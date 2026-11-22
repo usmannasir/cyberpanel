@@ -224,8 +224,8 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
-            cursor.execute("CREATE DATABASE " + dbuser)
-            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword + "'")
+            cursor.execute("CREATE DATABASE " + mysqlUtilities.quoteIdentifier(dbuser))
+            cursor.execute("CREATE USER %s@%s IDENTIFIED BY %s", (dbuser, mysqlUtilities.LOCALHOST, dbpassword))
 
             return 1
 
@@ -1373,27 +1373,6 @@ bind-address=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[addUserToDB]")
             return 0
-
-    @staticmethod
-    def UpdateWPTempPassword(dbname, password):
-        try:
-
-            ##
-
-            connection, cursor = mysqlUtilities.setupConnection()
-
-            if connection == 0:
-                return 0
-
-            cursor.execute("use %s" % (dbname))
-            cursor.execute("UPDATE `wp_users` SET `user_pass`= MD5('%s') WHERE `user_login`='usman'" % (password))
-            connection.close()
-
-            return 1
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[deleteDatabase]")
-            return str(msg)
 
     @staticmethod
     def UpgradeMariaDB(versionToInstall, tempStatusPath):
