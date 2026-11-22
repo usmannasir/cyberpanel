@@ -2513,7 +2513,7 @@ fi
 Install_Step ready
 if ! Admin_Password_Is_Set; then
   echo -e "\nCyberPanel was installed, but its administrator does not have the password of this installation."
-  echo -e "Set one with: adminPass 'a new password'\n"
+  Stop_Panel_Without_Password
   log_error "The panel's administrator does not have the password of this installation"
   Fail_Install panel_setup
 fi
@@ -3001,6 +3001,15 @@ VERIFY
 )
 }
 
+Stop_Panel_Without_Password() {
+# A panel that has no administrator creates "admin" with a well-known password
+# on the first request it gets, and anyone can send that request. A panel whose
+# password is not the one of this installation is therefore not left running.
+systemctl stop lscpd >/dev/null 2>&1
+echo "The panel has been stopped, because it could be signed in to with a password that is not yours."
+echo -e "Once the cause is removed, set a password and start the panel with: adminPass 'a new password'\n"
+}
+
 Post_Install_Tweak() {
 log_function_start "Post_Install_Tweak"
 log_info "Applying post-installation tweaks and configurations"
@@ -3035,7 +3044,7 @@ chmod 700 /usr/bin/adminPass
 
 if ! Set_Admin_Password; then
   echo -e "\nThe admin password could not be set in the panel, so the installation is not complete."
-  echo -e "Once the cause is removed, set one with: adminPass 'a new password'\n"
+  Stop_Panel_Without_Password
   log_error "The admin password could not be set in the panel"
   Fail_Install panel_setup
 fi
