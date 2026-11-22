@@ -131,14 +131,12 @@ phase() {
 panel_tree() {
   # What install.py leaves of the panel, as far as the script looks at it
   # afterwards: the tree's adminPass.py (QA_TREE=old: one that cannot read the
-  # password from a file) and the panel's interpreter.
-  mkdir -p "$QA_ROOT/etc/cyberpanel" "$QA_ROOT/usr/local/CyberCP/plogical" "$QA_ROOT/usr/local/CyberCP/bin"
+  # password from a file).
+  mkdir -p "$QA_ROOT/etc/cyberpanel" "$QA_ROOT/usr/local/CyberCP/plogical"
   printf '%s\n' "parser.add_argument('--password', help='New Password')" > "$QA_ROOT/usr/local/CyberCP/plogical/adminPass.py"
   if [ "$QA_TREE" != old ]; then
     printf '%s\n' "parser.add_argument('--password-file')" >> "$QA_ROOT/usr/local/CyberCP/plogical/adminPass.py"
   fi
-  cat "$QA_STAND_INS/panel-python" > "$QA_ROOT/usr/local/CyberCP/bin/python"
-  chmod 755 "$QA_ROOT/usr/local/CyberCP/bin/python"
 }
 Main_Installation() {
   # What cyberpanel.sh does here is covered by test_install_exit_status. This
@@ -156,17 +154,18 @@ Main_Installation() {
 }
 '''
 
-# Stand-ins for the two interpreters the script runs after install.py: the one
-# that runs the tree's adminPass.py records how it was called, the panel's own
-# keeps the check it was given. Each ends with the status the test asks for.
+# Stand-in for the interpreter the script runs after install.py. Given the
+# tree's adminPass.py it records how it was called; given a program to read
+# ("-": the check of the admin password) it keeps that program. Each ends with
+# the status the test asks for.
 INSTALLER_PYTHON = '''#!/bin/sh
+if [ "$1" = - ]; then
+  printf 'password-check\\n' >> "$QA_CALLS"
+  cat > "$QA_PASSWORD_CHECK"
+  exit "$QA_PASSWORD_CHECK_EXIT"
+fi
 printf '%s\\n' "$@" > "$QA_ADMINPASS_CALL"
 exit "$QA_ADMINPASS_EXIT"
-'''
-PANEL_PYTHON = '''#!/bin/sh
-printf 'password-check\\n' >> "$QA_CALLS"
-cat > "$QA_PASSWORD_CHECK"
-exit "$QA_PASSWORD_CHECK_EXIT"
 '''
 
 PYTHON_DRIVER = '''
@@ -284,9 +283,6 @@ class Installer:
         self.stored_password = self.root / 'etc/cyberpanel/adminPass'
         self.adminpass_call = self.root / 'adminpass-call'
         self.password_check = self.root / 'password-check.py'
-        stand_ins = self.root / 'stand-ins'
-        stand_ins.mkdir()
-        (stand_ins / 'panel-python').write_text(PANEL_PYTHON)
         installer_python = self.root / 'usr/local/CyberPanel/bin/python'
         installer_python.parent.mkdir(parents=True)
         installer_python.write_text(INSTALLER_PYTHON)
@@ -359,7 +355,6 @@ class Installer:
             'QA_SIGNAL': options.pop('signal', 'TERM'),
             'QA_PYTHON_STEPS': options.pop('python_steps', DEFAULT_PYTHON_STEPS),
             'QA_ROOT': str(self.root),
-            'QA_STAND_INS': str(self.root / 'stand-ins'),
             'QA_TREE': options.pop('tree', 'new'),
             'QA_ADMINPASS_CALL': str(self.adminpass_call),
             'QA_ADMINPASS_EXIT': str(options.pop('adminpass_exit', 0)),
