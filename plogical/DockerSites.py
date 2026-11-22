@@ -124,6 +124,14 @@ def app_vhost_problem(domain, content):
     return None
 
 
+## The entries SetupProxy adds to the main configuration of the web server for
+## a Docker site: an "extprocessor" block on OpenLiteSpeed, a <name> element
+## on LiteSpeed Enterprise. Nothing else in that file names a port of a site;
+## the names of websites, which are in it too, can hold any text.
+SITE_PORT_ENTRIES = (re.compile(r'^extprocessor[ \t]+docker([0-9]{1,5})[ \t]*\{', re.M),
+                     re.compile(r'<name>docker([0-9]{1,5})</name>'))
+
+
 def next_site_port(site_ports, web_server_config=''):
     """
     The loopback port for a new Docker site.
@@ -133,12 +141,18 @@ def next_site_port(site_ports, web_server_config=''):
     never handed out twice, and a website that still points at the port of a
     site that was deleted can never reach the container of a new one.
     """
+    recorded = []
+    for entry in SITE_PORT_ENTRIES:
+        recorded.extend(entry.findall(web_server_config or ''))
+
     highest = FIRST_SITE_PORT - 1
-    for port in list(site_ports) + re.findall(r'\bdocker([0-9]{1,5})\b', web_server_config or ''):
+    for port in list(site_ports) + recorded:
         try:
-            highest = max(highest, int(port))
+            port = int(port)
         except (TypeError, ValueError):
             continue
+        if 0 < port <= 65535:
+            highest = max(highest, port)
     if highest >= 65535:
         raise ValueError('No port is left for a new Docker site.')
     return str(highest + 1)
@@ -1062,8 +1076,17 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             dbusername = randomPassword.generate_pass()
             MySQLRootPass = randomPassword.generate_pass()
 
-            port = next_site_port(DockerSites.objects.values_list('port', flat=True),
-                                  Docker_Sites.web_server_config())
+            ## Without the web server's record of the ports it was given, the port
+            ## of a site that was deleted could be chosen again.
+
+            web_server_config = Docker_Sites.web_server_config()
+
+            if web_server_config is None:
+                logging.statusWriter(tempStatusPath, 'The configuration of the web server could not be read, so no '
+                                                     'port could be chosen. The Docker site was not created. [404]')
+                return 0
+
+            port = next_site_port(DockerSites.objects.values_list('port', flat=True), web_server_config)
 
             f_data = {
                 "JobID": tempStatusPath,
@@ -1107,6 +1130,14 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
         except BaseException as msg:
             logging.writeToFile("Error Submit Docker site Creation ....... %s" % str(msg))
+
+            ## The creation page waits for this file to say how the job ended.
+            try:
+                logging.statusWriter(self.data.get('JobID'),
+                                     'The Docker site could not be created: %s [404]' % ' '.join(str(msg).split()))
+            except BaseException:
+                pass
+
             return 0
 
     def DeleteDockerApp(self):
@@ -1169,17 +1200,23 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
     @staticmethod
     def web_server_config():
-        """The main configuration of the web server, where SetupProxy records every Docker site port."""
+        """
+        The main configuration of the web server, where SetupProxy records every
+        Docker site port, or None when it cannot be read.
+        """
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             path = '/usr/local/lsws/conf/httpd_config.conf'
         else:
             path = '/usr/local/lsws/conf/httpd_config.xml'
         try:
-            content = ProcessUtilities.outputExecutioner('cat ' + path)
-            return content if isinstance(content, str) else ''
+            answer = ProcessUtilities.outputExecutioner('cat ' + path, None, None, None, 1)
+            result, content = answer if isinstance(answer, tuple) and len(answer) == 2 else (0, None)
+            if result and isinstance(content, str) and content.strip():
+                return content
+            logging.writeToFile('Error reading the web server configuration %s' % path)
         except BaseException as msg:
             logging.writeToFile('Error reading the web server configuration: %s' % str(msg))
-            return ''
+        return None
 
     def website_account(self, domain):
         """The system account of the website a Docker site is installed on, or None."""
