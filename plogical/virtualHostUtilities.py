@@ -812,7 +812,8 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up SSL..,70')
                 if not os.path.exists(virtualHostUtilities.redisConf):
                     installUtilities.installUtilities.reStartLiteSpeed()
-                retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, sslPath)
+                retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, sslPath,
+                                                           newWebsite=True)
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
                 else:
@@ -1825,7 +1826,8 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')
                 if not os.path.exists(virtualHostUtilities.redisConf):
                     installUtilities.installUtilities.reStartLiteSpeed()
-                retValues = sslUtilities.issueSSLForDomain(virtualHostName, master.adminEmail, path)
+                retValues = sslUtilities.issueSSLForDomain(virtualHostName, master.adminEmail, path,
+                                                           newWebsite=True)
                 if not os.path.exists(virtualHostUtilities.redisConf):
                     installUtilities.installUtilities.reStartLiteSpeed()
                 if retValues[0] == 0:

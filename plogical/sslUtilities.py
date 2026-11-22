@@ -886,7 +886,15 @@ def removeSSLForDomain(domain, *args, **kwargs):
     return sslUtilities.removeSSLForDomain(domain, *args, **kwargs)
 
 
-def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False):
+def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=False, forceIssue=False,
+                      newWebsite=False):
+    """Issue and install a certificate for a website.
+
+    `newWebsite` is set while a website is being created. Certificate files
+    under its name can then only be left over from a deleted website of that
+    name, so a self-signed one among them is no reason to refuse: the new
+    website would have been given exactly that.
+    """
     try:
         # Adding an alias changes the certificate names; renewing the parent's
         # existing ACME order cannot add that name.
@@ -1005,6 +1013,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 from datetime import datetime, timezone
                 metadata = {'outcome': 'existing_certificate',
                             'certificate_validity': 'unknown', 'retained_existing': True}
+                self_signed = False
                 if not certificate_present or not key_present:
                     return [0, 'New SSL issuance failed. Existing certificate material is incomplete and has been preserved.', metadata]
                 try:
@@ -1021,7 +1030,9 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                     if sslUtilities.isStagingCertificate(x509):
                         return [0, 'New SSL issuance failed. The existing staging certificate has been preserved and is not trusted.', metadata]
                     if x509.get_issuer().get_components() == x509.get_subject().get_components():
-                        return [0, 'New SSL issuance failed. The existing self-signed certificate has been preserved.', metadata]
+                        if not newWebsite:
+                            return [0, 'New SSL issuance failed. The existing self-signed certificate has been preserved.', metadata]
+                        self_signed = True
                 except Exception as error:
                     logging.CyberCPLogFileWriter.writeToFile(
                         'Could not validate existing certificate for %s: %s' % (domain, error))
@@ -1029,6 +1040,10 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
                 if sslUtilities.installSSLForDomain(domain) != 1:
                     return [0, 'New SSL issuance failed and the existing certificate could not be installed. Existing certificate files have been preserved.', metadata]
+                if self_signed:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Self signed SSL left by an earlier website installed for " + domain + ".")
+                    return [2, "Public SSL issuance failed. A self-signed certificate was installed.", {"outcome": "self_signed", "certificate_validity": "valid"}]
                 warning = 'New SSL issuance failed. The existing date-valid certificate remains installed; its names and public TLS response should be checked.'
                 logging.CyberCPLogFileWriter.writeToFile('%s: %s' % (domain, warning))
                 return [2, warning, metadata]
