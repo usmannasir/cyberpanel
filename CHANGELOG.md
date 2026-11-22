@@ -4,6 +4,81 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.13 (build 13) — 2026-11-22
+
+Reliability release. It corrects nine defects found in acceptance testing of
+3.0.11: certificates on servers with more than one website, website
+suspension, the Create ACL page, mail in incremental backups, the Backup V2
+pages, WordPress restore to a new site, the Web Terminal service, pattern
+forwarding of mail and websites on the Apache backend. Upgrading is
+recommended for every server.
+
+### Certificates
+- A website with a certificate is mapped on the IPv4 and on the IPv6 HTTPS
+  listener and carries its own certificate. Before, the first website to get
+  a certificate was mapped on IPv4 only and the second on IPv6 only, so each
+  could be answered with the other's certificate. The DNS-validated route
+  follows the same rule.
+- An upgrade completes the listener maps of websites that already have a
+  certificate. Listeners on other ports or on a single address are left as
+  they are.
+
+### Websites
+- A website is suspended and restored on a server whose OpenLiteSpeed
+  configuration test already reports warnings or an error in another
+  website. The change is refused, and undone, only when it adds an error.
+  The same holds for a child domain created under a suspended website and
+  for a child domain's state restored from a backup.
+- A website on the Apache backend is written only for a system user that
+  exists. Apache's own configuration test runs before and after the change,
+  a refused change is undone and reported, and Apache is not restarted into
+  a configuration it refuses. Switching a website to Apache keeps its
+  OpenLiteSpeed configuration until Apache runs with the new one. The Apache
+  configuration editor and the PHP version change follow the same rule.
+- The system user of a new website is named in lower case.
+- An upgrade takes a virtual host or PHP-FPM pool that names a missing
+  system user out of use, so that the other websites on Apache answer again.
+
+### Users
+- The Create ACL page shows a checkbox for every permission it saves,
+  including the backup, SSL and AI Scanner permissions. The panel grants
+  only what the request names; a permission that is not sent is not granted.
+  Stored ACLs are not changed by the upgrade: open an ACL made on the earlier
+  page in Modify ACL to review its backup and SSL permissions.
+
+### Backups
+- An incremental backup with emails selected stores the website's mail, read
+  by the mail user and stored by the website's user. It says so when the
+  website has no mail folder, and fails when the mail cannot be read in
+  full. Restoring mail unpacks inside the website's mail folder only.
+  Restore points of mail made by earlier releases hold no mail.
+- A restore stops at a step that failed, and a backup fails when its
+  metadata could not be stored.
+- The Backup V2 create, restore, schedule and repository pages, the
+  incremental backup schedule and remote restore pages, and the email
+  marketing and container limit pages load the script they need.
+
+### WordPress
+- Restoring a WordPress backup to a new site produces a working copy with
+  its own database, or reports why not and removes the website it created.
+  The new site starts from the current WordPress release.
+- Restore steps see the real result of a copy or a database import; a
+  failed step is reported instead of "Completed".
+- A failed WordPress deployment to a new domain removes the website it
+  created and the files it added.
+
+### Mail
+- A pattern forwarding rule reaches Postfix: the panel writes the map
+  through its root helper and Postfix reads it after exact forwardings and
+  mailboxes and before the catch-all. A rule is refused when the map cannot
+  be written. Patterns match addresses of their own domain only. An upgrade
+  puts rules saved by earlier releases into use.
+
+### Web Terminal
+- The Web Terminal service is started once its interpreter exists, at the
+  end of an installation. An upgrade starts an enabled service it finds in
+  failed state; a stopped, disabled or masked service is left as it is.
+
 ## v3.0.12 (build 12) — 2026-11-22
 
 Security and reliability release. It hardens databases, Docker sites, the PHP
