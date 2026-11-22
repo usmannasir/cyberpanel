@@ -75,3 +75,49 @@ class WebsiteAPIOwnerSecurityTests(SimpleTestCase):
         self.assertIn('authorized', body['error_message'])
         self.assertEqual(administrator.call_count, 0)
         manager.submitWebsiteCreation.assert_not_called()
+
+    @mock.patch('websiteFunctions.website.hashPassword.check_password', return_value=True)
+    @mock.patch('websiteFunctions.website.ACLManager.loadedACL', return_value={'admin': 1})
+    @mock.patch('websiteFunctions.website.ACL.objects.get')
+    @mock.patch('websiteFunctions.website.Administrator')
+    def test_new_owner_needs_a_name_that_follows_the_rule(
+            self, administrator, get_acl, unused_acl, unused_password_check):
+        administrator.objects.get.return_value = SimpleNamespace(
+            pk=9, password='stored-hash', acl=SimpleNamespace(adminStatus=1))
+        administrator.objects.filter.return_value.exists.return_value = False
+        get_acl.return_value = SimpleNamespace(name='user', adminStatus=0)
+        manager = WebsiteManager()
+        manager.submitWebsiteCreation = mock.Mock(return_value=HttpResponse('{}'))
+
+        for name in ('x /etc/shadow', 'x & id', "x' OR '1", 'a/../../b', 'John Smith', 'root', 'cyberpanel',
+                     'cp-pma-5', ''):
+            payload = self.payload()
+            payload['websiteOwner'] = name
+            body = json.loads(manager.createWebsiteAPI(payload).content.decode())
+            self.assertEqual(0, body['createWebSiteStatus'], repr(name))
+        self.assertEqual(0, administrator.call_count)
+        manager.submitWebsiteCreation.assert_not_called()
+
+        manager.createWebsiteAPI(self.payload())
+        self.assertEqual('site-owner', administrator.call_args[1]['userName'])
+        manager.submitWebsiteCreation.assert_called_once()
+
+    @mock.patch('websiteFunctions.website.hashPassword.check_password', return_value=True)
+    @mock.patch('websiteFunctions.website.ACLManager.loadedACL', return_value={'admin': 1})
+    @mock.patch('websiteFunctions.website.ACL.objects.get')
+    @mock.patch('websiteFunctions.website.Administrator')
+    def test_owner_who_exists_under_an_earlier_name_is_still_served(
+            self, administrator, get_acl, unused_acl, unused_password_check):
+        administrator.objects.get.return_value = SimpleNamespace(
+            pk=9, password='stored-hash', acl=SimpleNamespace(adminStatus=1))
+        administrator.objects.filter.return_value.exists.return_value = True
+        get_acl.return_value = SimpleNamespace(name='user', adminStatus=0)
+        manager = WebsiteManager()
+        manager.submitWebsiteCreation = mock.Mock(return_value=HttpResponse('{}'))
+        payload = self.payload()
+        payload['websiteOwner'] = 'John Smith'
+
+        manager.createWebsiteAPI(payload)
+
+        administrator.objects.filter.assert_called_once_with(userName='John Smith')
+        manager.submitWebsiteCreation.assert_called_once()

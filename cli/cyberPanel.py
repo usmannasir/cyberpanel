@@ -1359,7 +1359,7 @@ def main():
 
     elif args.function == "createUser":
 
-        completeCommandExample = 'cyberpanel createUser --firstName Cyber --lastName Panel --email email@cyberpanel.net --userName cyberpanel --password securepassword --websitesLimit 10 --selectedACL user --securityLevel HIGH'
+        completeCommandExample = 'cyberpanel createUser --firstName Cyber --lastName Panel --email email@cyberpanel.net --userName cyberuser --password securepassword --websitesLimit 10 --selectedACL user --securityLevel HIGH'
 
         if not args.firstName:
             print("\n\nPlease enter First Name. For example:\n\n" + completeCommandExample + "\n\n")
