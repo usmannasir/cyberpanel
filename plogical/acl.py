@@ -6,6 +6,7 @@ from ApachController.ApacheVhosts import ApacheVhost
 from manageServices.models import PDNSStatus
 from .processUtilities import ProcessUtilities
 from .legacyWebmail import legacy_data_permission_commands
+from .aclPermissions import PERMISSIONS, stored_permission
 
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -217,77 +218,10 @@ class ACLManager:
             finalResponse['admin'] = 1
         else:
             finalResponse['admin'] = 0
-            finalResponse['versionManagement'] = config['versionManagement']
-
-            ## User Management
-
-            finalResponse['createNewUser'] = config['createNewUser']
-            finalResponse['listUsers'] = config['listUsers']
-            finalResponse['deleteUser'] = config['deleteUser']
-            finalResponse['changeUserACL'] = config['changeUserACL']
-            finalResponse['resellerCenter'] = config['resellerCenter']
-
-            ## Website Management
-
-            finalResponse['createWebsite'] = config['createWebsite']
-            finalResponse['modifyWebsite'] = config['modifyWebsite']
-            finalResponse['suspendWebsite'] = config['suspendWebsite']
-            finalResponse['deleteWebsite'] = config['deleteWebsite']
-
-            ## Package Management
-
-
-            finalResponse['createPackage'] = config['createPackage']
-            finalResponse['listPackages'] = config['listPackages']
-            finalResponse['deletePackage'] = config['deletePackage']
-            finalResponse['modifyPackage'] = config['modifyPackage']
-
-            ## Database Management
-
-            finalResponse['createDatabase'] = config['createDatabase']
-            finalResponse['deleteDatabase'] = config['deleteDatabase']
-            finalResponse['listDatabases'] = config['listDatabases']
-
-            ## DNS Management
-
-            finalResponse['createNameServer'] = config['createNameServer']
-            finalResponse['createDNSZone'] = config['createDNSZone']
-            finalResponse['deleteZone'] = config['deleteZone']
-            finalResponse['addDeleteRecords'] = config['addDeleteRecords']
-
-            ## Email Management
-
-            finalResponse['createEmail'] = config['createEmail']
-            finalResponse['listEmails'] = config['listEmails']
-            finalResponse['deleteEmail'] = config['deleteEmail']
-            finalResponse['emailForwarding'] = config['emailForwarding']
-            finalResponse['changeEmailPassword'] = config['changeEmailPassword']
-            finalResponse['dkimManager'] = config['dkimManager']
-
-            ## FTP Management
-
-            finalResponse['createFTPAccount'] = config['createFTPAccount']
-            finalResponse['deleteFTPAccount'] = config['deleteFTPAccount']
-            finalResponse['listFTPAccounts'] = config['listFTPAccounts']
-
-            ## Backup Management
-
-            finalResponse['createBackup'] = config['createBackup']
-            finalResponse['googleDriveBackups'] = config['googleDriveBackups']
-            finalResponse['restoreBackup'] = config['restoreBackup']
-            finalResponse['addDeleteDestinations'] = config['addDeleteDestinations']
-            finalResponse['scheduleBackups'] = config['scheduleBackups']
-            finalResponse['remoteBackups'] = config['remoteBackups']
-
-            ## SSL Management
-
-            finalResponse['manageSSL'] = config['manageSSL']
-            finalResponse['hostnameSSL'] = config['hostnameSSL']
-            finalResponse['mailServerSSL'] = config['mailServerSSL']
-
-            ## AI Scanner: ACLs made before this switch existed do not carry it and keep access
-
-            finalResponse['aiScannerAccess'] = config.get('aiScannerAccess', 1)
+            # One value for each permission. An ACL made before a permission existed does not
+            # carry it: plogical/aclPermissions.py says what its users have then.
+            for name in PERMISSIONS:
+                finalResponse[name] = stored_permission(config, name)
 
         return finalResponse
 

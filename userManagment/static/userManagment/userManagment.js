@@ -491,6 +491,96 @@ app.controller('deleteUser', function ($scope, $http) {
 
 /* Java script code to create acl */
 
+/* Every permission of an ACL, with its value on a new ACL that is not an admin ACL.
+   The Create ACL and Modify ACL pages have one checkbox for each name, and the panel
+   stores exactly these names (plogical/aclPermissions.py). A permission is added in
+   all three places or in none. */
+var aclPermissionDefaults = {
+    versionManagement: false,
+
+    // User Management
+    createNewUser: false,
+    listUsers: false,
+    resellerCenter: false,
+    deleteUser: false,
+    changeUserACL: false,
+
+    // Website Management
+    createWebsite: false,
+    modifyWebsite: false,
+    suspendWebsite: false,
+    deleteWebsite: false,
+
+    // Package Management
+    createPackage: false,
+    listPackages: false,
+    deletePackage: false,
+    modifyPackage: false,
+
+    // Database Management
+    createDatabase: true,
+    deleteDatabase: true,
+    listDatabases: true,
+
+    // DNS Management
+    createNameServer: false,
+    createDNSZone: true,
+    deleteZone: true,
+    addDeleteRecords: true,
+
+    // Email Management
+    createEmail: true,
+    listEmails: true,
+    deleteEmail: true,
+    emailForwarding: true,
+    changeEmailPassword: true,
+    dkimManager: true,
+
+    // FTP Management
+    createFTPAccount: true,
+    deleteFTPAccount: true,
+    listFTPAccounts: true,
+
+    // Backup Management
+    createBackup: true,
+    googleDriveBackups: true,
+    restoreBackup: false,
+    addDeleteDestinations: false,
+    scheduleBackups: false,
+    remoteBackups: false,
+
+    // SSL Management
+    manageSSL: true,
+    hostnameSSL: false,
+    mailServerSSL: false,
+
+    // AI Scanner
+    aiScannerAccess: true
+};
+
+/* Sets every permission checkbox of the page: valueFor gets the name of a permission
+   and its value on a new ACL, and returns whether its box is ticked. */
+function setACLPermissions($scope, valueFor) {
+    angular.forEach(aclPermissionDefaults, function (standard, name) {
+        $scope[name] = valueFor(name, standard) === true;
+    });
+}
+
+/* Adds every permission to what is sent, as its checkbox stands now. */
+function submittedACLPermissions($scope, data) {
+    angular.forEach(aclPermissionDefaults, function (standard, name) {
+        data[name] = $scope[name] === true;
+    });
+    return data;
+}
+
+/* Make Admin ticks every box; taking it away again puts the boxes back to a new ACL. */
+function aclAdminHook($scope) {
+    setACLPermissions($scope, function (name, standard) {
+        return $scope.makeAdmin === true ? true : standard;
+    });
+}
+
 app.controller('createACLCTRL', function ($scope, $http) {
 
     $scope.aclCreated = true;
@@ -500,75 +590,9 @@ app.controller('createACLCTRL', function ($scope, $http) {
     $scope.aclLoading = true;
     $scope.makeAdmin = false;
 
-    //
-
-    $scope.versionManagement = false;
-
-    // User Management
-
-    $scope.createNewUser = false;
-    $scope.listUsers = false;
-    $scope.resellerCenter = false;
-    $scope.deleteUser = false;
-    $scope.changeUserACL = false;
-
-    // Website Management
-
-    $scope.createWebsite = false;
-    $scope.modifyWebsite = false;
-    $scope.suspendWebsite = false;
-    $scope.deleteWebsite = false;
-
-    // Package Management
-
-    $scope.createPackage = false;
-    $scope.listPackages = false;
-    $scope.deletePackage = false;
-    $scope.modifyPackage = false;
-
-    // Database Management
-
-    $scope.createDatabase = true;
-    $scope.deleteDatabase = true;
-    $scope.listDatabases = true;
-
-    // DNS Management
-
-    $scope.createNameServer = false;
-    $scope.createDNSZone = true;
-    $scope.deleteZone = true;
-    $scope.addDeleteRecords = true;
-
-    // Email Management
-
-    $scope.createEmail = true;
-    $scope.listEmails = true;
-    $scope.deleteEmail = true;
-    $scope.emailForwarding = true;
-    $scope.changeEmailPassword = true;
-    $scope.dkimManager = true;
-
-    // FTP Management
-
-    $scope.createFTPAccount = true;
-    $scope.deleteFTPAccount = true;
-    $scope.listFTPAccounts = true;
-
-    // Backup Management
-
-    $scope.createBackup = true;
-    $scope.googleDriveBackups = true;
-    $scope.restoreBackup = false;
-    $scope.addDeleteDestinations = false;
-    $scope.scheduleBackups = false;
-    $scope.remoteBackups = false;
-
-
-    // SSL Management
-
-    $scope.manageSSL = true;
-    $scope.hostnameSSL = false;
-    $scope.mailServerSSL = false;
+    setACLPermissions($scope, function (name, standard) {
+        return standard;
+    });
 
 
     $scope.createACLFunc = function () {
@@ -577,80 +601,10 @@ app.controller('createACLCTRL', function ($scope, $http) {
 
         var url = "/users/createACLFunc";
 
-        var data = {
-
+        var data = submittedACLPermissions($scope, {
             aclName: $scope.aclName,
-            makeAdmin: $scope.makeAdmin,
-
-            //
-            versionManagement: $scope.versionManagement,
-
-            // User Management
-
-            createNewUser: $scope.createNewUser,
-            listUsers: $scope.listUsers,
-            resellerCenter: $scope.resellerCenter,
-            deleteUser: $scope.deleteUser,
-            changeUserACL: $scope.changeUserACL,
-
-            // Website Management
-
-            createWebsite: $scope.createWebsite,
-            modifyWebsite: $scope.modifyWebsite,
-            suspendWebsite: $scope.suspendWebsite,
-            deleteWebsite: $scope.deleteWebsite,
-
-            // Package Management
-
-            createPackage: $scope.createPackage,
-            listPackages: $scope.listPackages,
-            deletePackage: $scope.deletePackage,
-            modifyPackage: $scope.modifyPackage,
-
-            // Database Management
-
-            createDatabase: $scope.createDatabase,
-            deleteDatabase: $scope.deleteDatabase,
-            listDatabases: $scope.listDatabases,
-
-            // DNS Management
-
-            createNameServer: $scope.createNameServer,
-            createDNSZone: $scope.createDNSZone,
-            deleteZone: $scope.deleteZone,
-            addDeleteRecords: $scope.addDeleteRecords,
-
-            // Email Management
-
-            createEmail: $scope.createEmail,
-            listEmails: $scope.listEmails,
-            deleteEmail: $scope.deleteEmail,
-            emailForwarding: $scope.emailForwarding,
-            changeEmailPassword: $scope.changeEmailPassword,
-            dkimManager: $scope.dkimManager,
-
-            // FTP Management
-
-            createFTPAccount: $scope.createFTPAccount,
-            deleteFTPAccount: $scope.deleteFTPAccount,
-            listFTPAccounts: $scope.listFTPAccounts,
-
-            // Backup Management
-
-            createBackup: $scope.createBackup,
-            googleDriveBackups: $scope.googleDriveBackups,
-            restoreBackup: $scope.restoreBackup,
-            addDeleteDestinations: $scope.addDeleteDestinations,
-            scheduleBackups: $scope.scheduleBackups,
-            remoteBackups: $scope.remoteBackups,
-
-            // SSL Management
-
-            manageSSL: $scope.manageSSL,
-            hostnameSSL: $scope.hostnameSSL,
-            mailServerSSL: $scope.mailServerSSL
-
-        };
+            makeAdmin: $scope.makeAdmin
+        });
 
         var config = {
             headers: {
@@ -699,151 +653,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
     };
 
     $scope.adminHook = function () {
-
-        if ($scope.makeAdmin === true) {
-
-            $scope.makeAdmin = true;
-
-            //
-
-            $scope.versionManagement = true;
-
-            // User Management
-
-            $scope.createNewUser = true;
-            $scope.listUsers = true;
-            $scope.resellerCenter = true;
-            $scope.deleteUser = true;
-            $scope.changeUserACL = true;
-
-            // Website Management
-
-            $scope.createWebsite = true;
-            $scope.modifyWebsite = true;
-            $scope.suspendWebsite = true;
-            $scope.deleteWebsite = true;
-
-            // Package Management
-
-            $scope.createPackage = true;
-            $scope.listPackages = true;
-            $scope.deletePackage = true;
-            $scope.modifyPackage = true;
-
-            // Database Management
-
-            $scope.createDatabase = true;
-            $scope.deleteDatabase = true;
-            $scope.listDatabases = true;
-
-            // DNS Management
-
-            $scope.createNameServer = true;
-            $scope.createDNSZone = true;
-            $scope.deleteZone = true;
-            $scope.addDeleteRecords = true;
-
-            // Email Management
-
-            $scope.createEmail = true;
-            $scope.listEmails = true;
-            $scope.deleteEmail = true;
-            $scope.emailForwarding = true;
-            $scope.changeEmailPassword = true;
-            $scope.dkimManager = true;
-
-            // FTP Management
-
-            $scope.createFTPAccount = true;
-            $scope.deleteFTPAccount = true;
-            $scope.listFTPAccounts = true;
-
-            // Backup Management
-
-            $scope.createBackup = true;
-            $scope.restoreBackup = true;
-            $scope.addDeleteDestinations = true;
-            $scope.scheduleBackups = true;
-            $scope.remoteBackups = true;
-
-            // SSL Management
-
-            $scope.manageSSL = true;
-            $scope.hostnameSSL = true;
-            $scope.mailServerSSL = true;
-
-        } else {
-            $scope.makeAdmin = false;
-
-            //
-
-            $scope.versionManagement = false;
-
-            // User Management
-
-            $scope.createNewUser = false;
-            $scope.listUsers = false;
-            $scope.resellerCenter = false;
-            $scope.deleteUser = false;
-            $scope.changeUserACL = false;
-
-            // Website Management
-
-            $scope.createWebsite = false;
-            $scope.modifyWebsite = false;
-            $scope.suspendWebsite = false;
-            $scope.deleteWebsite = false;
-
-            // Package Management
-
-            $scope.createPackage = false;
-            $scope.listPackages = false;
-            $scope.deletePackage = false;
-            $scope.modifyPackage = false;
-
-            // Database Management
-
-            $scope.createDatabase = true;
-            $scope.deleteDatabase = true;
-            $scope.listDatabases = true;
-
-            // DNS Management
-
-            $scope.createNameServer = false;
-            $scope.createDNSZone = true;
-            $scope.deleteZone = true;
-            $scope.addDeleteRecords = true;
-
-            // Email Management
-
-            $scope.createEmail = true;
-            $scope.listEmails = true;
-            $scope.deleteEmail = true;
-            $scope.emailForwarding = true;
-            $scope.changeEmailPassword = true;
-            $scope.dkimManager = true;
-
-            // FTP Management
-
-            $scope.createFTPAccount = true;
-            $scope.deleteFTPAccount = true;
-            $scope.listFTPAccounts = true;
-
-            // Backup Management
-
-            $scope.createBackup = true;
-            $scope.restoreBackup = false;
-            $scope.addDeleteDestinations = false;
-            $scope.scheduleBackups = false;
-            $scope.remoteBackups = false;
-
-            // SSL Management
-
-            $scope.manageSSL = true;
-            $scope.hostnameSSL = false;
-            $scope.mailServerSSL = false;
-        }
-
+        aclAdminHook($scope);
     };
 
 
@@ -959,74 +769,9 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
 
                 $scope.makeAdmin = Boolean(response.data.adminStatus);
 
-                //
-
-                $scope.versionManagement = Boolean(response.data.versionManagement);
-
-                // User Management
-
-                $scope.createNewUser = Boolean(response.data.createNewUser);
-                $scope.listUsers = Boolean(response.data.listUsers);
-                $scope.resellerCenter = Boolean(response.data.resellerCenter);
-                $scope.deleteUser = Boolean(response.data.deleteUser);
-                $scope.changeUserACL = Boolean(response.data.changeUserACL);
-
-                // Website Management
-
-                $scope.createWebsite = Boolean(response.data.createWebsite);
-                $scope.modifyWebsite = Boolean(response.data.modifyWebsite);
-                $scope.suspendWebsite = Boolean(response.data.suspendWebsite);
-                $scope.deleteWebsite = Boolean(response.data.deleteWebsite);
-
-                // Package Management
-
-                $scope.createPackage = Boolean(response.data.createPackage);
-                $scope.listPackages = Boolean(response.data.listPackages);
-                $scope.deletePackage = Boolean(response.data.deletePackage);
-                $scope.modifyPackage = Boolean(response.data.modifyPackage);
-
-                // Database Management
-
-                $scope.createDatabase = Boolean(response.data.createDatabase);
-                $scope.deleteDatabase = Boolean(response.data.deleteDatabase);
-                $scope.listDatabases = Boolean(response.data.listDatabases);
-
-                // DNS Management
-
-                $scope.createNameServer = Boolean(response.data.createNameServer);
-                $scope.createDNSZone = Boolean(response.data.createDNSZone);
-                $scope.deleteZone = Boolean(response.data.deleteZone);
-                $scope.addDeleteRecords = Boolean(response.data.addDeleteRecords);
-
-                // Email Management
-
-                $scope.createEmail = Boolean(response.data.createEmail);
-                $scope.listEmails = Boolean(response.data.listEmails);
-                $scope.deleteEmail = Boolean(response.data.deleteEmail);
-                $scope.emailForwarding = Boolean(response.data.emailForwarding);
-                $scope.changeEmailPassword = Boolean(response.data.changeEmailPassword);
-                $scope.dkimManager = Boolean(response.data.dkimManager);
-
-                // FTP Management
-
-                $scope.createFTPAccount = Boolean(response.data.createFTPAccount);
-                $scope.deleteFTPAccount = Boolean(response.data.deleteFTPAccount);
-                $scope.listFTPAccounts = Boolean(response.data.listFTPAccounts);
-
-                // Backup Management
-
-                $scope.createBackup = Boolean(response.data.createBackup);
-                $scope.googleDriveBackups = Boolean(response.data.googleDriveBackups);
-                $scope.restoreBackup = Boolean(response.data.restoreBackup);
-                $scope.addDeleteDestinations = Boolean(response.data.addDeleteDestinations);
-                $scope.scheduleBackups = Boolean(response.data.scheduleBackups);
-                $scope.remoteBackups = Boolean(response.data.remoteBackups);
-
-                // SSL Management
-
-                $scope.manageSSL = Boolean(response.data.manageSSL);
-                $scope.hostnameSSL = Boolean(response.data.hostnameSSL);
-                $scope.mailServerSSL = Boolean(response.data.mailServerSSL);
+                setACLPermissions($scope, function (name) {
+                    return Boolean(response.data[name]);
+                });
 
             } else {
                 new PNotify({
@@ -1058,78 +803,10 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
 
         var url = "/users/submitACLModifications";
 
-        var data = {
+        var data = submittedACLPermissions($scope, {
             aclToModify: $scope.aclToModify,
-            adminStatus: $scope.makeAdmin,
-            //
-            versionManagement: $scope.versionManagement,
-
-            // User Management
-
-            createNewUser: $scope.createNewUser,
-            listUsers: $scope.listUsers,
-            resellerCenter: $scope.resellerCenter,
-            deleteUser: $scope.deleteUser,
-            changeUserACL: $scope.changeUserACL,
-
-            // Website Management
-
-            createWebsite: $scope.createWebsite,
-            modifyWebsite: $scope.modifyWebsite,
-            suspendWebsite: $scope.suspendWebsite,
-            deleteWebsite: $scope.deleteWebsite,
-
-            // Package Management
-
-            createPackage: $scope.createPackage,
-            listPackages: $scope.listPackages,
-            deletePackage: $scope.deletePackage,
-            modifyPackage: $scope.modifyPackage,
-
-            // Database Management
-
-            createDatabase: $scope.createDatabase,
-            deleteDatabase: $scope.deleteDatabase,
-            listDatabases: $scope.listDatabases,
-
-            // DNS Management
-
-            createNameServer: $scope.createNameServer,
-            createDNSZone: $scope.createDNSZone,
-            deleteZone: $scope.deleteZone,
-            addDeleteRecords: $scope.addDeleteRecords,
-
-            // Email Management
-
-            createEmail: $scope.createEmail,
-            listEmails: $scope.listEmails,
-            deleteEmail: $scope.deleteEmail,
-            emailForwarding: $scope.emailForwarding,
-            changeEmailPassword: $scope.changeEmailPassword,
-            dkimManager: $scope.dkimManager,
-
-            // FTP Management
-
-            createFTPAccount: $scope.createFTPAccount,
-            deleteFTPAccount: $scope.deleteFTPAccount,
-            listFTPAccounts: $scope.listFTPAccounts,
-
-            // Backup Management
-
-            createBackup: $scope.createBackup,
-            googleDriveBackups: $scope.googleDriveBackups,
-            restoreBackup: $scope.restoreBackup,
-            addDeleteDestinations: $scope.addDeleteDestinations,
-            scheduleBackups: $scope.scheduleBackups,
-            remoteBackups: $scope.remoteBackups,
-
-            // SSL Management
-
-            manageSSL: $scope.manageSSL,
-            hostnameSSL: $scope.hostnameSSL,
-            mailServerSSL: $scope.mailServerSSL
-
-        };
+            adminStatus: $scope.makeAdmin
+        });
 
         var config = {
             headers: {
@@ -1178,151 +855,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
     };
 
     $scope.adminHook = function () {
-
-        if ($scope.makeAdmin === true) {
-
-            $scope.makeAdmin = true;
-
-            //
-
-            $scope.versionManagement = true;
-
-            // User Management
-
-            $scope.createNewUser = true;
-            $scope.listUsers = true;
-            $scope.resellerCenter = true;
-            $scope.deleteUser = true;
-            $scope.changeUserACL = true;
-
-            // Website Management
-
-            $scope.createWebsite = true;
-            $scope.modifyWebsite = true;
-            $scope.suspendWebsite = true;
-            $scope.deleteWebsite = true;
-
-            // Package Management
-
-            $scope.createPackage = true;
-            $scope.listPackages = true;
-            $scope.deletePackage = true;
-            $scope.modifyPackage = true;
-
-            // Database Management
-
-            $scope.createDatabase = true;
-            $scope.deleteDatabase = true;
-            $scope.listDatabases = true;
-
-            // DNS Management
-
-            $scope.createNameServer = true;
-            $scope.createDNSZone = true;
-            $scope.deleteZone = true;
-            $scope.addDeleteRecords = true;
-
-            // Email Management
-
-            $scope.createEmail = true;
-            $scope.listEmails = true;
-            $scope.deleteEmail = true;
-            $scope.emailForwarding = true;
-            $scope.changeEmailPassword = true;
-            $scope.dkimManager = true;
-
-            // FTP Management
-
-            $scope.createFTPAccount = true;
-            $scope.deleteFTPAccount = true;
-            $scope.listFTPAccounts = true;
-
-            // Backup Management
-
-            $scope.createBackup = true;
-            $scope.restoreBackup = true;
-            $scope.addDeleteDestinations = true;
-            $scope.scheduleBackups = true;
-            $scope.remoteBackups = true;
-
-            // SSL Management
-
-            $scope.manageSSL = true;
-            $scope.hostnameSSL = true;
-            $scope.mailServerSSL = true;
-
-        } else {
-            $scope.makeAdmin = false;
-
-            //
-
-            $scope.versionManagement = false;
-
-            // User Management
-
-            $scope.createNewUser = false;
-            $scope.listUsers = false;
-            $scope.resellerCenter = false;
-            $scope.deleteUser = false;
-            $scope.changeUserACL = false;
-
-            // Website Management
-
-            $scope.createWebsite = false;
-            $scope.modifyWebsite = false;
-            $scope.suspendWebsite = false;
-            $scope.deleteWebsite = false;
-
-            // Package Management
-
-            $scope.createPackage = false;
-            $scope.listPackages = false;
-            $scope.deletePackage = false;
-            $scope.modifyPackage = false;
-
-            // Database Management
-
-            $scope.createDatabase = true;
-            $scope.deleteDatabase = true;
-            $scope.listDatabases = true;
-
-            // DNS Management
-
-            $scope.createNameServer = false;
-            $scope.createDNSZone = true;
-            $scope.deleteZone = true;
-            $scope.addDeleteRecords = true;
-
-            // Email Management
-
-            $scope.createEmail = true;
-            $scope.listEmails = true;
-            $scope.deleteEmail = true;
-            $scope.emailForwarding = true;
-            $scope.changeEmailPassword = true;
-            $scope.dkimManager = true;
-
-            // FTP Management
-
-            $scope.createFTPAccount = true;
-            $scope.deleteFTPAccount = true;
-            $scope.listFTPAccounts = true;
-
-            // Backup Management
-
-            $scope.createBackup = true;
-            $scope.restoreBackup = false;
-            $scope.addDeleteDestinations = false;
-            $scope.scheduleBackups = false;
-            $scope.remoteBackups = false;
-
-            // SSL Management
-
-            $scope.manageSSL = true;
-            $scope.hostnameSSL = false;
-            $scope.mailServerSSL = false;
-        }
-
+        aclAdminHook($scope);
     };
 
 });
