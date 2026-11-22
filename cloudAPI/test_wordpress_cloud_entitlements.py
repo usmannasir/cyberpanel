@@ -8,6 +8,8 @@ from pathlib import Path
 from types import SimpleNamespace
 import unittest
 from unittest import mock
+from plogical.panelUserNames import name_from, new_name_refusal
+from managePHP.phpConfig import normalized_php_selection
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIONS = (
@@ -66,6 +68,9 @@ def load_cloud():
         'api_token_matches': mock.Mock(return_value=True),
         'api_two_factor_matches': mock.Mock(return_value=True),
         'csrf_exempt': lambda method: method,
+        # What the cloud manager uses for account names and PHP versions: the real rules.
+        'name_from': name_from, 'new_name_refusal': new_name_refusal,
+        'normalized_php_selection': normalized_php_selection,
     }
     for filename in ('plogical/premiumEntitlements.py', 'websiteFunctions/wordpressEntitlements.py',
                      'websiteFunctions/apacheEntitlements.py'):

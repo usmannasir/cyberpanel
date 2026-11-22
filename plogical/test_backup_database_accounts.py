@@ -15,6 +15,7 @@ from plogical.mysqlUtilities import mysqlUtilities
 from plogical.test_backup_restore_ssl import load_method
 from plogical import test_backup_temp_metadata as lifetime
 from plogical.test_database_restore_accounts import Cursor, Rows, applied, panel
+from managePHP.phpConfig import stored_php_selection
 
 HERE = Path(__file__).resolve().parent
 HASH = '*94BDCEBE19083CE2A1F959FD02F964C7AF4CFC29'
@@ -150,6 +151,7 @@ class RestoreChoiceTests(unittest.TestCase):
         self.databases = mock.Mock()
         self.databases.createDatabaseAndRegister.return_value = (1, 'None')
         namespace = dict(os=os, ElementTree=ElementTree, generate_pass=lambda length: 'starting-password',
+                         stored_php_selection=stored_php_selection,
                          Administrator=SimpleNamespace(objects=mock.Mock(get=mock.Mock(return_value=user))),
                          Websites=SimpleNamespace(objects=mock.Mock(get=mock.Mock(return_value=website))),
                          ChildDomains=SimpleNamespace(objects=mock.Mock()),
