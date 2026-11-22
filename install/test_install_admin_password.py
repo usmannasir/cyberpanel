@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import stat
 import subprocess
 import sys
@@ -31,27 +32,33 @@ def password_file(directory, content=SECRET + '\n', mode=0o600):
     return path
 
 
+CANNOT_BE_READ = 'The file named in CP_ADMIN_PASSWORD_FILE cannot be read.'
+NOT_A_FILE = 'CP_ADMIN_PASSWORD_FILE does not name a regular file.'
+NOT_ROOT_ONLY = 'must belong to root and be readable by root only (chmod 600).'
+TOO_SHORT = 'has less than 8 characters.'
+
+
 class PasswordFileReaderTests(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.directory = directory.name
 
-    def read(self, path):
+    def read(self, path, search_path=None):
         script = function('Read_Admin_Password_File') + (
             'Read_Admin_Password_File\nstatus=$?\nprintf "%s" "$Admin_Pass_From_File"\n'
             'printf "%s" "$Admin_Pass_File_Problem" >&2\nexit $status\n')
-        environment = {'PATH': os.environ['PATH']}
+        environment = {'PATH': search_path or os.environ['PATH']}
         if path is not None:
             environment['CP_ADMIN_PASSWORD_FILE'] = str(path)
         return subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                               universal_newlines=True, env=environment, timeout=20)
 
-    def assert_refused(self, path, *secrets):
+    def assert_refused(self, path, saying, *secrets):
         result = self.read(path)
         self.assertEqual(1, result.returncode)
         self.assertEqual('', result.stdout)
-        self.assertIn('CP_ADMIN_PASSWORD_FILE', result.stderr)
+        self.assertIn(saying, result.stderr)
         for secret in secrets:
             self.assertNotIn(secret, result.stderr)
 
@@ -60,6 +67,13 @@ class PasswordFileReaderTests(unittest.TestCase):
             result = self.read(path)
             self.assertEqual((0, '', ''), (result.returncode, result.stdout, result.stderr))
 
+    def test_file_that_is_not_there_cannot_be_read(self):
+        self.assert_refused(Path(self.directory) / 'missing', CANNOT_BE_READ)
+        self.assert_refused(Path(self.directory) / 'missing' / 'deeper', CANNOT_BE_READ)
+
+    def test_directory_is_no_file(self):
+        self.assert_refused(self.directory, NOT_A_FILE)
+
     @AS_ROOT
     def test_password_is_taken_as_it_is_written(self):
         for content in (SECRET + '\n', SECRET, SECRET + '\nsecond line\n', '  spaced out  \n'):
@@ -67,6 +81,13 @@ class PasswordFileReaderTests(unittest.TestCase):
                 result = self.read(password_file(self.directory, content))
                 self.assertEqual((0, ''), (result.returncode, result.stderr))
                 self.assertEqual(content.split('\n')[0], result.stdout)
+
+    @AS_ROOT
+    def test_line_ending_of_another_system_is_no_part_of_the_password(self):
+        result = self.read(password_file(self.directory, SECRET + '\r\n'))
+        self.assertEqual((0, SECRET, ''), (result.returncode, result.stdout, result.stderr))
+        # Seven characters and a carriage return are seven characters.
+        self.assert_refused(password_file(self.directory, 'short7!\r\n'), TOO_SHORT, 'short7!')
 
     @AS_ROOT
     def test_modes_that_only_root_can_read_are_accepted(self):
@@ -78,26 +99,53 @@ class PasswordFileReaderTests(unittest.TestCase):
     def test_file_that_others_can_read_is_refused(self):
         for mode in (0o644, 0o640, 0o604, 0o660, 0o666):
             with self.subTest(mode=oct(mode)):
-                self.assert_refused(password_file(self.directory, mode=mode), SECRET)
+                self.assert_refused(password_file(self.directory, mode=mode), NOT_ROOT_ONLY, SECRET)
 
     @AS_ROOT
     def test_file_of_another_account_is_refused(self):
         path = password_file(self.directory)
         os.chown(str(path), 65534, 0)
-        self.assert_refused(path, SECRET)
+        self.assert_refused(path, NOT_ROOT_ONLY, SECRET)
 
-    def test_missing_file_directory_and_link_are_refused(self):
-        self.assert_refused(Path(self.directory) / 'missing')
-        self.assert_refused(self.directory)
+    @AS_ROOT
+    def test_link_is_judged_by_the_file_it_leads_to(self):
         link = Path(self.directory) / 'link'
         link.symlink_to(password_file(self.directory))
-        self.assert_refused(link, SECRET)
+        result = self.read(link)
+        self.assertEqual((0, SECRET, ''), (result.returncode, result.stdout, result.stderr))
+        password_file(self.directory, mode=0o644)
+        self.assert_refused(link, NOT_ROOT_ONLY, SECRET)
 
     @AS_ROOT
     def test_short_or_empty_password_is_refused_without_being_shown(self):
         for content in ('', '\n', 'short7!\n', '\n' + SECRET + '\n'):
             with self.subTest(content=content):
-                self.assert_refused(password_file(self.directory, content), 'short7!')
+                self.assert_refused(password_file(self.directory, content), TOO_SHORT, 'short7!')
+
+    def test_name_of_the_file_is_followed_once(self):
+        source = function('Read_Admin_Password_File')
+        self.assertEqual(1, source.count('"$CP_ADMIN_PASSWORD_FILE"'))
+        self.assertIn('< "$CP_ADMIN_PASSWORD_FILE"', source)
+
+    @AS_ROOT
+    def test_file_that_was_opened_is_the_one_checked_and_read(self):
+        # The name is a link. While the file is being checked the link is turned
+        # to a file that others can read and that holds another password: the
+        # checks and the password must still be those of the file that was opened.
+        opened = password_file(self.directory)
+        other = Path(self.directory) / 'other'
+        other.write_text('another-Secret-9\n')
+        other.chmod(0o644)
+        link = Path(self.directory) / 'link'
+        link.symlink_to(opened)
+        tools = Path(self.directory) / 'tools'
+        tools.mkdir()
+        (tools / 'stat').write_text('#!/bin/sh\nln -sfn "%s" "%s"\nexec "%s" "$@"\n'
+                                    % (other, link, shutil.which('stat')))
+        (tools / 'stat').chmod(0o755)
+        result = self.read(link, search_path='%s:%s' % (tools, os.environ['PATH']))
+        self.assertEqual(str(other), os.readlink(str(link)))
+        self.assertEqual((0, SECRET, ''), (result.returncode, result.stdout, result.stderr))
 
 
 class MaskedArgumentTests(unittest.TestCase):
