@@ -251,6 +251,12 @@ class cPanelImporter:
                 time.sleep(2)
 
 
+            # What the creation finds already there and uses; see DeleteSite().
+            from plogical.websiteDeletion import found_before_creation
+            self.foundBeforeCreation = found_before_creation(
+                DNS.zoneExists(DomainName), os.path.exists('/home/vmail/' + DomainName),
+                os.path.exists('/root/.acme.sh/' + DomainName))
+
             result = virtualHostUtilities.createVirtualHost(DomainName, self.email, self.PHPVersion, self.externalApp, 1, 0,
                                                             0, 'admin', 'Default', 0)
 
@@ -823,7 +829,11 @@ class cPanelImporter:
             return 0
 
     def DeleteSite(self):
-        vhost.deleteVirtualHostConfigurations(self.mainDomain)
+        # Only what this import made goes: a DNS zone, mail folder or
+        # certificate folder that was there before the website was created
+        # is left, and so is all of it when that was never looked at.
+        from plogical.websiteDeletion import REUSABLE
+        vhost.deleteVirtualHostConfigurations(self.mainDomain, getattr(self, 'foundBeforeCreation', REUSABLE))
 
     def checkIfExists(self, virtualHostName):
         if Websites.objects.filter(domain=virtualHostName).count() > 0:

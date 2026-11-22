@@ -274,7 +274,7 @@ class NewSiteContentTests(Harness):
             'config get DB_NAME': (True, b'newdb\n'), 'config get DB_USER': (True, b'newuser_db\n'),
             'config get DB_PASSWORD': (True, b"p a$$'w\n"), 'config get table_prefix': (True, b'wp_\n'),
             'option get siteurl': self.site_address,
-            'grep -a -o -m1': (True, b"'siteurl','https://source.example'\n"),
+            'grep -a -o -m 20': (True, b"(2,'siteurl','https://source.example','on')\n"),
         }
 
     def site_address(self, commands):
@@ -327,8 +327,10 @@ class NewSiteContentTests(Harness):
     def test_the_archive_is_opened_to_the_sites_group_and_stays_roots_file(self):
         self.fill()
         as_root = [call[0][0] for call in self.process.executioner.call_args_list]
-        self.assertEqual(['chown -h root:1234 ' + self.archive, 'chmod 640 ' + self.archive, 'mkdir ' + self.work,
-                          'chown -h newuser ' + self.work, 'rm -rf ' + self.installer.tempPath], as_root)
+        self.assertEqual(['chown -h root:1234 %s %s' % (self.installer.tempPath, self.archive),
+                          'chmod 750 ' + self.installer.tempPath, 'chmod 640 ' + self.archive,
+                          'mkdir -m 700 ' + self.work, 'chown -h newuser ' + self.work,
+                          'rm -rf ' + self.installer.tempPath], as_root)
         # Nothing is unpacked by root, and no command of the site's account is a root command.
         for call in self.process.method_calls:
             self.assertNotIn('tar ', str(call))
@@ -429,15 +431,24 @@ class NewSiteContentTests(Harness):
     def test_the_dumps_own_address_is_read_before_the_import_and_compared_before_any_rewriting(self):
         self.fill()
         commands = self.site_commands()
-        read = self.position('grep -a -o -m1')
-        self.assertEqual("grep -a -o -m1 -E %s %s/sourcedb.sql" % (shlex.quote("'siteurl','[^']*'"), self.work),
-                         commands[read])
+        read = self.position('grep -a -o -m 20')
+        self.assertEqual("grep -a -o -m 20 -E %s %s/sourcedb.sql | head -c 8192" % (
+            shlex.quote("\\([0-9]+,'siteurl','[^']*','[a-z-]+'\\)"), self.work), commands[read])
         asked = [index for index, command in enumerate(commands) if 'option get siteurl' in command]
         self.assertEqual(2, len(asked))
         self.assertTrue(read < self.position('db import') < asked[0] < self.position('search-replace') < asked[1])
 
+    def test_text_a_visitor_left_in_the_dump_cannot_make_the_site_unrestorable(self):
+        # Rows of that shape which are not the site's address, before and
+        # after the real one: the address the database holds is among them.
+        self.replies['grep -a -o -m 20'] = (True, b"(7,'siteurl','spam@example.test','x')\n"
+                                                  b"(2,'siteurl','https://source.example','on')\n"
+                                                  b"(9,'siteurl','https://other.example','yes')\n")
+        self.fill()
+        self.web_server.reStartLiteSpeed.assert_called_once()
+
     def test_a_dump_without_a_readable_address_must_at_least_have_replaced_the_plain_database(self):
-        self.replies['grep -a -o -m1'] = (False, b'')
+        self.replies['grep -a -o -m 20'] = (False, b'')
         self.fill()
         self.replies['option get siteurl'] = (True, b'http://new.example\n')
         with self.assertRaisesRegex(BaseException, 'still gives "http://new.example" as the site address'):
@@ -581,9 +592,9 @@ class ArchiveReadingTests(Harness):
         self.process.outputExecutioner.return_value = LISTING + '\n'
         self.assertEqual(self.layout(), self.installer.backupLayout(self.archive, 'both', FOLDER, 'sourcedb.sql'))
         self.assertEqual(
-            ("sudo cat %s | sudo -u nobody tar -tzf - 2>/dev/null | grep -E '^/?usr/local/CyberCP/tmp/%s/"
-             "(public_html/(public_html/)?(wp-config\\.php|wp-includes/version\\.php)|[^/]+\\.sql)$'"
-             % (self.archive, FOLDER), None, True), self.process.outputExecutioner.call_args[0])
+            ("sudo cat %s | sudo -u nobody tar -tzf - 2>/dev/null | grep -m 64 -E '^/?usr/local/CyberCP/tmp/%s/"
+             "(public_html/(public_html/)?(wp-config\\.php|wp-includes/version\\.php)|[^/]+\\.sql)$' "
+             "| head -c 16384" % (self.archive, FOLDER), None, True), self.process.outputExecutioner.call_args[0])
 
     def test_an_archive_without_what_its_kind_promises_ends_the_restore_with_the_reason(self):
         for kind, listing, reason in (('both', '', 'holds no WordPress files'), ('files', None, 'no WordPress files'),
@@ -599,9 +610,9 @@ class ArchiveReadingTests(Harness):
         self.process.outputExecutioner.return_value = "define( 'WP_SITEURL', 'https://source.example' );\n"
         self.assertIn('fixes the address', self.installer.otherDomainRefusal(self.archive, self.layout()))
         self.assertEqual(
-            ("sudo cat %s | sudo -u nobody tar -xzOf - %s/public_html/wp-config.php 2>/dev/null | grep -E "
-             "'WP_HOME|WP_SITEURL|MULTISITE|SUBDOMAIN_INSTALL|DOMAIN_CURRENT_SITE'" % (self.archive, STORED),
-             None, True), self.process.outputExecutioner.call_args[0])
+            ("sudo cat %s | sudo -u nobody tar -xzOf - %s/public_html/wp-config.php 2>/dev/null | grep -m 64 -E "
+             "'WP_HOME|WP_SITEURL|MULTISITE|SUBDOMAIN_INSTALL|DOMAIN_CURRENT_SITE' | head -c 16384"
+             % (self.archive, STORED), None, True), self.process.outputExecutioner.call_args[0])
         self.process.outputExecutioner.return_value = "define('MULTISITE', true);\n"
         self.assertIn('WordPress network', self.installer.otherDomainRefusal(self.archive, self.layout()))
         for harmless in ('', None, "// define('WP_HOME', 'x');\n# define('MULTISITE', true);\n",
@@ -616,15 +627,19 @@ class ArchiveReadingTests(Harness):
 
     def test_what_a_creation_would_reuse_is_asked_and_an_unclear_answer_counts_as_there(self):
         self.zone.return_value = True
-        self.process.outputExecutioner.side_effect = lambda command: '' if 'vmail' in command else 'find: no'
+        self.process.outputExecutioner.side_effect = lambda command: 'absent\n' if 'vmail' in command else ''
         self.assertEqual(('dns', 'ssl'), self.installer.foundBeforeCreation('new.example'))
         self.zone.assert_called_once_with('new.example')
         asked = [call[0][0] for call in self.process.outputExecutioner.call_args_list]
-        self.assertEqual(['sudo find /home/vmail/new.example -maxdepth 0 -printf present 2>/dev/null',
-                          'sudo find /root/.acme.sh/new.example -maxdepth 0 -printf present 2>/dev/null'], asked)
+        check = shlex.quote('test -e "$1" && echo present || echo absent')
+        self.assertEqual(['sudo sh -c %s sh /home/vmail/new.example 2>/dev/null' % check,
+                          'sudo sh -c %s sh /root/.acme.sh/new.example 2>/dev/null' % check], asked)
         self.zone.return_value = False
-        self.process.outputExecutioner.side_effect = lambda command: ''
+        self.process.outputExecutioner.side_effect = lambda command: 'absent\n'
         self.assertEqual((), self.installer.foundBeforeCreation('new.example'))
+        # A helper that answers nothing has not said that nothing is there.
+        self.process.outputExecutioner.side_effect = lambda command: ''
+        self.assertEqual(('mail', 'ssl'), self.installer.foundBeforeCreation('new.example'))
         self.zone.side_effect = RuntimeError('no database')
         self.assertEqual(('dns', 'mail', 'ssl'), self.installer.foundBeforeCreation('new.example'))
 
@@ -748,6 +763,31 @@ class RealArchiveTests(Harness):
         self.assertEqual((0, self.nobody.pw_gid, 0o640), (archive.st_uid, archive.st_gid, stat.S_IMODE(archive.st_mode)))
         self.assertEqual([NAME + '.tar.gz', 'site'], sorted(os.listdir(self.installer.tempPath)))
 
+    def test_the_dump_and_the_prepared_configuration_are_closed_to_every_other_account(self):
+        self.pack()
+        layout, dump = self.place()
+        job = os.stat(self.installer.tempPath)
+        self.assertEqual((0, self.nobody.pw_gid, 0o750), (job.st_uid, job.st_gid, stat.S_IMODE(job.st_mode)))
+        work = os.stat(os.path.join(self.installer.tempPath, 'site'))
+        self.assertEqual((self.nobody.pw_uid, 0o700), (work.st_uid, stat.S_IMODE(work.st_mode)))
+        # The files themselves are unpacked readable; the folders above them are what closes them.
+        self.assertTrue(stat.S_IMODE(os.stat(dump).st_mode) & 0o004)
+        try:
+            other = pwd.getpwnam('daemon')
+        except KeyError:
+            self.skipTest('no second unprivileged account ("daemon") to look with')
+        self.assertNotEqual(other.pw_gid, self.nobody.pw_gid)
+        for path in (dump, os.path.join(self.installer.tempPath, 'site', 'public_html', 'wp-config.php'),
+                     self.archive):
+            self.assertTrue(os.path.exists(path), path)
+            self.assertNotEqual(0, subprocess.call(['sudo', '-u', 'daemon', 'cat', path], stdout=subprocess.DEVNULL,
+                                                   stderr=subprocess.DEVNULL), path)
+        for folder in (self.installer.tempPath, os.path.join(self.installer.tempPath, 'site')):
+            self.assertNotEqual(0, subprocess.call(['sudo', '-u', 'daemon', 'ls', folder], stdout=subprocess.DEVNULL,
+                                                   stderr=subprocess.DEVNULL), folder)
+        # The site's own account still reads both.
+        self.assertEqual(0, subprocess.call(['sudo', '-u', 'nobody', 'cat', dump], stdout=subprocess.DEVNULL))
+
     def test_a_staging_sites_backup_is_copied_from_the_folder_one_level_down(self):
         self.pack(folder='public_html/public_html', leading_slash=False)
         layout, dump = self.place()
@@ -859,14 +899,29 @@ class StepOutcomeTests(Harness):
         self.assertNotIn('\n', message)
         self.assertTrue(message.endswith('tar: file4999: Cannot open: Permission denied'), message)
 
-    def test_presence_is_read_from_the_output_and_an_unclear_answer_is_not_a_yes_or_a_no(self):
-        for output, answer in (('present', True), ('present\n', True), ('', False),
-                               ("find: '/x': Permission denied", None), ('-1Connection failed', None), (None, None)):
+    def test_presence_is_one_of_two_printed_words_and_anything_else_is_no_answer(self):
+        for output, answer in (('present', True), ('present\n', True), ('absent\n', False),
+                               ('sudo: unable to resolve host x\nabsent\n', False),
+                               ('', None), ('\n', None), (None, None), ('0', None), ('-1Connection failed', None),
+                               ("sh: 1: test: Permission denied", None), ('present\nabsent\n', None),
+                               ('not present', None)):
             with self.subTest(output=output):
                 self.process.outputExecutioner.return_value = output
                 self.assertIs(answer, self.installer.pathPresent('/home/backup/a b.tar.gz', 'f'))
-        self.assertEqual("sudo find '/home/backup/a b.tar.gz' -maxdepth 0 -type f -printf present 2>/dev/null",
+        self.assertEqual("sudo sh -c %s sh '/home/backup/a b.tar.gz' 2>/dev/null"
+                         % shlex.quote('test -f "$1" && echo present || echo absent'),
                          self.process.outputExecutioner.call_args[0][0])
+
+    @unittest.skipUnless(os.geteuid() == 0 and shutil.which('sudo'), 'needs root and sudo')
+    def test_the_real_command_prints_its_word_for_a_file_a_folder_and_nothing(self):
+        self.process.outputExecutioner.side_effect = lambda command: subprocess.run(
+            command, shell=True, stdout=subprocess.PIPE, universal_newlines=True).stdout
+        folder = os.path.join(self.temp.name, "it's a folder")
+        os.mkdir(folder)
+        self.assertIs(True, self.installer.pathPresent(folder))
+        self.assertIs(True, self.installer.pathPresent(folder, 'd'))
+        self.assertIs(False, self.installer.pathPresent(folder, 'f'))
+        self.assertIs(False, self.installer.pathPresent(os.path.join(folder, 'nothing')))
 
 
 class InstallDirectoryCleanupTests(Harness):
@@ -1192,6 +1247,12 @@ class RestoreSourceTests(unittest.TestCase):
                         live.index("raise BaseException('The backup could not be downloaded from the storage", failed))
         self.assertIn('if downloaded:\n                    command = "mv %s /home/backup/" % shlex.quote(FinalZipPath)',
                       live)
+
+    def test_the_jobs_folder_is_roots_alone_from_the_moment_it_exists(self):
+        live = '\n'.join(self.restore_lines())
+        made = live.index("command = f'mkdir -p {self.tempPath}'")
+        closed = live.index("ProcessUtilities.executioner('chmod 700 %s' % shlex.quote(self.tempPath))")
+        self.assertTrue(made < closed < live.index('command = "cp -R /home/backup/%s* %s"'))
 
     def test_the_final_reason_is_written_as_one_line(self):
         live = '\n'.join(self.restore_lines())
