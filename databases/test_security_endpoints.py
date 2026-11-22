@@ -75,3 +75,30 @@ class DatabaseSecurityTests(SimpleTestCase):
             self.assertFalse(os.path.exists(status_path))
             read_status.assert_not_called()
             remove_status.assert_not_called()
+
+    def test_database_server_is_restarted_for_a_post_of_an_administrator_only(self):
+        with mock.patch('databases.views.ACLManager.loadedACL', return_value={'admin': 1}), \
+                mock.patch('databases.views.mysqlUtilities.restartMySQL', return_value=(1, 'None')) as restart:
+            for method in ('get', 'head', 'put'):
+                request = getattr(RequestFactory(), method)('/dataBases/restartMySQL')
+                request.session = {'userID': 1}
+                self.assertEqual(405, views.restartMySQL(request).status_code, method)
+            restart.assert_not_called()
+            response = views.restartMySQL(self.post('/dataBases/restartMySQL', {}))
+            self.assertEqual(1, json.loads(response.content.decode('utf-8'))['status'])
+            restart.assert_called_once_with()
+        with mock.patch('databases.views.ACLManager.loadedACL', return_value={'admin': 0}), \
+                mock.patch('databases.views.mysqlUtilities.restartMySQL') as restart:
+            views.restartMySQL(self.post('/dataBases/restartMySQL', {}))
+            restart.assert_not_called()
+
+    def test_database_server_status_is_read_for_an_administrator_only(self):
+        with mock.patch('databases.views.ACLManager.loadedACL', return_value={'admin': 0}), \
+                mock.patch('databases.views.mysqlUtilities.showStatus') as status:
+            views.getMysqlstatus(self.post('/dataBases/getMysqlstatus', {}))
+            status.assert_not_called()
+        with mock.patch('databases.views.ACLManager.loadedACL', return_value={'admin': 1}), \
+                mock.patch('databases.views.mysqlUtilities.showStatus', return_value={'uptime': 1}) as status:
+            response = views.getMysqlstatus(self.post('/dataBases/getMysqlstatus', {}))
+            self.assertEqual({'uptime': 1}, json.loads(response.content.decode('utf-8')))
+            status.assert_called_once_with()
