@@ -2,7 +2,9 @@ import json
 import os
 import mimetypes
 import base64
+from datetime import timedelta
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from websiteFunctions.models import Websites
@@ -10,6 +12,7 @@ from loginSystem.models import Administrator
 from .models import AIScannerSettings, FileAccessToken, ScanHistory
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.scannerFileAccess import Refused, SiteFiles
+from plogical.securityUtils import constant_time_equal
 
 
 class AuthWrapper:
@@ -45,143 +48,96 @@ def extract_auth_token(request):
     return None, None
 
 
+# The scanner key of a scan's owner works on that scan's website for this long
+# after the scan finished (or was started, when no result ever arrived). The
+# platform uses it to apply the fixes a customer chooses from the scan report.
+KEY_ACCESS_DAYS = 7
+
+
+def scan_website(domain):
+    """The website a scan was started for: the one whose domain is exactly the scan's domain."""
+    try:
+        return Websites.objects.get(domain=domain)
+    except Websites.DoesNotExist:
+        return None
+
+
 def validate_access_token(token, scan_id):
     """
-    Validate authentication token - accepts BOTH file access tokens and API keys
+    Validate authentication - accepts the file access token of a running scan,
+    or the scanner API key of the administrator who owns the scan.
 
     Authentication Flow:
-    1. Try FileAccessToken (temporary token for active scans)
-    2. If not found, try API Key (for post-scan file operations)
+    1. FileAccessToken (temporary token of this scan, while it is valid)
+    2. API key of the scan's owner (for file operations after the scan)
+
+    Either way the website is the one named by the scan itself, found by its
+    exact domain, and files are reached as that website's own user.
 
     Returns: (AuthWrapper object or None, error_message or None)
     """
     try:
-        if not token or not token.startswith('cp_'):
-            logging.writeToFile(f'[API] Invalid token format: {token[:20] if token else "None"}...')
+        if not isinstance(token, str) or not token.startswith('cp_') or not isinstance(scan_id, str) or not scan_id:
             return None, "Invalid token format"
 
-        # OPTION 1: Try FileAccessToken first (for active scans)
+        # OPTION 1: the file access token of this scan (for active scans)
+        file_token = FileAccessToken.objects.filter(
+            token=token,
+            scan_history__scan_id=scan_id,
+            is_active=True
+        ).first()
+
+        if file_token is not None and not file_token.is_expired():
+            website = scan_website(file_token.domain)
+            if website is None:
+                logging.writeToFile(f'[API] Website not found for scan {scan_id}')
+                return None, "Website not found"
+
+            return AuthWrapper(
+                domain=file_token.domain,
+                wp_path=file_token.wp_path,
+                auth_type='file_token',
+                external_app=website.externalApp,
+                source_obj=file_token
+            ), None
+
+        # OPTION 2: the scanner API key of the administrator who owns this scan
         try:
-            file_token = FileAccessToken.objects.get(
-                token=token,
-                scan_history__scan_id=scan_id,
-                is_active=True
-            )
+            scan = ScanHistory.objects.get(scan_id=scan_id)
+            scanner_settings = AIScannerSettings.objects.get(admin=scan.admin)
+        except (ScanHistory.DoesNotExist, AIScannerSettings.DoesNotExist):
+            return None, "Invalid token"
 
-            if file_token.is_expired():
-                logging.writeToFile(f'[API] File token expired for scan {scan_id}, trying API key fallback...')
-                # Don't return here - fall through to try API key
-            else:
-                # Get externalApp from the website object
-                from websiteFunctions.models import Websites
-                try:
-                    website = Websites.objects.get(domain=file_token.domain)
-                    external_app = website.externalApp
-                except Websites.DoesNotExist:
-                    logging.writeToFile(f'[API] Website not found for domain: {file_token.domain}')
-                    return None, "Website not found"
+        if not scanner_settings.api_key or not constant_time_equal(token, scanner_settings.api_key):
+            logging.writeToFile(f'[API] Token not valid for scan {scan_id}')
+            return None, "Invalid token"
 
-                logging.writeToFile(f'[API] File token validated successfully for scan {scan_id}, user {external_app}')
-                return AuthWrapper(
-                    domain=file_token.domain,
-                    wp_path=file_token.wp_path,
-                    auth_type='file_token',
-                    external_app=external_app,
-                    source_obj=file_token
-                ), None
+        finished = scan.completed_at or scan.started_at
+        if finished is None or timezone.now() - finished > timedelta(days=KEY_ACCESS_DAYS):
+            logging.writeToFile(f'[API] Scan {scan_id} is too old for file operations')
+            return None, "Scan is too old for file operations. Run a new scan."
 
-        except FileAccessToken.DoesNotExist:
-            logging.writeToFile(f'[API] File token not found for scan {scan_id}, trying API key fallback...')
-            # Fall through to try API key
+        website = scan_website(scan.domain)
+        if website is None:
+            logging.writeToFile(f'[API] Website not found for scan {scan_id}')
+            return None, "Website not found"
 
-        # OPTION 2: Try CyberPanel's own API Key (for post-scan file operations from platform)
-        # The platform sends back the same API key that CyberPanel used to submit the scan
-        try:
-            from .models import AIScannerSettings, ScanHistory
+        # The website may have changed hands since the scan.
+        from plogical.acl import ACLManager
+        if ACLManager.checkOwnership(scan.domain, scan.admin, ACLManager.loadedACL(scan.admin.pk)) != 1:
+            logging.writeToFile(f'[API] Scan {scan_id} is for a website its owner no longer has')
+            return None, "Website not found"
 
-            # Debug: log the token being checked
-            logging.writeToFile(f'[API] Checking API key: {token[:20]}... for scan {scan_id}')
-
-            # First, check if this is a valid CyberPanel API key (any admin's key)
-            scanner_settings = AIScannerSettings.objects.filter(
-                api_key=token
-            ).first()
-
-            if not scanner_settings:
-                logging.writeToFile(f'[API] API key not found in settings')
-                return None, "Invalid token"
-
-            logging.writeToFile(f'[API] Found API key for admin: {scanner_settings.admin.userName}')
-
-            # Require the scan to belong to the admin that owns this API key.
-            # This prevents a valid API key from one account being used to operate
-            # on another account's scans/sites.
-            try:
-                scan = ScanHistory.objects.get(
-                    scan_id=scan_id,
-                    admin=scanner_settings.admin
-                )
-
-                # Get wp_path from WPSites (WordPress installations)
-                try:
-                    from websiteFunctions.models import WPSites
-
-                    # Try to find WordPress site by domain
-                    # FinalURL contains the full URL, so we use icontains to match domain
-                    wp_site = WPSites.objects.filter(
-                        FinalURL__icontains=scan.domain
-                    ).first()
-
-                    if not wp_site:
-                        logging.writeToFile(f'[API] WordPress site not found for domain: {scan.domain}')
-                        return None, "WordPress site not found"
-
-                    wp_path = wp_site.path
-                    external_app = wp_site.owner.externalApp  # Get externalApp from the website owner
-
-                    # If no external app, try to get it from the website directly
-                    if not external_app:
-                        try:
-                            from websiteFunctions.models import Websites
-                            website = Websites.objects.get(domain=scan.domain)
-                            external_app = website.externalApp
-                        except Websites.DoesNotExist:
-                            pass
-
-                    # If still no external app, use the admin username as fallback
-                    if not external_app:
-                        external_app = scanner_settings.admin.userName
-                        logging.writeToFile(f'[API] Warning: No externalApp for {scan.domain}, using admin username: {external_app}')
-
-                    logging.writeToFile(f'[API] API key validated successfully for scan {scan_id}, domain {scan.domain}, path {wp_path}, user {external_app}')
-
-                    return AuthWrapper(
-                        domain=scan.domain,
-                        wp_path=wp_path,
-                        auth_type='api_key',
-                        external_app=external_app,
-                        source_obj=scanner_settings
-                    ), None
-
-                except Exception as e:
-                    logging.writeToFile(f'[API] Error getting WordPress path for domain {scan.domain}: {str(e)}')
-                    return None, "WordPress site not found"
-
-            except ScanHistory.DoesNotExist:
-                logging.writeToFile(f'[API] Scan {scan_id} not found')
-                return None, "Scan not found"
-
-        except Exception as e:
-            logging.writeToFile(f'[API] API key validation error: {str(e)}')
-            return None, "Token validation failed"
-
-        # No authentication path matched - fail closed.
-        return None, "Invalid token"
+        return AuthWrapper(
+            domain=scan.domain,
+            wp_path=site_home(scan.domain) + '/public_html',
+            auth_type='api_key',
+            external_app=website.externalApp,
+            source_obj=scanner_settings
+        ), None
 
     except Exception as e:
-        logging.writeToFile(f'[API] Token validation error: {str(e)}')
-        import traceback
-        logging.writeToFile(f'[API] Traceback: {traceback.format_exc()}')
+        logging.writeToFile(f'[API] Token validation error: {type(e).__name__}')
         return None, "Token validation failed"
 
 
