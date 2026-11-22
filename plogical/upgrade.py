@@ -5954,6 +5954,14 @@ pm.max_spare_servers = 3
             repair_dovecot_sql_driver(log=Upgrade.stdOut)
         except Exception as error:
             Upgrade.stdOut('WARNING: The Dovecot MySQL driver check did not run: ' + str(error), 0)
+        # Earlier releases saved pattern forwarding rules without writing the
+        # map Postfix reads them from (see the helper). A server without such
+        # rules is left as it is.
+        try:
+            from plogical.patternForwardingMap import upgrade as apply_pattern_forwarding
+            apply_pattern_forwarding(connect=Upgrade.setupConnection, log=Upgrade.stdOut)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: Pattern forwarding rules were not applied to Postfix: ' + str(error), 0)
         Upgrade.setupSieve()
         Upgrade.enableServices()
 

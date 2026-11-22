@@ -44,6 +44,7 @@ from plogical.processUtilities import ProcessUtilities
 from plogical.premiumEntitlements import premium_entitlement_required
 from plogical.legacyWebmail import legacy_data_permission_commands
 from plogical.dkimPublicKey import parse_dkim_public_key
+from plogical import patternForwardingMap
 import bcrypt
 import threading as multi
 import argparse
@@ -2219,13 +2220,8 @@ protocol sieve {
             enabled = data['enabled']
             delimiter = data.get('delimiter', '+')
 
-            # Update database settings
-            settings = EmailServerSettings.get_settings()
-            settings.plus_addressing_enabled = enabled
-            settings.plus_addressing_delimiter = delimiter
-            settings.save()
-
-            # Update Postfix configuration
+            # Update Postfix configuration. The setting is recorded below only
+            # once Postfix has it, so a refused write is not shown as enabled.
             mainCfPath = '/etc/postfix/main.cf'
             if os.path.exists(mainCfPath):
                 with open(mainCfPath, 'r') as f:
@@ -2245,6 +2241,12 @@ protocol sieve {
 
                 # Reload Postfix
                 ProcessUtilities.executioner('postfix reload')
+
+            # Update database settings
+            settings = EmailServerSettings.get_settings()
+            settings.plus_addressing_enabled = enabled
+            settings.plus_addressing_delimiter = delimiter
+            settings.save()
 
             data_ret = {
                 'status': 1,
@@ -2370,8 +2372,8 @@ protocol sieve {
 
             data = json.loads(self.request.body)
             domain = data['domain']
-            pattern = data['pattern']
-            destination = data['destination']
+            pattern = str(data['pattern']).strip()
+            destination = str(data['destination']).strip()
             pattern_type = data.get('pattern_type', 'wildcard')
             priority = data.get('priority', 100)
 
@@ -2381,26 +2383,14 @@ protocol sieve {
             else:
                 return ACLManager.loadErrorJson()
 
-            # Validate destination email
-            if '@' not in destination:
-                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'Invalid destination email address'}
+            # A rule is saved only if it can be written to Postfix's map as one
+            # line that matches addresses of this domain and names one destination.
+            try:
+                patternForwardingMap.rule_line(pattern_type, pattern, domain, destination)
+            except patternForwardingMap.RuleError as msg:
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-
-            # Validate pattern
-            if pattern_type == 'regex':
-                # Validate regex pattern
-                valid, msg = self._validateRegexPattern(pattern)
-                if not valid:
-                    data_ret = {'status': 0, 'createStatus': 0, 'error_message': f'Invalid regex pattern: {msg}'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-            else:
-                # Validate wildcard pattern
-                if not pattern or len(pattern) > 200:
-                    data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'Invalid wildcard pattern'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
 
             domainObj = Domains.objects.get(domain=domain)
 
@@ -2415,13 +2405,21 @@ protocol sieve {
             )
             rule.save()
 
-            # Regenerate virtual_regexp file
-            self._regenerateVirtualRegexp()
+            # The rule counts as created once Postfix has it; otherwise it is taken back.
+            result = self._applyPatternForwarding()
+            refusal = self._patternRuleRefusal(result, rule.id)
+            if refusal:
+                rule.delete()
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'The rule was not created. ' + refusal}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             data_ret = {
                 'status': 1,
                 'createStatus': 1,
                 'message': 'Pattern forwarding rule created successfully'
+                           + self._unusedPatternRules(result, domainObj)
             }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2453,15 +2451,25 @@ protocol sieve {
                 return ACLManager.loadErrorJson()
 
             # Delete the rule
+            domainObj = rule.domain
+            removed = {'pattern': rule.pattern, 'destination': rule.destination,
+                       'pattern_type': rule.pattern_type, 'priority': rule.priority, 'enabled': rule.enabled}
             rule.delete()
 
-            # Regenerate virtual_regexp file
-            self._regenerateVirtualRegexp()
+            result = self._applyPatternForwarding()
+            if not result.get('status'):
+                # Postfix still follows the rule, so it stays in the list.
+                PatternForwarding(domain=domainObj, **removed).save()
+                data_ret = {'status': 0, 'deleteStatus': 0,
+                            'error_message': 'The rule was not deleted. ' + self._patternRuleRefusal(result, None)}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             data_ret = {
                 'status': 1,
                 'deleteStatus': 1,
                 'message': 'Pattern forwarding rule deleted successfully'
+                           + self._unusedPatternRules(result, domainObj)
             }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2471,76 +2479,39 @@ protocol sieve {
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def _validateRegexPattern(self, pattern):
-        """Validate regex pattern for security and syntax"""
-        if len(pattern) > 200:
-            return False, "Pattern too long"
+    def _applyPatternForwarding(self):
+        """Have the root helper rebuild Postfix's pattern map from the saved rules; returns its result.
 
-        # Dangerous patterns that could cause ReDoS or security issues
-        dangerous = ['\\1', '\\2', '\\3', '(?P', '(?=', '(?!', '(?<', '(?:']
-        for d in dangerous:
-            if d in pattern:
-                return False, f"Disallowed construct: {d}"
+        This process cannot write under /etc/postfix, so the map is written by
+        mailUtilities.py, which the panel runs as root.
+        """
+        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+        execPath = execPath + " applyPatternForwarding"
+        result = patternForwardingMap.parse_result(ProcessUtilities.outputExecutioner(execPath))
+        if not result.get('status'):
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(result.get('error_message')) + ' [applyPatternForwarding]')
+        return result
 
-        try:
-            re.compile(pattern)
-            return True, "Valid"
-        except re.error as e:
-            return False, str(e)
+    def _patternRuleRefusal(self, result, ruleId):
+        """Why Postfix does not have the rule after the helper ran, or None when it has."""
+        if not result.get('status'):
+            return 'The mail server could not be updated: %s' % result.get('error_message')
+        for refused in result.get('rejected', []):
+            if refused.get('id') == ruleId:
+                return str(refused.get('reason'))
+        return None
 
-    def _wildcardToRegex(self, pattern, domain):
-        """Convert wildcard pattern to Postfix regexp format"""
-        # Escape special regex characters except * and ?
-        escaped = re.escape(pattern.replace('*', '__STAR__').replace('?', '__QUESTION__'))
-        # Replace placeholders with regex equivalents
-        regex = escaped.replace('__STAR__', '.*').replace('__QUESTION__', '.')
-        # Return full Postfix regexp format
-        return f'/^{regex}@{re.escape(domain)}$/'
-
-    def _regenerateVirtualRegexp(self):
-        """Regenerate /etc/postfix/virtual_regexp from database"""
-        try:
-            rules = PatternForwarding.objects.filter(enabled=True).order_by('priority')
-
-            content = "# Auto-generated by CyberPanel - DO NOT EDIT MANUALLY\n"
-            for rule in rules:
-                if rule.pattern_type == 'wildcard':
-                    pattern = self._wildcardToRegex(rule.pattern, rule.domain.domain)
-                else:
-                    pattern = f'/^{rule.pattern}@{re.escape(rule.domain.domain)}$/'
-                content += f"{pattern}    {rule.destination}\n"
-
-            # Write the file
-            regexpPath = '/etc/postfix/virtual_regexp'
-            with open(regexpPath, 'w') as f:
-                f.write(content)
-
-            # Set permissions
-            os.chmod(regexpPath, 0o640)
-            ProcessUtilities.executioner('chown root:postfix /etc/postfix/virtual_regexp')
-
-            # Update main.cf to include regexp file if not already present
-            mainCfPath = '/etc/postfix/main.cf'
-            if os.path.exists(mainCfPath):
-                with open(mainCfPath, 'r') as f:
-                    content = f.read()
-
-                if 'virtual_regexp' not in content:
-                    # Add regexp file to virtual_alias_maps
-                    if 'virtual_alias_maps' in content:
-                        content = content.replace(
-                            'virtual_alias_maps =',
-                            'virtual_alias_maps = regexp:/etc/postfix/virtual_regexp,'
-                        )
-                        with open(mainCfPath, 'w') as f:
-                            f.write(content)
-
-            # Reload Postfix
-            ProcessUtilities.executioner('postfix reload')
-            return True
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [_regenerateVirtualRegexp]')
-            return False
+    def _unusedPatternRules(self, result, domainObj):
+        """A note naming this domain's saved rules that Postfix could not take, for the success message."""
+        reasons = dict((refused.get('id'), refused.get('reason')) for refused in result.get('rejected', []))
+        if not reasons:
+            return ''
+        notes = ['%s (%s)' % (rule.pattern, reasons[rule.id])
+                 for rule in PatternForwarding.objects.filter(domain=domainObj, id__in=list(reasons))]
+        if not notes:
+            return ''
+        return '. These rules of this domain are not in use: ' + '; '.join(notes)
 
 
 def main():
