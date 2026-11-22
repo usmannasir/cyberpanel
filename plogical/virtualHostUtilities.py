@@ -1656,21 +1656,16 @@ class virtualHostUtilities:
     @staticmethod
     def _inheritDomainSuspension(master, virtualHostName, independentState=None):
         """Install inherited protection before creation can reload the server."""
-        from pathlib import Path
-        from plogical.websiteSuspension import VhostUpdate, _checked
+        from plogical.websiteSuspension import server_update
         from plogical.childDomainState import normalize_child_state
         existing = ChildDomains.objects.filter(domain=virtualHostName).first()
         state = existing.state if independentState is None and existing else normalize_child_state(independentState)
         suspended = not master.state or not state
         if not suspended:
             return
-        root = Path(virtualHostUtilities.Server_root)
-        binary = root / 'bin' / 'openlitespeed'
-        if not binary.exists():
-            binary = root / 'bin' / 'lshttpd'
         # createDomain's ordinary restarts follow this hook. Validate now but
         # do not activate a newly mapped domain before its state is installed.
-        with VhostUpdate(root, lambda: _checked([str(binary), '-t']), lambda: None) as update:
+        with server_update(virtualHostUtilities.Server_root, activate=False) as update:
             update.apply([(virtualHostName, True)])
 
     @staticmethod
@@ -1679,17 +1674,13 @@ class virtualHostUtilities:
         from pathlib import Path
         from django.db import transaction
         from plogical.childDomainState import normalize_child_state
-        from plogical.websiteSuspension import suspension_lock, validate_domain, VhostUpdate, _checked
+        from plogical.websiteSuspension import suspension_lock, validate_domain, server_update
         validate_domain(virtualHostName)
         state = None if independentState is None else normalize_child_state(independentState)
         validate_domain(masterDomain)
         root = Path(virtualHostUtilities.Server_root)
-        binary = root / 'bin' / 'openlitespeed'
-        if not binary.exists():
-            binary = root / 'bin' / 'lshttpd'
         with suspension_lock(root):
-            with VhostUpdate(root, lambda: _checked([str(binary), '-t']),
-                             lambda: _checked([str(root / 'bin' / 'lswsctrl'), 'restart'])) as update:
+            with server_update(root) as update:
                 with transaction.atomic():
                     child = ChildDomains.objects.get(domain=virtualHostName)
                     parent = Websites.objects.select_for_update().get(pk=child.master_id)

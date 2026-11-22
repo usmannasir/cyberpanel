@@ -1,4 +1,5 @@
 """Independent website/domain suspension with rollback on failed activation."""
+import collections
 import contextlib
 import json
 import os
@@ -193,12 +194,17 @@ def atomic_write(path, content, metadata):
 
 
 class VhostUpdate:
-    """Retain originals until both configuration activation and DB commit pass."""
+    """Retain originals until both configuration activation and DB commit pass.
+
+    `check()` returns what the web server's configuration test reports, and
+    `check(before)` raises when it reports an error that `before` lacks.
+    """
     def __init__(self, server_root, check, reload):
         self.root = Path(server_root).resolve()
         self.check = check
         self.reload = reload
         self.originals = []
+        self.before = None
 
     def apply(self, changes):
         staged = []
@@ -212,18 +218,23 @@ class VhostUpdate:
             updated = render_suspension(original.decode('utf-8'), suspended).encode('utf-8')
             if updated != original:
                 staged.append((path, original, updated, metadata))
+        if staged and self.before is None:
+            # What the test reports now is what the server already runs with.
+            self.before = self.check()
         for path, original, updated, metadata in staged:
             self.originals.append((path, original, metadata))
             atomic_write(path, updated, metadata)
         if staged:
-            self.check()
+            self.check(self.before)
             self.reload()
 
     def rollback(self):
         for path, original, metadata in reversed(self.originals):
             atomic_write(path, original, metadata)
         if self.originals:
-            self.check()
+            # The restored files are judged as the change was, so that what
+            # the test reported before the change does not block the recovery.
+            self.check(self.before)
             self.reload()
 
     def __enter__(self):
@@ -239,11 +250,93 @@ class VhostUpdate:
         return False
 
 
+def _run(command):
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
+    return result.returncode, result.stdout.decode('utf-8', errors='replace')
+
+
 def _checked(command):
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            text=True, timeout=60)
-    if result.returncode:
-        raise RuntimeError('Web server configuration activation failed: ' + result.stdout[-2000:])
+    status, output = _run(command)
+    if status:
+        raise RuntimeError('Web server configuration activation failed: ' + output[-2000:])
+
+
+_LINE_NUMBER = re.compile(r'(/[^\s:]+):[0-9]+(?=\s|$)')
+
+
+def config_errors_added(before, after):
+    """The errors a change brought into the web server's configuration test.
+
+    `before` and `after` are the (exit status, output) of the test on either
+    side of the change. OpenLiteSpeed ends the test with 1 after warnings and
+    with 2 after any error. A fresh installation already warns about its stock
+    Example virtual host, and a server with an error in one website keeps
+    running, so a test that must be clean would refuse every change on such a
+    server. Only what the change added counts: an error line that was not
+    there before, or an exit status that became an error status without one.
+    """
+    from plogical import olsStockClassifier
+
+    def errors(output):
+        # The upgrader's rule for an error line, with no website excused.
+        return olsStockClassifier.blocking_errors(output, {})
+
+    def comparable(line):
+        # Time and process ID differ in every run, and suspension moves the
+        # lines of the file it edits.
+        return _LINE_NUMBER.sub(r'\1', olsStockClassifier._STAMP.sub(r'\1 ', line))
+
+    known = collections.Counter(comparable(line) for line in errors(before[1]))
+    added = []
+    for line in errors(after[1]):
+        key = comparable(line)
+        if known[key]:
+            known[key] -= 1
+        else:
+            added.append(line)
+    if not added and after[0] not in (0, 1) and after[0] != before[0]:
+        added.append('The configuration test ended with status %s; before the change it ended with %s. %s'
+                     % (after[0], before[0], after[1].strip()[-1500:]))
+    return added
+
+
+def config_check(command, before=None):
+    """Run the web server's configuration test and return (exit status, output).
+
+    Given the result from before a change, raise when the change added an
+    error. Without it, raise only when the test gave no result, which leaves
+    nothing to compare a change with.
+    """
+    try:
+        state = _run(command)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise RuntimeError('The web server configuration test could not be run: %s' % error) from error
+    if before is None:
+        if state[0] not in (0, 1, 2):
+            raise RuntimeError('The web server configuration test gave no result (exit status %s): %s'
+                               % (state[0], state[1][-2000:]))
+        return state
+    added = config_errors_added(before, state)
+    if added:
+        raise RuntimeError('Web server configuration activation failed: ' + '\n'.join(added)[:2000])
+    return state
+
+
+def server_update(server_root, activate=True):
+    """A VhostUpdate for the installed web server.
+
+    With `activate` false the caller restarts the server itself after its own
+    remaining steps; the configuration is still tested here.
+    """
+    root = Path(server_root)
+    binary = root / 'bin' / 'openlitespeed'
+    if not binary.exists():
+        binary = root / 'bin' / 'lshttpd'
+
+    def reload():
+        if activate:
+            _checked([str(root / 'bin' / 'lswsctrl'), 'restart'])
+    return VhostUpdate(root, lambda before=None: config_check([str(binary), '-t'], before), reload)
 
 
 def change_suspension(user_id, domain, action):
@@ -261,9 +354,6 @@ def change_suspension(user_id, domain, action):
     if ACLManager.checkOwnership(domain, admin, acl) != 1:
         raise ValueError('You do not own this domain.')
     root = Path('/usr/local/lsws')
-    binary = root / 'bin' / 'openlitespeed'
-    if not binary.exists():
-        binary = root / 'bin' / 'lshttpd'
     with suspension_lock(root):
         # Provisioning can hold the lock while issuing certificates. Re-read
         # permission/account state after waiting rather than using a stale ACL.
@@ -271,8 +361,7 @@ def change_suspension(user_id, domain, action):
         if ACLManager.currentContextPermission(acl, 'suspendWebsite') == 0:
             raise ValueError('You do not have permission to suspend domains.')
         admin = Administrator.objects.get(pk=user_id)
-        with VhostUpdate(root, lambda: _checked([str(binary), '-t']),
-                         lambda: _checked([str(root / 'bin' / 'lswsctrl'), 'restart'])) as update:
+        with server_update(root) as update:
             # Lock the parent first in both flows, so child and parent operations
             # cannot race to overwrite an independently suspended child's state.
             child = ChildDomains.objects.filter(domain=domain).first()

@@ -98,17 +98,24 @@ def run_native_acceptance():
     api('child.test','Suspend',2);expected('child.test',True);api('child.test','Un-Suspend',2);expected('child.test',False)
     passed('reseller can manage owned customer child')
 
-    # A real invalid OLS config forces the privileged worker's validation failure.
-    bad=Path('/usr/local/lsws/conf/vhosts/other.test/vhost.conf');original=bad.read_bytes()
+    # A real fault in another website makes the native test end with a status
+    # other than 0 before anything is changed. It is not this change's fault:
+    # the worker must still suspend and restore the child.
+    bad=Path('/usr/local/lsws/conf/vhosts/other.test/vhost.conf');original=bad.read_bytes();before=fingerprint()
     bad.write_bytes(original+b'\ncontext /broken {\n type static\n location /qa-path-does-not-exist/\n}\n')
-    before=fingerprint()
-    r=json.loads(WebsiteManager().submitWebsiteStatus(3,{'websiteName':'child.test','state':'Suspend'}).content)
-    assert r['websiteStatus']==0,r
-    assert ChildDomains.objects.get(domain='child.test').state==1
-    assert fingerprint()==before
-    bad.write_bytes(original)
+    faulty=subprocess.run(['/usr/local/lsws/bin/openlitespeed','-t'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    assert faulty.returncode in (1,2),(faulty.returncode,faulty.stdout)
+    try:
+        api('child.test','Suspend');expected('child.test',True)
+        assert ChildDomains.objects.get(domain='child.test').state==0
+        api('child.test','Un-Suspend');expected('child.test',False)
+        assert ChildDomains.objects.get(domain='child.test').state==1
+    finally:
+        bad.write_bytes(original)
     subprocess.run(['/usr/local/lsws/bin/openlitespeed','-t'],check=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    expected('child.test',False);passed('real config validation failure retains DB state and original target vhost')
+    assert fingerprint()==before
+    receipt['faulty_test']={'status':faulty.returncode,'output':faulty.stdout.decode(errors='replace')[-2000:]}
+    passed('a fault in another website from before the change stops neither suspension nor restore')
 
     # Inject one reload failure; rollback must restore original bytes, validate and
     # actually reload the original serving configuration on its recovery attempt.

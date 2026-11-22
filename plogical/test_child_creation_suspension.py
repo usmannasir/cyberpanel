@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import types
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from plogical import websiteSuspension
 
@@ -43,25 +43,30 @@ class ChildCreationSuspensionTests(unittest.TestCase):
         self.namespace['ChildDomains'] = self.children
 
     def test_new_child_inherits_parent_suspension_before_activation(self):
-        with patch.object(websiteSuspension, '_checked') as checked:
+        with patch.object(websiteSuspension, 'config_check') as check, \
+                patch.object(websiteSuspension, '_checked') as restart:
             self.worker._inheritDomainSuspension(types.SimpleNamespace(state=0), self.domain)
         self.assertIn(websiteSuspension.START, self.config.read_text())
-        checked.assert_called_once_with([str(self.root / 'bin' / 'lshttpd'), '-t'])
+        # Tested before and after the change; creation restarts the server itself.
+        command = [str(self.root / 'bin' / 'lshttpd'), '-t']
+        self.assertEqual(check.call_args_list, [call(command, None), call(command, check.return_value)])
+        restart.assert_not_called()
 
     def test_regeneration_preserves_independent_child_suspension(self):
         self.children.objects.filter.return_value.first.return_value = types.SimpleNamespace(state=0)
-        with patch.object(websiteSuspension, '_checked'):
+        with patch.object(websiteSuspension, 'config_check'):
             self.worker._inheritDomainSuspension(types.SimpleNamespace(state=1), self.domain)
         self.assertIn(websiteSuspension.START, self.config.read_text())
 
     def test_active_new_child_needs_no_vhost_change_or_activation(self):
-        with patch.object(websiteSuspension, '_checked') as checked:
+        with patch.object(websiteSuspension, 'config_check') as check:
             self.worker._inheritDomainSuspension(types.SimpleNamespace(state=1), self.domain)
         self.assertEqual(self.original, self.config.read_text())
-        checked.assert_not_called()
+        check.assert_not_called()
 
     def test_bad_inherited_config_restores_original_and_fails_creation(self):
-        with patch.object(websiteSuspension, '_checked', side_effect=[RuntimeError('config invalid'), None]):
+        with patch.object(websiteSuspension, 'config_check',
+                          side_effect=[(1, ''), RuntimeError('config invalid'), (1, '')]):
             with self.assertRaisesRegex(RuntimeError, 'config invalid'):
                 self.worker._inheritDomainSuspension(types.SimpleNamespace(state=0), self.domain)
         self.assertEqual(self.original, self.config.read_text())
