@@ -42,9 +42,14 @@ class DatabaseRestoreOutcomeTests(unittest.TestCase):
 
     def restore(self, compressed=False, mysql_rc=0, gzip_rc=0):
         config = json.dumps({'mysqluser': 'root', 'mysqlpassword': 'fixture', 'mysqlport': 3306, 'mysqlhost': 'localhost'})
-        importer = mock.Mock(returncode=mysql_rc)
         decompressor = mock.Mock(returncode=gzip_rc)
-        with mock.patch('builtins.open', mock.mock_open(read_data=config)), mock.patch.object(module.os.path, 'exists', return_value=True), mock.patch.object(mysqlUtilities, 'detectBackupFormat', return_value={'compressed': compressed}), mock.patch.object(module.subprocess, 'Popen', side_effect=[decompressor, importer]), mock.patch.object(module.subprocess, 'call', return_value=mysql_rc), mock.patch.object(mysqlUtilities, 'setupConnection') as connection:
+        decompressor.stdout.read.return_value = b''
+
+        def import_dump(database, feed, host, port, owner):
+            # The import succeeds when its source ended well and the client reported no error.
+            return 1 if feed(mock.Mock()) and mysql_rc == 0 else 0
+
+        with mock.patch('builtins.open', mock.mock_open(read_data=config)), mock.patch.object(module.os.path, 'exists', return_value=True), mock.patch.object(mysqlUtilities, 'detectBackupFormat', return_value={'compressed': compressed}), mock.patch.object(module.subprocess, 'Popen', return_value=decompressor), mock.patch.object(module.databaseImport, 'import_dump', side_effect=import_dump), mock.patch.object(mysqlUtilities, 'registeredUser', return_value='fixture_user'), mock.patch.object(module.logging.CyberCPLogFileWriter, 'writeToFile'), mock.patch.object(mysqlUtilities, 'setupConnection') as connection:
             result = mysqlUtilities.restoreDatabaseBackup('fixture_db', '/fixture', 'hash', passwordCheck=1)
         connection.assert_not_called()
         return result

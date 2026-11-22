@@ -20,6 +20,7 @@ import MySQLdb.cursors as cursors
 import shlex
 import subprocess
 from databases.models import Databases
+from plogical import databaseImport
 from websiteFunctions.models import Websites, ChildDomains as CDomains
 from plogical.vhost import vhost
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -615,23 +616,6 @@ class cPanelImporter:
                 mysqlport = '3306'
                 mysqluser = 'root'
 
-            cnfPath = '/home/cyberpanel/.my.cnf'
-
-            if not os.path.exists(cnfPath):
-                cnfContent = """[mysqldump]
-user=root
-password=%s
-max_allowed_packet=1024M
-[mysql]
-user=root
-password=%s
-""" % (password, password)
-                writeToFile = open(cnfPath, 'w')
-                writeToFile.write(cnfContent)
-                writeToFile.close()
-
-                os.chmod(cnfPath, 0o600)
-
             f = open(passFile)
             data = f.read()
             password = data.split('\n', 1)[0]
@@ -644,6 +628,9 @@ password=%s
 
             DatabasesPath = '%s/mysql' % (CompletPathToExtractedArchive)
 
+            # (database, import account) of every dump loaded below.
+            imported = []
+
             for items in os.listdir(DatabasesPath):
                 if items.find('roundcube') > -1:
                     continue
@@ -652,45 +639,30 @@ password=%s
                     logging.statusWriter(self.logFile, message, 1)
 
                     try:
-                        cursor.execute("CREATE DATABASE `%s`" % (items.replace('.sql', '')))
+                        # The name comes from a file name in the archive.
+                        cursor.execute("CREATE DATABASE `%s`" % (items.replace('.sql', '').replace('`', '``')))
                     except BaseException as msg:
                         message = 'Failed while restoring database %s from backup file %s, error message: %s' % (items.replace('.sql', ''), self.backupFile, str(msg))
                         logging.statusWriter(self.logFile, message, 1)
 
-                    command =  f'mysql --defaults-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} ' + items.replace('.sql', '')
-
-                    message = f'Full command to restore DB {command}'
-                    logging.statusWriter(self.logFile, message, 1)
-
-                    cmd = shlex.split(command)
-
                     DBPath = "%s/%s" % (DatabasesPath, items)
 
-                    # with open(DBPath, 'r') as f:
-                    #     message = f'Full command to restore DB {cmd}'
-                    #     logging.statusWriter(self.logFile, message, 1)
-                    #
-                    #     res = subprocess.call(cmd, stdin=f)
+                    # The dump was written on another server: it is loaded by an
+                    # account that may use this database only, and what it
+                    # defines is handed to the database's user further down.
+                    def feed(sink):
+                        with open(DBPath, 'rb') as dump:
+                            return databaseImport.copy(dump, sink)
 
-                    with open(DBPath, 'r') as f:
-
-
-                        try:
-                            # Run the command using subprocess.run, capturing stdout and stderr
-                            result = subprocess.run(cmd, stdin=f, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                    universal_newlines=True)
-
-                            # Log stdout and stderr
-                            logging.statusWriter(self.logFile, f'STDOUT: {result.stdout}', 1)
-                            logging.statusWriter(self.logFile, f'STDERR: {result.stderr}', 1)
-
-                            # Check if the command failed
-                            if result.returncode != 0:
-                                logging.statusWriter(self.logFile,
-                                                     f'Command failed with return code {result.returncode}', 2)
-                        except Exception as e:
-                            # Log any exception that occurs
-                            logging.statusWriter(self.logFile, f'Exception occurred: {str(e)}', 2)
+                    try:
+                        if databaseImport.import_dump(items.replace('.sql', ''), feed, mysqlhost, mysqlport,
+                                                      connect=self.setupConnection, made=imported) != 1:
+                            logging.statusWriter(self.logFile,
+                                                 'The dump of %s was not loaded completely; the reason is in the '
+                                                 'panel log.' % (items.replace('.sql', '')), 2)
+                    except Exception as e:
+                        # Log any exception that occurs
+                        logging.statusWriter(self.logFile, f'Exception occurred: {str(e)}', 2)
 
                     website = Websites.objects.get(domain=self.mainDomain)
 
@@ -749,6 +721,20 @@ password=%s
                 except BaseException as msg:
                     message = 'Failed while restoring database %s from backup file %s, error message: %s' % (
                     items.replace('.sql', ''), self.backupFile, str(msg))
+                    logging.statusWriter(self.logFile, message, 1)
+
+            # Views, triggers and routines of an imported database belong to
+            # the database's own user, now that the users exist.
+            for importedName, importAccount in imported:
+                try:
+                    owner = Databases.objects.get(dbName=importedName).dbUser
+                    if not databaseImport.hand_over(cursor, importedName, importAccount, owner, connection):
+                        message = 'Views, triggers or routines of %s have no owner; set their definer by hand.' % (
+                            importedName)
+                        logging.statusWriter(self.logFile, message, 1)
+                except BaseException as msg:
+                    message = 'Could not hand the views, triggers or routines of %s to its user: %s' % (
+                        importedName, str(msg))
                     logging.statusWriter(self.logFile, message, 1)
 
             connection.close()
