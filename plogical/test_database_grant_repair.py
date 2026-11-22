@@ -199,6 +199,14 @@ class RepairTests(unittest.TestCase):
         self.assertEqual([], result['failed'])
         self.assertEqual('GRANT ALL PRIVILEGES ON `shop\\_db`.* TO %s@%s', server.changes()[-1][0])
 
+    def test_grant_of_the_server_on_its_own_schema_is_not_reported(self):
+        server = Server({('performance_schema', 'mysql.session', 'localhost'): ['SELECT', False],
+                         ('other_db', 'someone', 'localhost'): ['ALL PRIVILEGES', False]},
+                        schemas=['performance_schema', 'other_db'])
+        result = repair(server, ['shop_db'])
+        self.assertEqual([['other_db', 'someone', 'localhost', ['other_db']]], result['patterns'])
+        self.assertEqual([], server.changes())
+
     def test_server_that_reads_names_literally_is_left_alone(self):
         server = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False]}, literal=True)
         result = repair(server, ['shop_db'])

@@ -56,10 +56,12 @@ ACCOUNT = re.compile(r'cpimp_([0-9a-f]{8})_[a-z0-9]{10}')
 
 # The DEFINER clause where mysqldump, mariadb-dump and phpMyAdmin put it: at
 # the start of a line, after nothing but keywords and version comments.
+# A trigger or routine made under ANSI_QUOTES is dumped with its names between
+# double quotes.
 DEFINER = re.compile(
     br'^(?P<head>(?:/\*![0-9]+\s*)?(?:CREATE\b[A-Za-z0-9_=!/* \t]*?)?)'
-    br'DEFINER\s*=\s*(?:`(?:[^`\n]|``)*`|\'[^\'\n]*\'|[A-Za-z0-9_$.-]+)'
-    br'(?:\s*@\s*(?:`[^`\n]*`|\'[^\'\n]*\'|[A-Za-z0-9_.%:-]+)|\s*\(\s*\))?[ \t]?',
+    br'DEFINER\s*=\s*(?:`(?:[^`\n]|``)*`|\'[^\'\n]*\'|"(?:[^"\n]|"")*"|[A-Za-z0-9_$.-]+)'
+    br'(?:\s*@\s*(?:`[^`\n]*`|\'[^\'\n]*\'|"[^"\n]*"|[A-Za-z0-9_.%:-]+)|\s*\(\s*\))?[ \t]?',
     re.IGNORECASE)
 
 _options = {}
@@ -337,7 +339,10 @@ def reassign_definers(cursor, database, made_by, owner):
     objects = imported_objects(cursor, database, made_by)
     if not objects:
         return 0
-    old = 'DEFINER=%s@%s' % (quote(made_by[0]), quote(made_by[1]))
+    # A trigger or routine made under ANSI_QUOTES is described with its
+    # definer between double quotes, whatever the session is set to.
+    old_forms = ('DEFINER=%s@%s' % (quote(made_by[0]), quote(made_by[1])),
+                 'DEFINER="%s"@"%s"' % (made_by[0].replace('"', '""'), made_by[1].replace('"', '""')))
     new = 'DEFINER=%s@%s' % (quote(owner[0]), quote(owner[1]))
     replaces = 'MariaDB' in str(_rows(cursor, 'SELECT VERSION()')[0][0])
     schema = quote(database)
@@ -355,7 +360,10 @@ def reassign_definers(cursor, database, made_by, owner):
             plain = True
         row = _rows(cursor, 'SHOW CREATE %s %s' % (kind, target))[0]
         original = row[1] if kind == 'VIEW' else row[2]
-        if not isinstance(original, str) or not original.startswith('CREATE ') or original.count(old) < 1:
+        old = None
+        if isinstance(original, str) and original.startswith('CREATE '):
+            old = next((form for form in old_forms if form in original), None)
+        if old is None:
             raise ImportRefused('The %s %s is not described the way it was made.' % (kind.lower(), name))
         if kind != 'VIEW':
             cursor.execute('SET SESSION sql_mode = %s', (row[1],))
