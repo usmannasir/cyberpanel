@@ -218,7 +218,10 @@ class NoRunTests(unittest.TestCase):
         self.assertFalse(machine.install_log.exists())
 
     def test_help_ends_with_status_zero_before_anything_is_checked(self):
-        for arguments in (['help'], ['-h'], ['--help'], ['-v', 'ols', '--help'], ['-m', '-h']):
+        for arguments in (['help'], ['-h'], ['--help'], ['-v', 'ols', '--help'], ['-m', '-h'],
+                          # Also after a value that cannot be used.
+                          ['-p', 'abc', '--help'], ['-b', 'junk', '-h'], ['-v', 'BADKEY', '--help'],
+                          ['-v', 'ols', '-b', '1.0.0', '-p', 'short', '-a', '-h']):
             with self.subTest(arguments=arguments):
                 machine = Installer(self)
                 result = machine.run(*arguments)
@@ -245,12 +248,25 @@ class NoRunTests(unittest.TestCase):
                 (['-v', 'ols', '-b', '1.0.0'], 'You must use version number higher than 1.9.4'),
                 (['-v', 'ols', '-b'], 'Please input a valid format version number.'),
                 (['-v', 'not-a-license-key'], 'License key seems incorrect'),
-                (['-b', '2.4.4', '-a', '-v', 'ABCD-EFGH-IJKL'], 'License key seems incorrect')):
+                (['-b', '2.4.4', '-a', '-v', 'ABCD-EFGH-IJKL'], 'License key seems incorrect'),
+                # The first of -p and -b that cannot be used is the one named.
+                (['-v', 'ols', '-p', 'short', '-b', 'junk'], 'Password length less than 8'),
+                (['-v', 'ols', '-b', 'junk', '-p', 'short'], 'Please input a valid format version number.'),
+                (['-p', 'short', '-p', 'long-enough-1'], 'Password length less than 8'),
+                # Of -v the last value counts.
+                (['-v', 'ols', '-v', 'BADKEY'], 'License key seems incorrect'),
+                # The value of an option is not read as a request for help.
+                (['-v', '--help'], 'License key seems incorrect'),
+                (['-v', 'ols', '-b', '--help'], 'Please input a valid format version number.')):
             with self.subTest(arguments=arguments):
                 machine = Installer(self)
                 result = machine.run(*arguments, active_service='apache2')
                 self.assertEqual(2, result.returncode, result.stdout + result.stderr)
                 self.assertIn(said, result.stdout)
+                self.assertNotIn('CyberPanel Installer Script Help', result.stdout)
+                self.assertEqual(1, sum(result.stdout.count(problem) for problem in (
+                    'Password length less than 8', 'Please input a valid format version number.',
+                    'You must use version number higher than 1.9.4', 'License key seems incorrect')))
                 self.assert_untouched(machine)
 
     def test_usage_check_and_argument_reader_agree(self):
@@ -271,7 +287,14 @@ class NoRunTests(unittest.TestCase):
             ('-v', 'ols', '-p', 'random', '-a'): (0, 0),
             # The licence key is used by Argument_Mode, after the reader.
             ('-v', 'ABCD-EFGH-IJKL-MNOP'): (0, 0), ('-v', 'trial'): (0, 0), ('-v', 'TRIAL', '-a'): (0, 0),
-            ('help',): ('help', 0), ('-h',): ('help', 0), ('-a', '--help'): ('help', 0),
+            ('help',): ('help', 'help'), ('-h',): ('help', 'help'), ('-a', '--help'): ('help', 'help'),
+            # Help is answered by the check, which runs first: the reader, which
+            # would stop at the value, does not get to see these.
+            ('-p', 'abc', '--help'): ('help', 2), ('-b', 'junk', '-h'): ('help', 2),
+            ('-v', 'BADKEY', '--help'): ('help', 'help'),
+            # Of -v the last value counts in both.
+            ('-v', 'BADKEY', '-v', 'ols'): (0, 0), ('-v', 'ols', '-v', 'BADKEY'): (2, 0),
+            ('-v', 'BADKEY', '-v', 'trial'): (0, 0),
             ('-v',): (2, 2), ('-x',): (2, 2), ('-v', 'ols', 'what'): (2, 2),
             # A value that cannot be used ends both, the check first.
             ('-v', 'ols', '-p', 'short'): (2, 2), ('-v', 'ols', '-b', 'junk'): (2, 2),
@@ -299,8 +322,7 @@ class NoRunTests(unittest.TestCase):
                     else:
                         self.assertEqual(result.returncode == 0, 'CONTINUES' in result.stdout)
                         outcomes.append(result.returncode)
-                self.assertEqual(usage, outcomes[0])
-                self.assertEqual('help' if usage == 'help' else reading, outcomes[1])
+                self.assertEqual((usage, reading), tuple(outcomes))
 
 
 class FailedRunTests(unittest.TestCase):
