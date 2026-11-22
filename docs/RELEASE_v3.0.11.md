@@ -1,6 +1,6 @@
 # CyberPanel v3.0.11 (build 11) — Multi-Server Manager
 
-_Release candidate, 2026-11-22._
+_Released 2026-11-22._
 
 This release adds Multi-Server Manager: one CyberPanel server, the controller,
 manages other CyberPanel servers from its own panel. It is a separately
