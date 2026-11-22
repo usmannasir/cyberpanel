@@ -701,33 +701,36 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
         Runs as the website's own account. Everything the customer has in the
         file stays; the file itself is removed only when the panel's rules were
-        all it held.
+        all it held. The file is read and written as bytes: it is the
+        customer's, in whatever encoding and with whatever line ends it has,
+        and nothing but the panel's lines is changed in it.
         """
         try:
-            Content = open(htaccess, 'r').read()
-        except (IOError, OSError, UnicodeDecodeError):
+            with open(htaccess, 'rb') as handle:
+                Content = handle.read()
+        except (IOError, OSError):
             return 0
 
-        ports = set(re.findall(r'HTTP://docker(\d+)/\$1 \[P\]', Content))
+        ports = set(re.findall(br'HTTP://docker(\d+)/\$1 \[P\]', Content))
         Remaining = Content
 
         for port in ports:
+            number = port.decode('ascii')
             if domain:
-                Remaining = Remaining.replace(Docker_Sites.htaccess_rules(port, domain), '')
-            Remaining = Remaining.replace(Docker_Sites.htaccess_rules(port), '')
+                Remaining = Remaining.replace(Docker_Sites.htaccess_rules(number, domain).encode('utf-8'), b'')
+            Remaining = Remaining.replace(Docker_Sites.htaccess_rules(number).encode('utf-8'), b'')
             # The rule alone, where the lines around it were changed by hand.
-            Remaining = re.sub(r'(?m)^[ \t]*REWRITERULE \^\(\.\*\)\$ HTTP://docker%s/\$1 \[P\][ \t]*\n?' % port,
-                               '', Remaining)
+            Remaining = re.sub(br'(?m)^[ \t]*REWRITERULE \^\(\.\*\)\$ HTTP://docker%s/\$1 \[P\][ \t]*\r?\n?' % port,
+                               b'', Remaining)
 
         if Remaining == Content:
             return 0
 
-        if Remaining.strip() == '':
+        if Remaining.strip() == b'':
             os.remove(htaccess)
         else:
-            WriteToFile = open(htaccess, 'w')
-            WriteToFile.write(Remaining)
-            WriteToFile.close()
+            with open(htaccess, 'wb') as handle:
+                handle.write(Remaining)
 
         return 1
 
