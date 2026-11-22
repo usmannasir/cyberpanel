@@ -279,7 +279,7 @@ class NoRunTests(unittest.TestCase):
                     result = subprocess.run(['bash', '-c', script + '\n%s "$@"\necho CONTINUES\n' % function,
                                              'bash'] + list(arguments),
                                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                            universal_newlines=True, timeout=20)
+                                            encoding='utf-8', timeout=20)
                     self.assertEqual('', result.stderr)
                     if 'HELP' in result.stdout and result.returncode == 0:
                         self.assertNotIn('CONTINUES', result.stdout)
@@ -654,7 +654,7 @@ class InstallerHandoffTests(unittest.TestCase):
                   # The end of a run, as Install_Run_Finish writes it.
                   'Install_Event finishing done\nInstall_Event install complete\nInstall_Run_Active="No"\n')
         result = subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                universal_newlines=True, timeout=60, env={'PATH': os.environ['PATH']})
+                                encoding='utf-8', timeout=60, env={'PATH': os.environ['PATH']})
         lines = events.read_text().splitlines()
         self.assertEqual(1, len({line.split()[1] for line in lines}), 'install.py wrote under another run name')
         return result, [' '.join(line.split()[2:]) for line in lines], root
@@ -725,7 +725,7 @@ class WebTerminalStartTests(unittest.TestCase):
                       + function + 'Post_Install_Start_Web_Terminal\necho "status=$?"\n')
             started = time.time()
             result = subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    universal_newlines=True, timeout=60,
+                                    encoding='utf-8', timeout=60,
                                     env={'PATH': os.environ['PATH'], 'QA_LOG': str(root / 'log')})
             log = (root / 'log').read_text() if (root / 'log').exists() else ''
             called = (root / 'python.called').read_text().strip()
@@ -794,7 +794,7 @@ class ReadinessProbeTests(unittest.TestCase):
             environment[name] = 'http://127.0.0.1:%d' % self.proxy.getsockname()[1]
         script = function.replace(address, 'https://127.0.0.1:%d/' % self.port) + '\nPanel_Answers %d\n' % seconds
         return subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              universal_newlines=True, env=environment, timeout=120)
+                              encoding='utf-8', env=environment, timeout=120)
 
     def test_proxy_named_in_the_environment_is_not_asked(self):
         result = self.probe(self.function, 1)

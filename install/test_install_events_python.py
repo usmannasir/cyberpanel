@@ -115,7 +115,7 @@ class PythonEventWriterTests(unittest.TestCase):
         for name in ('install/install_events.py', 'install/installLog.py', 'install/install_utils.py',
                      'install/install.py', 'install/installCyberPanel.py'):
             with self.subTest(name=name):
-                parse_as_python_36((ROOT / name).read_text())
+                parse_as_python_36((ROOT / name).read_text(encoding='utf-8'))
 
     def test_python_36_parser_refuses_what_python_36_does_not_have(self):
         self.assertIsInstance(parse_as_python_36('value = "%s" % 1\n'), ast.Module)
@@ -219,7 +219,7 @@ class InstallerEntryPointTests(unittest.TestCase):
         self.logging = SimpleNamespace(InstallLog=log)
 
     def function(self, path, name):
-        tree = ast.parse((ROOT / path).read_text())
+        tree = ast.parse((ROOT / path).read_text(encoding='utf-8'))
         node = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
         return ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[]))
 
@@ -346,9 +346,9 @@ class PythonExitStatusTests(unittest.TestCase):
         self.assertGreater(len(files), 20)
         for path in files:
             with self.subTest(file=str(path.relative_to(ROOT))):
-                self.assertEqual([], exits(path.read_text(), successful=True))
+                self.assertEqual([], exits(path.read_text(encoding='utf-8'), successful=True))
         # The exits are seen, with the statuses they have now.
-        self.assertEqual(4, len(exits((ROOT / 'install/install.py').read_text(), successful=False)))
+        self.assertEqual(4, len(exits((ROOT / 'install/install.py').read_text(encoding='utf-8'), successful=False)))
 
     def test_exit_scan_sees_every_way_to_end_with_status_zero(self):
         # Proof that the scan above is not blind, on Python 3.6 as on newer ones.
@@ -363,7 +363,7 @@ class PythonExitStatusTests(unittest.TestCase):
 def imported_files(path):
     """The files of this repository that a Python file imports, wherever in it."""
     found = set()
-    for node in ast.walk(ast.parse(path.read_text())):
+    for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
         if isinstance(node, ast.Import):
             modules = [alias.name for alias in node.names]
         elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:

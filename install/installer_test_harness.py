@@ -216,7 +216,7 @@ def parse_as_python_36(source, interpreter=None):
 def script_parts(source=None):
     """The function definitions and the top level of the installer script."""
     if source is None:
-        source = (ROOT / 'cyberpanel.sh').read_text()
+        source = (ROOT / 'cyberpanel.sh').read_text(encoding='utf-8')
     start = source.index(TOP_LEVEL_START)
     return source[:start + 1], source[start + 1:]
 
@@ -334,10 +334,10 @@ class Installer:
         if options:
             raise TypeError('Unknown options: %s' % sorted(options))
         script = self.root / 'harness.sh'
-        script.write_text(self.harness())
+        script.write_text(self.harness(), encoding='utf-8')
         return subprocess.Popen(
             shell + [str(script)] + list(arguments), stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8',
             env=environment, cwd=str(self.root / 'home'), preexec_fn=as_a_terminal_starts_it(mask))
 
     def events(self):

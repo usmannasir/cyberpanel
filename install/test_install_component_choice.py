@@ -44,7 +44,7 @@ class ComponentChoiceTests(unittest.TestCase):
                   'Check_Argument "$@" >/dev/null\n'
                   'echo "$Postfix_Switch $PowerDNS_Switch $PureFTPd_Switch"\n')
         result = subprocess.run(['bash', '-c', script, 'bash'] + list(arguments), stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, universal_newlines=True, timeout=20)
+                                stderr=subprocess.PIPE, encoding='utf-8', timeout=20)
         self.assertEqual('', result.stderr)
         return result.returncode, result.stdout.strip()
 
@@ -101,7 +101,7 @@ class ComponentChoiceTests(unittest.TestCase):
 
         def check(*arguments):
             result = subprocess.run(['bash', '-c', usage, 'bash'] + list(arguments), stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE, universal_newlines=True, timeout=20)
+                                    stderr=subprocess.PIPE, encoding='utf-8', timeout=20)
             self.assertEqual('', result.stderr)
             return result.returncode, result.stdout.strip().splitlines()[-1]
 
