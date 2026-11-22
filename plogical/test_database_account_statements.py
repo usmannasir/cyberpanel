@@ -126,5 +126,35 @@ class PhpMyAdminAccountTests(StatementTests):
         self.assertEqual(1, self.connection.closed)
 
 
+class TableCursor:
+    def __init__(self):
+        self.last = ''
+
+    def execute(self, statement, arguments=None):
+        self.last = statement
+
+    def fetchall(self):
+        if self.last.startswith('select count'):
+            return [(1,)]
+        if self.last.startswith('desc'):
+            return [('<b>name</b>', 'text'), ('plain', 'int')]
+        if self.last.startswith('select *'):
+            return [('<script>alert(1)</script>', 5), ('a & b "c"', None)]
+        return []
+
+
+class TableDataTests(unittest.TestCase):
+    def test_column_names_and_cells_are_returned_as_text(self):
+        with mock.patch.object(mysqlUtilities, 'setupConnection', return_value=(Connection(), TableCursor())):
+            data = mysqlUtilities.fetchTableData({'recordsToShow': 10, 'currentPage': 1,
+                                                  'databaseName': 'exam_shop', 'tableName': 'notes'})
+        html = data['completeData']
+        self.assertNotIn('<script>', html)
+        self.assertNotIn('<b>', html)
+        self.assertIn('<th>&lt;b&gt;name&lt;/b&gt;</th><th>plain</th>', html)
+        self.assertIn('<td>&lt;script&gt;alert(1)&lt;/script&gt;</td><td>5</td>', html)
+        self.assertIn('<td>a &amp; b &quot;c&quot;</td><td>None</td>', html)
+
+
 if __name__ == '__main__':
     unittest.main()

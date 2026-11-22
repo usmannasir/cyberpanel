@@ -1111,8 +1111,11 @@ password=%s
 
             data['completeData'] = '<thead><tr>'
 
+            # Column names and cell values are data, never markup.
+            from html import escape
+
             for items in result:
-                data['completeData'] = data['completeData'] + '<th>' + items[0] + '</th>'
+                data['completeData'] = data['completeData'] + '<th>' + escape(str(items[0])) + '</th>'
 
             data['completeData'] = data['completeData'] + '</tr></thead>'
 
@@ -1129,7 +1132,7 @@ password=%s
             for items in result[finalPageNumber:endPageNumber]:
                 data['completeData'] = data['completeData'] + '<tr>'
                 for it in items:
-                    data['completeData'] = data['completeData'] + '<td>' + str(it) + '</td>'
+                    data['completeData'] = data['completeData'] + '<td>' + escape(str(it)) + '</td>'
                 data['completeData'] = data['completeData'] + '</tr>'
 
             data['completeData'] = data['completeData'] + '</tbody>'
