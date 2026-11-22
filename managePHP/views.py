@@ -45,6 +45,9 @@ def loadPHPHome(request):
 
 def installExtensions(request):
     try:
+        # Nothing is prepared for a user the page is refused to.
+        if ACLManager.loadedACL(request.session['userID'])['admin'] != 1:
+            return httpProc(request, 'managePHP/installExtensions.html', None, 'admin').render()
 
         if PHP.objects.count() == 0:
             for i in range(3, 7):
@@ -1700,6 +1703,10 @@ def getRequestStatusApache(request):
 
 def editPHPConfigs(request):
     try:
+        # Nothing is prepared for a user the page is refused to.
+        if ACLManager.loadedACL(request.session['userID'])['admin'] != 1:
+            return httpProc(request, 'managePHP/editPHPConfig.html', None, 'admin').render()
+
         apache = ApacheController.checkIfApacheInstalled()
 
         if apache:
