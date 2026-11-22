@@ -1,4 +1,6 @@
 import os.path
+import shlex
+import tempfile
 
 from plogical.processUtilities import ProcessUtilities
 import json
@@ -6,7 +8,7 @@ import re
 from django.shortcuts import HttpResponse
 from random import randint
 from .models import *
-from .phpConfig import matches_directive
+from .phpConfig import apply_basic_php_settings, checked_basic_php_settings, matches_directive
 from xml.etree import ElementTree
 
 class PHPManager:
@@ -164,6 +166,29 @@ class PHPManager:
             return "/etc/opt/remi/php72/php.ini"
         elif phpVersion == "PHP 7.3":
             return "/etc/opt/remi/php73/php.ini"
+        # Only the versions above are managed through this interface; there
+        # is no file to read or replace for anything else.
+        raise ValueError('This PHP version is not managed here.')
+
+    @staticmethod
+    def installPHPIni(path, content):
+        """Put new content in place of a managed php.ini, as a file of root.
+
+        The content waits for the privileged helper in a file of its own in
+        the panel's directory, which is removed whatever happens.
+        """
+        descriptor, tempStatusPath = tempfile.mkstemp(dir='/home/cyberpanel', prefix='phpini.')
+        try:
+            with os.fdopen(descriptor, 'w') as writeToFile:
+                writeToFile.write(content)
+
+            command = "install -o root -g root -m 644 -- %s %s" % (shlex.quote(tempStatusPath), shlex.quote(path))
+            ProcessUtilities.executioner(command)
+        finally:
+            try:
+                os.remove(tempStatusPath)
+            except OSError:
+                pass
 
 
     @staticmethod
@@ -176,33 +201,36 @@ class PHPManager:
         max_execution_time = ""
         upload_max_filesize = ""
         max_input_time = ""
+        post_max_size = ""
 
         command = "cat " + PHPManager.FindPHPFPMPath(phpVersion)
 
         data = ProcessUtilities.outputExecutioner(command).split('\n')
 
+        # Only a line that assigns a directive is read, the same lines a
+        # save replaces; a comment that mentions one is not.
         for items in data:
-            if items.find("allow_url_fopen") > -1 and items.find("=") > -1:
+            if matches_directive(items, "allow_url_fopen"):
                 if items.find("On") > -1:
                     allow_url_fopen = "1"
-            if items.find("display_errors") > -1 and items.find("=") > -1:
+            if matches_directive(items, "display_errors"):
                 if items.find("On") > -1:
                     display_errors = "1"
-            if items.find("file_uploads") > -1 and items.find("=") > -1:
+            if matches_directive(items, "file_uploads"):
                 if items.find("On") > -1:
                     file_uploads = "1"
-            if items.find("allow_url_include") > -1 and items.find("=") > -1:
+            if matches_directive(items, "allow_url_include"):
                 if items.find("On") > -1:
                     allow_url_include = "1"
             if matches_directive(items, "memory_limit"):
                 memory_limit = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
             if matches_directive(items, "max_execution_time"):
                 max_execution_time = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
-            if items.find("upload_max_filesize") > -1 and items.find("=") > -1:
+            if matches_directive(items, "upload_max_filesize"):
                 upload_max_filesize = re.findall(r"[A-Za-z0-9_]+", items)[1]
             if matches_directive(items, "max_input_time"):
                 max_input_time = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
-            if items.find("post_max_size") > -1 and items.find("=") > -1:
+            if matches_directive(items, "post_max_size"):
                 post_max_size = re.findall(r"[A-Za-z0-9_]+", items)[1]
 
         final_dic = {'fetchStatus': 1,
@@ -234,109 +262,21 @@ class PHPManager:
         max_input_time = data['max_input_time']
         post_max_size = data['post_max_size']
 
-        if allow_url_fopen:
-            allow_url_fopen = "allow_url_fopen = On"
-        else:
-            allow_url_fopen = "allow_url_fopen = Off"
-
-        if display_errors:
-            display_errors = "display_errors = On"
-        else:
-            display_errors = "display_errors = Off"
-
-        if file_uploads:
-            file_uploads = "file_uploads = On"
-        else:
-            file_uploads = "file_uploads = Off"
-
-        if allow_url_include:
-            allow_url_include = "allow_url_include = On"
-        else:
-            allow_url_include = "allow_url_include = Off"
-
+        # The same checks as the PHP settings page: each of the nine values is
+        # one word of its own kind, and only lines that assign a directive
+        # are replaced. An unknown version stops here, before anything is read.
         path = PHPManager.FindPHPFPMPath(phpVersion)
+        settings = checked_basic_php_settings({
+            'allow_url_fopen': bool(allow_url_fopen), 'display_errors': bool(display_errors),
+            'file_uploads': bool(file_uploads), 'allow_url_include': bool(allow_url_include),
+            'memory_limit': memory_limit, 'max_execution_time': max_execution_time,
+            'upload_max_filesize': upload_max_filesize, 'max_input_time': max_input_time,
+            'post_max_size': post_max_size})
+
         command = "cat " + path
-        data = ProcessUtilities.outputExecutioner(command).splitlines()
+        current = ProcessUtilities.outputExecutioner(command)
 
-        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-
-        writeToFile = open(tempStatusPath, 'w')
-
-        # Track which directives we've found and replaced
-        found_directives = {
-            'allow_url_fopen': False,
-            'display_errors': False,
-            'file_uploads': False,
-            'allow_url_include': False,
-            'memory_limit': False,
-            'max_execution_time': False,
-            'upload_max_filesize': False,
-            'max_input_time': False,
-            'post_max_size': False
-        }
-
-        for items in data:
-            if items.find("allow_url_fopen") > -1 and items.find("=") > -1:
-                writeToFile.writelines(allow_url_fopen + "\n")
-                found_directives['allow_url_fopen'] = True
-            elif items.find("display_errors") > -1 and items.find("=") > -1:
-                writeToFile.writelines(display_errors + "\n")
-                found_directives['display_errors'] = True
-            elif items.find("file_uploads") > -1 and items.find("=") > -1 and not items.find(
-                    "max_file_uploads") > -1:
-                writeToFile.writelines(file_uploads + "\n")
-                found_directives['file_uploads'] = True
-            elif items.find("allow_url_include") > -1 and items.find("=") > -1:
-                writeToFile.writelines(allow_url_include + "\n")
-                found_directives['allow_url_include'] = True
-            elif matches_directive(items, "memory_limit"):
-                writeToFile.writelines("memory_limit = " + memory_limit + "\n")
-                found_directives['memory_limit'] = True
-            elif items.find("max_execution_time") > -1 and items.find("=") > -1:
-                writeToFile.writelines("max_execution_time = " + max_execution_time + "\n")
-                found_directives['max_execution_time'] = True
-            elif items.find("upload_max_filesize") > -1 and items.find("=") > -1:
-                writeToFile.writelines("upload_max_filesize = " + upload_max_filesize + "\n")
-                found_directives['upload_max_filesize'] = True
-            elif items.find("max_input_time") > -1 and items.find("=") > -1:
-                writeToFile.writelines("max_input_time = " + max_input_time + "\n")
-                found_directives['max_input_time'] = True
-            elif items.find("post_max_size") > -1 and items.find("=") > -1:
-                writeToFile.writelines("post_max_size = " + post_max_size + "\n")
-                found_directives['post_max_size'] = True
-            else:
-                writeToFile.writelines(items + '\n')
-
-        # Add any missing directives at the end of the file
-        missing_directives = []
-        if not found_directives['allow_url_fopen']:
-            missing_directives.append(allow_url_fopen)
-        if not found_directives['display_errors']:
-            missing_directives.append(display_errors)
-        if not found_directives['file_uploads']:
-            missing_directives.append(file_uploads)
-        if not found_directives['allow_url_include']:
-            missing_directives.append(allow_url_include)
-        if not found_directives['memory_limit']:
-            missing_directives.append("memory_limit = " + memory_limit)
-        if not found_directives['max_execution_time']:
-            missing_directives.append("max_execution_time = " + max_execution_time)
-        if not found_directives['upload_max_filesize']:
-            missing_directives.append("upload_max_filesize = " + upload_max_filesize)
-        if not found_directives['max_input_time']:
-            missing_directives.append("max_input_time = " + max_input_time)
-        if not found_directives['post_max_size']:
-            missing_directives.append("post_max_size = " + post_max_size)
-
-        if missing_directives:
-            writeToFile.writelines("\n; Added by CyberPanel PHP Config Manager\n")
-            for directive in missing_directives:
-                writeToFile.writelines(directive + "\n")
-
-        writeToFile.close()
-
-        command = "mv %s %s" % (tempStatusPath, path)
-        ProcessUtilities.executioner(command)
+        PHPManager.installPHPIni(path, apply_basic_php_settings(current, settings))
 
         php = PHPManager.getPHPString(phpVersion)
 
@@ -367,16 +307,12 @@ class PHPManager:
         phpVersion = data['phpVersion']
         configData = data['configData']
 
+        # An unknown version stops here, before anything is written.
         path = PHPManager.FindPHPFPMPath(phpVersion)
+        if not isinstance(configData, str):
+            raise ValueError('Invalid PHP configuration.')
 
-        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-
-        writeToFile = open(tempStatusPath, 'w')
-        writeToFile.write(configData)
-        writeToFile.close()
-
-        command = "mv %s %s" % (tempStatusPath, path)
-        ProcessUtilities.executioner(command)
+        PHPManager.installPHPIni(path, configData)
 
         php = PHPManager.getPHPString(phpVersion)
 
