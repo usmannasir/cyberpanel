@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.contrib import messages
 from loginSystem.models import Administrator
 from .models import AIScannerSettings, ScanHistory, FileAccessToken
+from .panel_address import panel_address
 from .platform_auth import saved_scanner_auth_headers, scanner_payment_setup_request
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -389,8 +390,9 @@ class AIScannerManager:
             )
             
             # Submit scan to AI Scanner API
-            callback_url = f"https://{request.get_host()}/api/ai-scanner/callback"
-            file_access_base_url = f"https://{request.get_host()}/api/ai-scanner/"
+            panel_host = panel_address(request, admin, currentACL)
+            callback_url = f"https://{panel_host}/api/ai-scanner/callback"
+            file_access_base_url = f"https://{panel_host}/api/ai-scanner/"
             
             # Use VPS API key if available, otherwise use regular scanner settings
             api_key_to_use = vps_api_key if vps_api_key else scanner_settings.api_key
