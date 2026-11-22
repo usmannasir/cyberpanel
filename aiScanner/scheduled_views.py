@@ -1,11 +1,97 @@
-from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from loginSystem.views import loadLoginPage
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from .access import scanner_view
 import json
+import re
 
 
+MAX_SCHEDULED_DOMAINS = 200
+MAX_NOTIFICATION_EMAILS = 10
+# A name is shown in pages and e-mails: no markup characters, no control characters.
+SCHEDULE_NAME = re.compile(r'[^<>"`\\\x00-\x1f\x7f]{1,200}')
+
+
+class InvalidSchedule(Exception):
+    """A scheduled scan request that cannot be stored; the message is shown to the user."""
+
+
+def switch(data, name, default):
+    """An on/off setting of a request: only true and false are stored."""
+    value = data.get(name, default)
+    return value if isinstance(value, bool) else default
+
+
+def day_number(value, lowest, highest):
+    if isinstance(value, bool) or not isinstance(value, (int, str)) or not re.fullmatch(r'[0-9]{1,2}', str(value)):
+        raise InvalidSchedule('Invalid day')
+    number = int(value)
+    if not lowest <= number <= highest:
+        raise InvalidSchedule('Invalid day')
+    return number
+
+
+def checked_schedule(data):
+    """Check the fields of a new scheduled scan against what the model allows."""
+    from datetime import datetime
+    from django.core.exceptions import ValidationError
+    from django.core.validators import validate_email
+    from .models import ScheduledScan
+
+    if not isinstance(data, dict):
+        raise InvalidSchedule('Invalid request')
+    for field in ('name', 'domains', 'frequency', 'scan_type', 'time_of_day'):
+        if not data.get(field):
+            raise InvalidSchedule('Missing required field: %s' % field)
+
+    name = data['name'].strip() if isinstance(data['name'], str) else ''
+    if not SCHEDULE_NAME.fullmatch(name):
+        raise InvalidSchedule('Name must be 1 to 200 characters and may not contain < > " ` or \\')
+
+    frequency, scan_type = data['frequency'], data['scan_type']
+    if frequency not in [choice[0] for choice in ScheduledScan.FREQUENCY_CHOICES]:
+        raise InvalidSchedule('Invalid frequency')
+    if scan_type not in [choice[0] for choice in ScheduledScan.SCAN_TYPE_CHOICES]:
+        raise InvalidSchedule('Invalid scan type')
+
+    domains = data['domains']
+    if not isinstance(domains, list) or len(domains) == 0:
+        raise InvalidSchedule('At least one domain must be selected')
+    if len(domains) > MAX_SCHEDULED_DOMAINS or not all(
+            isinstance(domain, str) and 0 < len(domain) <= 255 for domain in domains):
+        raise InvalidSchedule('Invalid domains')
+
+    try:
+        time_of_day = datetime.strptime(data['time_of_day'], '%H:%M').time()
+    except (TypeError, ValueError):
+        raise InvalidSchedule('Invalid time format')
+
+    emails = data.get('notification_emails') or []
+    if not isinstance(emails, list) or len(emails) > MAX_NOTIFICATION_EMAILS:
+        raise InvalidSchedule('At most %d notification e-mail addresses are allowed' % MAX_NOTIFICATION_EMAILS)
+    for email in emails:
+        try:
+            if not isinstance(email, str) or len(email) > 254:
+                raise ValidationError('invalid')
+            validate_email(email)
+        except ValidationError:
+            raise InvalidSchedule('Invalid notification e-mail address')
+
+    checked = {
+        'name': name, 'frequency': frequency, 'scan_type': scan_type, 'domains': domains,
+        'time_of_day': time_of_day, 'notification_emails': emails,
+        'day_of_week': None, 'day_of_month': None,
+    }
+    if frequency == 'weekly':
+        checked['day_of_week'] = day_number(data.get('day_of_week'), 0, 6)
+    elif frequency == 'monthly':
+        checked['day_of_month'] = day_number(data.get('day_of_month'), 1, 31)
+    elif frequency == 'quarterly' and data.get('day_of_month') not in (None, ''):
+        checked['day_of_month'] = day_number(data['day_of_month'], 1, 31)
+    return checked
+
+
+@scanner_view()
 @require_http_methods(['GET', 'POST'])
 def scheduledScans(request):
     """Manage scheduled scans"""
@@ -54,70 +140,54 @@ def scheduledScans(request):
         
         elif request.method == 'POST':
             # Create new scheduled scan
-            data = json.loads(request.body)
-            
-            # Validate required fields
-            required_fields = ['name', 'domains', 'frequency', 'scan_type', 'time_of_day']
-            for field in required_fields:
-                if field not in data or not data[field]:
-                    return JsonResponse({'success': False, 'error': f'Missing required field: {field}'})
-            
-            # Validate domains
-            if not isinstance(data['domains'], list) or len(data['domains']) == 0:
-                return JsonResponse({'success': False, 'error': 'At least one domain must be selected'})
-            
+            try:
+                data = json.loads(request.body)
+                checked = checked_schedule(data)
+            except InvalidSchedule as refusal:
+                return JsonResponse({'success': False, 'error': str(refusal)})
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Invalid request'})
+
             # Check if user has access to these domains
             if currentACL['admin'] != 1:
                 from websiteFunctions.models import Websites
                 user_domains = set(Websites.objects.filter(admin=admin).values_list('domain', flat=True))
-                requested_domains = set(data['domains'])
-                
+                requested_domains = set(checked['domains'])
+
                 if not requested_domains.issubset(user_domains):
                     return JsonResponse({'success': False, 'error': 'You do not have access to some of the selected domains'})
-            
-            # Parse time
-            from datetime import datetime
-            try:
-                time_obj = datetime.strptime(data['time_of_day'], '%H:%M').time()
-            except ValueError:
-                return JsonResponse({'success': False, 'error': 'Invalid time format'})
-            
+
             # Create scheduled scan
             scheduled_scan = ScheduledScan(
                 admin=admin,
-                name=data['name'],
-                frequency=data['frequency'],
-                scan_type=data['scan_type'],
-                time_of_day=time_obj,
-                email_notifications=data.get('email_notifications', True),
-                notify_on_threats=data.get('notify_on_threats', True),
-                notify_on_completion=data.get('notify_on_completion', False),
-                notify_on_failure=data.get('notify_on_failure', True)
+                name=checked['name'],
+                frequency=checked['frequency'],
+                scan_type=checked['scan_type'],
+                time_of_day=checked['time_of_day'],
+                day_of_week=checked['day_of_week'],
+                day_of_month=checked['day_of_month'],
+                email_notifications=switch(data, 'email_notifications', True),
+                notify_on_threats=switch(data, 'notify_on_threats', True),
+                notify_on_completion=switch(data, 'notify_on_completion', False),
+                notify_on_failure=switch(data, 'notify_on_failure', True)
             )
-            
-            # Set domains
-            scheduled_scan.set_domains(data['domains'])
-            
-            # Set notification emails
-            if data.get('notification_emails'):
-                scheduled_scan.set_notification_emails(data['notification_emails'])
-            
-            # Set frequency-specific fields
-            if data['frequency'] == 'weekly' and 'day_of_week' in data:
-                scheduled_scan.day_of_week = int(data['day_of_week'])
-            elif data['frequency'] in ['monthly', 'quarterly'] and 'day_of_month' in data:
-                scheduled_scan.day_of_month = int(data['day_of_month'])
-            
+
+            scheduled_scan.set_domains(checked['domains'])
+            if checked['notification_emails']:
+                scheduled_scan.set_notification_emails(checked['notification_emails'])
+
             scheduled_scan.save()
-            
+
             return JsonResponse({'success': True, 'id': scheduled_scan.id})
             
     except KeyError:
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile('[AI Scanner] Scheduled scan request failed: %s' % type(e).__name__)
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 
+@scanner_view()
 @require_http_methods(['GET', 'DELETE'])
 def scheduledScanDetail(request, scan_id):
     """Get or delete a specific scheduled scan"""
@@ -174,10 +244,11 @@ def scheduledScanDetail(request, scan_id):
     except KeyError:
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile('[AI Scanner] Scheduled scan request failed: %s' % type(e).__name__)
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 
-@csrf_exempt
+@scanner_view()
 @require_http_methods(['POST'])
 def toggleScheduledScan(request, scan_id):
     """Toggle scheduled scan status (active/paused)"""
@@ -215,9 +286,11 @@ def toggleScheduledScan(request, scan_id):
     except KeyError:
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile('[AI Scanner] Scheduled scan request failed: %s' % type(e).__name__)
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 
+@scanner_view()
 @require_http_methods(['GET'])
 def scheduledScanExecutions(request, scan_id):
     """Get execution history for a scheduled scan"""
@@ -267,4 +340,5 @@ def scheduledScanExecutions(request, scan_id):
     except KeyError:
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile('[AI Scanner] Scheduled scan request failed: %s' % type(e).__name__)
+        return JsonResponse({'success': False, 'error': 'Internal server error'})

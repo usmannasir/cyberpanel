@@ -1624,30 +1624,31 @@ function displayScheduledScans(scans) {
         const statusClass = scan.status === 'active' ? 'success' : scan.status === 'paused' ? 'warning' : 'danger';
         const nextRun = scan.next_run ? new Date(scan.next_run).toLocaleString() : 'Not scheduled';
         const lastRun = scan.last_run ? new Date(scan.last_run).toLocaleString() : 'Never';
+        const scanNumber = Number(scan.id) || 0;
         
         html += `
             <div class="scheduled-scan-card">
                 <div class="scheduled-scan-header">
-                    <h4>${scan.name}</h4>
-                    <span class="status-label ${statusClass}">${scan.status}</span>
+                    <h4>${escapeHtml(scan.name)}</h4>
+                    <span class="status-label ${statusClass}">${escapeHtml(scan.status)}</span>
                 </div>
                 <div class="scheduled-scan-info">
-                    <p><strong>Frequency:</strong> ${scan.frequency}</p>
-                    <p><strong>Scan Type:</strong> ${scan.scan_type}</p>
-                    <p><strong>Domains:</strong> ${scan.domains.join(', ')}</p>
-                    <p><strong>Next Run:</strong> ${nextRun}</p>
-                    <p><strong>Last Run:</strong> ${lastRun}</p>
+                    <p><strong>Frequency:</strong> ${escapeHtml(scan.frequency)}</p>
+                    <p><strong>Scan Type:</strong> ${escapeHtml(scan.scan_type)}</p>
+                    <p><strong>Domains:</strong> ${escapeHtml((scan.domains || []).join(', '))}</p>
+                    <p><strong>Next Run:</strong> ${escapeHtml(nextRun)}</p>
+                    <p><strong>Last Run:</strong> ${escapeHtml(lastRun)}</p>
                 </div>
                 <div class="scheduled-scan-actions">
-                    <button class="btn-xs btn-default" onclick="editScheduledScan(${scan.id})">
+                    <button class="btn-xs btn-default" onclick="editScheduledScan(${scanNumber})">
                         <i class="fas fa-edit"></i> Edit
                     </button>
                     <button class="btn-xs btn-${scan.status === 'active' ? 'warning' : 'success'}" 
-                            onclick="toggleScheduledScan(${scan.id})">
+                            onclick="toggleScheduledScan(${scanNumber})">
                         <i class="fas fa-${scan.status === 'active' ? 'pause' : 'play'}"></i> 
                         ${scan.status === 'active' ? 'Pause' : 'Activate'}
                     </button>
-                    <button class="btn-xs btn-danger" onclick="deleteScheduledScan(${scan.id})">
+                    <button class="btn-xs btn-danger" onclick="deleteScheduledScan(${scanNumber})">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
@@ -1754,7 +1755,8 @@ function populateScheduleForm(scan) {
     
     // Select domains
     scan.domains.forEach(domain => {
-        const checkbox = document.querySelector(`input[name="domains"][value="${domain}"]`);
+        const checkbox = Array.from(document.querySelectorAll('input[name="domains"]'))
+            .find(candidate => candidate.value === domain);
         if (checkbox) {
             checkbox.checked = true;
         }

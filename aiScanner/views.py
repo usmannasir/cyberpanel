@@ -2,10 +2,13 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from loginSystem.views import loadLoginPage
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from .access import scanner_view
 from .aiScannerManager import AIScannerManager
 import json
 
 
+@scanner_view(page=True)
 def aiScannerHome(request):
     """Main AI Scanner page"""
     try:
@@ -16,6 +19,7 @@ def aiScannerHome(request):
         return redirect(loadLoginPage)
 
 
+@scanner_view()
 def setupPayment(request):
     """Setup payment method for AI scanner"""
     try:
@@ -26,6 +30,7 @@ def setupPayment(request):
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
 
 
+@scanner_view(page=True)
 def setupComplete(request):
     """Handle return from payment setup"""
     try:
@@ -36,6 +41,7 @@ def setupComplete(request):
         return redirect(loadLoginPage)
 
 
+@scanner_view()
 def startScan(request):
     """Start a new AI security scan"""
     try:
@@ -46,6 +52,7 @@ def startScan(request):
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
 
 
+@scanner_view()
 def refreshBalance(request):
     """Refresh account balance from API"""
     try:
@@ -56,6 +63,7 @@ def refreshBalance(request):
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
 
 
+@scanner_view()
 def addPaymentMethod(request):
     """Add a new payment method"""
     try:
@@ -66,6 +74,7 @@ def addPaymentMethod(request):
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
 
 
+@scanner_view(page=True)
 def paymentMethodComplete(request):
     """Handle return from adding payment method"""
     try:
@@ -76,6 +85,7 @@ def paymentMethodComplete(request):
         return redirect(loadLoginPage)
 
 
+@scanner_view()
 def getScanHistory(request):
     """Get scan history for user"""
     try:
@@ -117,9 +127,11 @@ def getScanHistory(request):
     except KeyError:
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile('[AI Scanner] Request failed: %s' % type(e).__name__)
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 
+@scanner_view()
 @require_http_methods(['GET'])
 def getScanDetails(request, scan_id):
     """Get detailed scan results"""
@@ -189,9 +201,11 @@ def getScanDetails(request, scan_id):
     except ScanHistory.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Scan not found'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile('[AI Scanner] Request failed: %s' % type(e).__name__)
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 
+@scanner_view()
 @require_http_methods(['GET'])
 def getPlatformMonitorUrl(request, scan_id):
     """Get the platform monitor URL for a scan"""
@@ -199,7 +213,6 @@ def getPlatformMonitorUrl(request, scan_id):
         userID = request.session['userID']
         from loginSystem.models import Administrator
         from .models import ScanHistory, AIScannerSettings
-        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
         import requests
         
         # Get scan to verify ownership
@@ -313,31 +326,31 @@ def getPlatformMonitorUrl(request, scan_id):
                     'platform_scan_id': data.get('platform_scan_id')
                 })
             else:
-                error_msg = data.get('error', 'Failed to get monitor URL')
-                logging.writeToFile(f"[AI Scanner] Failed to get monitor URL: {error_msg}")
+                logging.writeToFile(f"[AI Scanner] Failed to get monitor URL for scan {scan_id}")
                 return JsonResponse({
                     'success': False,
-                    'error': error_msg,
-                    'scan_exists': data.get('scan_exists', False)
+                    'error': 'Failed to get monitor URL',
+                    'scan_exists': bool(data.get('scan_exists', False))
                 })
                 
         except requests.exceptions.Timeout:
             logging.writeToFile(f"[AI Scanner] Platform request timeout for scan {scan_id}")
             return JsonResponse({'success': False, 'error': 'Platform request timeout'})
         except requests.exceptions.RequestException as e:
-            logging.writeToFile(f"[AI Scanner] Platform request error: {str(e)}")
-            return JsonResponse({'success': False, 'error': f'Platform error: {str(e)}'})
+            logging.writeToFile(f"[AI Scanner] Platform request error: {type(e).__name__}")
+            return JsonResponse({'success': False, 'error': 'Platform request failed'})
         except Exception as e:
-            logging.writeToFile(f"[AI Scanner] Unexpected error: {str(e)}")
-            return JsonResponse({'success': False, 'error': f'Error: {str(e)}'})
+            logging.writeToFile(f"[AI Scanner] Unexpected error: {type(e).__name__}")
+            return JsonResponse({'success': False, 'error': 'Internal server error'})
             
     except KeyError:
         return JsonResponse({'success': False, 'error': 'Not authenticated'})
     except Exception as e:
-        logging.writeToFile(f"[AI Scanner] getPlatformMonitorUrl error: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile(f"[AI Scanner] getPlatformMonitorUrl error: {type(e).__name__}")
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 
+@scanner_view()
 def getPlatformScanStatus(request, scan_id):
     """Get real-time scan status from AI Scanner platform"""
     try:
@@ -416,4 +429,5 @@ def getPlatformScanStatus(request, scan_id):
     except ScanHistory.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Scan not found'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logging.writeToFile('[AI Scanner] Request failed: %s' % type(e).__name__)
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
