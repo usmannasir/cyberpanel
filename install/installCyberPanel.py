@@ -1734,6 +1734,7 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
     installer.installLiteSpeed()
     if ent == 0:
         installer.changePortTo80()
+    logging.InstallLog.step('php')
     logging.InstallLog.writeToFile('Installing Optimized PHPs..,50')
     installer.installAllPHPVersions()
     if ent == 0:
@@ -1744,6 +1745,7 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
 
     ## setupWebmail is called later, after Dovecot is installed (see install.py)
 
+    logging.InstallLog.step('database')
     logging.InstallLog.writeToFile('Installing MySQL,60')
     installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
@@ -1768,6 +1770,7 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
             "that this server is allowed to connect. Aborting.")
         os._exit(os.EX_SOFTWARE)
 
+    logging.InstallLog.step('ftp', ftp is None or ftp == 'ON')
     if ftp is None:
         installer.installPureFTPD()
         installer.installPureFTPDConfigurations(mysql)
@@ -1778,6 +1781,7 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
             installer.installPureFTPDConfigurations(mysql)
             installer.startPureFTPD()
 
+    logging.InstallLog.step('dns', dns is None or dns == 'ON')
     if dns is None:
         installer.installPowerDNS()
         installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
