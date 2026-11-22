@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from install.installer_test_harness import ROOT, Installer, script_parts
+from install.installer_test_harness import ROOT, Installer, parse_as_python_36, script_parts
 
 SECRET = 'Tr0ub4dor&3 -e \\n $HOME `id` "quoted"'
 AS_ROOT = unittest.skipUnless(os.geteuid() == 0, 'a file owned by root is needed')
@@ -232,7 +232,7 @@ class PanelAccountTests(unittest.TestCase):
 
 class AdminPassScriptTests(unittest.TestCase):
     def setUp(self):
-        self.tree = ast.parse((ROOT / 'plogical/adminPass.py').read_text(), feature_version=(3, 6))
+        self.tree = parse_as_python_36((ROOT / 'plogical/adminPass.py').read_text())
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.directory = directory.name
