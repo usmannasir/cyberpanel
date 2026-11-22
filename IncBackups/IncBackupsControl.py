@@ -32,6 +32,12 @@ except:
     pass
 
 
+def dump_database_name(path):
+    """The database a dump file holds: its file name without the `.sql` ending."""
+    name = path.split('/')[-1]
+    return name[:-len('.sql')] if name.endswith('.sql') else name
+
+
 class IncJobs(multi.Thread):
 
     def __init__(self, function, extraArgs):
@@ -140,7 +146,7 @@ class IncJobs(multi.Thread):
                 resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
                 command = f'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s --exclude /home/{self.website.domain}/logs --exclude /home/%s/backup --exclude /home/%s/incbackup' % (
-                    key, secret, self.website.domain, backupPath, self.passwordFile, self.website.domain, self.website.domain)
+                    key, secret, self.website.domain, shlex.quote(backupPath), self.passwordFile, self.website.domain, self.website.domain)
 
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
                 if os.path.isfile(backupExcludesFile):
@@ -159,7 +165,7 @@ class IncJobs(multi.Thread):
 
                 if bType == 'database':
                     newSnapshot = JobSnapshots(job=self.jobid,
-                                               type='%s:%s' % (bType, backupPath.split('/')[-1].rstrip('.sql')),
+                                               type='%s:%s' % (bType, dump_database_name(backupPath)),
                                                snapshotid=snapShotid,
                                                destination=self.backupDestinations)
                 else:
@@ -233,7 +239,7 @@ class IncJobs(multi.Thread):
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
             command = 'restic -r %s backup %s --password-file %s --exclude %s --exclude /home/%s/backup --exclude /home/%s/logs' % (
-                self.repoPath, backupPath, self.passwordFile, self.repoPath,
+                self.repoPath, shlex.quote(backupPath), self.passwordFile, self.repoPath,
                 self.website.domain, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
@@ -248,7 +254,7 @@ class IncJobs(multi.Thread):
 
             if type == 'database':
                 newSnapshot = JobSnapshots(job=self.jobid,
-                                           type='%s:%s' % (type, backupPath.split('/')[-1].rstrip('.sql')),
+                                           type='%s:%s' % (type, dump_database_name(backupPath)),
                                            snapshotid=snapShotid,
                                            destination=self.backupDestinations)
             else:
@@ -296,7 +302,7 @@ class IncJobs(multi.Thread):
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
             remotePath = '/home/backup/%s' % (self.website.domain)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup --exclude /home/%s/logs' % (
-                self.backupDestinations, remotePath, backupPath, self.passwordFile,
+                self.backupDestinations, remotePath, shlex.quote(backupPath), self.passwordFile,
                 self.repoPath, self.website.domain, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
@@ -311,7 +317,7 @@ class IncJobs(multi.Thread):
 
             if type == 'database':
                 newSnapshot = JobSnapshots(job=self.jobid,
-                                           type='%s:%s' % (type, backupPath.split('/')[-1].rstrip('.sql')),
+                                           type='%s:%s' % (type, dump_database_name(backupPath)),
                                            snapshotid=snapShotid,
                                            destination=self.backupDestinations)
             else:
@@ -380,7 +386,7 @@ class IncJobs(multi.Thread):
     def databaseOfDump(self, fileName):
         """The database a dump file is restored into; it must be one of this website's own."""
         from databases.models import Databases
-        name = fileName[:-len('.sql')] if fileName.endswith('.sql') else fileName
+        name = dump_database_name(fileName)
         website = getattr(self.website, 'domain', self.website)
         if not Databases.objects.filter(dbName=name, website__domain=website).exists():
             raise BaseException('The database %s does not belong to %s.' % (name, website))
@@ -664,6 +670,14 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath, '%s. [IncJobs.backupData.223][5009]' % str(msg), 1)
             return 0
 
+    def removeDump(self, path, user=None):
+        """Remove a dump file, as root or as the account whose directory it is in; a failure is only reported."""
+        try:
+            ProcessUtilities.executioner('rm -f %s' % shlex.quote(path), user)
+        except BaseException as msg:
+            logging.statusWriter(self.statusPath,
+                                 'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
+
     def backupDatabases(self):
         try:
             logging.statusWriter(self.statusPath, 'Backing up databases..', 1)
@@ -691,36 +705,52 @@ class IncJobs(multi.Thread):
 
                 ###
 
-                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, UploadPath) == 0:
+                dbPath = '%s/%s.sql' % (UploadPath, items.dbName)
+                dbPathNew = '/home/%s/%s.sql' % (self.website.domain, items.dbName)
+
+                # A dump an earlier run left in the website's directory must
+                # never be what this snapshot saves.
+                self.removeDump(dbPathNew, self.externalApp)
+
+                # The snapshot is made of one plain dump, whatever the server's
+                # setting for compressed dumps is.
+                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, UploadPath,
+                                                                      use_compression=False) == 0:
                     return 0
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'Backup created for DB Incscheduler.backupDatabases')
 
-                dbPath = '%s/%s.sql' % (UploadPath, items.dbName)
-                dbPathNew = '/home/%s/%s.sql' % (self.website.domain, items.dbName)
-
-                command = 'cp %s %s' % (dbPath, dbPathNew)
-                ProcessUtilities.executioner(command, self.externalApp)
-
-                if self.backupDestinations == 'local':
-                    if self.localFunction(dbPathNew, 'database') == 0:
-                        return 0
-                elif self.backupDestinations[:4] == 'sftp':
-                    if self.sftpFunction(dbPathNew, 'database') == 0:
-                        return 0
-
-                else:
-                    if self.awsFunction('backup', dbPathNew, '', 'database') == 0:
-                        return 0
-
                 try:
-                    dbPath = '/usr/local/CyberCP/tmp/%s.sql' % (items.dbName)
-                    command = 'rm -f %s' % (dbPath)
-                    ProcessUtilities.executioner(command, self.externalApp)
-                except BaseException as msg:
-                    logging.statusWriter(self.statusPath,
-                                         'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
+                    # The dump is a private file of the panel. It is given to the
+                    # website's account, which makes the copy the snapshot saves.
+                    command = 'chown %s:%s %s' % (self.externalApp, self.externalApp, shlex.quote(dbPath))
+                    ProcessUtilities.executioner(command)
+
+                    command = 'cp %s %s' % (shlex.quote(dbPath), shlex.quote(dbPathNew))
+                    copied, output = ProcessUtilities.outputExecutioner(
+                        command, self.externalApp, shell=False, retRequired=True)
+                    if copied != 1:
+                        logging.statusWriter(
+                            self.statusPath,
+                            'The dump of database %s could not be handed to the website: %s. '
+                            '[IncJobs.backupDatabases][5009]' % (items.dbName, str(output).strip()), 1)
+                        return 0
+
+                    if self.backupDestinations == 'local':
+                        if self.localFunction(dbPathNew, 'database') == 0:
+                            return 0
+                    elif self.backupDestinations[:4] == 'sftp':
+                        if self.sftpFunction(dbPathNew, 'database') == 0:
+                            return 0
+
+                    else:
+                        if self.awsFunction('backup', dbPathNew, '', 'database') == 0:
+                            return 0
+                finally:
+                    # Neither copy outlives the snapshot.
+                    self.removeDump(dbPath)
+                    self.removeDump(dbPathNew, self.externalApp)
 
             return 1
         except BaseException as msg:

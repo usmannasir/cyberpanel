@@ -2537,14 +2537,17 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
             # Move database backup (check for both .sql.gz and .sql)
             if os.path.exists(f'/home/cyberpanel/{dbName}.sql.gz'):
-                command = f'mv /home/cyberpanel/{dbName}.sql.gz {CPHomeStorage}/{dbName}.sql.gz'
+                command = 'mv %s %s' % (shlex.quote(f'/home/cyberpanel/{dbName}.sql.gz'),
+                                        shlex.quote(f'{CPHomeStorage}/{dbName}.sql.gz'))
                 ProcessUtilities.executioner(command)
                 # Also move metadata file if it exists
                 if os.path.exists(f'/home/cyberpanel/{dbName}.backup.json'):
-                    command = f'mv /home/cyberpanel/{dbName}.backup.json {CPHomeStorage}/{dbName}.backup.json'
+                    command = 'mv %s %s' % (shlex.quote(f'/home/cyberpanel/{dbName}.backup.json'),
+                                            shlex.quote(f'{CPHomeStorage}/{dbName}.backup.json'))
                     ProcessUtilities.executioner(command)
             elif os.path.exists(f'/home/cyberpanel/{dbName}.sql'):
-                command = f'mv /home/cyberpanel/{dbName}.sql {CPHomeStorage}/{dbName}.sql'
+                command = 'mv %s %s' % (shlex.quote(f'/home/cyberpanel/{dbName}.sql'),
+                                        shlex.quote(f'{CPHomeStorage}/{dbName}.sql'))
                 ProcessUtilities.executioner(command)
 
 
