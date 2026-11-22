@@ -203,29 +203,55 @@ class NoRunTests(unittest.TestCase):
                 self.assertIn('CyberPanel Installer Script Help', result.stdout)
                 self.assert_untouched(machine)
 
+    def test_value_that_cannot_be_used_ends_with_status_two_before_anything_is_touched(self):
+        # Before this was checked up front, a running Apache had been stopped and
+        # masked by the time the value was looked at.
+        for arguments, said in (
+                (['-v', 'ols', '-p', 'short'], 'Password length less than 8'),
+                (['-v', 'ols', '-b', 'junk'], 'Please input a valid format version number.'),
+                (['-v', 'ols', '-b', '1.0.0'], 'You must use version number higher than 1.9.4'),
+                (['-v', 'ols', '-b'], 'Please input a valid format version number.'),
+                (['-v', 'not-a-license-key'], 'License key seems incorrect'),
+                (['-b', '2.4.4', '-a', '-v', 'ABCD-EFGH-IJKL'], 'License key seems incorrect')):
+            with self.subTest(arguments=arguments):
+                machine = Installer(self)
+                result = machine.run(*arguments, active_service='apache2')
+                self.assertEqual(2, result.returncode, result.stdout + result.stderr)
+                self.assertIn(said, result.stdout)
+                self.assert_untouched(machine)
+
     def test_usage_check_and_argument_reader_agree(self):
         functions, _ = script_parts()
         reader = functions[functions.index('\nCheck_Usage() {'):functions.index('\nArgument_Mode() {')]
         helpers = ''.join(
             re.search(r'^%s\(\) \{\n.*?^\}\n' % name, functions, re.M | re.S).group(0)
-            for name in ('Fail_Install', 'Leave_Install', 'Branch_Check', 'Named_Components')
+            for name in ('Fail_Install', 'Leave_Install', 'Branch_Problem', 'License_Problem',
+                         'Password_Problem', 'Branch_Check', 'Named_Components')
             if re.search(r'^%s\(\) \{' % name, functions, re.M))
         cases = {
             (): (0, 0), ('--debug',): (0, 0), ('default',): (0, 0), ('default', 'junk'): (0, 0),
             ('-v', 'ols'): (0, 0), ('--version', 'OLS', '--addons', '--mirror'): (0, 0),
             ('-v', 'ols', '-p', 'r'): (0, 0), ('-v', 'ols', '-p'): (0, 0),
             ('-v', 'ols', '-m', 'postfix', 'powerdns'): (0, 0),
-            ('-v', 'ols', '-b', '2.4.4'): (0, 0),
+            ('-v', 'ols', '-b', '2.4.4'): (0, 0), ('-b', ' 3.0.12 ', '-v', 'ols'): (0, 0),
+            ('-v', 'ols', '-p', '12345678'): (0, 0), ('-v', 'ols', '-p', 'd'): (0, 0),
+            ('-v', 'ols', '-p', 'random', '-a'): (0, 0),
+            # The licence key is used by Argument_Mode, after the reader.
+            ('-v', 'ABCD-EFGH-IJKL-MNOP'): (0, 0), ('-v', 'trial'): (0, 0), ('-v', 'TRIAL', '-a'): (0, 0),
             ('help',): ('help', 0), ('-h',): ('help', 0), ('-a', '--help'): ('help', 0),
             ('-v',): (2, 2), ('-x',): (2, 2), ('-v', 'ols', 'what'): (2, 2),
-            # A value that cannot be used is found by the reader alone.
-            ('-v', 'ols', '-p', 'short'): (0, 2), ('-v', 'ols', '-b', 'junk'): (0, 2),
-            ('-v', 'ols', '-b', '1.0.0'): (0, 2),
+            # A value that cannot be used ends both, the check first.
+            ('-v', 'ols', '-p', 'short'): (2, 2), ('-v', 'ols', '-b', 'junk'): (2, 2),
+            ('-v', 'ols', '-b', '1.0.0'): (2, 2), ('-v', 'ols', '-b', '1.9.3'): (2, 2),
+            ('-v', 'ols', '-b'): (2, 2),
+            ('-v', 'not-a-license-key'): (2, 0), ('-v', 'ABCD-EFGH-IJKL'): (2, 0),
+            ('-v', 'ABCD-EFGH-IJKL-MNOPQ'): (2, 0), ('-v', 'ABCDEFGHIJKLMNOPQRS'): (2, 0),
         }
         for arguments, (usage, reading) in cases.items():
             with self.subTest(arguments=arguments):
                 script = ('Show_Help() { echo HELP; }\nlog_function_start() { :; }\nDebug_Log2() { :; }\n'
-                          'Base_Number="1.9.3"\ntrap \'echo "REASON=$Install_Fail_Code"\' EXIT\n'
+                          'Base_Number="1.9.3"\nAdmin_Pass_From_File=""\n'
+                          'trap \'echo "REASON=$Install_Fail_Code"\' EXIT\n'
                           + helpers + reader)
                 outcomes = []
                 for function in ('Check_Usage', 'Check_Argument'):
@@ -305,11 +331,13 @@ class FailedRunTests(unittest.TestCase):
                          [call for call in machine.recorded(machine.calls)
                           if call.startswith('systemctl') and 'is-active' not in call])
 
-    def test_value_that_cannot_be_used(self):
-        self.failed('-v', 'ols', '-p', 'short', status=2, reason='invalid_input')
-        self.failed('-v', 'ols', '-b', 'junk', status=2, reason='invalid_input')
-        self.failed('-v', 'ols', '-b', '1.0.0', status=2, reason='invalid_input')
-        self.failed('-v', 'not-a-license-key', status=2, reason='invalid_input')
+    def test_answer_that_cannot_be_used(self):
+        # Install, OpenLiteSpeed, full service, local MySQL, then the version question.
+        _, result = self.failed('--debug', stdin='1\n1\n\n\njunk\n', status=2, reason='invalid_input')
+        self.assertIn('Please input a valid format version number.', result.stdout)
+        # LiteSpeed Enterprise with a serial number that is none.
+        _, result = self.failed('--debug', stdin='1\n2\nnot-a-key\ny\n', status=2, reason='invalid_input')
+        self.assertIn('License key seems incorrect', result.stdout)
 
     def test_wrong_answer_at_the_menu(self):
         self.failed('--debug', stdin='7\n', reason='invalid_input')

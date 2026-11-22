@@ -21,7 +21,7 @@ class ComponentChoiceTests(unittest.TestCase):
                   'Fail_Install() { echo "FAILED $*" >&3; exit "${2:-1}"; }\n'
                   'Postfix_Switch="On"\nPowerDNS_Switch="On"\nPureFTPd_Switch="On"\n'
                   'Minimal_Install="Off"\nMinimal_Components=()\nAdmin_Pass_From_File=""\n'
-                  + function('Named_Components') + function('Check_Argument') +
+                  + function('Named_Components') + function('Password_Problem') + function('Check_Argument') +
                   'Check_Argument "$@" >/dev/null\n'
                   'echo "$Postfix_Switch $PowerDNS_Switch $PureFTPd_Switch"\n')
         result = subprocess.run(['bash', '-c', script, 'bash'] + list(arguments), stdout=subprocess.PIPE,

@@ -584,39 +584,61 @@ Validate_Remote_MySQL() {
   return 0
 }
 
-Branch_Check() {
-if [[ "$1" = *.*.* ]]; then
-  #check input if it's valid format as X.Y.Z
-  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
-  BEGIN {
-    print "num1", (num1 < num2 ? "<" : ">="), "num2"
-  }
-  ')
-  if [[ $Output = *">="* ]]; then
-    echo -e "\nYou must use version number higher than 1.9.4"
-    Fail_Install invalid_input 2
-  else
-    Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name..."
-  fi
-else
-  echo -e "\nPlease input a valid format version number."
-  Fail_Install invalid_input 2
+# What is wrong with a value, in the words shown for it; nothing when the value
+# can be used. Check_Usage asks before anything on the server is touched, the
+# functions that take the values from the command line or from an answer ask
+# again where they use them.
+
+Branch_Problem() {
+# A version for -b or the version question: X.Y.Z, above 1.9.3.
+if [[ "$1" != *.*.* ]]; then
+  echo "Please input a valid format version number."
+elif [[ $(awk -v num1="${Base_Number:-1.9.3}" -v num2="${1//[[:space:]]/}" 'BEGIN { print (num1 < num2 ? "<" : ">=") }') != "<" ]]; then
+  echo "You must use version number higher than 1.9.4"
 fi
 }
 
+License_Problem() {
+# A LiteSpeed Enterprise serial number, XXXX-XXXX-XXXX-XXXX, or "trial".
+if [[ "${1,,}" = "trial" ]]; then
+  return 0
+fi
+if [[ ${#1} != "19" ]] || ! echo "$1" | grep -q "^....-....-....-....$"; then
+  echo -e "License key seems incorrect, please verify\n\nIf you are copying/pasting, please make sure you didn't paste blank space..."
+fi
+}
+
+Password_Problem() {
+# A value of -p: nothing, d, r or random, or a password of 8 characters or more.
+if [[ -n "$1" && "$1" != "d" && "$1" != "r" && "$1" != "random" && ${#1} -lt 8 ]]; then
+  echo "Password length less than 8 digital, please choose a more complicated password."
+fi
+}
+
+Branch_Check() {
+local problem
+problem=$(Branch_Problem "$1")
+if [[ -n "$problem" ]]; then
+  echo -e "\n$problem"
+  Fail_Install invalid_input 2
+fi
+Branch_Name="v${1//[[:space:]]/}"
+echo -e "\nSet branch name to $Branch_Name..."
+}
+
 License_Check() {
+local problem
 License_Key="$1"
 echo -e "\nChecking LiteSpeed Enterprise license key..."
-if echo "$License_Key" | grep -q "^....-....-....-....$" && [[ ${#License_Key} = "19" ]]; then
-  echo -e "\nLicense key set...\n"
+problem=$(License_Problem "$License_Key")
+if [[ -n "$problem" ]]; then
+  echo -e "\n$problem\n"
+  Fail_Install invalid_input 2
 elif [[ ${License_Key,,} = "trial" ]] ; then
   echo -e "\nTrial license set..."
   License_Key="Trial"
 else
-  echo -e "\nLicense key seems incorrect, please verify"
-  echo -e "\nIf you are copying/pasting, please make sure you didn't paste blank space...\n"
-  Fail_Install invalid_input 2
+  echo -e "\nLicense key set...\n"
 fi
 }
 
@@ -973,27 +995,30 @@ Read_Admin_Password_File() {
 # CP_ADMIN_PASSWORD_FILE names a file that only root can read, with the admin
 # password on its first line. A password given this way takes the place of -p
 # and is never shown, logged or put on a command line. Read before anything on
-# the server is changed, so that a file that cannot be used changes nothing.
+# the server is changed, and before the command line is checked, which then
+# knows that a value of -p is not used. What is wrong with the file is kept in
+# Admin_Pass_File_Problem and said after a request for help was answered.
 local details owner mode
 Admin_Pass_From_File=""
+Admin_Pass_File_Problem=""
 if [[ -z "${CP_ADMIN_PASSWORD_FILE:-}" ]]; then
   return 0
 fi
 if [[ -L "$CP_ADMIN_PASSWORD_FILE" || ! -f "$CP_ADMIN_PASSWORD_FILE" ]]; then
-  echo -e "\nCP_ADMIN_PASSWORD_FILE does not name a regular file.\n" >&2
+  Admin_Pass_File_Problem="CP_ADMIN_PASSWORD_FILE does not name a regular file."
   return 1
 fi
 details=$(stat -c '%u %a' "$CP_ADMIN_PASSWORD_FILE" 2>/dev/null)
 owner=${details%% *}
 mode=${details##* }
 if [[ "$owner" != "0" || ! "$mode" =~ ^[0-7]+$ ]] || (( (8#$mode & 8#77) != 0 )); then
-  echo -e "\nThe file named in CP_ADMIN_PASSWORD_FILE must belong to root and be readable by root only (chmod 600).\n" >&2
+  Admin_Pass_File_Problem="The file named in CP_ADMIN_PASSWORD_FILE must belong to root and be readable by root only (chmod 600)."
   return 1
 fi
 IFS= read -r Admin_Pass_From_File < "$CP_ADMIN_PASSWORD_FILE"
 if [[ ${#Admin_Pass_From_File} -lt 8 ]]; then
   Admin_Pass_From_File=""
-  echo -e "\nThe password in the file named in CP_ADMIN_PASSWORD_FILE has less than 8 characters.\n" >&2
+  Admin_Pass_File_Problem="The password in the file named in CP_ADMIN_PASSWORD_FILE has less than 8 characters."
   return 1
 fi
 return 0
@@ -1028,8 +1053,10 @@ printf '%s\n' "${names[@]}"
 Check_Usage() {
 # Answers from the arguments alone, before the server is looked at or anything
 # on it is changed: a request for help ends here with status 0, a command line
-# that cannot be understood with status 2. Neither starts an installation, so
-# neither is recorded as one. The options are those of Check_Argument.
+# that cannot be understood, or that holds a value that cannot be used, with
+# status 2. Neither starts an installation, so neither is recorded as one. The
+# options are those of Check_Argument.
+local problem=""
 if [[ "${1:-}" = "help" ]]; then
   Show_Help
   exit 0
@@ -1047,10 +1074,20 @@ while [[ -n "${1:-}" ]]; do
     if [[ "${1:-}" = "" ]]; then
       Show_Help
       exit 2
+    elif [[ "${1^^}" != "OLS" ]]; then
+      problem=$(License_Problem "$1")
     fi
   ;;
-  -p | --password | -b | --branch)
+  -p | --password)
     shift
+    # Not looked at when the password comes from a file: it is not used then.
+    if [[ -z "$Admin_Pass_From_File" ]]; then
+      problem=$(Password_Problem "${1:-}")
+    fi
+  ;;
+  -b | --branch)
+    shift
+    problem=$(Branch_Problem "${1:-}")
   ;;
   -m | --minimal | -a | --addons | --debug | --mirror)
   ;;
@@ -1062,6 +1099,10 @@ while [[ -n "${1:-}" ]]; do
     fi
   ;;
   esac
+  if [[ -n "$problem" ]]; then
+    echo -e "\n$problem\n"
+    exit 2
+  fi
   shift
 done
 }
@@ -1106,25 +1147,26 @@ else
       ;;
       -p | --password)
       shift
-      if [[ ${1} = "" ]]; then
-        Admin_Pass="1234567"
-      elif [[ ${1} = "r" ]] || [[ $1 = "random" ]]; then
-        Admin_Pass=$(
-        head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
-        echo ''
-        )
-      elif [[ ${1} = "d" ]]; then
-        Admin_Pass="1234567"
-      else
-        if [[ ${#1} -lt 8 ]]; then
-          echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
-          Fail_Install invalid_input 2
-        fi
-        Admin_Pass="${1}"
-      fi
       if [[ -n "$Admin_Pass_From_File" ]]; then
+        # The value is neither used nor looked at.
         echo -e "\nThe password option is not used: the admin password is read from the file named in CP_ADMIN_PASSWORD_FILE..."
       else
+        if [[ ${1} = "" ]]; then
+          Admin_Pass="1234567"
+        elif [[ ${1} = "r" ]] || [[ $1 = "random" ]]; then
+          Admin_Pass=$(
+          head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
+          echo ''
+          )
+        elif [[ ${1} = "d" ]]; then
+          Admin_Pass="1234567"
+        else
+          if [[ -n "$(Password_Problem "$1")" ]]; then
+            echo -e "\n$(Password_Problem "$1")\n"
+            Fail_Install invalid_input 2
+          fi
+          Admin_Pass="${1}"
+        fi
         echo -e "\nSet to use password ${1}..."
       fi
       ;;
@@ -3165,9 +3207,14 @@ sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech
 sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 }
 
+Read_Admin_Password_File
+
 Check_Usage "$@"
 
-Read_Admin_Password_File || exit 2
+if [[ -n "$Admin_Pass_File_Problem" ]]; then
+  echo -e "\n$Admin_Pass_File_Problem\n" >&2
+  exit 2
+fi
 
 Mask_Arguments "$@"
 
