@@ -713,6 +713,36 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
         return 1, None
 
+    def install_compose_file(self, content):
+        """
+        Put the compose file of the site in place, and return (1, None) or (0, the error).
+
+        The file holds the passwords of the site. It is written where only the
+        panel can read it and handed to root in one step that also sets its
+        owner and mode, so there is no moment at which another account of the
+        server could read it.
+        """
+        temporary = f'/home/cyberpanel/{self.data["finalURL"]}-docker-compose.yml'
+
+        try:
+            os.remove(temporary)
+        except OSError:
+            pass
+
+        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, 'w') as handle:
+            handle.write(content)
+
+        command = f"install -m 600 -o root -g root {shlex.quote(temporary)} {shlex.quote(self.data['ComposePath'])}"
+        result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+        try:
+            os.remove(temporary)
+        except OSError:
+            pass
+
+        return (1, None) if result else (0, message)
+
     def wait_for_wordpress(self, attempts=60, delay=5):
         client = docker.from_env()
         for _ in range(attempts):
@@ -762,21 +792,11 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
                 return 0
 
-            TempCompose = f'/home/cyberpanel/{self.data["finalURL"]}-docker-compose.yml'
-
-            WriteToFile = open(TempCompose, 'w')
-            WriteToFile.write(WPSite)
-            WriteToFile.close()
-
-            command = f"mv {TempCompose} {self.data['ComposePath']}"
-            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+            result, message = self.install_compose_file(WPSite)
 
             if result == 0:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
                 return 0
-
-            command = f"chmod 600 {self.data['ComposePath']} && chown root:root {self.data['ComposePath']}"
-            ProcessUtilities.executioner(command, 'root', True)
 
             ####
 
@@ -1619,17 +1639,9 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 self.data['ServiceName'] = self.data["SiteName"].replace(' ', '-')
                 compose_config = getattr(self, meta['compose'])()
                 
-                TempCompose = f'/home/cyberpanel/{self.data["finalURL"]}-docker-compose.yml'
-                with open(TempCompose, 'w') as f:
-                    f.write(compose_config)
-                
-                command = f"mv {TempCompose} {self.data['ComposePath']}"
-                result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                result, message = self.install_compose_file(compose_config)
                 if result == 0:
                     raise DockerDeploymentError(f"Failed to move compose file: {message}")
-                
-                command = f"chmod 600 {self.data['ComposePath']} && chown root:root {self.data['ComposePath']}"
-                ProcessUtilities.executioner(command, 'root', True)
                 logging.statusWriter(self.JobID, 'Docker compose file created...,40')
 
                 # Deploy containers

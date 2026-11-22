@@ -66,7 +66,7 @@ class ComposeAppTests(unittest.TestCase):
         self.assertIs(True, run.result)
         self.assertLess(position(run.events, ROOT_DIRECTORY), position(run.events, N8N_DATA))
         self.assertLess(position(run.events, N8N_DATA), position(run.events, ' up -d'))
-        self.assertLess(position(run.events, ROOT_DIRECTORY), position(run.events, 'docker-compose.yml /home/docker'))
+        self.assertLess(position(run.events, ROOT_DIRECTORY), position(run.events, 'COMPOSE FILE'))
         self.assertEqual([], [event for event in run.events if event.startswith('mkdir')])
 
     def test_an_application_that_runs_as_root_gets_the_private_directory_only(self):
@@ -117,14 +117,15 @@ class WordPressTests(unittest.TestCase):
                 mock.patch.object(docker_sites.ProcessUtilities, 'executioner', side_effect=execute), \
                 mock.patch.object(docker_sites.ProcessUtilities, 'decideDistro', return_value=0), \
                 mock.patch('plogical.DockerSites.os.path.exists', return_value=False), \
-                mock.patch('builtins.open', mock.mock_open()), \
+                mock.patch.object(site, 'install_compose_file',
+                                  side_effect=lambda content: events.append('COMPOSE FILE') or (1, None)), \
                 mock.patch.dict(sys.modules, {'plogical.installUtilities': utilities}), \
                 mock.patch.object(site, 'wait_for_wordpress'), \
                 mock.patch.object(docker_sites.logging, 'statusWriter') as status, \
                 mock.patch.object(docker_sites.logging, 'writeToFile'):
             site.DeployWPContainer()
         self.assertTrue(any('[200]' in call[0][1] for call in status.call_args_list))
-        self.assertLess(position(events, ROOT_DIRECTORY), position(events, 'docker-compose.yml /home/docker'))
+        self.assertLess(position(events, ROOT_DIRECTORY), position(events, 'COMPOSE FILE'))
         self.assertLess(position(events, ROOT_DIRECTORY), position(events, ' up -d'))
         self.assertEqual([], [event for event in events if event.startswith('mkdir')])
 
