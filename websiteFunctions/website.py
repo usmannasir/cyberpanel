@@ -186,16 +186,19 @@ class WebsiteManager:
         The database compares names more loosely than the file system does
         (letter case, trailing spaces). After the ownership check, paths and
         command lines are therefore built from the stored name, never from
-        the spelling a request used.
+        the spelling a request used. The request only has to be text that
+        finds a row; the stored name is then checked as a path component, so
+        a website named by an earlier release's rules stays manageable.
         """
-        from plogical.websiteSuspension import validate_domain
-        validate_domain(domain)
+        from plogical.websiteSuspension import validate_stored_domain
+        if not isinstance(domain, str):
+            raise ValueError('Invalid domain name.')
         row = ChildDomains.objects.filter(domain=domain).first()
         if row is None:
             row = Websites.objects.filter(domain=domain).first()
         if row is None:
             raise ValueError('Invalid domain name.')
-        return row.domain
+        return validate_stored_domain(row.domain)
 
     @staticmethod
     def gitCloneURL(host, username, repository):

@@ -40,8 +40,8 @@ class tuning:
     def phpTuningTarget(virtualHost):
         """What PHP tuning acts on: a website on OpenLiteSpeed, a LiteSpeed PHP on Enterprise."""
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            from plogical.websiteSuspension import validate_domain
-            return validate_domain(virtualHost)
+            from plogical.websiteSuspension import validate_stored_domain
+            return validate_stored_domain(virtualHost)
         if isinstance(virtualHost, str) and re.fullmatch(r'lsphp[0-9]{2,3}', virtualHost):
             return virtualHost
         raise ValueError('Invalid PHP version selected.')

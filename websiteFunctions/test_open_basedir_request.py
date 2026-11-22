@@ -11,7 +11,7 @@ import unittest
 from unittest import mock
 
 from plogical.test_php_restart_marker import load_methods
-from websiteFunctions.test_stored_domain_name import NOT_A_DOMAIN, prepared_manager
+from websiteFunctions.test_stored_domain_name import NOT_A_DOMAIN, OLDER_NAMES, UNSAFE_STORED_NAME, prepared_manager
 
 NOT_A_CHOICE = ('Enable --virtualHostName other.example', 'Enable;id', 'enable', 'Enabled', 'Enable ', '1', '',
                 None, True, ['Enable'], {'Enable': 1})
@@ -94,9 +94,18 @@ class OpenBasedirWorkerTests(unittest.TestCase):
         self.assertEqual('docRoot $VH_ROOT/public_html\nphpIniOverride  {\n}\n', self.vhost.read_text())
         self.install.installUtilities.reStartLiteSpeed.assert_called_once_with()
 
+    def test_a_website_named_by_an_earlier_release_is_changed(self):
+        for name in OLDER_NAMES:
+            with self.subTest(name=name):
+                vhost = Path(self.temp.name) / 'conf' / 'vhosts' / name / 'vhost.conf'
+                vhost.parent.mkdir(parents=True)
+                vhost.write_text(self.conf)
+                self.assertEqual('1,None\n', self.run_worker(name, 'Disable'))
+                self.assertEqual('docRoot $VH_ROOT/public_html\nphpIniOverride  {\n}\n', vhost.read_text())
+
     def test_other_names_and_values_open_no_file_and_restart_nothing(self):
         os.mkdir(os.path.join(self.temp.name, 'conf', 'other'))
-        for domain, value in [(domain, 'Disable') for domain in NOT_A_DOMAIN + ('../other', 'example.test/../../other')] + \
+        for domain, value in [(domain, 'Disable') for domain in UNSAFE_STORED_NAME + ('../other', 'example.test/../../other')] + \
                 [('example.test', value) for value in NOT_A_CHOICE]:
             with self.subTest(domain=domain, value=value):
                 self.assertTrue(self.run_worker(domain, value).startswith('0,'))
