@@ -6,8 +6,8 @@ from loginSystem.models import Administrator
 from plogical.acl import ACLManager
 from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
-from django.views.decorators.csrf import csrf_exempt
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.DockerSites import COMPOSE_PROJECT_LABEL, compose_project_names
 
 def require_login(view_func):
     def wrapper(request, *args, **kwargs):
@@ -31,140 +31,78 @@ class DockerManager:
             logging.writeToFile(f"Error getting container {container_id}: {str(e)}")
             return None
 
-@csrf_exempt
+def refusal(message):
+    return HttpResponse(json.dumps({'status': 0, 'error_message': message}))
+
+
+def container_of_owned_site(request):
+    """
+    Return (container, None) for the container the request names when it belongs
+    to a Docker site of the signed-in user, else (None, the refusal to send).
+
+    The request names a Docker site and a container. The user must own the
+    website the site is installed on, and the container must carry the label of
+    that site's Docker Compose project: a container of another site, or one the
+    administrator started, is not found.
+    """
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    admin = Administrator.objects.get(pk=userID)
+
+    data = json.loads(request.body)
+    container_id = data.get('container_id')
+    site_name = data.get('name')
+
+    if not isinstance(site_name, str) or not isinstance(container_id, str) or not container_id.strip():
+        return None, refusal('Docker site not found')
+
+    try:
+        docker_site = DockerSites.objects.get(SiteName=site_name)
+    except DockerSites.DoesNotExist:
+        return None, refusal('Docker site not found')
+
+    if ACLManager.checkOwnership(docker_site.admin.domain, admin, currentACL) != 1:
+        return None, refusal('Not authorized to access this container')
+
+    container = DockerManager().get_container(container_id.strip())
+
+    if container is None:
+        return None, refusal('Container not found')
+
+    project = (container.labels or {}).get(COMPOSE_PROJECT_LABEL)
+
+    if not project or project not in compose_project_names(docker_site.SiteName):
+        return None, refusal('Container not found')
+
+    return container, None
+
+
+def container_action(request, action):
+    try:
+        if request.method != 'POST':
+            return HttpResponse('Not allowed')
+
+        container, refused = container_of_owned_site(request)
+
+        if refused is not None:
+            return refused
+
+        getattr(container, action)()
+        return HttpResponse(json.dumps({'status': 1}))
+    except Exception as e:
+        return refusal(str(e))
+
+
 @require_login
 def startContainer(request):
-    try:
-        if request.method == 'POST':
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+    return container_action(request, 'start')
 
-            data = json.loads(request.body)
-            container_id = data.get('container_id')
-            site_name = data.get('name')
 
-            # Verify Docker site ownership
-            try:
-                docker_site = DockerSites.objects.get(SiteName=site_name)
-                if currentACL['admin'] != 1 and docker_site.admin != admin and docker_site.admin.owner != admin.pk:
-                    return HttpResponse(json.dumps({
-                        'status': 0,
-                        'error_message': 'Not authorized to access this container'
-                    }))
-            except DockerSites.DoesNotExist:
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Docker site not found'
-                }))
-
-            docker_manager = DockerManager()
-            container = docker_manager.get_container(container_id)
-            
-            if not container:
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Container not found'
-                }))
-
-            container.start()
-            return HttpResponse(json.dumps({'status': 1}))
-
-        return HttpResponse('Not allowed')
-    except Exception as e:
-        return HttpResponse(json.dumps({
-            'status': 0,
-            'error_message': str(e)
-        }))
-
-@csrf_exempt
 @require_login
 def stopContainer(request):
-    try:
-        if request.method == 'POST':
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+    return container_action(request, 'stop')
 
-            data = json.loads(request.body)
-            container_id = data.get('container_id')
-            site_name = data.get('name')
 
-            # Verify Docker site ownership
-            try:
-                docker_site = DockerSites.objects.get(SiteName=site_name)
-                if currentACL['admin'] != 1 and docker_site.admin != admin and docker_site.admin.owner != admin.pk:
-                    return HttpResponse(json.dumps({
-                        'status': 0,
-                        'error_message': 'Not authorized to access this container'
-                    }))
-            except DockerSites.DoesNotExist:
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Docker site not found'
-                }))
-
-            docker_manager = DockerManager()
-            container = docker_manager.get_container(container_id)
-            
-            if not container:
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Container not found'
-                }))
-
-            container.stop()
-            return HttpResponse(json.dumps({'status': 1}))
-
-        return HttpResponse('Not allowed')
-    except Exception as e:
-        return HttpResponse(json.dumps({
-            'status': 0,
-            'error_message': str(e)
-        }))
-
-@csrf_exempt
 @require_login
 def restartContainer(request):
-    try:
-        if request.method == 'POST':
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-
-            data = json.loads(request.body)
-            container_id = data.get('container_id')
-            site_name = data.get('name')
-
-            # Verify Docker site ownership
-            try:
-                docker_site = DockerSites.objects.get(SiteName=site_name)
-                if currentACL['admin'] != 1 and docker_site.admin != admin and docker_site.admin.owner != admin.pk:
-                    return HttpResponse(json.dumps({
-                        'status': 0,
-                        'error_message': 'Not authorized to access this container'
-                    }))
-            except DockerSites.DoesNotExist:
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Docker site not found'
-                }))
-
-            docker_manager = DockerManager()
-            container = docker_manager.get_container(container_id)
-            
-            if not container:
-                return HttpResponse(json.dumps({
-                    'status': 0,
-                    'error_message': 'Container not found'
-                }))
-
-            container.restart()
-            return HttpResponse(json.dumps({'status': 1}))
-
-        return HttpResponse('Not allowed')
-    except Exception as e:
-        return HttpResponse(json.dumps({
-            'status': 0,
-            'error_message': str(e)
-        })) 
+    return container_action(request, 'restart')

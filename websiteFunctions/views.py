@@ -2098,7 +2098,6 @@ def fetchWPDetails(request):
         return redirect(loadLoginPage)
 
 
-@csrf_exempt
 def startContainer(request):
     try:
         if request.method == 'POST':
@@ -2108,7 +2107,6 @@ def startContainer(request):
         return redirect(loadLoginPage)
 
 
-@csrf_exempt
 def stopContainer(request):
     try:
         if request.method == 'POST':
@@ -2118,7 +2116,6 @@ def stopContainer(request):
         return redirect(loadLoginPage)
 
 
-@csrf_exempt
 def restartContainer(request):
     try:
         if request.method == 'POST':
