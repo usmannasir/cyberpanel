@@ -3,7 +3,14 @@ import json
 import unittest
 
 from websiteFunctions.test_wordpress_entitlements import load_wordpress_manager
-from websiteFunctions.wordpressRestore import backup_parts, restore_plan, restored_site_address
+from websiteFunctions.wordpressRestore import (
+    address_is_on,
+    backup_layout,
+    backup_listing_filter,
+    other_domain_refusal,
+    restore_plan,
+    restored_site_address,
+)
 
 BOTH = 'Both Website and DataBase'
 
@@ -33,20 +40,91 @@ class RestorePlanTests(unittest.TestCase):
             self.assertEqual(('both', 'existing'), restore_plan(described, 34, ''))
 
 
-class BackupPartsTests(unittest.TestCase):
-    ROOT = '/usr/local/CyberCP/tmp/new/ab/usr/local/CyberCP/tmp/old'
+class BackupLayoutTests(unittest.TestCase):
+    ROOT = 'usr/local/CyberCP/tmp/ab12'
 
-    def parts(self, kind):
-        return backup_parts(kind, '/usr/local/CyberCP/tmp/new', 'old', 'sourcedb.sql')
+    def listing(self, *names, **options):
+        return '\n'.join(options.get('slash', '/') + self.ROOT + '/' + name for name in names)
 
-    def test_each_kind_holds_what_it_promises_and_nothing_else_is_expected(self):
-        self.assertEqual((self.ROOT + '/public_html', self.ROOT + '/sourcedb.sql'), self.parts('both'))
-        self.assertEqual((self.ROOT + '/public_html', None), self.parts('files'))
-        self.assertEqual((None, self.ROOT + '/sourcedb.sql'), self.parts('database'))
+    def test_a_backup_made_of_a_site_holds_its_files_one_folder_down(self):
+        listing = "tar: Removing leading `/' from member names\n" + self.listing(
+            'public_html/wp-includes/version.php', 'public_html/wp-config.php', 'sourcedb.sql')
+        self.assertEqual({'files': '/' + self.ROOT + '/public_html', 'config': '/' + self.ROOT + '/public_html/wp-config.php',
+                          'strip': 6, 'dump': '/' + self.ROOT + '/sourcedb.sql', 'root': 5},
+                         backup_layout('both', listing, 'ab12', 'sourcedb.sql'))
+
+    def test_a_backup_of_a_staging_site_holds_them_two_folders_down(self):
+        listing = self.listing('public_html/public_html/wp-config.php',
+                               'public_html/public_html/wp-includes/version.php', 'sourcedb.sql')
+        layout = backup_layout('both', listing, 'ab12', 'sourcedb.sql')
+        self.assertEqual(('/' + self.ROOT + '/public_html/public_html', 7), (layout['files'], layout['strip']))
+        self.assertEqual('/' + self.ROOT + '/public_html/public_html/wp-config.php', layout['config'])
+
+    def test_names_are_given_back_as_the_archive_stores_them(self):
+        listing = self.listing('public_html/wp-config.php', 'sourcedb.sql', slash='')
+        layout = backup_layout('both', listing, 'ab12', 'sourcedb.sql')
+        self.assertEqual((self.ROOT + '/public_html', self.ROOT + '/sourcedb.sql'), (layout['files'], layout['dump']))
+
+    def test_a_site_folder_is_one_that_holds_wordpress(self):
+        self.assertIsNone(backup_layout('files', self.listing('public_html/wp-includes/version.php'), 'ab12',
+                                        'x.sql')['config'])
+        for listing in ('', None, self.listing('public_html/readme.txt', 'public_html/blog/wp-config.php'),
+                        self.listing('public_html/wp-config.php').replace('ab12', 'zz99')):
+            with self.subTest(listing=listing):
+                with self.assertRaisesRegex(ValueError, 'holds no WordPress files'):
+                    backup_layout('files', listing, 'ab12', 'x.sql')
+
+    def test_each_kind_must_hold_what_it_promises_and_nothing_more_is_asked_of_it(self):
+        files = self.listing('public_html/wp-config.php')
+        self.assertEqual((None, 5), (backup_layout('files', files, 'ab12', 'sourcedb.sql')['dump'], 5))
+        with self.assertRaisesRegex(ValueError, 'holds no database dump'):
+            backup_layout('both', files, 'ab12', 'sourcedb.sql')
+        with self.assertRaisesRegex(ValueError, 'holds no database dump'):
+            backup_layout('database', self.listing('other.sql'), 'ab12', 'sourcedb.sql')
+        layout = backup_layout('database', self.listing('sourcedb.sql'), 'ab12', 'sourcedb.sql')
+        self.assertEqual((None, None, '/' + self.ROOT + '/sourcedb.sql'),
+                         (layout['files'], layout['config'], layout['dump']))
+
+    def test_the_work_folder_named_by_a_backup_is_a_plain_name(self):
+        for name in ('../../etc', 'a/b', 'a b', '', '.*', None, 'x' * 65):
+            with self.subTest(name=name):
+                with self.assertRaises(ValueError):
+                    backup_listing_filter(name)
+                with self.assertRaises(ValueError):
+                    backup_layout('files', '', name, 'x.sql')
+        self.assertEqual(r'^/?usr/local/CyberCP/tmp/1234/(public_html/(public_html/)?'
+                         r'(wp-config\.php|wp-includes/version\.php)|[^/]+\.sql)$', backup_listing_filter('1234'))
 
     def test_the_recorded_address_of_a_site_is_its_domain_and_its_folder(self):
         self.assertEqual('new.example', restored_site_address('new.example', ''))
         self.assertEqual('new.example/blog/news', restored_site_address('new.example', 'blog/news'))
+
+
+class OtherDomainTests(unittest.TestCase):
+    def test_a_configuration_that_fixes_the_address_cannot_move_to_another_domain(self):
+        for line in ("define('WP_HOME', 'https://source.example');", '  define( "WP_SITEURL", $address );',
+                     "define('WP_HOME','x'); define('WP_SITEURL','x');"):
+            self.assertIn('fixes the address of the site', other_domain_refusal(line), line)
+
+    def test_a_network_of_sites_is_tied_to_its_domain(self):
+        for lines in ("define('MULTISITE', true);", "define( 'MULTISITE', TRUE );", "define('MULTISITE', 1);",
+                      "define('DOMAIN_CURRENT_SITE', 'source.example');", "define('SUBDOMAIN_INSTALL', false);"):
+            self.assertIn('WordPress network', other_domain_refusal(lines), lines)
+
+    def test_lines_that_are_commented_out_or_switch_nothing_on_do_not_count(self):
+        for lines in ('', None, "// define('WP_HOME', 'x');", "# define('WP_SITEURL', 'x');",
+                      " * define('MULTISITE', true);", "define('MULTISITE', false);",
+                      "define('WP_ALLOW_MULTISITE', true);", "$note = 'WP_HOME is not set here';"):
+            self.assertIsNone(other_domain_refusal(lines), lines)
+
+    def test_a_site_address_is_on_a_domain_only_when_its_host_is_that_domain(self):
+        for address in ('http://example.com', 'https://www.example.com/blog', 'HTTPS://Example.com:8443/',
+                        'example.com/blog', ' http://example.com\n'):
+            self.assertTrue(address_is_on(address, 'example.com'), address)
+        for address in ('http://ample.com', 'http://myexample.com', 'http://example.com.evil.test',
+                        'http://evil.test/example.com', 'http://sub.example.com', '', None, 'http://'):
+            self.assertFalse(address_is_on(address, 'example.com'), address)
+        self.assertFalse(address_is_on('http://example.com', ''))
 
 
 class NewWebsiteOnlyTests(unittest.TestCase):

@@ -46,6 +46,9 @@ from plogical.wordpressInstallerUtilities import (
     wordpress_cli_command,
     wordpress_config_set_command,
     wordpress_table_prefix_command,
+    brief_output,
+    out_of_quota,
+    worker_failure_reason,
 )
 from plogical.scannerFileAccess import run_as_site_user
 from managePHP.phpConfig import stored_php_selection
@@ -748,16 +751,20 @@ class ApplicationInstaller(multi.Thread):
         for name in entries_added_since(before, self.directoryEntries(path, user)):
             ProcessUtilities.executioner(build_entry_removal_command(path, name), user)
 
-    def removeCreatedWebsite(self, domain):
+    def removeCreatedWebsite(self, domain, keep):
         """Remove a website that this job created itself, after the job failed.
 
         Call it only for a website that did not exist before the job and was
-        created by it. Returns the sentence that tells the user what happened
-        to that website.
+        created by it. keep is what foundBeforeCreation() answered before
+        that creation: a DNS zone, mail folder or certificate folder of this
+        name that was already there is not the job's and stays. Returns the
+        sentence that tells the user what happened to that website.
         """
         from plogical.websiteDeletion import wait_for_deletion
         execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
         execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + shlex.quote(domain)
+        if keep:
+            execPath = execPath + " --keep " + shlex.quote(','.join(keep))
         try:
             state = wait_for_deletion(execPath, ProcessUtilities.outputExecutioner,
                                       lambda message: logging.writeToFile('%s: %s' % (domain, message)), 600)
@@ -2090,6 +2097,10 @@ class ApplicationInstaller(multi.Thread):
         # True once this job's own website creation has succeeded: only such a
         # website is removed again when the rest of the job fails.
         websiteCreated = False
+        # What that creation found already there and used (DNS zone, mail
+        # folder, certificate folder): never removed with the website.
+        from plogical.websiteDeletion import REUSABLE
+        keep = REUSABLE
         # installWordPress() is given a status file of its own further down;
         # this is the one the caller of this job reads.
         callerStatusPath = self.extraArgs.get('tempStatusPath')
@@ -2145,6 +2156,8 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'Error in finding existing site in wordpressInstallNew is {str(msg)}')
 
+                keep = self.foundBeforeCreation(DataToPass['domainName'])
+
                 ab = WebsiteManager()
                 coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
                 coreResult1 = json.loads((coreResult).content)
@@ -2166,8 +2179,11 @@ class ApplicationInstaller(multi.Thread):
                     if lastLine.find('[200]') > -1:
                         break
                     elif lastLine.find('[404]') > -1:
+                        # The worker's status ends with a line break and its
+                        # own marker: only its reason is passed on.
                         statusFile = open(currentTemp, 'w')
-                        statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
+                        statusFile.writelines(
+                            'Failed to Create Website: error: %s. [404]' % worker_failure_reason(lastLine))
                         statusFile.close()
                         return 0
                     else:
@@ -2215,10 +2231,10 @@ class ApplicationInstaller(multi.Thread):
                     removal = ''
                     if websiteCreated:
                         websiteCreated = False
-                        removal = self.removeCreatedWebsite(self.extraArgs['domainName']) + ' '
+                        removal = self.removeCreatedWebsite(self.extraArgs['domainName'], keep) + ' '
                     statusFile = open(currentTemp, 'w')
-                    statusFile.writelines('Failed to install WordPress: error: %s %s[404]' % (
-                        lastLine.replace('[404]', '').strip(), removal))
+                    statusFile.writelines('Failed to install WordPress: error: %s. %s[404]' % (
+                        worker_failure_reason(lastLine), removal))
                     statusFile.close()
                     return 0
                 else:
@@ -2264,9 +2280,10 @@ class ApplicationInstaller(multi.Thread):
             try:
                 removal = ''
                 if websiteCreated:
-                    removal = self.removeCreatedWebsite(self.extraArgs['domainName']) + ' '
+                    removal = self.removeCreatedWebsite(self.extraArgs['domainName'], keep) + ' '
                 statusFile = open(callerStatusPath, 'w')
-                statusFile.writelines('Failed to install WordPress: error: %s. %s[404]' % (str(msg), removal))
+                statusFile.writelines('Failed to install WordPress: error: %s. %s[404]' % (
+                    worker_failure_reason(msg), removal))
                 statusFile.close()
             except BaseException as error:
                 logging.writeToFile("Error WP web creating  ....... %s" % str(error))
@@ -2489,7 +2506,7 @@ class ApplicationInstaller(multi.Thread):
                 break
             elif lastLine.find('[404]') > -1:
                 statusFile = open(currentTemp, 'w')
-                statusFile.writelines('Failed to Create Website: error: %s[404]' % lastLine)
+                statusFile.writelines('Failed to Create Website: error: %s. [404]' % worker_failure_reason(lastLine))
                 statusFile.close()
                 return None
             else:
@@ -3318,46 +3335,143 @@ class ApplicationInstaller(multi.Thread):
         """Run one step of a restore as the website's user and return what it printed.
 
         A step that did not succeed ends the restore with `failure` and the
-        step's own output, so nothing that depends on it runs afterwards.
+        end of the step's own output, so nothing that depends on it runs
+        afterwards.
         """
         result, output = ApplicationInstaller.siteCommand(command, user)
         if result == 0 or output.find('Error:') > -1:
-            raise BaseException('%s: %s' % (failure, output.strip() or 'the command failed'))
+            if out_of_quota(output):
+                raise BaseException('%s: the disk quota of this website is used up. The backup does not fit into '
+                                    'the space its package allows; raise the limit or free space, then restore '
+                                    'again' % failure)
+            raise BaseException('%s: %s' % (failure, brief_output(output) or 'the command failed'))
         return output
 
     def siteConfigValue(self, phpPath, path, user, key):
-        """One value of a site's wp-config.php (a database constant or the table prefix)."""
+        """One value of the wp-config.php in a folder (a database constant or the table prefix)."""
         result, output = ApplicationInstaller.siteCommand(
             wordpress_cli_command(phpPath, path, 'config', 'get', key), user, False)
         try:
             if result == 0 or output.find('Error:') > -1:
-                raise ValueError(output.strip())
+                raise ValueError(brief_output(output))
             return single_line_value(output)
         except ValueError as error:
             raise BaseException('%s could not be read from wp-config.php in %s: %s' % (
                 key, path, str(error) or 'the command failed'))
 
-    def unpackBackupAs(self, user, BackUpFileName):
-        """Unpack the backup archive in this job's work folder as a website's own account.
+    def siteDatabaseSettings(self, phpPath, path, user, withPrefix):
+        """A site's own database settings as (name, value) pairs, in the order they are written back.
 
-        A backup holds a site's files with the owner and the modes they had
-        on the site it was made from. Unpacked by the destination's account
-        they all belong to that account, so none of them is closed to it.
+        withPrefix adds the table prefix: for a restore that brings no
+        database, so that the site goes on with the tables it has.
         """
-        archive = '%s/%s.tar.gz' % (self.tempPath, BackUpFileName)
-        unpacked = self.tempPath + '/ab'
-        ProcessUtilities.executioner('rm -rf %s' % shlex.quote(unpacked))
-        ProcessUtilities.executioner('chown -h %s:%s %s %s' % (
-            shlex.quote(user), shlex.quote(user), shlex.quote(self.tempPath), shlex.quote(archive)))
-        self.restoreStep('mkdir %s' % shlex.quote(unpacked), user, 'The backup file could not be unpacked')
-        result, output = ApplicationInstaller.siteCommand(
-            'tar -xf %s -C %s' % (shlex.quote(archive), shlex.quote(unpacked)), user)
-        if result == 0:
-            raise BaseException('The backup file could not be unpacked: %s' % (
-                output.strip()[-500:] or 'the command failed'))
+        keys = ['DB_NAME', 'DB_USER', 'DB_PASSWORD']
+        if withPrefix:
+            keys.append('table_prefix')
+        return [(key, self.siteConfigValue(phpPath, path, user, key)) for key in keys]
 
-    def restoreToNewSite(self, config, kind, userID, DomainName, BackUpFileName, oldtemppath, DumpFileName,
-                         oldurl, WebOwner, packegs):
+    def foundBeforeCreation(self, domain):
+        """What the creation of a website of this name would find already there and use.
+
+        See plogical.websiteDeletion.REUSABLE. Asked before the creation;
+        whatever is named here is left alone when the creation is undone.
+        """
+        from plogical.websiteDeletion import REUSABLE, found_before_creation
+        try:
+            from plogical.dnsUtilities import DNS
+            return found_before_creation(DNS.zoneExists(domain), self.pathPresent('/home/vmail/' + domain),
+                                         self.pathPresent('/root/.acme.sh/' + domain))
+        except BaseException as msg:
+            logging.writeToFile('%s: %s [foundBeforeCreation]' % (domain, str(msg)))
+            return REUSABLE
+
+    def backupLayout(self, archive, kind, oldtemppath, DumpFileName):
+        """Where the archive keeps what a backup of this kind promises (see backup_layout).
+
+        Only the names in the archive are read, by an account without any
+        rights; nothing is unpacked. An archive that cannot be read, or that
+        lacks what its kind promises, ends the restore here.
+        """
+        from websiteFunctions.wordpressRestore import backup_layout, backup_listing_filter
+        try:
+            command = 'sudo cat %s | sudo -u nobody tar -tzf - 2>/dev/null | grep -E %s' % (
+                shlex.quote(archive), shlex.quote(backup_listing_filter(oldtemppath)))
+            return backup_layout(kind, ProcessUtilities.outputExecutioner(command, None, True), oldtemppath,
+                                 DumpFileName)
+        except ValueError as error:
+            raise BaseException(str(error))
+
+    def otherDomainRefusal(self, archive, layout):
+        """Why this backup cannot become a site under another domain, or None (see other_domain_refusal)."""
+        from websiteFunctions.wordpressRestore import ADDRESS_FILTER, other_domain_refusal
+        if layout['config'] is None:
+            return None
+        # The backup's wp-config.php is printed by an account without any
+        # rights and only its lines about the site's address are kept.
+        command = 'sudo cat %s | sudo -u nobody tar -xzOf - %s 2>/dev/null | grep -E %s' % (
+            shlex.quote(archive), shlex.quote(layout['config']), shlex.quote(ADDRESS_FILTER))
+        return other_domain_refusal(ProcessUtilities.outputExecutioner(command, None, True))
+
+    def placeBackup(self, layout, archive, user, phpPath, sitePath, settings):
+        """Put what a backup holds into a site, as the site's own account, and return where its dump lies.
+
+        The archive stays root's file and is only opened for reading to the
+        site's group, so it is not counted against the site's disk quota,
+        and the site's files are unpacked straight into the site: no second
+        copy of them exists at any time. Unpacked by the site's account they
+        belong to that account, and a file cannot keep an owner or a setuid
+        bit it had in the archive.
+
+        The backup's wp-config.php never goes into the site as it is. It is
+        unpacked into this job's work folder, given `settings` there (the
+        site's own database settings, as (name, value) pairs; None leaves
+        it unchanged) and only then put in place, after the files. A job
+        that stops before that leaves the site with the wp-config.php it
+        had.
+        """
+        import pwd
+        work = self.tempPath + '/site'
+        ProcessUtilities.executioner('chown -h root:%d %s' % (pwd.getpwnam(user).pw_gid, shlex.quote(archive)))
+        ProcessUtilities.executioner('chmod 640 %s' % shlex.quote(archive))
+        ProcessUtilities.executioner('mkdir %s' % shlex.quote(work))
+        ProcessUtilities.executioner('chown -h %s %s' % (shlex.quote(user), shlex.quote(work)))
+
+        unpack = 'tar -xzf %s --no-same-owner --no-same-permissions' % shlex.quote(archive)
+        small = [member for member in (layout['config'], layout['dump']) if member is not None]
+        if small:
+            # wp-config.php and the dump go into the work folder, without
+            # the path of the folder the backup was assembled in.
+            self.restoreStep('%s -C %s --strip-components=%d %s' % (
+                unpack, shlex.quote(work), layout['root'], ' '.join(shlex.quote(member) for member in small)),
+                user, 'The backup file could not be unpacked')
+
+        if layout['files'] is not None:
+            preparedConfig = None
+            if layout['config'] is not None:
+                preparedConfig = work + '/' + '/'.join(layout['config'].lstrip('/').split('/')[layout['root']:])
+                for key, value in settings or ():
+                    if key == 'table_prefix':
+                        command = wordpress_table_prefix_command(phpPath, os.path.dirname(preparedConfig), value)
+                    else:
+                        command = wordpress_config_set_command(phpPath, os.path.dirname(preparedConfig), key, value)
+                    self.restoreStep(command, user, 'The database settings could not be written to wp-config.php')
+
+            command = '%s -C %s --strip-components=%d' % (unpack, shlex.quote(sitePath), layout['strip'])
+            if layout['config'] is not None:
+                command += ' --anchored --exclude=%s' % shlex.quote(layout['config'])
+            self.restoreStep('%s %s' % (command, shlex.quote(layout['files'])), user,
+                             'The website files could not be copied')
+
+            if preparedConfig is not None:
+                self.restoreStep('cp -f %s %s' % (
+                    shlex.quote(preparedConfig), shlex.quote(sitePath.rstrip('/') + '/wp-config.php')),
+                    user, 'wp-config.php could not be put in place')
+
+        if layout['dump'] is None:
+            return None
+        return work + '/' + layout['dump'].split('/')[-1]
+
+    def restoreToNewSite(self, config, kind, userID, DomainName, archive, layout, oldurl, WebOwner, packegs):
         """Restore a backup that holds a site's files ('files' or 'both') into a website created for it.
 
         The new website is created by this job and by nothing else. Once it
@@ -3374,6 +3488,12 @@ class ApplicationInstaller(multi.Thread):
             raise BaseException('%s already exists on this server. Restore to the existing site instead, '
                                 'or choose a domain that is not in use' % DomainName)
 
+        # A site that its own wp-config.php ties to the old domain would be
+        # created, found unusable and removed again: said here instead.
+        refusal = self.otherDomainRefusal(archive, layout)
+        if refusal is not None:
+            raise BaseException(refusal)
+
         # The new site starts as a plain installation of the current WordPress
         # release, the one the plugins installed with it are made for. The
         # backup's own files and database then replace it.
@@ -3383,6 +3503,10 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile('Current WordPress release not available: %s [restoreToNewSite]' % str(error))
             raise BaseException('The current WordPress version could not be determined, so no website was '
                                 'created. Try the restore again')
+
+        # Read before the creation, which uses a DNS zone, mail folder or
+        # certificate folder of this name when one is already there.
+        keep = self.foundBeforeCreation(DomainName)
 
         DataToPass = {}
         DataToPass['title'] = config['WPtitle']
@@ -3418,24 +3542,23 @@ class ApplicationInstaller(multi.Thread):
                 break
             elif lastLine.find('[404]') > -1:
                 raise BaseException('The new WordPress site could not be created: %s' % (
-                    lastLine.replace('[404]', '').strip().rstrip('.')))
+                    worker_failure_reason(lastLine)))
             else:
                 logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
                 time.sleep(2)
 
         try:
-            self.fillNewSiteFromBackup(config, kind, DomainName, BackUpFileName, oldtemppath, DumpFileName, oldurl,
+            self.fillNewSiteFromBackup(config, kind, DomainName, archive, layout, oldurl,
                                        restored_site_address(DomainName, self.extraArgs['path']))
         except BaseException as msg:
             logging.writeToFile("Error RestoreWPbackupNow ....... %s" % str(msg))
             raise BaseException('%s. %s' % (str(msg).rstrip('. \n'),
-                                            self.removeCreatedWebsite(DomainName).rstrip('.')))
+                                            self.removeCreatedWebsite(DomainName, keep).rstrip('.')))
 
-    def fillNewSiteFromBackup(self, config, kind, DomainName, BackUpFileName, oldtemppath, DumpFileName, oldurl,
-                              newurl):
+    def fillNewSiteFromBackup(self, config, kind, DomainName, archive, layout, oldurl, newurl):
         """Put a backup's files, and its database when it has one, into the plain site just created for it."""
         from plogical.phpUtilities import phpUtilities
-        from websiteFunctions.wordpressRestore import backup_parts
+        from websiteFunctions.wordpressRestore import address_is_on
 
         logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
         NewWPsite = WPSites.objects.get(owner__domain=DomainName, FinalURL=newurl)
@@ -3444,12 +3567,11 @@ class ApplicationInstaller(multi.Thread):
         vhFile = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % NewWPsite.owner.domain
         FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, NewWPsite.owner.domain)
 
-        # The new site's own database: its settings are read before the
-        # backup's wp-config.php replaces the new one, and written back after.
-        Finaldbname = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_NAME')
-        Finaldbuser = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_USER')
-        Finaldbpasswd = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_PASSWORD')
-        tablePrefix = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'table_prefix')
+        # The new site's own database: its settings are read here and go
+        # into the backup's wp-config.php before that file is put in place.
+        # A backup without a database keeps the tables of the plain
+        # installation, so their prefix is kept as well.
+        settings = self.siteDatabaseSettings(FinalPHPPath, newWPpath, VHuser, layout['dump'] is None)
 
         # The site runs on the PHP version it had when the backup was made,
         # when this server has it; otherwise it keeps the one it was created with.
@@ -3467,25 +3589,10 @@ class ApplicationInstaller(multi.Thread):
                 logging.writeToFile('%s keeps the PHP version it was created with: %s could not be selected.' % (
                     DomainName, selection))
 
-        logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,40')
-
-        self.unpackBackupAs(VHuser, BackUpFileName)
-        backupFiles, backupDump = backup_parts(kind, self.tempPath, oldtemppath, DumpFileName)
-
         logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
-        self.restoreStep('cp -Rf %s %s' % (shlex.quote(backupFiles + '/.'), shlex.quote(newWPpath)),
-                         VHuser, 'The website files could not be copied')
+        backupDump = self.placeBackup(layout, archive, VHuser, FinalPHPPath, newWPpath, settings)
 
-        for key, value in (('DB_NAME', Finaldbname), ('DB_USER', Finaldbuser), ('DB_PASSWORD', Finaldbpasswd)):
-            self.restoreStep(wordpress_config_set_command(FinalPHPPath, newWPpath, key, value),
-                             VHuser, 'The database settings could not be written to wp-config.php')
-
-        if backupDump is None:
-            # No database came with the backup: the site keeps the tables of
-            # its plain installation, which carry the prefix read above.
-            self.restoreStep(wordpress_table_prefix_command(FinalPHPPath, newWPpath, tablePrefix),
-                             VHuser, 'The table prefix could not be written to wp-config.php')
-        else:
+        if backupDump is not None:
             logging.statusWriter(self.tempStatusPath, 'Restoring Data Base...,80')
             self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', backupDump),
                              VHuser, 'The database could not be imported')
@@ -3501,11 +3608,12 @@ class ApplicationInstaller(multi.Thread):
         # database and answers under the new domain.
         self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'core', 'is-installed'),
                          VHuser, 'The restored site does not start with its database')
-        address = self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'option', 'get', 'siteurl'),
-                                   VHuser, 'The address of the restored site could not be read')
-        if address.find(DomainName) == -1:
-            raise BaseException('The restored site still uses the address %s instead of %s' % (
-                address.strip(), DomainName))
+        result, output = ApplicationInstaller.siteCommand(
+            wordpress_cli_command(FinalPHPPath, newWPpath, 'option', 'get', 'siteurl'), VHuser, False)
+        answer = output.strip().splitlines()
+        if result == 0 or not answer or not address_is_on(answer[-1], DomainName):
+            raise BaseException('The restored site answers under the address "%s" instead of under %s' % (
+                brief_output(output, 120), DomainName))
 
         # Empties the page cache when the site has the LiteSpeed plugin; a
         # site without it has no such command and nothing to empty.
@@ -3563,7 +3671,7 @@ class ApplicationInstaller(multi.Thread):
 
             # A request that this kind of backup cannot serve ends here,
             # before anything is downloaded, created or changed.
-            from websiteFunctions.wordpressRestore import restore_plan, backup_parts
+            from websiteFunctions.wordpressRestore import restore_plan
             try:
                 backupKind, restoreTarget = restore_plan(BackupType, DesSiteID, DomainName)
             except ValueError as error:
@@ -4785,15 +4893,23 @@ class ApplicationInstaller(multi.Thread):
                 FinalZipPath = "/home/cyberpanel/%s.tar.gz" % (uploadfilename)
                 try:
                     client.download_file(BucketName, uploadfilename, FinalZipPath)
+                    downloaded = True
                 except BaseException as msg:
                     logging.writeToFile("Error in downloadfile: ..%s" % str(msg))
-                    raise BaseException('The backup could not be downloaded from the storage: %s' % str(msg))
+                    downloaded = False
+                    # The copy of this backup that is still kept on the
+                    # server serves as well; without one there is nothing
+                    # to restore from.
+                    if self.pathPresent(localArchive) is not True:
+                        raise BaseException('The backup could not be downloaded from the storage: %s' % (
+                            brief_output(msg)))
 
-                command = "mv %s /home/backup/" % shlex.quote(FinalZipPath)
-                ProcessUtilities.executioner(command)
+                if downloaded:
+                    command = "mv %s /home/backup/" % shlex.quote(FinalZipPath)
+                    ProcessUtilities.executioner(command)
 
-                if not archiveWasHere and uploadfilename == BackUpFileName:
-                    downloadedArchive = localArchive
+                    if not archiveWasHere and uploadfilename == BackUpFileName:
+                        downloadedArchive = localArchive
 
                 # ##### CHeck if Backup type is Only Database
                 # if BackupType == 'DataBase Backup':
@@ -5927,45 +6043,13 @@ class ApplicationInstaller(multi.Thread):
 
             logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
 
-            if restoreTarget == 'existing':
-                # The destination's own account unpacks the archive, so that
-                # every file in it is one that account can read and copy.
-                self.unpackBackupAs(WPSites.objects.get(pk=DesSiteID).owner.externalApp, BackUpFileName)
-                stdout = ''
-            else:
-                # A new site has no account yet. The archive is looked into
-                # with root's rights here, and unpacked again by the new
-                # site's account once that exists.
-                command = "mkdir %s/ab" % (self.tempPath)
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if result == 0:
-                    raise BaseException(stdout)
-
-                command = "sudo tar -xvf  %s/%s.tar.gz -C %s/ab" % ( self.tempPath, BackUpFileName, self.tempPath)
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if result == 0:
-                    raise BaseException(stdout)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-
-                logging.writeToFile(f'Output of archive {str(stdout)}')
-
-                command = f"ls -lh {self.tempPath}/ab"
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(f'Listing files {str(stdout)}')
-
-
-            # The archive must hold what this kind of backup promises. Checked
+            # The archive stays packed. Its list of names tells how the backup
+            # is laid out and whether it holds what its kind promises: read
             # here, where a missing or unreadable backup changes nothing yet.
-            backupFiles, backupDump = backup_parts(backupKind, self.tempPath, oldtemppath, DumpFileName)
-            if backupFiles is not None and self.pathPresent(backupFiles, 'd') is not True:
-                raise BaseException('The backup file could not be unpacked or holds no website files')
-            if backupDump is not None and self.pathPresent(backupDump, 'f') is not True:
-                raise BaseException('The backup file could not be unpacked or holds no database dump')
+            # Its content is unpacked later, by the destination's own account
+            # and never with root's rights.
+            archive = '%s/%s.tar.gz' % (self.tempPath, BackUpFileName)
+            layout = self.backupLayout(archive, backupKind, oldtemppath, DumpFileName)
 
             ##### Check if Backup type is Only Database
             if BackupType == 'DataBase Backup':
@@ -6016,7 +6100,7 @@ class ApplicationInstaller(multi.Thread):
 
                     # dump Mysql file in unzippath path
 
-                    unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
+                    unzippathdb = self.placeBackup(layout, archive, VHuser, FinalPHPPath, newWPpath, None)
                     # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
                     self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', unzippathdb),
                                      VHuser, 'The database could not be imported')
@@ -6166,10 +6250,22 @@ class ApplicationInstaller(multi.Thread):
                         ### Create secure folder
 
 
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                        # The site goes on with its own database: its settings
+                        # go into the backup's wp-config.php before that file
+                        # replaces the site's own. A site whose wp-config.php
+                        # cannot be read has no settings to keep; it takes the
+                        # file of its own backup as it is, and no other site's.
+                        try:
+                            ownSettings = self.siteDatabaseSettings(FinalPHPPath, WPpath, VHuser, True)
+                        except BaseException as error:
+                            if str(backupobj.WPSiteID) != str(wpsite.pk):
+                                raise BaseException(
+                                    '%s. This backup is of another site, so its wp-config.php cannot take the '
+                                    'place of the unreadable one' % str(error).rstrip('. '))
+                            logging.writeToFile('%s [RestoreWPbackupNow]' % str(error))
+                            ownSettings = None
 
-                        self.restoreStep('cp -Rf %s %s' % (shlex.quote(unzippath + '.'), shlex.quote(WPpath)),
-                                         VHuser, 'The website files could not be copied')
+                        self.placeBackup(layout, archive, VHuser, FinalPHPPath, WPpath, ownSettings)
 
                         ### why replace urls in only website data restore???
 
@@ -6207,8 +6303,8 @@ class ApplicationInstaller(multi.Thread):
                             raise BaseException(stdout)
 
                 elif (DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
-                    self.restoreToNewSite(config, backupKind, userID, DomainName, BackUpFileName, oldtemppath,
-                                          DumpFileName, oldurl, WebOwner, packegs)
+                    self.restoreToNewSite(config, backupKind, userID, DomainName, archive, layout, oldurl,
+                                          WebOwner, packegs)
             ####Check if backup type is Both web and DB
             else:
                 ############## Existing site
@@ -6253,33 +6349,19 @@ class ApplicationInstaller(multi.Thread):
                             logging.writeToFile(f'WP Path where things are happening: {newWPpath}')
 
 
-                        # The site keeps its own database: its name, user and
-                        # password are read before the backup's files replace
-                        # wp-config.php, and written back afterwards.
-                        Finaldbname = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_NAME')
-                        Finaldbuser = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_USER')
-                        Finaldbpasswd = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_PASSWORD')
+                        # The site keeps its own database. Its name, user and
+                        # password go into the backup's wp-config.php before
+                        # that file is put in place, after the files: a
+                        # restore that stops on the way leaves the site with
+                        # the wp-config.php it had.
+                        ownSettings = self.siteDatabaseSettings(FinalPHPPath, newWPpath, VHuser, False)
 
                         ##
 
                         ### need to work on when site restore to new url then change db
 
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                        unzippath2 = self.placeBackup(layout, archive, VHuser, FinalPHPPath, WPpath, ownSettings)
 
-                        self.restoreStep('cp -Rf %s %s' % (shlex.quote(unzippath + '.'), shlex.quote(WPpath)),
-                                         VHuser, 'The website files could not be copied')
-
-                        # These three values were read from the site's own
-                        # wp-config.php, a file its owner edits freely: each is
-                        # written back as one quoted argument, by the site's user.
-                        for key, value in (('DB_USER', Finaldbuser), ('DB_NAME', Finaldbname),
-                                           ('DB_PASSWORD', Finaldbpasswd)):
-                            self.restoreStep(wordpress_config_set_command(FinalPHPPath, WPpath, key, value),
-                                             VHuser, 'The database settings could not be written to wp-config.php')
-
-                        # dump Mysql file in unzippath path
-                        unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
-                                self.tempPath, oldtemppath, DumpFileName)
                         # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
                         self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', unzippath2),
                                          VHuser, 'The database could not be imported')
@@ -6569,8 +6651,8 @@ class ApplicationInstaller(multi.Thread):
 
                 ############## New Site
                 elif (DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
-                    self.restoreToNewSite(config, backupKind, userID, DomainName, BackUpFileName, oldtemppath,
-                                          DumpFileName, oldurl, WebOwner, packegs)
+                    self.restoreToNewSite(config, backupKind, userID, DomainName, archive, layout, oldurl,
+                                          WebOwner, packegs)
 
             # The restore itself is complete: a leftover download is no reason
             # to report it as failed.
@@ -6600,7 +6682,8 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
-            logging.statusWriter(self.tempStatusPath, f'{str(msg)}. [404]')
+            # One line: the page shows the last line of the status.
+            logging.statusWriter(self.tempStatusPath, '%s. [404]' % ' '.join(str(msg).split()).rstrip('. '))
             return 0, str(msg)
 
     def UpdateDownloadStatus(self, transferred, total):

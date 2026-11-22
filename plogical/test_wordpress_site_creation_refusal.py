@@ -10,6 +10,7 @@ from unittest import mock
 
 from managePHP.phpConfig import normalized_php_selection, stored_php_selection
 from plogical.test_php_restart_marker import load_methods
+from plogical.wordpressInstallerUtilities import worker_failure_reason
 
 REFUSAL = 'Apache is not set up on this server yet.'
 
@@ -37,13 +38,14 @@ class WordPressCreationTests(unittest.TestCase):
         self.namespace = dict(
             Websites=self.websites, Administrator=mock.Mock(), ACLManager=mock.Mock(), ProcessUtilities=process,
             logging=mock.Mock(), os=os, time=mock.Mock(), wpplugins=mock.Mock(),
-            normalized_php_selection=normalized_php_selection, stored_php_selection=stored_php_selection)
+            normalized_php_selection=normalized_php_selection, stored_php_selection=stored_php_selection,
+            worker_failure_reason=worker_failure_reason)
         self.create, self.staging_site = load_methods(
             'plogical/applicationInstaller.py', 'ApplicationInstaller',
             ['wordpressInstallNew', '_createStagingWebsite'], self.namespace)
         data = dict(tempStatusPath=self.status, domainName='new.example', adminEmail='owner@example.test',
                     websiteOwner='owner', package='Default', adminID=7, apacheBackend=1, StagingDomain='stage.example')
-        self.installer = NS(data=data, extraArgs=data)
+        self.installer = NS(data=data, extraArgs=data, foundBeforeCreation=lambda domain: ())
         self.source = NS(owner=NS(adminEmail='owner@example.test', phpSelection='PHP 8.3',
                                   admin=NS(userName='owner')))
 

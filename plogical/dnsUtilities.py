@@ -873,6 +873,20 @@ class DNS:
             return 0
 
     @staticmethod
+    def zoneExists(virtualHostName):
+        """Whether a zone of exactly this name is kept here.
+
+        Asked before a website is created, to know whether the zone is the
+        creation's own. An answer that cannot be had counts as yes: a zone
+        is then never removed as if the creation had made it.
+        """
+        try:
+            return Domains.objects.filter(name=virtualHostName).exists()
+        except Exception as error:
+            logging.CyberCPLogFileWriter.writeToFile('%s [zoneExists: %s]' % (error, virtualHostName))
+            return True
+
+    @staticmethod
     def createDNSZone(virtualHostName, admin):
         try:
             zone = Domains(admin=admin, name=virtualHostName, type="NATIVE")

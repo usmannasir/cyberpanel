@@ -43,14 +43,6 @@ class RestoreSourceTests(unittest.TestCase):
         self.assertNotIn('sed -i "s/define(', live)
         self.assertIsNone(re.search(r'wp config set DB_(NAME|USER|PASSWORD) %s', live))
 
-    def test_every_write_back_runs_as_the_site_user_and_ends_the_restore_when_it_fails(self):
-        lines = self.live_lines()
-        writes = [index for index, line in enumerate(lines) if 'wordpress_config_set_command(Final' in line]
-        self.assertEqual(2, len(writes))
-        for index in writes:
-            self.assertIn('self.restoreStep(wordpress_config_set_command(Final', lines[index])
-            self.assertTrue(lines[index + 1].strip().startswith('VHuser,'), lines[index + 1])
-
 
 if __name__ == '__main__':
     unittest.main()

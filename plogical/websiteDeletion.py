@@ -5,6 +5,25 @@ import threading
 
 RESULT_PREFIX = 'WEBSITE_DELETE_RESULT='
 
+# What the creation of a website uses when it is already there instead of
+# making it: the DNS zone of that name, its mail folder, and the work folder
+# of its certificate. Undoing a creation leaves those of them it found.
+REUSABLE = ('dns', 'mail', 'ssl')
+
+
+def found_before_creation(zone, mail, certificate):
+    """The names of what was already there when a website's creation began.
+
+    Each argument is True, False, or None when it could not be told. Only a
+    clear "it was not there" makes a thing the creation's own.
+    """
+    return tuple(name for name, found in zip(REUSABLE, (zone, mail, certificate)) if found is not False)
+
+
+def kept_by_creation(text):
+    """The names in a worker's --keep argument; anything else in it is ignored."""
+    return tuple(name for name in REUSABLE if name in str(text or '').split(','))
+
 
 def wait_for_deletion(command, execute, log, timeout=15):
     result_queue = queue.Queue(maxsize=1)
