@@ -278,6 +278,8 @@ Redis="Off"
 Postfix_Switch="On"
 PowerDNS_Switch="On"
 PureFTPd_Switch="On"
+Minimal_Install="Off"
+Minimal_Components=()
 
 Server_IP=""
 Server_Country="Unknow"
@@ -931,7 +933,7 @@ echo -e "e.g. \e[31m-p r\e[39m will generate a random password"
 echo -e "     \e[31m-p 123456789\e[39m will set password to 123456789"
 echo -e "\n\e[31m-m\e[39m or \e[31m--minimal\e[39m : set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
 echo -e "\n\e[31m-m postfix/pureftpd/powerdns\e[39m will do minimal install also with compoenent given"
-echo -e "e.g.  \e[31m-m postfix\e[39m will do minimal install also with Postfix"
+echo -e "e.g.  \e[31m-m postfix\e[39m will do minimal install also with Postfix, and without PowerDNS and Pure-FTPd"
 echo -e "      \e[31m-m powerdns\e[39m will do minimal install also with PowerDNS"
 echo -e "      \e[31m-m postfix\e[39m powerdns will do minimal install also with Postfix and PowerDNS"
 echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 1.9.4"
@@ -942,6 +944,23 @@ echo -e "\nsh <(curl cyberpanel.sh) -v ols -p r or ./cyberpanel.sh --version ols
 echo -e "\nThis will install CyberPanel OpenLiteSpeed and randomly generate the password."
 echo -e "\nsh <(curl cyberpanel.sh) -v LICENSE_KEY -a -p my_pass_word"
 echo -e "\nThis will install LiteSpeed Enterise , replace LICENSE_KEY to actual license key and set password to my_pass_word\n"
+}
+
+Named_Components() {
+# Prints the components that an argument names (POSTFIX, POWERDNS, PUREFTPD),
+# one per line, and fails for anything else. Names may be joined with "," or
+# "/" and are not case sensitive.
+local name
+local -a names
+[[ -n "${1:-}" ]] || return 1
+IFS=',/' read -r -a names <<<"${1^^}"
+for name in "${names[@]}"; do
+  case "$name" in
+    POSTFIX | POWERDNS | PUREFTPD) ;;
+    *) return 1 ;;
+  esac
+done
+printf '%s\n' "${names[@]}"
 }
 
 Check_Usage() {
@@ -974,7 +993,7 @@ while [[ -n "${1:-}" ]]; do
   -m | --minimal | -a | --addons | --debug | --mirror)
   ;;
   *)
-    if [[ "${1^^}" != *"POSTFIX"* ]] && [[ "${1^^}" != *"PUREFTPD"* ]] && [[ "${1^^}" != *"POWERDNS"* ]] ; then
+    if ! Named_Components "$1" >/dev/null ; then
       echo -e "\nUnknown argument...\n"
       Show_Help
       exit 2
@@ -1048,25 +1067,8 @@ else
         Branch_Check "${1}"
       ;;
       -m | --minimal)
-      if ! echo "$@" | grep -q -i "postfix\|pureftpd\|powerdns" ; then
-        Postfix_Switch="Off"
-        PowerDNS_Switch="Off"
-        PureFTPd_Switch="Off"
+        Minimal_Install="On"
         echo -e "\nSet to use minimal installation..."
-      else
-          if [[ "${*^^}" = *"POSTFIX"* ]] ; then
-            Postfix_Switch="On"
-            echo -e "\nEnable Postfix..."
-          fi
-          if [[ "${*^^}" = *"PUREFTPD"* ]] ; then
-            PureFTPd_Switch="On"
-            echo -e "\nEnable PureFTPd..."
-          fi
-          if [[ "${*^^}" = *"POWERDNS"* ]] ; then
-            PowerDNS_Switch="On"
-            echo -e "\nEnable PowerDNS..."
-          fi
-      fi
       ;;
       -a | --addons)
         Memcached="On"
@@ -1084,9 +1086,8 @@ else
         echo -e "\nForce to use mirror server...\n"
       ;;
       *)
-        if [[ "${1^^}" = *"POSTFIX"* ]] || [[ "${1^^}" = *"PUREFTPD"* ]] || [[ "${1^^}" = *"POWERDNS"* ]] ; then
-          :
-        #this is ugly workaround , leave it for now , to-do for further improvement.
+        if Component_Names=$(Named_Components "$1") ; then
+          Minimal_Components+=($Component_Names)
         else
           echo -e "\nUnknown argument...\n"
           Show_Help
@@ -1096,6 +1097,29 @@ else
     esac
     shift
     done
+
+    if [[ "$Minimal_Install" = "On" ]] ; then
+      # A minimal installation has none of the three, except the named ones.
+      Postfix_Switch="Off"
+      PowerDNS_Switch="Off"
+      PureFTPd_Switch="Off"
+      for Component_Name in "${Minimal_Components[@]}" ; do
+        case "$Component_Name" in
+          POSTFIX)
+            Postfix_Switch="On"
+            echo -e "\nEnable Postfix..."
+          ;;
+          PUREFTPD)
+            PureFTPd_Switch="On"
+            echo -e "\nEnable PureFTPd..."
+          ;;
+          POWERDNS)
+            PowerDNS_Switch="On"
+            echo -e "\nEnable PowerDNS..."
+          ;;
+        esac
+      done
+    fi
   fi
 fi
 
