@@ -4,6 +4,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from IncBackups.test_database_backup_step import dump_database_name
 from plogical.test_child_domain_conversion import load_method
 from plogical.test_database_restore_accounts import Rows
 
@@ -17,7 +18,7 @@ class RestoreTargetTests(unittest.TestCase):
         self.restore = mock.Mock(return_value=1)
         self.commands = []
         namespace = dict(
-            os=os, mysqlUtilities=SimpleNamespace(mysqlUtilities=SimpleNamespace(restoreDatabaseBackup=self.restore)),
+            os=os, dump_database_name=dump_database_name, mysqlUtilities=SimpleNamespace(mysqlUtilities=SimpleNamespace(restoreDatabaseBackup=self.restore)),
             ProcessUtilities=SimpleNamespace(executioner=lambda command, *a: self.commands.append(command)),
             logging=SimpleNamespace(statusWriter=mock.Mock(), writeToFile=mock.Mock()))
         name_of = load_method(SOURCE, 'IncJobs', 'databaseOfDump', dict(namespace))
