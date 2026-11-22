@@ -10,7 +10,7 @@ import os
 from websiteFunctions.models import Websites, ChildDomains
 from plogical.vhostConfs import vhostConfs
 from managePHP.phpManager import PHPManager
-from managePHP.phpConfig import fpm_pool_name, fpm_service_for_selection
+from managePHP.phpConfig import fpm_pool_name, fpm_service_for_selection, managed_ini_path
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 import re
@@ -646,22 +646,12 @@ class ApacheVhost:
 
     @staticmethod
     def DecidePHPPathforManager(apache, phpVers):
-        if apache == 0 or apache == None:
-            phpVers = "php" + PHPManager.getPHPString(phpVers)
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
-            else:
-                initial = phpVers[3]
-                final = phpVers[4]
-
-                completeName = str(initial) + '.' + str(final)
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
-        else:
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                phpVers = "php" + PHPManager.getPHPString(phpVers)
-                path = f'/etc/opt/remi/{phpVers}/php.ini'
-            else:
-                path = f'/etc/php/{phpVers.split(" ")[1]}/fpm/php.ini'
+        # The path is built from the digits of a checked selection; a
+        # selection of any other shape raises ValueError. apache is absent
+        # (None or 0) for LiteSpeed PHP and anything else for the PHP-FPM of
+        # the Apache backend, as the pages send it.
+        rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+        path = managed_ini_path(phpVers, not (apache == 0 or apache == None), rpmFamily)
 
         if os.path.exists(ProcessUtilities.debugPath):
             logging.writeToFile(f'PHP Path {path}')

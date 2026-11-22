@@ -18,6 +18,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import re
 from plogical.virtualHostUtilities import virtualHostUtilities
 import shlex
+import tempfile
 from random import randint
 from xml.etree import ElementTree
 from plogical.acl import ACLManager
@@ -25,6 +26,7 @@ from plogical.processUtilities import ProcessUtilities
 from .phpManager import PHPManager
 from .phpConfig import is_php_package, php_package_prefix
 from .phpConfig import matches_directive
+from .phpConfig import BASIC_PHP_SETTINGS, PHP_FLAGS, checked_basic_php_settings, php_selection_digits
 from plogical.httpProc import httpProc
 
 
@@ -1744,32 +1746,35 @@ def getCurrentPHPConfig(request):
                 max_execution_time = ""
                 upload_max_filesize = ""
                 max_input_time = ""
+                post_max_size = ""
 
-                command = "sudo cat " + path
+                command = "sudo cat " + shlex.quote(path)
                 data = ProcessUtilities.outputExecutioner(command).split('\n')
 
+                # Only a line that assigns a directive is read, the same lines
+                # a save replaces; a comment that mentions one is not.
                 for items in data:
-                    if items.find("allow_url_fopen") > -1 and items.find("=") > -1:
+                    if matches_directive(items, "allow_url_fopen"):
                         if items.find("On") > -1:
                             allow_url_fopen = "1"
-                    if items.find("display_errors") > -1 and items.find("=") > -1:
+                    if matches_directive(items, "display_errors"):
                         if items.find("On") > -1:
                             display_errors = "1"
-                    if items.find("file_uploads") > -1 and items.find("=") > -1:
+                    if matches_directive(items, "file_uploads"):
                         if items.find("On") > -1:
                             file_uploads = "1"
-                    if items.find("allow_url_include") > -1 and items.find("=") > -1:
+                    if matches_directive(items, "allow_url_include"):
                         if items.find("On") > -1:
                             allow_url_include = "1"
                     if matches_directive(items, "memory_limit"):
                         memory_limit = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
                     if matches_directive(items, "max_execution_time"):
                         max_execution_time = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
-                    if items.find("upload_max_filesize") > -1 and items.find("=") > -1:
+                    if matches_directive(items, "upload_max_filesize"):
                         upload_max_filesize = re.findall(r"[A-Za-z0-9_]+", items)[1]
                     if matches_directive(items, "max_input_time"):
                         max_input_time = re.findall(r"[+-]?[A-Za-z0-9_]+", items)[1]
-                    if items.find("post_max_size") > -1 and items.find("=") > -1:
+                    if matches_directive(items, "post_max_size"):
                         post_max_size = re.findall(r"[A-Za-z0-9_]+", items)[1]
 
                 final_dic = {'fetchStatus': 1,
@@ -1824,27 +1829,21 @@ def savePHPConfigBasic(request):
                 max_input_time = data['max_input_time']
                 post_max_size = data['post_max_size']
 
-                if allow_url_fopen == True:
-                    allow_url_fopen = "allow_url_fopen = On"
-                else:
-                    allow_url_fopen = "allow_url_fopen = Off"
-
-                if display_errors == True:
-                    display_errors = "display_errors = On"
-                else:
-                    display_errors = "display_errors = Off"
-
-                if file_uploads == True:
-                    file_uploads = "file_uploads = On"
-                else:
-                    file_uploads = "file_uploads = Off"
-
-                if allow_url_include == True:
-                    allow_url_include = "allow_url_include = On"
-                else:
-                    allow_url_include = "allow_url_include = Off"
-
-                #phpVers = "php" + PHPManager.getPHPString(phpVers)
+                # Refused here, before the privileged worker is started: the
+                # version must be one of the panel's selections and each of
+                # the nine values one word of its own kind. The worker checks
+                # the same again.
+                try:
+                    php_selection_digits(phpVers)
+                    settings = dict(checked_basic_php_settings({
+                        'allow_url_fopen': allow_url_fopen, 'display_errors': display_errors,
+                        'file_uploads': file_uploads, 'allow_url_include': allow_url_include,
+                        'memory_limit': memory_limit, 'max_execution_time': max_execution_time,
+                        'upload_max_filesize': upload_max_filesize, 'max_input_time': max_input_time,
+                        'post_max_size': post_max_size}))
+                except ValueError as msg:
+                    final_json = json.dumps({'saveStatus': 0, 'error_message': str(msg)})
+                    return HttpResponse(final_json)
 
                 if request.GET.get('apache', None) == None:
                     apache = 0
@@ -1854,11 +1853,14 @@ def savePHPConfigBasic(request):
                 ##
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-                execPath = execPath + " savePHPConfigBasic --phpVers '" + phpVers + "' --allow_url_fopen '" + allow_url_fopen +\
-                           "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" \
-                           + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + \
-                           max_execution_time + " --upload_max_filesize " + upload_max_filesize \
-                           + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size + f" --apache {str(apache)}"
+                execPath = execPath + " savePHPConfigBasic --phpVers " + shlex.quote(phpVers)
+                for directive in BASIC_PHP_SETTINGS:
+                    value = settings[directive]
+                    if directive in PHP_FLAGS:
+                        value = '1' if value == 'On' else '0'
+                    # name=value keeps a value with a leading minus (-1) a value.
+                    execPath = execPath + " --" + directive + "=" + shlex.quote(value)
+                execPath = execPath + " --apache " + str(apache)
 
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1902,7 +1904,7 @@ def getCurrentAdvancedPHPConfig(request):
                 from ApachController.ApacheVhosts import ApacheVhost
                 path = ApacheVhost.DecidePHPPathforManager(request.GET.get('apache', None), phpVers)
 
-                command = "sudo cat " + path
+                command = "sudo cat " + shlex.quote(path)
                 configData = ProcessUtilities.outputExecutioner(command)
 
                 status = {"fetchStatus": 1, "configData": configData}
@@ -1938,16 +1940,26 @@ def savePHPConfigAdvance(request):
                 from ApachController.ApacheVhosts import ApacheVhost
                 path = ApacheVhost.DecidePHPPathforManager(request.GET.get('apache', None), phpVers)
 
-                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                configData = data['configData']
+                if not isinstance(configData, str):
+                    raise ValueError('Invalid PHP configuration.')
 
-                vhost = open(tempPath, "w")
-                vhost.write(data['configData'])
-                vhost.close()
+                # The text waits for the worker in a file of its own, with a
+                # name nothing else uses, and is removed whatever happens.
+                descriptor, tempPath = tempfile.mkstemp(dir='/home/cyberpanel', prefix='phpini.')
+                try:
+                    with os.fdopen(descriptor, 'w') as staged:
+                        staged.write(configData)
 
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-                execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    execPath = execPath + " savePHPConfigAdvance --phpVers " + shlex.quote(path) + " --tempPath " + shlex.quote(tempPath)
 
-                output = ProcessUtilities.outputExecutioner(execPath)
+                    output = ProcessUtilities.outputExecutioner(execPath)
+                finally:
+                    try:
+                        os.remove(tempPath)
+                    except OSError:
+                        pass
 
                 if output.find("1,None") > -1:
                     status = {"saveStatus": 1, "configData": data['configData']}
@@ -1964,7 +1976,7 @@ def savePHPConfigAdvance(request):
                 return HttpResponse(json_data)
 
     except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
+        logging.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")
 
 ## Restart PHP

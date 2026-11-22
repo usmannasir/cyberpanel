@@ -17,7 +17,7 @@ class AdvancedPHPRestartTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.destination = self.root / 'php.ini'
         self.destination.write_text('memory_limit = 128M\n')
-        self.staged = self.root / 'staged.ini'
+        self.staged = self.root / 'phpini.staged'
         self.content = '; site PHP configuration\nmemory_limit = 256M\n'
         self.staged.write_text(self.content)
         self.events = []
@@ -63,23 +63,22 @@ class AdvancedPHPRestartTests(unittest.TestCase):
 
     def run_save(self, selected_path, distro='ubuntu'):
         self.process.decideDistro.return_value = distro
-        real_open = open
+        utilities = self.module.phpUtilities
 
-        def fixture_open(path, mode='r', *args, **kwargs):
-            if str(path) == selected_path:
-                handle = real_open(self.destination, mode, *args, **kwargs)
-            elif str(path) == str(self.staged):
-                handle = real_open(self.staged, mode, *args, **kwargs)
-            else:
+        # The selected php.ini is the fixture file; the worker's own checks of
+        # the path and of the staged file run unchanged.
+        def replace(path, content):
+            if path != selected_path:
                 raise AssertionError('Unexpected file access: %s' % path)
-            self.handles.append(handle)
-            return handle
+            self.destination.write_bytes(content)
 
         output = io.StringIO()
-        with mock.patch.object(self.module, 'open', side_effect=fixture_open, create=True), \
+        with mock.patch.object(utilities, 'stagingDirectory', str(self.root)), \
+                mock.patch.object(utilities, 'replaceIniFile', side_effect=replace), \
+                mock.patch.object(self.module.os.path, 'realpath', side_effect=lambda path: path), \
                 mock.patch.object(self.module.os.path, 'exists', return_value=False), \
                 contextlib.redirect_stdout(output):
-            self.module.phpUtilities.savePHPConfigAdvance(selected_path, str(self.staged))
+            utilities.savePHPConfigAdvance(selected_path, str(self.staged))
         return output.getvalue()
 
     def assert_saved(self, selected_path, distro, expected_service=None):
@@ -124,9 +123,12 @@ class AdvancedPHPRestartTests(unittest.TestCase):
 
     def test_write_failure_does_not_restart_any_service(self):
         output = io.StringIO()
-        with mock.patch.object(self.module, 'open', side_effect=PermissionError('fixture write denied'), create=True), \
+        utilities = self.module.phpUtilities
+        with mock.patch.object(utilities, 'stagingDirectory', str(self.root)), \
+                mock.patch.object(utilities, 'replaceIniFile', side_effect=PermissionError('fixture write denied')), \
+                mock.patch.object(self.module.os.path, 'realpath', side_effect=lambda path: path), \
                 contextlib.redirect_stdout(output):
-            self.module.phpUtilities.savePHPConfigAdvance('/etc/php/8.3/fpm/php.ini', str(self.staged))
+            utilities.savePHPConfigAdvance('/etc/php/8.3/fpm/php.ini', str(self.staged))
         self.assertEqual('memory_limit = 128M\n', self.destination.read_text())
         self.assertTrue(output.getvalue().startswith('0,'))
         self.install.reStartLiteSpeed.assert_not_called()
