@@ -115,6 +115,12 @@ class ComponentChoiceTests(unittest.TestCase):
         self.assertEqual(2, check('-m', 'postfix', '-v')[0])
         self.assertEqual(2, check('-v')[0])
 
+    def test_name_before_minimal_counts_and_the_help_says_so(self):
+        self.assertEqual((0, 'On Off Off'), self.switches('postfix', '-m'))
+        self.assertEqual((0, 'Off On On'), self.switches('pureftpd', '-v', 'ols', '-m', 'powerdns'))
+        help_text = Installer(self).run('--help').stdout
+        self.assertIn('The names count wherever they stand on the command line, also before', help_text)
+
     def test_component_names_without_minimal_keep_the_full_installation(self):
         self.assertEqual((0, 'On On On'), self.switches('-v', 'ols', 'postfix'))
 
