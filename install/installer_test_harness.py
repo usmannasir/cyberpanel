@@ -25,7 +25,8 @@ TOP_LEVEL_START = '\nCheck_Usage "$@"\n'
 
 # Functions of the script that run as they are.
 REAL_FUNCTIONS = (
-    'Check_Usage', 'Set_Default_Variables', 'Check_Root', 'Check_Server_IP',
+    'Check_Usage', 'Read_Admin_Password_File', 'Mask_Arguments', 'Use_Admin_Password_File',
+    'Set_Default_Variables', 'Check_Root', 'Check_Server_IP',
     'Check_OS', 'Check_Virtualization', 'Check_Panel', 'Check_Process', 'Check_Provider',
     'Check_Argument', 'Argument_Mode', 'Interactive_Mode', 'Validate_Remote_MySQL',
     'Fail_Install', 'Install_Step', 'Pre_Install_Setup_Git_URL',

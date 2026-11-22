@@ -931,6 +931,8 @@ echo -e "\n\e[31m-a\e[39m or \e[31m--addons\e[39m : install addons: memcached, r
 echo -e "\n\e[31m-p\e[39m or \e[31m--password\e[39m : set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besides [d] and [r(andom)] will be accept as password, default use 1234567."
 echo -e "e.g. \e[31m-p r\e[39m will generate a random password"
 echo -e "     \e[31m-p 123456789\e[39m will set password to 123456789"
+echo -e "\nTo keep the password off the command line, put it in a file that only root can read and name the file in \e[31mCP_ADMIN_PASSWORD_FILE\e[39m"
+echo -e "e.g. \e[31mCP_ADMIN_PASSWORD_FILE=/root/panel-password\e[39m ./cyberpanel.sh -v ols"
 echo -e "\n\e[31m-m\e[39m or \e[31m--minimal\e[39m : set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
 echo -e "\n\e[31m-m postfix/pureftpd/powerdns\e[39m will do minimal install also with compoenent given"
 echo -e "e.g.  \e[31m-m postfix\e[39m will do minimal install also with Postfix, and without PowerDNS and Pure-FTPd"
@@ -944,6 +946,63 @@ echo -e "\nsh <(curl cyberpanel.sh) -v ols -p r or ./cyberpanel.sh --version ols
 echo -e "\nThis will install CyberPanel OpenLiteSpeed and randomly generate the password."
 echo -e "\nsh <(curl cyberpanel.sh) -v LICENSE_KEY -a -p my_pass_word"
 echo -e "\nThis will install LiteSpeed Enterise , replace LICENSE_KEY to actual license key and set password to my_pass_word\n"
+}
+
+Mask_Arguments() {
+# Fills Logged_Arguments with the command line as it may be written to a log:
+# the value that follows -p or --password is replaced.
+local argument hide="No"
+Logged_Arguments=()
+for argument in "$@"; do
+  if [[ "$hide" = "Yes" ]]; then
+    Logged_Arguments+=("*****")
+    hide="No"
+    continue
+  fi
+  Logged_Arguments+=("$argument")
+  if [[ "$argument" = "-p" || "$argument" = "--password" ]]; then
+    hide="Yes"
+  fi
+done
+}
+
+Read_Admin_Password_File() {
+# CP_ADMIN_PASSWORD_FILE names a file that only root can read, with the admin
+# password on its first line. A password given this way takes the place of -p
+# and is never shown, logged or put on a command line. Read before anything on
+# the server is changed, so that a file that cannot be used changes nothing.
+local details owner mode
+Admin_Pass_From_File=""
+if [[ -z "${CP_ADMIN_PASSWORD_FILE:-}" ]]; then
+  return 0
+fi
+if [[ -L "$CP_ADMIN_PASSWORD_FILE" || ! -f "$CP_ADMIN_PASSWORD_FILE" ]]; then
+  echo -e "\nCP_ADMIN_PASSWORD_FILE does not name a regular file.\n" >&2
+  return 1
+fi
+details=$(stat -c '%u %a' "$CP_ADMIN_PASSWORD_FILE" 2>/dev/null)
+owner=${details%% *}
+mode=${details##* }
+if [[ "$owner" != "0" || ! "$mode" =~ ^[0-7]+$ ]] || (( (8#$mode & 8#77) != 0 )); then
+  echo -e "\nThe file named in CP_ADMIN_PASSWORD_FILE must belong to root and be readable by root only (chmod 600).\n" >&2
+  return 1
+fi
+IFS= read -r Admin_Pass_From_File < "$CP_ADMIN_PASSWORD_FILE"
+if [[ ${#Admin_Pass_From_File} -lt 8 ]]; then
+  Admin_Pass_From_File=""
+  echo -e "\nThe password in the file named in CP_ADMIN_PASSWORD_FILE has less than 8 characters.\n" >&2
+  return 1
+fi
+return 0
+}
+
+Use_Admin_Password_File() {
+# The password from the file wins over what -p or the questions set, and the
+# closing summary does not print it.
+if [[ -n "$Admin_Pass_From_File" ]]; then
+  Admin_Pass="$Admin_Pass_From_File"
+  Custom_Pass="True"
+fi
 }
 
 Named_Components() {
@@ -1005,7 +1064,7 @@ done
 }
 
 Check_Argument() {
-log_function_start "Check_Argument" "$@"
+log_function_start "Check_Argument" "${Logged_Arguments[@]}"
 if  [[ "$#" = "0" ]] || [[ "$#" = "1" && "$1" = "--debug" ]] || [[ "$#" = "1" && "$1" = "--mirror" ]]; then
   echo -e "\nInitialized...\n"
 else
@@ -1060,7 +1119,11 @@ else
         fi
         Admin_Pass="${1}"
       fi
-      echo -e "\nSet to use password ${1}..."
+      if [[ -n "$Admin_Pass_From_File" ]]; then
+        echo -e "\nThe password option is not used: the admin password is read from the file named in CP_ADMIN_PASSWORD_FILE..."
+      else
+        echo -e "\nSet to use password ${1}..."
+      fi
       ;;
       -b | --branch)
       shift
@@ -1138,7 +1201,9 @@ else
   License_Check "$License_Key"
 fi
 
-if [[ $Admin_Pass = "d" ]]; then
+if [[ -n "$Admin_Pass_From_File" ]]; then
+  echo -e "\nAdmin password is read from the file named in CP_ADMIN_PASSWORD_FILE"
+elif [[ $Admin_Pass = "d" ]]; then
   Admin_Pass="1234567"
   echo -e "\nSet to default password..."
   echo -e "\nAdmin password will be set to \e[31m$Admin_Pass\e[39m\n"
@@ -3025,11 +3090,15 @@ sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litesp
 
 Check_Usage "$@"
 
+Read_Admin_Password_File || exit 2
+
+Mask_Arguments "$@"
+
 echo -e "\nInitializing...\n"
 log_info "============================================="
 log_info "CyberPanel installation script started"
 log_info "Script version: $Panel_Version.$Panel_Build"
-log_info "Script arguments: $*"
+log_info "Script arguments: ${Logged_Arguments[*]}"
 log_info "============================================="
 
 if [[ "$*" = *"--debug"* ]] ; then
@@ -3063,6 +3132,8 @@ if [[ $Silent = "On" ]]; then
 else
   Interactive_Mode
 fi
+
+Use_Admin_Password_File
 
 # Answers that cannot be used are the only reason for a failure here.
 Install_Fail_Code="invalid_input"
