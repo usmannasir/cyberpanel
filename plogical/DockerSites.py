@@ -93,6 +93,35 @@ def site_directory_name(domain):
     return None
 
 
+FIRST_SITE_PORT = 11000
+
+## The block SetupAppVhost adds to a website's virtual host, from its comment
+## line to the closing brace of the context.
+APP_VHOST_BLOCK = re.compile(
+    r'(?:^\n){0,2}^# Docker App Proxy Configuration\n^context / \{\n(?:(?!^\}).*\n)*?^[ \t]*handler[ \t]+docker[0-9]+[ \t]*\n'
+    r'(?:(?!^\}).*\n)*?^\}[ \t]*\n?', re.M)
+
+
+def next_site_port(site_ports, web_server_config=''):
+    """
+    The loopback port for a new Docker site.
+
+    It is higher than the port of every Docker site there is and of every
+    Docker site the web server has ever been told about. A port is therefore
+    never handed out twice, and a website that still points at the port of a
+    site that was deleted can never reach the container of a new one.
+    """
+    highest = FIRST_SITE_PORT - 1
+    for port in list(site_ports) + re.findall(r'\bdocker([0-9]{1,5})\b', web_server_config or ''):
+        try:
+            highest = max(highest, int(port))
+        except (TypeError, ValueError):
+            continue
+    if highest >= 65535:
+        raise ValueError('No port is left for a new Docker site.')
+    return str(highest + 1)
+
+
 ## Registry of the one-click applications offered on the Docker Site creation page.
 ##
 ## siteType   -> value stored in DockerSites.SiteType so the panel can tell apps apart
@@ -441,6 +470,14 @@ extprocessor docker{port} {{
             with open(vhost_path, 'r') as f:
                 content = f.read()
 
+            # A block the panel left behind for a Docker site that is gone would
+            # keep pointing the domain at that site's port.
+            remaining = APP_VHOST_BLOCK.sub('', content)
+            if remaining != content:
+                content = remaining
+                with open(vhost_path, 'w') as f:
+                    f.write(content)
+
             # Check if context already exists
             if 'context / {' in content:
                 logging.writeToFile("Context already exists, skipping...")
@@ -478,6 +515,36 @@ context / {{
             logging.writeToFile(f'Error setting up app vhost: {str(e)}')
             return False
     
+    @staticmethod
+    def RemoveAppVhost(domain):
+        """Take the proxy context the panel added for a Docker site out of the domain's virtual host."""
+        try:
+            if site_directory_name(domain) is None:
+                return False
+
+            vhost_path = f'/usr/local/lsws/conf/vhosts/{domain}/vhost.conf'
+
+            if not os.path.exists(vhost_path):
+                return False
+
+            with open(vhost_path, 'r') as f:
+                content = f.read()
+
+            remaining = APP_VHOST_BLOCK.sub('', content)
+
+            if remaining == content:
+                return False
+
+            with open(vhost_path, 'w') as f:
+                f.write(remaining)
+
+            logging.writeToFile(f"Removed the Docker app proxy context of {domain}")
+            return True
+
+        except Exception as e:
+            logging.writeToFile(f'Error removing app vhost: {str(e)}')
+            return False
+
     @staticmethod
     def htaccess_rules(port, domain=None):
         """The lines the panel adds to a website's .htaccess for a Docker site."""
@@ -880,10 +947,8 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             dbusername = randomPassword.generate_pass()
             MySQLRootPass = randomPassword.generate_pass()
 
-            if DockerSites.objects.count() == 0:
-                port = '11000'
-            else:
-                port = str(int(DockerSites.objects.last().port) + 1)
+            port = next_site_port(DockerSites.objects.values_list('port', flat=True),
+                                  Docker_Sites.web_server_config())
 
             f_data = {
                 "JobID": tempStatusPath,
@@ -974,12 +1039,32 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 execPath = execPath + f" RemoveHTAccess --htaccess /home/{domain}/public_html/.htaccess --domain {domain}"
                 ProcessUtilities.executioner(execPath, account)
 
+            ## The virtual host must not go on pointing at the port of a site that is gone.
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
+            execPath = execPath + f" RemoveAppVhost --domain {domain}"
+            ProcessUtilities.executioner(execPath)
+
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
 
         except BaseException as msg:
             logging.writeToFile("Error Delete Docker APP ....... %s" % str(msg))
             return 0
+
+    @staticmethod
+    def web_server_config():
+        """The main configuration of the web server, where SetupProxy records every Docker site port."""
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            path = '/usr/local/lsws/conf/httpd_config.conf'
+        else:
+            path = '/usr/local/lsws/conf/httpd_config.xml'
+        try:
+            content = ProcessUtilities.outputExecutioner('cat ' + path)
+            return content if isinstance(content, str) else ''
+        except BaseException as msg:
+            logging.writeToFile('Error reading the web server configuration: %s' % str(msg))
+            return ''
 
     def website_account(self, domain):
         """The system account of the website a Docker site is installed on, or None."""
@@ -1888,6 +1973,8 @@ def Main():
             Docker_Sites.RemoveHTAccess(args.htaccess, args.domain)
         elif args.function == 'SetupN8NVhost' or args.function == 'SetupAppVhost':
             Docker_Sites.SetupAppVhost(args.domain, args.port)
+        elif args.function == 'RemoveAppVhost':
+            Docker_Sites.RemoveAppVhost(args.domain)
         elif args.function == 'DeployWPDocker':
             # Takes
             # ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,
