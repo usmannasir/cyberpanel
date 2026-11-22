@@ -253,6 +253,110 @@ class EarlierAccountTests(unittest.TestCase):
         self.assertIn('privileges', self.refusal(lines=[]))
 
 
+class ImportTests(unittest.TestCase):
+    DUMP = [
+        "-- cPanel mysql backup\n",
+        "GRANT USAGE ON *.* TO 'cpuser'@'localhost' IDENTIFIED BY PASSWORD '*AAAA';\n",
+        "GRANT ALL PRIVILEGES ON `cpuser\\_%`.* TO 'cpuser'@'localhost';\n",
+        "GRANT USAGE ON *.* TO 'cpuser_wp'@'localhost' IDENTIFIED BY PASSWORD '*BBBB';\n",
+        "GRANT ALL PRIVILEGES ON `cpuser\\_blog`.* TO 'cpuser_wp'@'localhost';\n",
+        "GRANT ALL PRIVILEGES ON `cpuser\\_blog`.* TO 'cpuser_wp'@'203.0.113.9';\n",
+        "GRANT SELECT, INSERT ON `cpuser\\_blog`.* TO `cpuser_ro`@`localhost`;\n",
+        "GRANT ALL PRIVILEGES ON `cpuser\\_shop`.* TO 'root'@'localhost';\n",
+        "GRANT ALL PRIVILEGES ON `cpuser\\_shop`.* TO 'cpuser_shop'@'localhost';\n",
+        "GRANT ALL PRIVILEGES ON `cpuser\\_blog`.`posts` TO 'cpuser_tbl'@'localhost';\n",
+    ]
+
+    def test_users_are_read_from_grants_on_exactly_the_database(self):
+        self.assertEqual(['cpuser_wp', 'cpuser_ro'], accounts.users_granted_in_dump(self.DUMP, 'cpuser_blog'))
+        self.assertEqual(['root', 'cpuser_shop'], accounts.users_granted_in_dump(self.DUMP, 'cpuser_shop'))
+        self.assertEqual([], accounts.users_granted_in_dump(self.DUMP, 'cpuser_none'))
+        self.assertEqual([], accounts.users_granted_in_dump(self.DUMP, 'cpuser_%'))
+        self.assertEqual([], accounts.users_granted_in_dump(self.DUMP, 'cpuser_anything'))
+        self.assertEqual(['plain'], accounts.users_granted_in_dump(
+            ["GRANT ALL PRIVILEGES ON `cpuser_old`.* TO 'plain'@'localhost';"], 'cpuser_old'))
+        self.assertEqual([], accounts.users_granted_in_dump([], 'cpuser_blog'))
+
+    def user(self, candidate, registered=(), hosts=None, refusal=None):
+        site = SimpleNamespace(pk=3)
+        model = mock.Mock()
+        model.objects.filter.return_value = list(registered)
+        cursor = Cursor(hosts=hosts)
+        with mock.patch.dict('sys.modules', {'databases.models': SimpleNamespace(Databases=model)}), \
+                mock.patch.object(accounts, 'administrative_account', return_value='root'), \
+                mock.patch.object(accounts, 'named_like_panel_user', return_value=refusal == 'panel'):
+            return accounts.imported_database_user(cursor, candidate, site)
+
+    def test_new_plain_user_is_registered(self):
+        self.assertEqual('cpuser_wp', self.user('cpuser_wp'))
+
+    def test_mark_of_a_database_without_a_user_can_never_be_an_account_a_customer_acts_on(self):
+        from plogical.securityUtils import is_safe_sql_identifier
+        self.assertEqual('-', accounts.NO_DATABASE_USER)
+        self.assertFalse(is_safe_sql_identifier(accounts.NO_DATABASE_USER))
+
+    def test_account_of_the_server_is_never_registered(self):
+        for name in ('root', 'Root', 'mysql', 'cyberpanel', 'debian-sys-maint', 'cp-pma-1', '', None,
+                     "x'y", 'a b', 'x' * 51):
+            self.assertEqual('-', self.user(name), repr(name))
+
+    def test_name_of_a_panel_user_is_never_registered(self):
+        self.assertEqual('-', self.user('reseller1', refusal='panel'))
+
+    def test_user_of_the_same_website_is_registered_again(self):
+        same = SimpleNamespace(website_id=3, dbUser='cpuser_wp')
+        self.assertEqual('cpuser_wp', self.user('cpuser_wp', registered=[same], hosts={'cpuser_wp': ['localhost']}))
+
+    def test_user_registered_for_another_website_or_in_another_case_is_not_registered(self):
+        other = SimpleNamespace(website_id=4, dbUser='cpuser_wp')
+        variant = SimpleNamespace(website_id=3, dbUser='CPUSER_WP')
+        self.assertEqual('-', self.user('cpuser_wp', registered=[other]))
+        self.assertEqual('-', self.user('cpuser_wp', registered=[variant]))
+
+    def test_account_that_exists_without_a_registration_is_not_registered(self):
+        self.assertEqual('-', self.user('monitor', hosts={'monitor': ['localhost']}))
+
+    def test_failed_lookup_registers_no_user(self):
+        model = mock.Mock()
+        model.objects.filter.side_effect = RuntimeError('table unavailable')
+        with mock.patch.dict('sys.modules', {'databases.models': SimpleNamespace(Databases=model)}), \
+                mock.patch.object(accounts, 'account_refusal', return_value=None):
+            self.assertEqual('-', accounts.imported_database_user(Cursor(), 'cpuser_wp', SimpleNamespace(pk=3)))
+
+    def test_registrations_under_a_server_account_or_a_panel_user_are_listed(self):
+        site = SimpleNamespace(domain='example.com')
+        rows = [SimpleNamespace(dbName='imp_one', dbUser='root', website=site),
+                SimpleNamespace(dbName='imp_two', dbUser='Root', website=site),
+                SimpleNamespace(dbName='shop', dbUser='Reseller1', website=site),
+                SimpleNamespace(dbName='imp_three', dbUser='-', website=site),
+                SimpleNamespace(dbName='exam_ok', dbUser='exam_user', website=site)]
+        users = mock.Mock()
+        users.objects.values_list.return_value = ['admin', 'reseller1']
+        records = mock.Mock()
+        records.objects.values_list.return_value = ['cp-pma-2']
+        registered = mock.Mock()
+        registered.objects.all.return_value.select_related.return_value = rows
+        modules = {'databases.models': SimpleNamespace(Databases=registered, GlobalUserDB=records),
+                   'loginSystem.models': SimpleNamespace(Administrator=users)}
+        with mock.patch.dict('sys.modules', modules), \
+                mock.patch.object(accounts, 'administrative_account', return_value='root'):
+            found = accounts.registrations_needing_review()
+        self.assertEqual([('imp_one', 'root', 'example.com', 'an account of the server'),
+                          ('imp_two', 'Root', 'example.com', 'an account of the server'),
+                          ('shop', 'Reseller1', 'example.com', 'the name of a panel user')], found)
+
+    def test_importer_registers_through_these_checks_only(self):
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cPanelImporter.py')
+        with open(path) as stream:
+            source = stream.read()
+        self.assertNotIn("dbUser='root'", source)
+        self.assertNotIn('dbUser="root"', source)
+        self.assertEqual(1, source.count('Databases(website=website'))
+        self.assertIn('databaseAccounts.users_granted_in_dump(data, importedName)', source)
+        self.assertIn('databaseAccounts.imported_database_user(cursor, candidate, website) == candidate', source)
+        self.assertIn('db = Databases(website=website, dbName=importedName, dbUser=cDBUser)', source)
+
+
 class RemoteAccessTests(unittest.TestCase):
     def setUp(self):
         self.cursor = Cursor()

@@ -672,33 +672,28 @@ class cPanelImporter:
 
                     data = open(CommandsPath, 'r').readlines()
 
-                    ### temp disable if user not added, need to remove this try,catch and to ensure user gets added
+                    # The user comes from the archive: it is registered only when it is a
+                    # name a customer could have created here and nothing else on this
+                    # server already has it. Otherwise the database is registered without
+                    # a user, never under an account of the server.
+                    from plogical import databaseAccounts
 
-                    try:
+                    importedName = items.replace('.sql', '')
+                    cDBUser = databaseAccounts.NO_DATABASE_USER
 
-                        for inItems in data:
-                            if (inItems.find('GRANT ALL PRIVILEGES') > -1 or inItems.find('GRANT USAGE') > -1) and inItems.find('localhost') > -1 and inItems.find('_test') == -1:
-                                cDBName = inItems.split('`')[1].replace('\\', '')
-                                logging.statusWriter(self.logFile, inItems, 1)
-                                if cDBName == items.replace('.sql', ''):
-                                    cDBUser = inItems.replace("`","'").replace("\\","").split("'")[1]
-                                    message = 'Database user for %s is %s.' % (cDBName, cDBUser)
-                                    logging.statusWriter(self.logFile, message, 1)
-                                    if Databases.objects.filter(dbUser=cDBUser).count() > 0:
-                                        continue
-                                    break
-                    except:
-                        pass
+                    for candidate in databaseAccounts.users_granted_in_dump(data, importedName):
+                        if databaseAccounts.imported_database_user(cursor, candidate, website) == candidate:
+                            cDBUser = candidate
+                            break
 
-                    ### temp disable if user not added, need to remove this try,catch and to ensure user gets added
+                    if cDBUser == databaseAccounts.NO_DATABASE_USER:
+                        message = 'No usable database user was found for %s; it is registered without one.' % (importedName)
+                    else:
+                        message = 'Database user for %s is %s.' % (importedName, cDBUser)
+                    logging.statusWriter(self.logFile, message, 1)
 
-                    try:
-                        db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser=cDBUser)
-                        db.save()
-                    except:
-                        db = Databases(website=website, dbName=items.replace('.sql', ''), dbUser='root')
-                        db.save()
-                        pass
+                    db = Databases(website=website, dbName=importedName, dbUser=cDBUser)
+                    db.save()
 
                     message = 'MySQL dump successfully restored for %s.' % (items.replace('.sql', ''))
                     logging.statusWriter(self.logFile, message, 1)
