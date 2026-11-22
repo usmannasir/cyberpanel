@@ -29,7 +29,9 @@ class Server:
         self.rows = []
         if self.refuse and query.startswith(self.refuse):
             raise RuntimeError('refused by the server')
-        if query.startswith('SHOW VARIABLES'):
+        if query.startswith('SET SESSION'):
+            pass
+        elif query.startswith('SHOW VARIABLES'):
             self.rows = [('partial_revokes', 'ON')] if self.literal else []
         elif query == 'SELECT @@lower_case_table_names':
             self.rows = [(self.folds,)]
@@ -130,8 +132,9 @@ class RepairTests(unittest.TestCase):
         result = repair(server, ['shop_db', 'plain'])
         self.assertEqual([], server.changes())
         self.assertEqual(grants, server.grants)
-        self.assertEqual({'literal': False, 'moved': [], 'failed': [], 'patterns': []}, result)
-        self.assertEqual(["SHOW VARIABLES LIKE 'partial_revokes'", 'SELECT @@lower_case_table_names',
+        self.assertEqual({'literal': False, 'moved': [], 'failed': [], 'patterns': [], 'too_long': []}, result)
+        self.assertEqual(["SHOW VARIABLES LIKE 'partial_revokes'", 'SET SESSION sql_quote_show_create = 1',
+                          "SET SESSION sql_mode = ''", 'SELECT @@lower_case_table_names',
                           'SELECT Db, User, Host FROM mysql.db ORDER BY Db, User, Host'],
                          [query for query, args in server.statements])
 
@@ -199,7 +202,7 @@ class RepairTests(unittest.TestCase):
     def test_server_that_reads_names_literally_is_left_alone(self):
         server = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False]}, literal=True)
         result = repair(server, ['shop_db'])
-        self.assertEqual({'literal': True, 'moved': [], 'failed': [], 'patterns': []}, result)
+        self.assertEqual({'literal': True, 'moved': [], 'failed': [], 'patterns': [], 'too_long': []}, result)
         self.assertEqual([("SHOW VARIABLES LIKE 'partial_revokes'", None)], server.statements)
 
     def test_database_name_is_quoted_in_both_statements(self):
@@ -250,7 +253,7 @@ class OtherHoldersTests(unittest.TestCase):
         result = repair(server, ['shop_db'])
         self.assertEqual(first, len(server.changes()))
         self.assertEqual(after, server.grants)
-        self.assertEqual({'literal': False, 'moved': [], 'failed': [], 'patterns': []}, result)
+        self.assertEqual({'literal': False, 'moved': [], 'failed': [], 'patterns': [], 'too_long': []}, result)
 
     def test_exact_grant_that_is_already_there_is_kept_when_the_plain_one_goes(self):
         server = Server({('shop_db', 'shop_user', 'localhost'): ['SELECT', False],
@@ -258,6 +261,76 @@ class OtherHoldersTests(unittest.TestCase):
         result = repair(server, ['shop_db'])
         self.assertEqual({('shop\\_db', 'shop_user', 'localhost'): ['SELECT', False]}, server.grants)
         self.assertEqual([['shop_db', 'shop_user', 'localhost']], result['moved'])
+
+    def test_exact_grant_with_fewer_privileges_is_what_the_account_keeps(self):
+        # The server uses the exact grant alone for this database: the plain one never gave more.
+        server = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False],
+                         ('shop\\_db', 'shop_user', 'localhost'): ['SELECT', False]})
+        result = repair(server, ['shop_db'])
+        self.assertEqual({('shop\\_db', 'shop_user', 'localhost'): ['SELECT', False]}, server.grants)
+        self.assertEqual([('REVOKE ALL PRIVILEGES ON `shop_db`.* FROM %s@%s', ('shop_user', 'localhost'))],
+                         server.changes())
+        self.assertEqual([['shop_db', 'shop_user', 'localhost']], result['moved'])
+        self.assertEqual([], result['failed'])
+
+    def test_exact_grant_of_its_own_is_given_again_as_it_was_when_a_revoke_took_it_along(self):
+        server = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False],
+                         ('shop\\_db', 'shop_user', 'localhost'): ['SELECT, INSERT', True]}, sweeping=True)
+        result = repair(server, ['shop_db'])
+        self.assertEqual({('shop\\_db', 'shop_user', 'localhost'): ['SELECT, INSERT', True]}, server.grants)
+        self.assertEqual([('REVOKE ALL PRIVILEGES ON `shop_db`.* FROM %s@%s', ('shop_user', 'localhost')),
+                          ('GRANT SELECT, INSERT ON `shop\\_db`.* TO %s@%s WITH GRANT OPTION',
+                           ('shop_user', 'localhost'))], server.changes())
+        self.assertEqual([], result['failed'])
+
+    def test_session_is_made_to_write_names_between_backticks_before_grants_are_read(self):
+        server = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False]})
+        repair(server, ['shop_db'])
+        statements = [query for query, args in server.statements]
+        self.assertEqual(['SET SESSION sql_quote_show_create = 1', "SET SESSION sql_mode = ''"],
+                         [query for query in statements if query.startswith('SET')])
+        self.assertLess(statements.index("SET SESSION sql_mode = ''"),
+                        statements.index('SELECT Db, User, Host FROM mysql.db ORDER BY Db, User, Host'))
+        # A server that reads names literally is asked nothing more.
+        literal = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False]}, literal=True)
+        repair(literal, ['shop_db'])
+        self.assertEqual([], [query for query, args in literal.statements if query.startswith('SET')])
+
+    def test_name_too_long_for_an_exact_grant_is_reported_once_and_left_alone(self):
+        name = 'a_b_c_d_e_f_g_h_i_j_k_l_m_n_o_p_q_r_s_t_u_v_w_x_y_z_0_1_2_3_4_5'   # 63 characters, 94 escaped
+        self.assertFalse(databaseGrants.exact_name_fits(name))
+        self.assertTrue(databaseGrants.exact_name_fits('_' * 32))
+        server = Server({(name, 'shop_user', 'localhost'): ['ALL PRIVILEGES', False],
+                         (name, 'shop_user', '127.0.0.1'): ['ALL PRIVILEGES', False],
+                         (name, 'reseller', 'localhost'): ['ALL PRIVILEGES', False]})
+        result = repair(server, [name])
+        self.assertEqual([], server.changes())
+        self.assertEqual(([], [], [], [name]),
+                         (result['moved'], result['failed'], result['patterns'], result['too_long']))
+        lines = []
+        databaseGrantRepair.describe(result, lines.append)
+        self.assertEqual(1, len(lines))
+        self.assertIn(name, lines[0])
+        self.assertIn('too long', lines[0])
+        self.assertNotIn('WARNING', lines[0])
+
+    def test_grant_for_a_name_that_does_not_fit_is_refused_before_anything_is_made(self):
+        name = 'a_b_c_d_e_f_g_h_i_j_k_l_m_n_o_p_q_r_s_t_u_v_w_x_y_z_0_1_2_3_4_5'
+        cursor = mock.Mock()
+        cursor.fetchall.return_value = []
+        with self.assertRaises(ValueError):
+            databaseGrants.grant_name(cursor, name)
+        cursor.fetchall.return_value = [('partial_revokes', 'ON')]
+        self.assertEqual(name, databaseGrants.grant_name(cursor, name))
+        # Creating a database asks for the grant name before its first statement.
+        from plogical import mysqlUtilities as module
+        connection, cursor = mock.Mock(), mock.Mock()
+        cursor.fetchall.return_value = []
+        with mock.patch.object(module.mysqlUtilities, 'setupConnection', return_value=(connection, cursor)), \
+                mock.patch.object(module.logging.CyberCPLogFileWriter, 'writeToFile'):
+            self.assertEqual(0, module.mysqlUtilities.createDatabase(name, 'shop_user', 'secret'))
+        self.assertEqual([], [call for call in cursor.execute.call_args_list if 'CREATE' in call[0][0]])
+        connection.close.assert_called_once()
 
     def test_plain_grant_stays_when_the_exact_one_was_not_stored(self):
         key = ('shop_db', 'shop_user', 'localhost')

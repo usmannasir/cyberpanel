@@ -35,13 +35,37 @@ def names_are_literal(cursor):
     return bool(rows and len(rows[0]) > 1 and str(text(rows[0][1])).upper() in ('ON', '1'))
 
 
+# The longest database name the server accepts in a grant.
+NAME_LENGTH = 64
+
+
+def exact_name_fits(name):
+    """True when the escaped form of the name is short enough for the server to accept in a grant."""
+    return len(escape_grant_name(name)) <= NAME_LENGTH
+
+
 def grant_name(cursor, name):
     """What to write as the database of a GRANT or REVOKE so that it means `name` alone."""
     if not isinstance(name, str) or not name:
         raise ValueError('A grant needs a database name.')
     if names_are_literal(cursor):
         return name
+    if not exact_name_fits(name):
+        # Callers ask before they create anything, so nothing is left half made.
+        raise ValueError('The database name is too long to be granted exactly: each `_` and `%` in it counts '
+                         'twice, and the server accepts 64 characters.')
     return escape_grant_name(name)
+
+
+def plain_session(cursor):
+    """Make this session write names the one way the statements read here expect: between backticks.
+
+    A server set to ANSI_QUOTES, or with sql_quote_show_create off, writes
+    SHOW GRANTS and SHOW CREATE differently. Both settings are changed for
+    this session only.
+    """
+    cursor.execute('SET SESSION sql_quote_show_create = 1')
+    cursor.execute("SET SESSION sql_mode = ''")
 
 
 def stored_names(name):
