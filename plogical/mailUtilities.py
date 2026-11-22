@@ -1586,6 +1586,30 @@ LogFile /var/log/clamav/clamav.log
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [removeRelayHost]')
             print('0,%s' % str(msg))
 
+    @staticmethod
+    def applyPatternForwarding():
+        """Root half of the Pattern Forwarding page: rebuild Postfix's map from the saved rules.
+
+        The panel's web process cannot write under /etc/postfix. It saves the
+        rule and runs this, which reads every enabled rule from the database
+        and prints what became of the map.
+        """
+        from plogical import patternForwardingMap
+        try:
+            from django.db import connection
+
+            def savedRules():
+                with connection.cursor() as cursor:
+                    return patternForwardingMap.read_rules(cursor)
+
+            result = patternForwardingMap.apply(savedRules)
+            result['status'] = 1
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [applyPatternForwarding]')
+            result = {'status': 0, 'error_message': str(msg)}
+        print(patternForwardingMap.result_line(result))
+        return result
+
     ####### Imported below functions from mailserver/mailservermanager, need to refactor later
 
 class MailServerManagerUtils(multi.Thread):
@@ -2716,6 +2740,8 @@ def main():
         mailUtilities.configureRelayHost(args.smtpHost, args.smtpPort, args.smtpUser, args.smtpPassword)
     elif args.function == 'removeRelayHost':
         mailUtilities.removeRelayHost()
+    elif args.function == 'applyPatternForwarding':
+        mailUtilities.applyPatternForwarding()
 
 if __name__ == "__main__":
     main()
