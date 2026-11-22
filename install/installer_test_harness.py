@@ -213,6 +213,35 @@ def parse_as_python_36(source, interpreter=None):
     return ast.parse(source)
 
 
+def stand_in_interpreter(path):
+    """A file at ``path`` that runs this Python with the arguments it is given.
+
+    It takes the place of an interpreter that the script names. The tests can
+    themselves be run by an interpreter that lives where those names point (the
+    panel's own, on a server that has a panel); the name of the running
+    interpreter is therefore never put into text of the script, where a later
+    replacement of a path could change it.
+    """
+    path.write_text('#!/bin/sh\nexec "%s" "$@"\n' % sys.executable, encoding='utf-8')
+    path.chmod(0o755)
+    return path
+
+
+def with_stand_ins(text, stand_ins):
+    """``text`` with every name in ``stand_ins`` replaced by its stand-in.
+
+    One pass: what a replacement put in is not looked at again, so a stand-in
+    that holds one of the names stays as it is. Where one name begins with
+    another, the longer one is taken. Every name has to be in the text.
+    """
+    table = dict((str(real), str(stand_in)) for real, stand_in in stand_ins)
+    for real in table:
+        if real not in text:
+            raise AssertionError('%s is not in the text' % real)
+    names = sorted(table, key=len, reverse=True)
+    return re.sub('|'.join(re.escape(name) for name in names), lambda match: table[match.group(0)], text)
+
+
 def script_parts(source=None):
     """The function definitions and the top level of the installer script."""
     if source is None:

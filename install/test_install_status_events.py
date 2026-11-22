@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 from install.installer_test_harness import (
     CLI_FAILED, DEBIAN_12, PYTHON_DRIVER, REAL_FUNCTIONS, ROOT, SPECIAL_STUBS, STUBBED_PHASES,
-    Installer, script_parts, top_level_functions,
+    Installer, script_parts, top_level_functions, with_stand_ins,
 )
 
 STEPS = ('preflight repositories system_update python_env download_panel web_server '
@@ -58,6 +58,18 @@ class HarnessSafetyTests(unittest.TestCase):
         for tool in ('systemctl', 'apt', 'apt-get', 'yum', 'dnf', 'rpm', 'pip', 'git', 'wget',
                      'curl', 'reboot', 'swapon', 'sysctl', 'ln', 'cp', 'mv', 'rm'):
             self.assertFalse((machine.root / 'bin' / tool).exists(), tool)
+
+    def test_a_stand_in_is_not_changed_by_another_replacement(self):
+        # The tests are also run by the panel's own interpreter, on a server
+        # that has a panel: a stand-in can then hold a name that is replaced.
+        text = 'cd /usr/local/CyberCP && /usr/local/CyberCP/bin/python - < /etc/cyberpanel/adminPass'
+        self.assertEqual(
+            'cd /tmp/tree && /usr/local/CyberCP/bin/python3 - < /usr/local/CyberCP/stored',
+            with_stand_ins(text, (('/usr/local/CyberCP', '/tmp/tree'),
+                                  ('/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/bin/python3'),
+                                  ('/etc/cyberpanel/adminPass', '/usr/local/CyberCP/stored'))))
+        with self.assertRaises(AssertionError):
+            with_stand_ins(text, (('/usr/local/CyberPanel', '/tmp/other'),))
 
     def test_nothing_that_runs_names_a_path_outside_the_temporary_machine(self):
         outside = re.compile(r'(?<![\w./])/(etc|var|usr|root|home|tmp|opt|sys|boot|bin|sbin|lib|lib64|run|srv|mnt)/')
@@ -641,12 +653,9 @@ class InstallerHandoffTests(unittest.TestCase):
             % (sys.executable, driver, ROOT / 'install', events, directives,
                'echo "CyberPanel installation successfully completed!,80" >> "%s"' % log if marker else ''))
         python.chmod(0o755)
-        for real, stand_in in (('/var/log/cyberpanel/install_events.log', events),):
-            self.assertIn(real, status_functions)
-            status_functions = status_functions.replace(real, str(stand_in))
-        for real, stand_in in (('/usr/local/CyberPanel/bin/python', python), ('/var/log/installLogs.txt', log)):
-            self.assertIn(real, handoff)
-            handoff = handoff.replace(real, str(stand_in))
+        status_functions = with_stand_ins(status_functions, (('/var/log/cyberpanel/install_events.log', events),))
+        handoff = with_stand_ins(handoff, (('/usr/local/CyberPanel/bin/python', python),
+                                           ('/var/log/installLogs.txt', log)))
         script = ('Debug_Log2() { :; }\n' + status_functions
                   + 'Remote_MySQL=%s\nMySQL_Password=fixture-only\nFinal_Flags=(192.0.2.10 --postfix ON)\n' % remote
                   + 'Install_Run_Start 3.0.11\nInstall_Step web_server\n'

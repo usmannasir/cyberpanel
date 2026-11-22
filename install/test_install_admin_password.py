@@ -13,7 +13,9 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from install.installer_test_harness import CLI_FAILED, ROOT, Installer, parse_as_python_36, script_parts
+from install.installer_test_harness import (
+    CLI_FAILED, ROOT, Installer, parse_as_python_36, script_parts, stand_in_interpreter, with_stand_ins,
+)
 
 SECRET = 'Tr0ub4dor&3 -e \\n $HOME `id` "quoted"'
 AS_ROOT = unittest.skipUnless(os.geteuid() == 0, 'a file owned by root is needed')
@@ -294,12 +296,10 @@ class PanelAccountTests(unittest.TestCase):
         else:
             self.tool.write_text("parser.add_argument('--password', help='New Password')\n"
                                  + ("parser.add_argument('--password-file')\n" if tree == 'new' else ''))
-        source = function('Set_Admin_Password')
-        for real, stand_in in (('/etc/cyberpanel/adminPass', self.stored),
-                               ('/usr/local/CyberPanel/bin/python', self.python),
-                               ('/usr/local/CyberCP/plogical/adminPass.py', self.tool)):
-            self.assertIn(real, source)
-            source = source.replace(real, str(stand_in))
+        source = with_stand_ins(function('Set_Admin_Password'), (
+            ('/etc/cyberpanel/adminPass', self.stored),
+            ('/usr/local/CyberPanel/bin/python', self.python),
+            ('/usr/local/CyberCP/plogical/adminPass.py', self.tool)))
         self.assertNotIn('/etc/', source)
         self.assertNotIn('/usr/local/', source)
         result = subprocess.run(['bash', '-c', 'umask %s\n%s\nSet_Admin_Password' % (umask, source)],
@@ -406,11 +406,12 @@ class AdminPasswordCheckTests(unittest.TestCase):
             self.stored.unlink()
         source = function('Admin_Password_Is_Set')
         self.assertNotIn('Admin_Pass"', source)
-        for real, stand_in in (('/usr/local/CyberCP/bin/python', sys.executable),
-                               ('/usr/local/CyberCP', self.tree),
-                               ('/etc/cyberpanel/adminPass', self.stored)):
-            self.assertIn(real, source)
-            source = source.replace(real, str(stand_in))
+        # The interpreter is a file of the temporary directory: these tests are
+        # also run by the panel's own interpreter, whose path the script names.
+        source = with_stand_ins(source, (
+            ('/usr/local/CyberCP/bin/python', stand_in_interpreter(self.root / 'panel-python')),
+            ('/usr/local/CyberCP', self.tree),
+            ('/etc/cyberpanel/adminPass', self.stored)))
         self.assertNotIn('/etc/', source)
         self.assertNotIn('/usr/local/', source)
         result = subprocess.run(['bash', '-c', source + '\nAdmin_Password_Is_Set'], stdout=subprocess.PIPE,
@@ -418,6 +419,18 @@ class AdminPasswordCheckTests(unittest.TestCase):
                                 env={'PATH': os.environ['PATH'], 'QA_ADMINISTRATORS': str(self.administrators)})
         self.assertEqual('', result.stdout)
         return result
+
+    def test_check_runs_when_the_tests_are_run_by_the_panels_interpreter(self):
+        # On a server that has a panel the tests are run by its interpreter,
+        # /usr/local/CyberCP/bin/python: a path that holds the names the check
+        # is given stand-ins for.
+        interpreter = self.root / 'server/usr/local/CyberCP/bin/python'
+        interpreter.parent.mkdir(parents=True)
+        interpreter.symlink_to(sys.executable)
+        with patch.object(sys, 'executable', str(interpreter)):
+            result = self.check({'admin': self.stored_hash(SECRET)}, SECRET + '\n')
+            self.assertEqual((0, ''), (result.returncode, result.stderr))
+            self.assertNotEqual(0, self.check({'admin': self.stored_hash('1234567')}, SECRET + '\n').returncode)
 
     def test_administrator_with_the_stored_password(self):
         for password in (SECRET, 'p\u00e4ssw\u00f6rd-1234', '1234567'):
