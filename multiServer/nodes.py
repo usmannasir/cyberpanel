@@ -85,7 +85,8 @@ def index(request):
     # The sealed text is read only for a server that waits for approval, to show its number.
     rows = models.Node.objects.defer('sealed').order_by('label', 'link_id')
     return httpProc(request, 'multiServer/nodes.html',
-                    {'nodes': [summary(row) for row in rows], 'licensed': entitlement.allowed()}).render()
+                    {'nodes': [summary(row) for row in rows], 'licensed': entitlement.allowed(),
+                     'buy_url': entitlement.purchase_url()}).render()
 
 
 @never_cache

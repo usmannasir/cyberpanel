@@ -28,6 +28,6 @@
     {% empty %}<tr><td colspan="4">No matching records in the available inventory.</td></tr>{% endfor %}</tbody>
   </table></div>
   <nav aria-label="Inventory pages">{% if prev %}<a href="{{ prev }}">Previous</a> · {% endif %}Page {{ page }} of {{ pages }}{% if next %} · <a href="{{ next }}">Next</a>{% endif %}</nav>
-  {% else %}<p class="alert alert-warning">An active Multi-Server Manager licence is required to view inventory.</p>{% endif %}
+  {% else %}<p class="alert alert-warning">An active Multi-Server Manager licence is required to view inventory. <a href="{{ buy_url }}" target="_blank" rel="noopener">Get a licence for this controller</a></p>{% endif %}
 </section>
 {% endblock %}

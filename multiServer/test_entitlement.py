@@ -478,6 +478,17 @@ class AddressTests(unittest.TestCase):
         with patch.object(entitlement, 'ADDRESS_FILE', '/nonexistent/machineIP'):
             self.assertIsNone(entitlement.server_address())
 
+    def test_the_licence_is_bought_for_the_address_the_platform_is_asked_about(self):
+        page = 'https://platform.cyberpersons.com/order/multi-server/'
+        for address, query in (('203.0.113.20', '?ip=203.0.113.20'), ('2001:db8::20', '?ip=2001%3Adb8%3A%3A20')):
+            with patch.object(entitlement, 'server_address', return_value=address):
+                self.assertEqual(page + query, entitlement.purchase_url())
+        # A server that does not know its own address is sent to the form to type one.
+        with patch.object(entitlement, 'ADDRESS_FILE', '/nonexistent/machineIP'):
+            self.assertEqual(page, entitlement.purchase_url())
+        # The licence and the question about it go to the same platform.
+        self.assertEqual(entitlement.URL.split('/')[2], entitlement.ORDER_PAGE.split('/')[2])
+
 
 class IndependenceTests(unittest.TestCase):
     """The panel's general add-on check answers yes on LiteSpeed Enterprise; this one must not."""

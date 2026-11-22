@@ -37,8 +37,10 @@ import ipaddress
 import json
 import threading
 import time
+from urllib.parse import urlencode
 
 URL = 'https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission'
+ORDER_PAGE = 'https://platform.cyberpersons.com/order/multi-server/'
 FEATURE = 'multi-server'
 ADDRESS_FILE = '/etc/cyberpanel/machineIP'
 YES_SECONDS = 60
@@ -113,6 +115,16 @@ def server_address():
         return text if len(text) <= 45 and '%' not in text else None
     except Exception:
         return None
+
+
+def purchase_url():
+    """Where the licence for this controller is bought.
+
+    The order form opens with the address this server asks about, so the licence
+    is bought for the address the platform will be asked for. Never raises.
+    """
+    address = server_address()
+    return ORDER_PAGE + ('?' + urlencode({'ip': address}) if address else '')
 
 
 def ask(address):

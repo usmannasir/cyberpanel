@@ -19,7 +19,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 
-from multiServer import audit, keys, msctl, stepup, switch, views
+from multiServer import audit, entitlement, keys, msctl, stepup, switch, views
 
 NAMES = {keys.OFF: 'Off', keys.CONTROLLER: 'Controller', keys.NODE: 'Managed server'}
 CHANGED = 'This server is now: %s.'
@@ -70,6 +70,7 @@ def page(request):
         'role': role, 'role_name': NAMES[role], 'running': switch.active_role() == role,
         'enrolled': views.two_factor_enrolled(admin),
         'choices': [(value, NAMES[value]) for value in msctl.ROLES],
+        'buy_url': entitlement.purchase_url(),
     }).render()
 
 
