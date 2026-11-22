@@ -357,19 +357,59 @@ extprocessor docker11004 {
 
     def test_values_that_are_not_ports_are_ignored(self):
         self.assertEqual('11002', next_site_port(['11001', '', None, 'abc'], 'docker docker- dockerabc'))
+        self.assertEqual('11002', next_site_port(['11001', '70000', '99999', '0', '-5', 65536], ''))
 
     def test_no_port_beyond_the_last_one(self):
         with self.assertRaises(ValueError):
             next_site_port(['65535'])
 
+    def test_only_the_entries_the_panel_wrote_count_not_the_names_of_websites(self):
+        # Websites, child domains and aliases are named in the same file.
+        names = '''virtualHost docker20000.shop.example {
+  vhRoot                  /home/docker20000.shop.example
+  configFile              $SERVER_ROOT/conf/vhosts/docker20000.shop.example/vhost.conf
+}
+listener Default {
+  map                     docker70000.example.com docker70000.example.com, www.docker65535.example.com
+  map                     docker65534.x.com docker65534.x.com
+}
+# extprocessor docker30000 {
+  extprocessor docker30001 {
+extprocessor docker40000
+extprocessor mydocker40001 {
+extprocessor docker40002x {
+'''
+        self.assertEqual('11000', next_site_port([], names))
+        self.assertEqual('11005', next_site_port([], names + self.CONFIG))
+        self.assertEqual('11005', next_site_port(['11001'], self.CONFIG + names))
 
-def create(ports, config):
+    def test_only_the_entries_the_panel_wrote_count_on_the_other_web_server(self):
+        names = ('<virtualHost><name>docker20000.shop.example</name></virtualHost>'
+                 '<vhostMap><vhost>docker70000.example.com</vhost><domain>docker65535.example.com</domain></vhostMap>'
+                 '<extProcessor><name>docker70000</name></extProcessor><extProcessor><name>docker</name></extProcessor>')
+        self.assertEqual('11000', next_site_port([], names))
+        self.assertEqual('11010', next_site_port([], names + '<extProcessor><name>docker11009</name></extProcessor>'))
+
+    def test_the_entry_the_panel_writes_is_one_that_counts(self):
+        written = []
+        handle = mock.mock_open(read_data='')
+        handle.return_value.write = written.append
+        with mock.patch('builtins.open', handle), \
+                mock.patch.object(docker_sites.ProcessUtilities, 'decideServer',
+                                  return_value=docker_sites.ProcessUtilities.OLS):
+            Docker_Sites.SetupProxy('11041')
+        self.assertEqual('11042', next_site_port([], ''.join(written)))
+
+
+def create(ports, config, site_name='shop'):
+    """Run the real creation job; ``config`` is what reading the web server configuration answers."""
     site = Docker_Sites.__new__(Docker_Sites)
-    site.JobID = '/dev/null'
+    site.JobID = '/home/cyberpanel/4711'
     site.data = {
-        'JobID': '/dev/null', 'Domain': 'shop.example', 'WPemal': 'admin@example.test', 'Owner': 'reseller',
-        'userID': 7, 'MysqlCPU': 1, 'MYsqlRam': 256, 'SiteCPU': 1, 'SiteRam': 512, 'sitename': 'shop',
-        'WPusername': 'admin', 'WPpasswd': 'inert-password', 'externalApp': 'shop1234', 'App': 'WordPress',
+        'JobID': '/home/cyberpanel/4711', 'Domain': 'shop.example', 'WPemal': 'admin@example.test',
+        'Owner': 'reseller', 'userID': 7, 'MysqlCPU': 1, 'MYsqlRam': 256, 'SiteCPU': 1, 'SiteRam': 512,
+        'sitename': site_name, 'WPusername': 'admin', 'WPpasswd': 'inert-password', 'externalApp': 'shop1234',
+        'App': 'WordPress',
     }
     row = mock.Mock(domain='shop.example', externalApp='shop1234')
     row.dockersites_set.all.return_value.count.return_value = 0
@@ -383,29 +423,75 @@ def create(ports, config):
     acl.checkOwnership.return_value = 1
     modules = {'websiteFunctions.models': models, 'websiteFunctions.website': SimpleNamespace(WebsiteManager=mock.Mock()),
                'loginSystem.models': SimpleNamespace(Administrator=mock.Mock())}
+    real_open = open
     with mock.patch.dict(sys.modules, modules), \
             mock.patch.object(docker_sites, 'ACLManager', acl, create=True), \
-            mock.patch.object(docker_sites.ProcessUtilities, 'outputExecutioner', return_value=config) as output, \
+            mock.patch.object(docker_sites.ProcessUtilities, 'outputExecutioner', side_effect=config
+                              if isinstance(config, Exception) else None, return_value=config) as output, \
             mock.patch.object(docker_sites.ProcessUtilities, 'decideServer',
                               return_value=docker_sites.ProcessUtilities.OLS), \
+            mock.patch('builtins.open', side_effect=lambda path, *more: real_open(
+                os.devnull if path == '/home/cyberpanel/4711' else path, *more)), \
+            mock.patch.object(docker_sites.logging, 'statusWriter') as status, \
             mock.patch.object(docker_sites.logging, 'writeToFile'), \
             mock.patch.object(docker_sites, 'Docker_Sites') as deployment:
         deployment.web_server_config = Docker_Sites.web_server_config
-        Docker_Sites.SubmitDockersiteCreation(site)
-    return deployment.call_args[0][1]['port'], models, output
+        result = Docker_Sites.SubmitDockersiteCreation(site)
+    return SimpleNamespace(port=deployment.call_args[0][1]['port'] if deployment.call_args else None, models=models,
+                           output=output, result=result, started=deployment.call_count,
+                           status=[call[0] for call in status.call_args_list])
 
 
 class AllocationTests(unittest.TestCase):
     def test_a_new_site_gets_a_port_no_site_ever_had(self):
         # The newest row is not the highest port, and 11004 belonged to a site that was deleted.
-        port, models, output = create(['11002', '11001'], PortTests.CONFIG)
-        self.assertEqual('11005', port)
-        self.assertEqual('11005', models.DockerSites.call_args[1]['port'])
-        output.assert_called_once_with('cat /usr/local/lsws/conf/httpd_config.conf')
+        run = create(['11002', '11001'], (1, PortTests.CONFIG))
+        self.assertEqual('11005', run.port)
+        self.assertEqual('11005', run.models.DockerSites.call_args[1]['port'])
+        run.output.assert_called_once_with('cat /usr/local/lsws/conf/httpd_config.conf', None, None, None, 1)
+        self.assertEqual([], run.status)
 
-    def test_a_web_server_configuration_that_cannot_be_read_still_gives_a_port(self):
-        port, models, output = create(['11002', '11001'], None)
-        self.assertEqual('11003', port)
+    def test_a_website_named_like_a_port_entry_does_not_move_or_stop_the_allocation(self):
+        for name in ('docker70000.example.com', 'docker65535.example.com', 'docker20000.shop.example'):
+            with self.subTest(name=name):
+                config = 'listener Default {\n  map                     %s %s\n}\n' % (name, name)
+                run = create(['11002', '11001'], (1, config + PortTests.CONFIG))
+                self.assertEqual('11005', run.port)
+
+    def test_without_the_web_server_configuration_no_site_is_created_and_the_page_is_told(self):
+        # Chosen from the rows alone, the port would be 11003 although the web server may know 11004.
+        for answer in ((0, 'cat: /usr/local/lsws/conf/httpd_config.conf: No such file or directory'), (0, ''),
+                       (1, ''), (1, '  \n'), (1, None), None, 'text', OSError('no socket')):
+            with self.subTest(answer=answer):
+                run = create(['11002', '11001'], answer)
+                self.assertEqual(0, run.result)
+                self.assertEqual(0, run.started)
+                run.models.DockerSites.assert_not_called()
+                self.assertEqual(1, len(run.status))
+                self.assertEqual('/home/cyberpanel/4711', run.status[0][0])
+                self.assertIn('could not be read', run.status[0][1])
+                self.assertTrue(run.status[0][1].endswith('[404]'))
+
+    def test_when_no_port_is_left_the_page_is_told(self):
+        run = create(['11002', '65535'], (1, PortTests.CONFIG))
+        self.assertEqual(0, run.result)
+        self.assertEqual(0, run.started)
+        self.assertEqual([('/home/cyberpanel/4711',
+                           'The Docker site could not be created: No port is left for a new Docker site. [404]')],
+                         run.status)
+
+    def test_any_other_error_of_the_job_ends_the_page_with_a_message_on_one_line(self):
+        site = Docker_Sites.__new__(Docker_Sites)
+        site.data = {'JobID': '/home/cyberpanel/4711', 'Domain': 'shop.example'}
+        models = SimpleNamespace(DockerSites=mock.Mock(), Websites=mock.Mock())
+        with mock.patch.dict(sys.modules, {'websiteFunctions.models': models,
+                                           'websiteFunctions.website': SimpleNamespace(WebsiteManager=mock.Mock())}), \
+                mock.patch('builtins.open', side_effect=OSError('first line\nsecond line')), \
+                mock.patch.object(docker_sites.logging, 'statusWriter') as status, \
+                mock.patch.object(docker_sites.logging, 'writeToFile'):
+            self.assertEqual(0, Docker_Sites.SubmitDockersiteCreation(site))
+        status.assert_called_once_with('/home/cyberpanel/4711',
+                                       'The Docker site could not be created: first line second line [404]')
 
 
 class DeleteTests(unittest.TestCase):
