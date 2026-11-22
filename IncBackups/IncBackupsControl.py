@@ -18,6 +18,7 @@ import threading as multi
 from plogical.processUtilities import ProcessUtilities
 from .models import IncJob, JobSnapshots
 from .resticOutput import extract_snapshot_id
+from . import mailArchive
 from websiteFunctions.models import Websites
 import plogical.randomPassword as randomPassword
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -295,6 +296,10 @@ class IncJobs(multi.Thread):
     ## Last argument delete is set when the snapshot is to be deleted from this repo, when this argument is set, any preceding argument is not used
 
     def sftpFunction(self, backupPath, type, restore=None, delete=None):
+        # SFTP repositories are not served. The job is told so: a step that
+        # ends without a word leaves whoever waits for the job waiting.
+        logging.statusWriter(self.statusPath,
+                             'Incremental backups do not work with an SFTP destination in this version. [5009]', 1)
         return 0
         if restore == None:
             # Define our excludes file for use with restic
@@ -365,7 +370,8 @@ class IncJobs(multi.Thread):
 
             if self.reconstruct == 'remote':
                 if self.backupDestinations[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    if self.sftpFunction('none', 'none', 1) == 0:
+                        return 0
                 else:
                     if self.awsFunction('restore', '', self.jobid) == 0:
                         return 0
@@ -468,24 +474,42 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath, "%s [160][5009]" % (str(msg)), 1)
             return 0
 
+    def mailRepository(self, destination, domain):
+        """The repository of a website as restic is told it, and the stored AWS key it needs, if any."""
+        if destination == 'local':
+            return '/home/%s/incbackup' % domain, None
+        return 's3:s3.amazonaws.com/%s' % domain, destination.split('/')[-1]
+
     def restoreEmail(self):
+        """Bring the mail of a snapshot back. It is done only when the mail helper says so."""
         try:
+            domain = getattr(self.website, 'domain', self.website)
 
             if self.reconstruct == 'remote':
-                if self.backupDestinations[:4] == 'sftp':
-                    if self.sftpFunction('none', 'none', 1) == 0:
-                        return 0
-                else:
-                    if self.awsFunction('restore', '', self.jobid) == 0:
-                        return 0
+                # Here the password is the one typed for the remote repository.
+                destination, snapshot = self.backupDestinations, self.jobid
+                secret = dict(password=self.passwordFile)
             else:
-                if self.jobid.destination == 'local':
-                    return self.localFunction('none', 'none', 1)
-                elif self.jobid.destination[:4] == 'sftp':
-                    return self.sftpFunction('none', 'none', 1)
-                else:
-                    return self.awsFunction('restore', '', self.jobid.snapshotid)
+                destination, snapshot = self.jobid.destination, self.jobid.snapshotid
+                secret = dict(password_file=self.passwordFile)
 
+            if destination[:4] == 'sftp':
+                return self.sftpFunction('none', 'none', 1)
+
+            # The mail store is the mail account's and the repository the
+            # website's. The helper runs restic as the website and writes the
+            # mail as the mail account; see IncBackups/mailArchive.py.
+            repository, awsKey = self.mailRepository(destination, domain)
+            command = mailArchive.helper_command('restore', domain, self.externalApp, repository,
+                                                 aws_key=awsKey, snapshot=snapshot, **secret)
+            outcome, detail = mailArchive.read_outcome(ProcessUtilities.outputExecutioner(command))
+
+            if outcome != mailArchive.RESTORED:
+                logging.statusWriter(self.statusPath, '%s [IncJobs.restoreEmail][5009]' % detail, 1)
+                return 0
+
+            logging.statusWriter(self.statusPath, '%s mail files restored to %s.' % (
+                detail, mailArchive.mail_folder(domain)), 1)
             return 1
 
         except BaseException as msg:
@@ -550,7 +574,17 @@ class IncJobs(multi.Thread):
                 self.passwordFile = self.extraArgs['password']
                 self.path = self.extraArgs['path']
 
-                if self.path.find('.sql') > -1:
+                # A snapshot of mail is known by where its path starts. A part
+                # of a name decides nothing: domains and databases have such parts.
+                if self.path == mailArchive.archive_path(self.website) \
+                        or self.path.startswith(mailArchive.MAIL_ROOT + '/'):
+                    message = 'Restoring email..'
+                    logging.statusWriter(self.statusPath, message, 1)
+                    if self.restoreEmail() == 0:
+                        return 0
+                    message = 'Emails restored.'
+                    logging.statusWriter(self.statusPath, message, 1)
+                elif self.path.find('.sql') > -1:
                     message = 'Restoring database..'
                     logging.statusWriter(self.statusPath, message, 1)
                     if self.restoreDatabase() == 0:
@@ -563,13 +597,6 @@ class IncJobs(multi.Thread):
                     if self.restoreData() == 0:
                         return 0
                     message = 'Data restored..'
-                    logging.statusWriter(self.statusPath, message, 1)
-                elif self.path.find('vmail') > -1:
-                    message = 'Restoring email..'
-                    logging.statusWriter(self.statusPath, message, 1)
-                    if self.restoreEmail() == 0:
-                        return 0
-                    message = 'Emails restored.'
                     logging.statusWriter(self.statusPath, message, 1)
                 elif self.path.find('meta.xml') > -1:
                     message = 'Reconstructing with meta..'
@@ -593,7 +620,8 @@ class IncJobs(multi.Thread):
                 if self.jobid.type[:8] == 'database':
                     message = 'Restoring database..'
                     logging.statusWriter(self.statusPath, message, 1)
-                    self.restoreDatabase()
+                    if self.restoreDatabase() == 0:
+                        return 0
                     message = 'Database restored.'
                     logging.statusWriter(self.statusPath, message, 1)
                 elif self.jobid.type[:4] == 'data':
@@ -606,13 +634,15 @@ class IncJobs(multi.Thread):
                 elif self.jobid.type[:5] == 'email':
                     message = 'Restoring email..'
                     logging.statusWriter(self.statusPath, message, 1)
-                    self.restoreEmail()
+                    if self.restoreEmail() == 0:
+                        return 0
                     message = 'Emails restored.'
                     logging.statusWriter(self.statusPath, message, 1)
                 elif self.jobid.type[:4] == 'meta':
                     message = 'Reconstructing with meta..'
                     logging.statusWriter(self.statusPath, message, 1)
-                    self.reconstructWithMeta()
+                    if self.reconstructWithMeta() == 0:
+                        return 0
                     message = 'Reconstructed'
                     logging.statusWriter(self.statusPath, message, 1)
 
@@ -770,26 +800,46 @@ class IncJobs(multi.Thread):
             return 0
 
     def emailBackup(self):
+        """Save the website's mail as one snapshot.
+
+        The step reports mail as backed up only when a snapshot of it was
+        saved. A website without a mail folder is said to have none, and a
+        mail folder that is there but cannot be read fails the job.
+        """
         try:
             logging.statusWriter(self.statusPath, 'Backing up emails..', 1)
 
-            backupPath = '/home/vmail/%s' % (self.website.domain)
+            domain = self.website.domain
+            mailFolder = mailArchive.mail_folder(domain)
 
-            if os.path.exists(backupPath):
+            if self.backupDestinations[:4] == 'sftp':
+                return self.sftpFunction(mailFolder, 'email')
 
-                if self.backupDestinations == 'local':
-                    if self.localFunction(backupPath, 'email') == 0:
-                        return 0
-                elif self.backupDestinations[:4] == 'sftp':
-                    if self.sftpFunction(backupPath, 'email') == 0:
-                        return 0
-                else:
-                    if self.awsFunction('backup', backupPath, '', 'email') == 0:
-                        return 0
+            # Neither this process nor the website's account can look into the
+            # mail store, so neither can tell whether there is mail, let alone
+            # read it. The helper finds that out with root privilege, has the
+            # mail account read the mail and the website's account write the
+            # snapshot; see IncBackups/mailArchive.py.
+            repository, awsKey = self.mailRepository(self.backupDestinations, domain)
+            command = mailArchive.helper_command('backup', domain, self.externalApp, repository,
+                                                 password_file=self.passwordFile, aws_key=awsKey)
+            outcome, detail = mailArchive.read_outcome(ProcessUtilities.outputExecutioner(command))
 
-            logging.statusWriter(self.statusPath,
-                                 'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
-            return 1
+            if outcome == mailArchive.SAVED:
+                JobSnapshots(job=self.jobid, type='email:%s' % mailFolder, snapshotid=detail,
+                             destination=self.backupDestinations).save()
+                logging.statusWriter(self.statusPath,
+                                     'Emails for %s backed to %s.' % (domain, self.backupDestinations), 1)
+                return 1
+
+            if outcome == mailArchive.NO_FOLDER:
+                logging.statusWriter(self.statusPath,
+                                     'No mail folder exists for %s (%s): there are no emails to back up.' % (
+                                         domain, mailFolder), 1)
+                return 1
+
+            logging.statusWriter(self.statusPath, '%s [IncJobs.emailBackup][5009]' % detail, 1)
+            return 0
         except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.emailBackup.269][5009]' % str(msg), 1)
             return 0
@@ -969,7 +1019,7 @@ Subject: %s
 
             ## Backup job done
 
-            self.metaBackup()
+            metaSaved = self.metaBackup()
 
             metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
 
@@ -979,6 +1029,11 @@ Subject: %s
             except BaseException as msg:
                 logging.statusWriter(self.statusPath,
                                      'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
+
+            # Without its meta snapshot the backup cannot rebuild the website:
+            # the job has failed, and the step has said why.
+            if metaSaved == 0:
+                return 0
 
             logging.statusWriter(self.statusPath, 'Completed', 1)
 

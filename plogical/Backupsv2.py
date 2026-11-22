@@ -51,6 +51,9 @@ class CPBackupsV2(multi.Thread):
     COMPLETED = 2
     FAILED = 3
 
+    ### What the email step returns for a website that has no mail folder
+    NO_MAIL_FOLDER = 2
+
     ### RCLONE BACKEND TYPES
     SFTP = 1
     LOCAL = 2
@@ -556,9 +559,13 @@ class CPBackupsV2(multi.Thread):
 
                     if self.data['BackupEmails'] and self.MergeSnapshotFlag:
                         self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
-                        if self.BackupEmailsRustic() == 0:
+                        emailsSaved = self.BackupEmailsRustic()
+                        if emailsSaved == 0:
                             self.UpdateStatus(f'Failed to create backup for emails..', CPBackupsV2.FAILED)
                             self.MergeSnapshotFlag = 0
+                        elif emailsSaved == CPBackupsV2.NO_MAIL_FOLDER:
+                            self.UpdateStatus('This website has no mail folder: there are no emails to back up..,85',
+                                              CPBackupsV2.RUNNING)
                         else:
                             self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
 
@@ -736,29 +743,42 @@ class CPBackupsV2(multi.Thread):
 
         source = f'/home/vmail/{self.website.domain}'
 
-        if os.path.exists(source):
-            ## Pending add user provided folders in the exclude list
+        # The panel's own process may not enter the mail store, so it cannot
+        # tell a website without mail from one whose mail it cannot see. The
+        # question is answered with privilege.
+        from IncBackups import mailArchive
+        found, detail = mailArchive.read_outcome(
+            ProcessUtilities.outputExecutioner(mailArchive.helper_command('look', self.website.domain)))
 
-            exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
+        if found == mailArchive.NO_FOLDER:
+            return CPBackupsV2.NO_MAIL_FOLDER
 
-            command = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
+        if found != mailArchive.PRESENT:
+            self.UpdateStatus(detail, CPBackupsV2.FAILED)
+            return 0
 
-            result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
+        ## Pending add user provided folders in the exclude list
 
-            try:
-                SnapShotID = result['id']  ## snapshot id that we need to store in db
-                files_new = result['summary']['files_new']  ## basically new files in backup
-                total_duration = result['summary']['total_duration']  ## time taken
+        exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-                self.snapshots.append(SnapShotID)
+        command = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
 
-                ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
+        result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
 
-                # self.BackupConfig(SnapShotID)
+        try:
+            SnapShotID = result['id']  ## snapshot id that we need to store in db
+            files_new = result['summary']['files_new']  ## basically new files in backup
+            total_duration = result['summary']['total_duration']  ## time taken
 
-            except BaseException as msg:
-                self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
-                return 0
+            self.snapshots.append(SnapShotID)
+
+            ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
+
+            # self.BackupConfig(SnapShotID)
+
+        except BaseException as msg:
+            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+            return 0
 
         return 1
 
