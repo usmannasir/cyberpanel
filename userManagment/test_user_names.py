@@ -1,4 +1,4 @@
-"""Creating a user checks the name first."""
+"""Creating a user checks the name first; a change of what a user may reach takes the phpMyAdmin account away."""
 import json
 from types import SimpleNamespace
 from unittest import mock
@@ -58,3 +58,86 @@ class UserCreationTests(SimpleTestCase):
         example = source[source.index("completeCommandExample = 'cyberpanel createUser "):]
         name = example.split('--userName ')[1].split(' ')[0]
         self.assertIsNone(new_name_refusal(name), name)
+
+
+class AccessRemovalTests(SimpleTestCase):
+    def setUp(self):
+        self.users = {
+            'customer': SimpleNamespace(pk=7, userName='customer', owner=4, state='ACTIVE', acl=None, save=mock.Mock(),
+                                        delete=mock.Mock(), initWebsitesLimit=1),
+            'reseller1': SimpleNamespace(pk=4, userName='reseller1', owner=1, state='ACTIVE', save=mock.Mock()),
+            'reseller2': SimpleNamespace(pk=5, userName='reseller2', owner=1, state='ACTIVE', save=mock.Mock()),
+            'admin': SimpleNamespace(pk=1, userName='admin', owner=1, state='ACTIVE', save=mock.Mock()),
+        }
+        self.children = [SimpleNamespace(pk=8, userName='child', delete=mock.Mock())]
+
+        def get(**kwargs):
+            if 'userName' in kwargs:
+                return self.users[kwargs['userName']]
+            return [user for user in self.users.values() if user.pk == kwargs['pk']][0]
+
+        def filtered(**kwargs):
+            if 'owner' in kwargs:
+                return self.children
+            return [user for user in self.users.values() if user.pk == kwargs['pk']]
+
+        patches = {
+            'get': mock.patch.object(views.Administrator.objects, 'get', side_effect=get),
+            'filter': mock.patch.object(views.Administrator.objects, 'filter', side_effect=filtered),
+            'loaded': mock.patch.object(views.ACLManager, 'loadedACL', return_value={'admin': 1}),
+            'owner': mock.patch.object(views.ACLManager, 'checkUserOwnerShip', return_value=1),
+            'limit': mock.patch.object(views.ACLManager, 'websitesLimitCheck', return_value=1),
+            'retire': mock.patch.object(views.phpmyadminAccess, 'retire', return_value=1),
+        }
+        for name, item in patches.items():
+            setattr(self, name, item.start())
+            self.addCleanup(item.stop)
+
+    def answer(self, view, payload):
+        return json.loads(view(post(payload)).content.decode())
+
+    def test_suspended_user_loses_the_account_and_a_resumed_one_is_left_alone(self):
+        with mock.patch('userManagment.userManager.UserManager'):
+            self.assertEqual(1, self.answer(views.controlUserState,
+                                            {'accountUsername': 'customer', 'state': 'SUSPEND'})['status'])
+            self.retire.assert_called_once_with([self.users['customer']])
+            self.assertEqual(1, self.answer(views.controlUserState,
+                                            {'accountUsername': 'customer', 'state': 'ACTIVATE'})['status'])
+        self.retire.assert_called_once_with([self.users['customer']])
+
+    def test_deleted_user_and_the_users_below_lose_their_accounts_first(self):
+        order = mock.Mock()
+        order.attach_mock(self.retire, 'retire')
+        order.attach_mock(self.users['customer'].delete, 'delete')
+        self.assertEqual(1, self.answer(views.submitUserDeletion, {'accountUsername': 'customer'})['deleteStatus'])
+        self.assertEqual([mock.call.retire([self.users['customer']] + self.children), mock.call.delete()],
+                         order.mock_calls)
+
+    def test_user_given_another_role_loses_the_account(self):
+        role = SimpleNamespace(name='user')
+        for acl in ({'admin': 1}, {'admin': 0, 'changeUserACL': 1}):
+            self.retire.reset_mock()
+            self.loaded.return_value = acl
+            with mock.patch.object(views.ACL.objects, 'get', return_value=role), \
+                    mock.patch.object(views.ACLManager, 'isAdminACL', return_value=False):
+                self.assertEqual(1, self.answer(views.changeACLFunc,
+                                                {'selectedUser': 'customer', 'selectedACL': 'user'})['status'])
+            self.retire.assert_called_once_with([self.users['customer']])
+            self.assertIs(role, self.users['customer'].acl)
+
+    def test_users_of_a_changed_role_lose_their_accounts(self):
+        members = [self.users['customer'], self.users['reseller1']]
+        role = SimpleNamespace(save=mock.Mock(), administrator_set=SimpleNamespace(all=lambda: members))
+        with mock.patch.object(views.ACL.objects, 'get', return_value=role):
+            self.assertEqual(1, self.answer(views.submitACLModifications,
+                                            {'aclToModify': 'user', 'adminStatus': 0, 'listDatabases': 0})['status'])
+        self.retire.assert_called_once_with(members)
+
+    def test_reseller_a_user_leaves_loses_the_account(self):
+        payload = {'userToBeModified': 'customer', 'newOwner': 'reseller2', 'websitesLimit': 1}
+        self.assertEqual(1, self.answer(views.saveResellerChanges, payload)['status'])
+        self.retire.assert_called_once_with([self.users['reseller1']])
+        self.assertEqual(5, self.users['customer'].owner)
+        self.retire.reset_mock()
+        self.assertEqual(1, self.answer(views.saveResellerChanges, payload)['status'])
+        self.retire.assert_not_called()

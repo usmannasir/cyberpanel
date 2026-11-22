@@ -13,7 +13,7 @@ from plogical import storageQuota
 class WebsiteQuotaReassignmentTests(unittest.TestCase):
     def setUp(self):
         self.admin = NS(pk=1)
-        self.site = NS(pk=1, domain='owned.test', externalApp='owned', save=Mock())
+        self.site = NS(pk=1, domain='owned.test', externalApp='owned', save=Mock(), admin=self.admin)
         self.package = NS(pk=3, diskSpace=50, inodeLimit=70, enforceDiskLimits=1)
         self.site.package = NS(pk=2, diskSpace=10, inodeLimit=20, enforceDiskLimits=1)
         self.project_prepare = Mock(return_value=None)
@@ -76,6 +76,23 @@ class WebsiteQuotaReassignmentTests(unittest.TestCase):
         self.prepare.assert_not_called()
         self.apply.assert_not_called()
         self.process.executioner.assert_not_called()
+
+    def test_former_owner_loses_phpmyadmin_access_once_the_website_has_moved(self):
+        former = NS(pk=7, owner=4)
+        self.site.admin = former
+        calls = Mock()
+        with patch('databases.phpmyadminAccess.retire_for_website') as retire:
+            calls.attach_mock(self.site.save, 'save')
+            calls.attach_mock(retire, 'retire')
+            self.assertEqual(1, self.save()['saveStatus'])
+        self.assertEqual(['save', 'retire'], [call[0] for call in calls.mock_calls])
+        retire.assert_called_once_with(former)
+        self.assertIs(self.admin, self.site.admin)
+
+    def test_unchanged_owner_keeps_phpmyadmin_access(self):
+        with patch('databases.phpmyadminAccess.retire_for_website') as retire:
+            self.assertEqual(1, self.save()['saveStatus'])
+        retire.assert_not_called()
 
     def test_each_existing_authorization_denial_precedes_quota(self):
         for name in ('currentContextPermission', 'checkOwnership', 'checkUserOwnerShip'):
