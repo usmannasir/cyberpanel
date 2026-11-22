@@ -17,13 +17,17 @@ tells `Shop_user` and `shop_user` apart.
 import json
 import re
 
-from plogical.databaseGrants import text
+from plogical.databaseGrants import pattern_matches, text
 from plogical.securityUtils import is_safe_sql_identifier
 
 PASSWORD_FILE = '/etc/cyberpanel/mysqlPassword'
 
 PHPMYADMIN_PREFIX = 'cp-pma-'
 _PHPMYADMIN_ACCOUNT = re.compile(r'cp-pma-[1-9][0-9]{0,17}')
+
+# What an imported database is registered with when it has no usable user of
+# its own. It is not a valid account name, so nothing can be done with it.
+NO_DATABASE_USER = '-'
 
 # Accounts of the database server and of the panel, in lower case.
 SYSTEM_ACCOUNTS = frozenset((
@@ -107,6 +111,30 @@ def registered_databases(name):
     return [database for database in Databases.objects.filter(dbUser=name) if database.dbUser == name]
 
 
+def registrations_needing_review():
+    """(database, registered user, website, reason) of each database whose registered user the panel will not act on.
+
+    Earlier releases registered an imported database under `root` when its
+    user was not found, and let a database user carry the name of a panel
+    user. Changing the password or the remote access of such a user is
+    refused; an administrator has to give the database a user of its own.
+    """
+    from databases.models import Databases, GlobalUserDB
+    from loginSystem.models import Administrator
+    panel_names = set(name.lower() for name in Administrator.objects.values_list('userName', flat=True))
+    panel_names.update(name.lower() for name in GlobalUserDB.objects.values_list('username', flat=True))
+    found = []
+    for database in Databases.objects.all().select_related('website'):
+        user = database.dbUser
+        if user == NO_DATABASE_USER:
+            continue
+        if is_reserved(user):
+            found.append((database.dbName, user, database.website.domain, 'an account of the server'))
+        elif user.lower() in panel_names:
+            found.append((database.dbName, user, database.website.domain, 'the name of a panel user'))
+    return found
+
+
 def account_hosts(cursor, user):
     """The hosts of every account the server has under exactly this user name."""
     cursor.execute('SELECT User, Host FROM mysql.user WHERE User = %s', (user,))
@@ -171,6 +199,60 @@ def earlier_phpmyadmin_account_refusal(cursor, user, host):
     if not holds_database_privileges_only(cursor, user, host):
         return 'it holds privileges a phpMyAdmin account was never given'
     return None
+
+
+_DUMP_GRANT = re.compile(
+    r"GRANT (?!USAGE )[A-Z ,]+ ON `((?:[^`]|``)+)`\.\* TO ['`]([^'`]+)['`]@['`]localhost['`]")
+
+
+def _has_wildcard(stored, wildcard):
+    escaped = False
+    for char in stored:
+        if escaped:
+            escaped = False
+        elif char == '\\':
+            escaped = True
+        elif char == wildcard:
+            return True
+    return False
+
+
+def users_granted_in_dump(lines, database):
+    """The users a control-panel dump grants privileges on exactly this database at localhost, in order."""
+    users = []
+    for line in lines:
+        found = _DUMP_GRANT.match(line.strip())
+        if found is None:
+            continue
+        granted = found.group(1).replace('``', '`')
+        # A grant on every database of a prefix names no database in particular.
+        if _has_wildcard(granted, '%') or not pattern_matches(granted, database):
+            continue
+        if found.group(2) not in users:
+            users.append(found.group(2))
+    return users
+
+
+def imported_database_user(cursor, candidate, website):
+    """The user to register for a database imported from another control panel.
+
+    The name comes from the archive. It is registered only when it is a name a
+    customer could have created here, and when no account or registration
+    outside this website already has it; otherwise the database is registered
+    without a user.
+    """
+    from databases.models import Databases
+    try:
+        if account_refusal(candidate) is not None or len(candidate) > 50:
+            return NO_DATABASE_USER
+        registered = list(Databases.objects.filter(dbUser=candidate))
+        if any(database.website_id != website.pk or database.dbUser != candidate for database in registered):
+            return NO_DATABASE_USER
+        if not registered and account_hosts(cursor, candidate):
+            return NO_DATABASE_USER
+        return candidate
+    except Exception:
+        return NO_DATABASE_USER
 
 
 def open_remote_access(utilities, passwords, database, user, host, previous_host=None):
