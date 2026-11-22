@@ -22,6 +22,7 @@ from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, 
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
+import tempfile
 from plogical.installUtilities import installUtilities
 from django.shortcuts import HttpResponse, render, redirect
 from loginSystem.models import Administrator, ACL
@@ -5628,7 +5629,7 @@ StrictHostKeyChecking no
             except (ValueError, TypeError):
                 return ACLManager.loadErrorJson()
 
-            if int(pmStartServers) < int(pmMinSpareServers) or int(pmStartServers) > int(pmMinSpareServers):
+            if int(pmStartServers) < int(pmMinSpareServers) or int(pmStartServers) > int(pmMaxSpareServers):
                 data_ret = {'status': 0,
                             'error_message': 'pm.start_servers must not be less than pm.min_spare_servers and not greater than pm.max_spare_servers.'}
                 json_data = json.dumps(data_ret)
@@ -5646,8 +5647,6 @@ StrictHostKeyChecking no
             except:
                 website = ChildDomains.objects.get(domain=domainName)
                 externalApp = website.master.externalApp
-
-            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 sockPath = '/var/run/php-fpm/'
@@ -5675,12 +5674,23 @@ StrictHostKeyChecking no
             phpFPMConf = phpFPMConf.replace('{sockPath}', sockPath)
             phpFPMConf = phpFPMConf.replace('{group}', group)
 
-            writeToFile = open(tempStatusPath, 'w')
-            writeToFile.writelines(phpFPMConf)
-            writeToFile.close()
+            # The pool waits for the privileged helper in a file of its own,
+            # with a name nothing else uses. The helper installs it as a file
+            # of root, like every other pool file, and the copy is removed
+            # whatever happens.
+            descriptor, tempStatusPath = tempfile.mkstemp(dir='/home/cyberpanel', prefix='fpmpool.')
+            try:
+                writeToFile = os.fdopen(descriptor, 'w')
+                writeToFile.writelines(phpFPMConf)
+                writeToFile.close()
 
-            command = 'sudo mv %s %s' % (shlex.quote(tempStatusPath), shlex.quote(phpPath))
-            ProcessUtilities.executioner(command)
+                command = 'sudo install -o root -g root -m 644 -- %s %s' % (shlex.quote(tempStatusPath), shlex.quote(phpPath))
+                ProcessUtilities.executioner(command)
+            finally:
+                try:
+                    os.remove(tempStatusPath)
+                except OSError:
+                    pass
 
             phpPath = phpPath.split('/')
 
@@ -5705,14 +5715,15 @@ StrictHostKeyChecking no
 
             # The service name is built from the version's digits. This is the
             # panel's web process, which cannot control services itself, so
-            # the privileged helper runs the two commands.
-            for action in ('stop', 'restart'):
-                command = ' '.join(shlex.quote(word) for word in ApacheVhost.fpmServiceCommand(action, phpVersion))
+            # the privileged helper runs the command. The service re-reads its
+            # pools; the other websites' pools keep their sockets.
+            command = ' '.join(shlex.quote(word) for word in
+                               ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(f'PHP service command in tune settings {command}')
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'PHP service command in tune settings {command}')
 
-                ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)

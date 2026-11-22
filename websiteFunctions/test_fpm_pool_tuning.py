@@ -1,4 +1,4 @@
-"""Tuning a website's PHP-FPM pool: the pool file it writes and the service it restarts."""
+"""Tuning a website's PHP-FPM pool: the pool file it writes and what it asks of the shared service."""
 import json
 from types import SimpleNamespace
 import unittest
@@ -44,7 +44,9 @@ class PoolTuning(unittest.TestCase):
         self.process.outputExecutioner.return_value = ''
         self.distro('ubuntu')
         self.services['ApacheVhost'].fpmServiceCommand.side_effect = self.service_command
-
+        self.services['ApacheVhost'].fpmReload = 'reload-or-restart'
+        self.staged = '/home/cyberpanel/fpmpool.test'
+        self.ns['tempfile'] = SimpleNamespace(mkstemp=self.mkstemp)
 
     def distro(self, name):
         self.rpm_family = name != 'ubuntu'
@@ -53,37 +55,81 @@ class PoolTuning(unittest.TestCase):
     def service_command(self, action, selection):
         return ['systemctl', action, '--', phpConfig.fpm_service_for_selection(selection, self.rpm_family)]
 
+    def mkstemp(self, dir=None, prefix=None):
+        self.assertEqual(('/home/cyberpanel', 'fpmpool.'), (dir, prefix))
+        return 9, self.staged
+
     def tune(self, data):
         self.process.reset_mock()
         self.services['open'].reset_mock()
+        self.services['os'].fdopen.reset_mock()
+        self.services['os'].remove.reset_mock()
         return json.loads(self.manager().tuneSettings(7, data).content)
+
+    def install_command(self, pool):
+        return 'sudo install -o root -g root -m 644 -- %s %s' % (self.staged, pool)
 
     def helper_commands(self):
         return [call[0][0] for call in self.process.executioner.call_args_list]
 
     def written(self):
-        return ''.join(self.services['open'].return_value.writelines.call_args[0][0])
+        self.services['os'].fdopen.assert_called_once_with(9, 'w')
+        return ''.join(self.services['os'].fdopen.return_value.writelines.call_args[0][0])
 
 
-class PoolServiceRestartTests(PoolTuning):
-    def assert_restarts(self, pool, unit):
+class PoolServiceReloadTests(PoolTuning):
+    def assert_reloads(self, pool, unit):
         result = self.tune(tuning_data(pool))
         self.assertEqual({'status': 1}, result)
-        self.assertEqual(['sudo mv /home/cyberpanel/1000 ' + pool,
-                          'systemctl stop -- ' + unit, 'systemctl restart -- ' + unit], self.helper_commands())
+        # One request to the service all websites of this PHP version share:
+        # it re-reads its pools. It is not stopped.
+        self.assertEqual([self.install_command(pool), 'systemctl reload-or-restart -- ' + unit],
+                         self.helper_commands())
         # The web process cannot control services; nothing is attempted from it.
         self.process.normalExecutioner.assert_not_called()
 
-    def test_ubuntu_pool_restarts_the_service_of_its_own_version(self):
-        self.assert_restarts(UBUNTU_POOL, 'php8.1-fpm')
+    def test_ubuntu_pool_reloads_the_service_of_its_own_version(self):
+        self.assert_reloads(UBUNTU_POOL, 'php8.1-fpm')
 
-    def test_remi_pool_restarts_the_service_of_its_own_version(self):
+    def test_remi_pool_reloads_the_service_of_its_own_version(self):
         self.distro('cent8')
-        self.assert_restarts(REMI_POOL, 'php81-php-fpm')
+        self.assert_reloads(REMI_POOL, 'php81-php-fpm')
 
-    def test_old_remi_layout_restarts_the_service_of_its_own_version(self):
+    def test_old_remi_layout_reloads_the_service_of_its_own_version(self):
         self.distro('centos')
-        self.assert_restarts(OLD_REMI_POOL, 'php54-php-fpm')
+        self.assert_reloads(OLD_REMI_POOL, 'php54-php-fpm')
+
+
+class PoolFileTests(PoolTuning):
+    def test_pool_is_installed_as_a_file_of_root_from_a_file_of_its_own(self):
+        self.assertEqual({'status': 1}, self.tune(tuning_data(UBUNTU_POOL)))
+        self.assertEqual(self.install_command(UBUNTU_POOL), self.helper_commands()[0])
+        # No status-file style name is used and the staged copy is removed.
+        self.services['open'].assert_not_called()
+        self.services['os'].remove.assert_called_once_with(self.staged)
+
+    def test_staged_copy_is_removed_when_the_helper_fails(self):
+        self.process.executioner.side_effect = RuntimeError('helper unavailable')
+        result = self.tune(tuning_data(UBUNTU_POOL))
+        self.process.executioner.side_effect = None
+        self.assertEqual(0, result['status'])
+        self.services['os'].remove.assert_called_once_with(self.staged)
+
+
+class PoolSizeTests(PoolTuning):
+    def test_start_servers_may_lie_between_the_spare_limits(self):
+        for start in (2, 4, 6):
+            with self.subTest(start=start):
+                self.assertEqual({'status': 1}, self.tune(tuning_data(
+                    UBUNTU_POOL, pmStartServers=start, pmMinSpareServers=2, pmMaxSpareServers=6)))
+
+    def test_start_servers_outside_the_spare_limits_is_refused(self):
+        for start in (1, 7):
+            with self.subTest(start=start):
+                result = self.tune(tuning_data(
+                    UBUNTU_POOL, pmStartServers=start, pmMinSpareServers=2, pmMaxSpareServers=6))
+                self.assertEqual(0, result['status'])
+                self.assertEqual([], self.helper_commands())
 
 
 class PoolNameOnTuningTests(PoolTuning):
