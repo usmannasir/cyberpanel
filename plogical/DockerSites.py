@@ -96,10 +96,32 @@ def site_directory_name(domain):
 FIRST_SITE_PORT = 11000
 
 ## The block SetupAppVhost adds to a website's virtual host, from its comment
-## line to the closing brace of the context.
+## line to the closing brace of the context. Earlier releases wrote the same
+## block for n8n sites under another comment and with other header lines.
 APP_VHOST_BLOCK = re.compile(
-    r'(?:^\n){0,2}^# Docker App Proxy Configuration\n^context / \{\n(?:(?!^\}).*\n)*?^[ \t]*handler[ \t]+docker[0-9]+[ \t]*\n'
+    r'(?:^\n){0,2}^# (?:Docker App|N8N) Proxy Configuration\n^context / \{\n'
+    r'(?:(?!^\}).*\n)*?^[ \t]*handler[ \t]+docker[0-9]+[ \t]*\n'
     r'(?:(?!^\}).*\n)*?^\}[ \t]*\n?', re.M)
+
+## A context for the whole website that the panel's Docker sites did not write:
+## password protection of the website, or a block somebody added by hand.
+OTHER_ROOT_CONTEXT = re.compile(r'^[ \t]*context[ \t]+/[ \t]*\{', re.M)
+
+
+def app_vhost_problem(domain, content):
+    """
+    Say why a website cannot be pointed at a Docker application, or None.
+
+    ``content`` is the virtual host of the website. A block the panel left
+    there for an earlier Docker site is replaced and is no obstacle. Any other
+    context for the whole website stays as it is, and the web server would go
+    on using it instead of the application.
+    """
+    if OTHER_ROOT_CONTEXT.search(APP_VHOST_BLOCK.sub('', content)):
+        return ('The website %s already has a "context /" block of its own in its virtual host configuration '
+                '(password protection of the whole website, or a block added by hand), so it cannot be pointed '
+                'at the application. Remove that block and create the Docker site again.' % domain)
+    return None
 
 
 def next_site_port(site_ports, web_server_config=''):
@@ -522,11 +544,14 @@ extprocessor docker{port} {{
         websocket enabled proxy context and forwarded headers.
         """
         try:
-            vhost_path = f'/usr/local/lsws/conf/vhosts/{domain}/vhost.conf'
+            problem = Docker_Sites.AppVhostProblem(domain)
 
-            if not os.path.exists(vhost_path):
-                logging.writeToFile(f"Error: Vhost file not found at {vhost_path}")
+            if problem is not None:
+                # The deployment reads this line and shows it to the customer.
+                print(problem)
                 return False
+
+            vhost_path = f'/usr/local/lsws/conf/vhosts/{domain}/vhost.conf'
 
             # Read existing vhost configuration
             with open(vhost_path, 'r') as f:
@@ -539,11 +564,6 @@ extprocessor docker{port} {{
                 content = remaining
                 with open(vhost_path, 'w') as f:
                     f.write(content)
-
-            # Check if context already exists
-            if 'context / {' in content:
-                logging.writeToFile("Context already exists, skipping...")
-                return True
 
             # Add proxy context with proper headers for the app container
             # NOTE: Do NOT include "RequestHeader set Origin" - OpenLiteSpeed cannot override
@@ -576,7 +596,29 @@ context / {{
         except Exception as e:
             logging.writeToFile(f'Error setting up app vhost: {str(e)}')
             return False
-    
+
+    @staticmethod
+    def AppVhostProblem(domain):
+        """Say why the virtual host of a website cannot be pointed at a Docker application, or None."""
+        vhost_path = f'/usr/local/lsws/conf/vhosts/{domain}/vhost.conf'
+
+        try:
+            if site_directory_name(domain) is None or not os.path.exists(vhost_path):
+                logging.writeToFile(f"Error: Vhost file not found at {vhost_path}")
+                return 'The website %s has no virtual host configuration to point at the application.' % domain
+
+            with open(vhost_path, 'r') as f:
+                problem = app_vhost_problem(domain, f.read())
+
+        except Exception as e:
+            logging.writeToFile(f'Error reading the app vhost: {str(e)}')
+            return 'The virtual host configuration of %s could not be read.' % domain
+
+        if problem is not None:
+            logging.writeToFile(problem)
+
+        return problem
+
     @staticmethod
     def RemoveAppVhost(domain):
         """Take the proxy context the panel added for a Docker site out of the domain's virtual host."""
@@ -1586,6 +1628,23 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             except Exception as e:
                 logging.writeToFile(f'Error logging metrics: {str(e)}')
 
+    def app_vhost_step(self, arguments):
+        """
+        Run one virtual host helper of this file as root. When the helper says
+        the website cannot be pointed at the application, the deployment fails
+        with what the helper printed instead of ending as completed.
+        """
+        command = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py " + arguments
+        answer = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+        result, output = answer if isinstance(answer, tuple) and len(answer) == 2 else (0, '')
+
+        if result:
+            return True
+
+        lines = [line.strip() for line in str(output or '').splitlines() if line.strip()]
+        raise DockerDeploymentError(lines[-1] if lines else
+                                    'The website could not be pointed at the application.')
+
     def DeployN8NContainer(self):
         return self.DeployComposeApp('n8n')
 
@@ -1622,6 +1681,10 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 # Verify system resources
                 self.verify_system_resources()
                 logging.statusWriter(self.JobID, 'System resources verified...,10')
+
+                # A website that cannot be pointed at the application is refused
+                # now, not after its containers have been started.
+                self.app_vhost_step(f"CheckAppVhost --domain {self.data['finalURL']}")
 
                 # Create directories
                 result, message = self.create_site_directory(meta.get('dataOwner'))
@@ -1671,9 +1734,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 logging.statusWriter(self.JobID, 'Proxy configured...,80')
 
                 # Setup the app vhost configuration instead of htaccess
-                execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
-                execPath = execPath + f" SetupAppVhost --domain {self.data['finalURL']} --port {self.data['port']}"
-                ProcessUtilities.executioner(execPath)
+                self.app_vhost_step(f"SetupAppVhost --domain {self.data['finalURL']} --port {self.data['port']}")
                 logging.statusWriter(self.JobID, f'{app} vhost configured...,90')
 
                 # Restart web server
@@ -1957,7 +2018,13 @@ def Main():
         elif args.function == 'RemoveHTAccess':
             Docker_Sites.RemoveHTAccess(args.htaccess, args.domain)
         elif args.function == 'SetupN8NVhost' or args.function == 'SetupAppVhost':
-            Docker_Sites.SetupAppVhost(args.domain, args.port)
+            if not Docker_Sites.SetupAppVhost(args.domain, args.port):
+                return 1
+        elif args.function == 'CheckAppVhost':
+            problem = Docker_Sites.AppVhostProblem(args.domain)
+            if problem is not None:
+                print(problem)
+                return 1
         elif args.function == 'RemoveAppVhost':
             Docker_Sites.RemoveAppVhost(args.domain)
         elif args.function == 'CheckN8NSites':
@@ -2010,4 +2077,4 @@ def Main():
 
 
 if __name__ == "__main__":
-    Main()
+    sys.exit(Main())

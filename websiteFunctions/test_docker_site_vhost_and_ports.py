@@ -33,6 +33,46 @@ context / {
 }
 '''
 
+PASSWORD_PROTECTION = '''
+### PASSWORD PROTECTION CONF STARTS /home/shop.example/public_html
+
+realm shop {
+
+  userDB  {
+    location              /home/shop.example/.htpasswd
+  }
+}
+
+context / {
+  location                /home/shop.example/public_html
+  allowBrowse             1
+  realm                   shop
+}
+### PASSWORD PROTECTION CONF ENDS /home/shop.example/public_html
+'''
+
+
+def block(comment, headers):
+    """The text a release appended to a virtual host for a Docker site on port 11003."""
+    return ('\n\n# %s\ncontext / {\n  type                    proxy\n  handler                 docker11003\n'
+            '  addDefaultCharset       off\n  websocket               1\n\n'
+            '  extraHeaders            <<<END_extraHeaders\n%s  END_extraHeaders\n}\n' % (
+                comment, ''.join('  RequestHeader %s\n' % header for header in headers)))
+
+
+FORWARDED = ['set X-Forwarded-For $ip', 'set X-Forwarded-Proto https', 'set X-Forwarded-Host "shop.example"']
+
+## Every form of the block that a release has written, oldest first.
+RELEASED_BLOCKS = {
+    'n8n, origin only': block('N8N Proxy Configuration', ['set Origin "https://shop.example"']),
+    'n8n, forwarded for replaced': block('N8N Proxy Configuration', ['unset X-Forwarded-For'] + FORWARDED
+                                          + ['set Host "shop.example"']),
+    'n8n, with origin': block('N8N Proxy Configuration', FORWARDED + [
+        'set Origin "shop.example, shop.example"', 'set Host "shop.example"']),
+    'n8n, without origin': block('N8N Proxy Configuration', FORWARDED + ['set Host "shop.example"']),
+    'present': block('Docker App Proxy Configuration', FORWARDED + ['set Host "shop.example"']),
+}
+
 
 class VhostTests(unittest.TestCase):
     def setUp(self):
@@ -109,15 +149,182 @@ class VhostTests(unittest.TestCase):
         self.assertEqual(1, content.count('handler                 docker11012'))
         self.assertEqual(1, content.count('context / {'))
 
-    def test_a_new_site_still_leaves_the_administrators_own_context_alone(self):
-        self.write(VHOST + OWN_CONTEXT)
+    def test_the_present_block_is_the_one_in_the_list_of_released_blocks(self):
+        self.write(VHOST)
+        Docker_Sites.SetupAppVhost('shop.example', '11003')
+        self.assertEqual(VHOST + RELEASED_BLOCKS['present'], self.read())
+
+    def test_the_block_of_every_release_is_taken_out_when_its_site_is_deleted(self):
+        for release, text in RELEASED_BLOCKS.items():
+            with self.subTest(release=release):
+                self.write(VHOST + text)
+                self.assertTrue(Docker_Sites.RemoveAppVhost('shop.example'))
+                self.assertEqual(VHOST, self.read())
+
+    def test_a_new_site_replaces_the_block_of_every_release(self):
+        # The old site is gone and its block was left behind; the new site has another port.
+        for release, text in RELEASED_BLOCKS.items():
+            with self.subTest(release=release):
+                self.write(VHOST + text)
+                self.assertIsNone(Docker_Sites.AppVhostProblem('shop.example'))
+                self.assertTrue(Docker_Sites.SetupAppVhost('shop.example', '11012'))
+                content = self.read()
+                self.assertNotIn('docker11003', content)
+                self.assertNotIn('N8N Proxy Configuration', content)
+                self.assertEqual(1, content.count('handler                 docker11012'))
+                self.assertEqual(1, content.count('context / {'))
+                self.assertTrue(content.startswith(VHOST))
+
+    def test_a_website_with_a_context_of_its_own_is_not_reported_as_pointed_at_the_site(self):
+        for own in (OWN_CONTEXT, PASSWORD_PROTECTION, '\ncontext /{\n  type proxy\n}\n',
+                    '\n  context   /   {\n  type proxy\n}\n'):
+            with self.subTest(own=own):
+                self.write(VHOST + own)
+                with mock.patch('builtins.print') as shown:
+                    self.assertFalse(Docker_Sites.SetupAppVhost('shop.example', '11012'))
+                self.assertEqual(VHOST + own, self.read())
+                problem = Docker_Sites.AppVhostProblem('shop.example')
+                self.assertIn('shop.example already has a "context /" block of its own', problem)
+                shown.assert_called_once_with(problem)
+
+    def test_a_context_of_its_own_beside_a_block_the_panel_left_is_still_an_obstacle(self):
+        content = VHOST + RELEASED_BLOCKS['n8n, with origin'] + OWN_CONTEXT
+        self.write(content)
+        self.assertFalse(Docker_Sites.SetupAppVhost('shop.example', '11012'))
+        self.assertEqual(content, self.read())
+
+    def test_contexts_for_parts_of_the_website_are_no_obstacle(self):
+        # VHOST has a context for /.well-known/acme-challenge.
+        self.write(VHOST + '\ncontext /blog {\n  type proxy\n  handler other\n}\n')
+        self.assertIsNone(Docker_Sites.AppVhostProblem('shop.example'))
         self.assertTrue(Docker_Sites.SetupAppVhost('shop.example', '11012'))
-        self.assertEqual(VHOST + OWN_CONTEXT, self.read())
+
+    def test_a_website_without_a_virtual_host_is_an_obstacle(self):
+        self.assertIn('no virtual host configuration', Docker_Sites.AppVhostProblem('shop.example'))
+        self.assertFalse(Docker_Sites.SetupAppVhost('shop.example', '11012'))
+        self.write(VHOST)
+        for domain in (None, '', '../shop.example', 'a/b', 'a b'):
+            self.assertIsNotNone(Docker_Sites.AppVhostProblem(domain))
+            self.assertFalse(Docker_Sites.SetupAppVhost(domain, '11012'))
+        self.assertEqual(VHOST, self.read())
 
     def test_the_pattern_needs_the_panels_comment_and_a_docker_handler(self):
         self.assertIsNone(APP_VHOST_BLOCK.search(
             '# Docker App Proxy Configuration\ncontext / {\n  type proxy\n}\ncontext /x {\n  handler docker11000\n}\n'))
         self.assertIsNone(APP_VHOST_BLOCK.search('context / {\n  handler docker11000\n}\n'))
+
+
+class VhostCommandTests(unittest.TestCase):
+    """The helpers end with a status the deployment can read."""
+
+    def main(self, *arguments, **results):
+        with mock.patch.object(sys, 'argv', ['DockerSites.py'] + list(arguments)), \
+                mock.patch.object(Docker_Sites, 'SetupAppVhost', return_value=results.get('setup')) as setup, \
+                mock.patch.object(Docker_Sites, 'AppVhostProblem', return_value=results.get('problem')) as check, \
+                mock.patch('builtins.print') as shown:
+            return docker_sites.Main(), setup, check, shown
+
+    def test_setting_up_the_virtual_host_reports_failure(self):
+        for name in ('SetupAppVhost', 'SetupN8NVhost'):
+            status, setup, check, shown = self.main(name, '--domain', 'shop.example', '--port', '11012', setup=False)
+            self.assertEqual(1, status)
+            setup.assert_called_once_with('shop.example', '11012')
+            status, setup, check, shown = self.main(name, '--domain', 'shop.example', '--port', '11012', setup=True)
+            self.assertFalse(status)
+
+    def test_the_check_reports_the_obstacle_and_changes_nothing(self):
+        status, setup, check, shown = self.main('CheckAppVhost', '--domain', 'shop.example', problem='in the way')
+        self.assertEqual(1, status)
+        shown.assert_called_once_with('in the way')
+        setup.assert_not_called()
+        status, setup, check, shown = self.main('CheckAppVhost', '--domain', 'shop.example', problem=None)
+        self.assertFalse(status)
+        check.assert_called_once_with('shop.example')
+
+    def test_the_file_ends_with_the_status_of_its_command(self):
+        with open(docker_sites.__file__.replace('.pyc', '.py')) as handle:
+            self.assertTrue(handle.read().rstrip().endswith('sys.exit(Main())'))
+
+
+def deploy(answers):
+    """Run the real deployment of an n8n site; ``answers`` maps part of a helper command to its (status, output)."""
+    site = Docker_Sites.__new__(Docker_Sites)
+    site.JobID = '/dev/null'
+    site.data = {
+        'JobID': '/dev/null', 'ComposePath': '/home/docker/shop.example/docker-compose.yml', 'MySQLDBName': 'db',
+        'MySQLPassword': 'inert-password', 'CPUsMySQL': 1, 'MemoryMySQL': 512, 'port': '11012', 'CPUsSite': 1,
+        'MemorySite': 1024, 'SiteName': 'shop', 'finalURL': 'shop.example', 'adminUser': 'admin',
+        'adminPassword': 'inert-password', 'adminEmail': 'admin@example.test',
+    }
+    commands = []
+
+    def output(command, *more):
+        commands.append(command)
+        if command == 'docker --help':
+            return 'Usage: docker [OPTIONS] COMMAND'
+        for part, answer in answers.items():
+            if part in command:
+                return answer
+        return 1, ''
+
+    utilities = SimpleNamespace(installUtilities=mock.Mock())
+    with mock.patch.object(docker_sites.ProcessUtilities, 'outputExecutioner', side_effect=output), \
+            mock.patch.object(docker_sites.ProcessUtilities, 'executioner',
+                              side_effect=lambda command, *more: commands.append(command) or 1), \
+            mock.patch.object(docker_sites.ProcessUtilities, 'decideDistro', return_value=0), \
+            mock.patch('plogical.DockerSites.os.path.exists', return_value=False), \
+            mock.patch.object(site, 'install_compose_file', return_value=(1, None)), \
+            mock.patch.dict(sys.modules, {'plogical.installUtilities': utilities}), \
+            mock.patch.object(site, 'verify_system_resources'), \
+            mock.patch.object(site, 'check_container_health', return_value=True), \
+            mock.patch.object(site, 'monitor_deployment'), \
+            mock.patch.object(site, 'log_deployment_metrics'), \
+            mock.patch.object(site, 'cleanup_failed_deployment') as cleanup, \
+            mock.patch.object(site, 'create_n8n_owner', return_value=True), \
+            mock.patch.object(docker_sites.time, 'sleep'), \
+            mock.patch.object(docker_sites.logging, 'statusWriter') as status, \
+            mock.patch.object(docker_sites.logging, 'writeToFile'):
+        result = site.DeployComposeApp('n8n')
+    return SimpleNamespace(result=result, commands=commands, cleanup=cleanup,
+                           messages=[call[0][1] for call in status.call_args_list],
+                           restarts=utilities.installUtilities.reStartLiteSpeedSocket.call_count)
+
+
+OBSTACLE = 'The website shop.example already has a "context /" block of its own'
+
+
+class DeploymentTests(unittest.TestCase):
+    def test_a_website_that_can_be_pointed_at_the_site_is_deployed(self):
+        run = deploy({})
+        self.assertIs(True, run.result)
+        self.assertIn('[200]', run.messages[-1])
+        helper = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py '
+        self.assertIn(helper + 'CheckAppVhost --domain shop.example', run.commands)
+        self.assertIn(helper + 'SetupAppVhost --domain shop.example --port 11012', run.commands)
+
+    def test_an_obstacle_is_reported_before_any_container_is_started(self):
+        run = deploy({'CheckAppVhost': (0, 'a warning of the interpreter\n' + OBSTACLE + '\n')})
+        self.assertIs(False, run.result)
+        self.assertEqual('Deployment failed: %s [404]' % OBSTACLE, run.messages[-1])
+        self.assertFalse([command for command in run.commands if ' up -d' in command or 'SetupProxy' in command])
+        self.assertFalse([message for message in run.messages if '[200]' in message or 'completed' in message])
+        self.assertEqual(0, run.restarts)
+
+    def test_an_obstacle_found_when_the_website_is_pointed_at_the_site_fails_the_deployment(self):
+        run = deploy({'SetupAppVhost': (0, OBSTACLE + '\n')})
+        self.assertIs(False, run.result)
+        self.assertEqual('Deployment failed: %s [404]' % OBSTACLE, run.messages[-1])
+        self.assertFalse([message for message in run.messages if '[200]' in message or 'completed' in message])
+        run.cleanup.assert_called_once_with()
+        self.assertEqual(0, run.restarts)
+
+    def test_a_helper_that_says_nothing_or_cannot_be_run_still_fails_the_deployment(self):
+        for answer in ((0, ''), (0, None), None, 'text'):
+            with self.subTest(answer=answer):
+                run = deploy({'SetupAppVhost': answer})
+                self.assertIs(False, run.result)
+                self.assertEqual('Deployment failed: The website could not be pointed at the application. [404]',
+                                 run.messages[-1])
 
 
 class PortTests(unittest.TestCase):
