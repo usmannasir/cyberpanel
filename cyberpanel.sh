@@ -963,6 +963,7 @@ echo -e "\n\e[31m-m postfix/pureftpd/powerdns\e[39m will do minimal install also
 echo -e "e.g.  \e[31m-m postfix\e[39m will do minimal install also with Postfix, and without PowerDNS and Pure-FTPd"
 echo -e "      \e[31m-m powerdns\e[39m will do minimal install also with PowerDNS"
 echo -e "      \e[31m-m postfix\e[39m powerdns will do minimal install also with Postfix and PowerDNS"
+echo -e "The names count wherever they stand on the command line, also before \e[31m-m\e[39m, and may be joined: \e[31mpostfix,powerdns\e[39m"
 echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 1.9.4"
 echo -e "e.g.  \e[31m-b 2.0.2\e[39m will install 2.0.2 version"
 echo -e "\n\e[31m--mirror\e[39m : this argument force to use mirror server for majority of repositories, only suggest to use for servers within China"
