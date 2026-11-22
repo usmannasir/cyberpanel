@@ -1,6 +1,7 @@
 #!/usr/local/CyberCP/bin/python
 import json
 import os
+import re
 import sys
 import time
 from random import randint
@@ -39,6 +40,57 @@ def container_name_matches(application_name, container_name):
         normalized_container == normalized_application
         or normalized_container.startswith(normalized_application + '_')
     )
+
+
+COMPOSE_PROJECT_LABEL = 'com.docker.compose.project'
+COMPOSE_SERVICE_LABEL = 'com.docker.compose.service'
+
+
+def compose_project_names(site_name):
+    """The Docker Compose project names the containers of one Docker site can carry.
+
+    A site's containers are started with ``-p <site name>`` and Docker Compose
+    records that name in a label on each of them: in lower case and, for a name
+    from before site names were limited to lower case letters and digits,
+    without the characters it does not allow. A container belongs to the site
+    only when the label is exactly one of these names. Part of a container
+    name says nothing: "n" is part of the names of every "n8n" container.
+    """
+    if not isinstance(site_name, str):
+        return []
+    lowered = site_name.lower()
+    names = []
+    for name in (site_name, lowered, re.sub('[^-_a-z0-9]', '', lowered), re.sub('[^a-z0-9]', '', lowered)):
+        if name and name not in names:
+            names.append(name)
+    return names
+
+
+def site_containers(client, site_name, service=None):
+    """Every container, running or not, of one Docker site, optionally of one of its services."""
+    found = []
+    for project in compose_project_names(site_name):
+        labels = ['%s=%s' % (COMPOSE_PROJECT_LABEL, project)]
+        if service is not None:
+            labels.append('%s=%s' % (COMPOSE_SERVICE_LABEL, service))
+        for container in client.containers.list(all=True, filters={'label': labels}):
+            if container.id not in [known.id for known in found]:
+                found.append(container)
+    return found
+
+
+def compose_command():
+    """The Docker Compose command of this server, as the deployment uses it."""
+    if ProcessUtilities.decideDistro() in (ProcessUtilities.centos, ProcessUtilities.cent8):
+        return 'docker compose'
+    return 'docker-compose'
+
+
+def site_directory_name(domain):
+    """Return the domain when it can name a directory under /home/docker, else None."""
+    if isinstance(domain, str) and re.fullmatch('[A-Za-z0-9_][A-Za-z0-9_.-]*', domain) and '..' not in domain:
+        return domain
+    return None
 
 
 ## Registry of the one-click applications offered on the Docker Site creation page.
@@ -790,41 +842,38 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
     def DeleteDockerApp(self):
         try:
 
-            command = f'docker-compose -f /home/docker/{self.data["domain"]}/docker-compose.yml down'
-            ProcessUtilities.executioner(command)
+            domain = site_directory_name(self.data.get('domain'))
+            name = self.data.get('name')
 
-            command = f'rm -rf /home/docker/{self.data["domain"]}'
-            ProcessUtilities.executioner(command)
+            if domain is None:
+                logging.writeToFile("Error Delete Docker APP ....... no usable domain was given.")
+                return 0
 
-            command = f'rm -f /home/{self.data["domain"]}/public_html/.htaccess'
-            ProcessUtilities.executioner(command)
+            ## The containers were started as the Compose project named after the
+            ## site, so that is the project to take down, with the volumes its
+            ## compose file declares. Whatever is left of the project afterwards
+            ## is removed by its label. Containers of other sites are never
+            ## selected, whatever their names contain.
 
+            compose = f'/home/docker/{domain}/docker-compose.yml'
 
-            ### forcefully delete containers
+            for project in compose_project_names(name):
+                command = f'{compose_command()} -f {shlex.quote(compose)} -p {shlex.quote(project)} down -v'
+                ProcessUtilities.executioner(command)
 
-            # Create a Docker client
             client = docker.from_env()
-
-            FilerValue = self.DockerAppName
-
-            # Define the label to filter containers
-            label_filter = {'name': FilerValue}
-
-            # List containers matching the label filter
-            containers = client.containers.list(filters=label_filter)
+            containers = site_containers(client, name)
 
             logging.writeToFile(f'List of containers {str(containers)}')
 
-
             for container in containers:
-                command = f'docker stop {container.short_id}'
+                command = f'docker rm -f {shlex.quote(container.id)}'
                 ProcessUtilities.executioner(command)
 
-                command = f'docker rm {container.short_id}'
-                ProcessUtilities.executioner(command)
+            command = f'rm -rf {shlex.quote("/home/docker/" + domain)}'
+            ProcessUtilities.executioner(command)
 
-
-            command = f"rm -rf /home/{self.data['domain']}/public_html/.htaccess'"
+            command = f'rm -f /home/{self.data["domain"]}/public_html/.htaccess'
             ProcessUtilities.executioner(command)
 
             from plogical.installUtilities import installUtilities
@@ -992,38 +1041,24 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
         Check if a container is running, accepting healthy, unhealthy, and starting states
         Total wait time will be 4 minutes (3 retries * 80 seconds)
 
-        Uses fuzzy matching to find containers since Docker Compose naming varies by version:
-        - Docker Compose v1: project_service_1 (underscores)
-        - Docker Compose v2: project-service-1 (hyphens)
+        The container is the one Docker Compose labelled with this site's project
+        and the given service. Names are not compared: they vary with the Docker
+        Compose version, and part of another site's name can equal this one.
         """
         try:
             logging.writeToFile(f'Checking container health for service: {service_name}')
 
             for attempt in range(max_retries):
-                client = docker.from_env()
-
-                # Find container by searching all containers for a name containing the service name
-                # This handles both v1 (underscores) and v2 (hyphens) naming conventions
-                all_containers = client.containers.list(all=True)
-                container = None
-
-                # Normalize service name for matching (handle both - and _)
-                service_pattern = service_name.lower().replace(' ', '').replace('-', '').replace('_', '')
-
-                for c in all_containers:
-                    container_pattern = c.name.lower().replace('-', '').replace('_', '')
-                    if service_pattern in container_pattern:
-                        container = c
-                        logging.writeToFile(f'Found matching container: {c.name} for service: {service_name}')
-                        break
+                container = self.find_container_by_service(service_name)
 
                 if container is None:
                     logging.writeToFile(f'No container found matching service: {service_name}, attempt {attempt + 1}/{max_retries}')
                     time.sleep(delay)
                     continue
 
+                health = container.attrs.get('State', {}).get('Health', {}).get('Status')
+
                 if container.status == 'running':
-                    health = container.attrs.get('State', {}).get('Health', {}).get('Status')
 
                     # Accept healthy, unhealthy, and starting states as long as container is running
                     if health in ['healthy', 'unhealthy', 'starting'] or health is None:
@@ -1144,9 +1179,15 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
     def cleanup_failed_deployment(self):
         try:
-            # Stop and remove containers
-            command = f"cd {os.path.dirname(self.data['ComposePath'])} && docker-compose down -v"
-            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+            # Stop and remove the containers of this site's project, and nothing else
+            for project in compose_project_names(self.data['SiteName']):
+                command = (f"{compose_command()} -f {shlex.quote(self.data['ComposePath'])} "
+                           f"-p {shlex.quote(project)} down -v")
+                ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            for container in site_containers(docker.from_env(), self.data['SiteName']):
+                command = f'docker rm -f {shlex.quote(container.id)}'
+                ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
             # Remove docker directory
             command = f"rm -rf /home/docker/{self.data['finalURL']}"
@@ -1164,21 +1205,12 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
     def find_container_by_service(self, service_name):
         """
-        Find a container by service name using fuzzy matching.
+        Find the container of one service of this site's Docker Compose project.
         Returns the container object or None if not found.
         """
         try:
-            client = docker.from_env()
-            all_containers = client.containers.list(all=True)
-
-            # Normalize service name for matching
-            service_pattern = service_name.lower().replace(' ', '').replace('-', '').replace('_', '')
-
-            for c in all_containers:
-                container_pattern = c.name.lower().replace('-', '').replace('_', '')
-                if service_pattern in container_pattern:
-                    return c
-            return None
+            containers = site_containers(docker.from_env(), self.data['SiteName'], service_name)
+            return containers[0] if containers else None
         except Exception as e:
             logging.writeToFile(f'Error finding container: {str(e)}')
             return None
@@ -1197,12 +1229,8 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
             logging.writeToFile(f'Monitoring containers: {n8n_container_name} and {db_container_name}')
 
-            # Check container health
-            command = f"docker ps -a --filter name={self.data['ServiceName']} --format '{{{{.Status}}}}'"
-            result, status = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
             # Only raise error if container is exited
-            if "exited" in status.lower():
+            if n8n_container.status == 'exited':
                 # Get container logs
                 command = f"docker logs {n8n_container_name}"
                 result, logs = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
