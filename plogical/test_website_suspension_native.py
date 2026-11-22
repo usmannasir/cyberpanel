@@ -117,6 +117,34 @@ def run_native_acceptance():
     receipt['faulty_test']={'status':faulty.returncode,'output':faulty.stdout.decode(errors='replace')[-2000:]}
     passed('a fault in another website from before the change stops neither suspension nor restore')
 
+    # A change that adds an error must be refused by the real configuration
+    # test and undone. The worker's own code runs in this process with one
+    # difference: the block it writes into the website's file has a stray
+    # closing brace, which OpenLiteSpeed reports as an error in that file.
+    from unittest import mock
+    from plogical import websiteSuspension
+    broken=websiteSuspension.SUSPENSION.replace(websiteSuspension.END,'}\n'+websiteSuspension.END)
+    assert broken!=websiteSuspension.SUSPENSION
+    before=fingerprint()
+    refusal=None
+    with mock.patch.object(websiteSuspension,'SUSPENSION',broken):
+        try:
+            change_suspension(3,'child.test','Suspend')
+        except RuntimeError as error:
+            refusal=str(error)
+    assert refusal and refusal.startswith('Web server configuration activation failed: '),refusal
+    assert '[ERROR]' in refusal and 'child.test' in refusal,refusal
+    assert 'automatic recovery failed' not in refusal,refusal
+    assert fingerprint()==before
+    assert ChildDomains.objects.get(domain='child.test').state==1
+    subprocess.run(['/usr/local/lsws/bin/openlitespeed','-t'],check=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    expected('child.test',False)
+    receipt['refused_change']=refusal[-2000:]
+    passed('a change that adds an error is refused by the real test; files, database state and content are as before')
+    # The unchanged worker still suspends and restores the same child.
+    api('child.test','Suspend');expected('child.test',True);api('child.test','Un-Suspend');expected('child.test',False)
+    assert fingerprint()==before
+
     # Inject one reload failure; rollback must restore original bytes, validate and
     # actually reload the original serving configuration on its recovery attempt.
     ctrl=Path('/usr/local/lsws/bin/lswsctrl');real=ctrl.read_bytes();before=fingerprint()

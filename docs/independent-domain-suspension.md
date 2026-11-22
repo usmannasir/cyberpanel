@@ -35,6 +35,28 @@ warnings about its stock Example virtual host, and an error in one website
 ends it with 2 while the server keeps running. Any failure before the
 database commit restores original vhost files and attempts to reactivate them;
 the restored files are judged against the same earlier result.
+
+Three consequences of judging a change by what it added:
+
+- An error that was already in the configuration before the change does not
+  refuse a suspension or a restore, also when it is not confined to one
+  website (a listener, the WebAdmin configuration, a disabled module). The
+  server is restarted with it, as every other panel action that restarts the
+  server does. If such an error would keep OpenLiteSpeed from starting, correct
+  it first: `/usr/local/lsws/bin/openlitespeed -t` lists it.
+- Restoring a website puts back the configuration it had before it was
+  suspended. Its rewrite rules are commented out while it is suspended, so an
+  error in them is not reported then and returns with them. An error line
+  about a website that is being restored therefore does not refuse the
+  restore, of that website or of the parent and siblings restored with it. A
+  line is about a website when its context names the virtual host
+  (`[config:server:vhosts:vhost:NAME...]`) or when the only website directory
+  it names is `conf/vhosts/NAME/`. A new error about any other website, a
+  server-wide one, a fatal one, or one that names no website still refuses the
+  restore and leaves the websites suspended.
+- Line numbers are ignored when comparing, but only in messages about the
+  websites whose files the change edits, because suspension moves the lines
+  of exactly those files.
 Recovery failure is reported explicitly. Suspension applies at vhost rewrite
 level, before more-specific contexts, and affects HTTP and HTTPS using the
 same vhost. Existing SSL certificates are not changed.
@@ -68,6 +90,8 @@ ordinary paths and a more-specific static/proxy context throughout:
    Repeat items 1 and 3 on a server whose configuration test does not end
    with 0 before the change (a fresh installation, and one website with an
    error of its own): both must succeed.
+   Put a faulty rule into the rewrite block of a child's vhost file, suspend
+   and restore its parent: parent, child and siblings must all be restored.
 8. Verify cross-owner and missing-permission requests cannot mutate any vhost.
 9. Create/regenerate a child under suspended parent; it must never serve content
    before inheriting the parent's effective suspension.
@@ -87,7 +111,10 @@ CYBERPANEL_RUN_NATIVE_SUSPENSION_TESTS=isolated-qa python -m unittest plogical.t
 ```
 
 The runner mutates fixture vhosts and schema, injects one reload failure, and
-writes `/qa/native-receipt.json`. Native creation checks invoke the actual
+writes `/qa/native-receipt.json`. Against the real configuration test it
+checks both sides of the rule above: a fault in another website from before
+the change is tolerated, and a change that itself adds an error (the worker's
+code, writing a block with a stray closing brace) is refused and undone. Native creation checks invoke the actual
 inheritance hook before saving/activating its synthetic child; unit tests
 separately execute the creation dispatcher's ordering and failure paths. They
 do not establish external DNS/ACME issuance on every installation type.

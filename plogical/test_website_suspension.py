@@ -113,7 +113,8 @@ class VhostUpdateTests(unittest.TestCase):
         self.assertEqual(self.paths['parent.test'].read_text(), VHOST)
         self.assertEqual(self.paths['sibling.test'].read_text(), VHOST)
         # Once before the change, then once against that result.
-        self.assertEqual(self.check.call_args_list, [mock.call(), mock.call(self.check.return_value)])
+        self.assertEqual(self.check.call_args_list,
+                         [mock.call(), mock.call(self.check.return_value, {'child.test': True})])
         self.reload.assert_called_once_with()
 
     def test_identical_repeated_operation_needs_no_server_reload(self):
@@ -134,7 +135,8 @@ class VhostUpdateTests(unittest.TestCase):
         for path in self.paths.values():
             self.assertEqual(path.read_text(), VHOST)
         # The restored files are compared with the same earlier result.
-        self.assertEqual(self.check.call_args_list, [mock.call(), mock.call('before'), mock.call('before')])
+        self.assertEqual(self.check.call_args_list, [
+            mock.call(), mock.call('before', {'parent.test': True, 'child.test': True}), mock.call('before')])
         self.reload.assert_called_once_with()  # Recovery only.
 
     def test_failed_reload_restores_all_originals_and_reloads_original_config(self):
