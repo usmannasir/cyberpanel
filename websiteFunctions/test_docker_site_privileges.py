@@ -82,12 +82,14 @@ class ComposeAppTests(unittest.TestCase):
                 mock.patch.object(site, 'verify_system_resources'), \
                 mock.patch.object(site, 'cleanup_failed_deployment'), \
                 mock.patch.object(docker_sites.ProcessUtilities, 'outputExecutioner',
-                                  return_value='Usage: docker') as output, \
+                                  side_effect=lambda command, *more: 'Usage: docker' if command == 'docker --help'
+                                  else (1, '')) as output, \
                 mock.patch.object(docker_sites.ProcessUtilities, 'executioner') as execute, \
                 mock.patch.object(docker_sites.logging, 'statusWriter') as status, \
                 mock.patch.object(docker_sites.logging, 'writeToFile'):
             self.assertIs(False, site.DeployComposeApp('n8n'))
         execute.assert_not_called()
+        self.assertFalse([call for call in output.call_args_list if ' up -d' in call[0][0]])
         self.assertTrue(any('no space left' in call[0][1] and '[404]' in call[0][1]
                             for call in status.call_args_list))
 

@@ -199,10 +199,11 @@ class TestAppVhost(unittest.TestCase):
         self.assertIn('RequestHeader set X-Forwarded-Proto https', context)
         self.assertIn('RequestHeader set X-Forwarded-Host "example.com"', context)
 
-    def test_is_idempotent(self):
+    def test_a_context_of_the_website_itself_is_left_alone_and_reported(self):
         handle = mock.mock_open(read_data='context / {\n  type proxy\n}\n')
-        with mock.patch('os.path.exists', return_value=True), mock.patch('builtins.open', handle):
-            self.assertTrue(Docker_Sites.SetupAppVhost('example.com', '11007'))
+        with mock.patch('os.path.exists', return_value=True), mock.patch('builtins.open', handle), \
+                mock.patch('builtins.print'):
+            self.assertFalse(Docker_Sites.SetupAppVhost('example.com', '11007'))
         handle.return_value.write.assert_not_called()
 
     def test_missing_vhost_file_is_reported(self):
