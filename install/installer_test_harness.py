@@ -47,6 +47,9 @@ STUBBED_PHASES = {
     'Post_Install_PHP_Session_Setup': 'exit 1',
     'Post_Install_PHP_TimezoneDB': 'cd /nonexistent-directory || exit',
     'Post_Install_Regenerate_Cert': 'exit 1',
+    # Cannot fail a run: when the service does not start, the real one only
+    # writes a warning to the log and the installation goes on.
+    'Post_Install_Start_Web_Terminal': 'log_warning "Web Terminal service could not be started"',
     'Post_Install_Regenerate_Webadmin_Console_Passwd': 'exit 1',
     'Post_Install_Setup_Watchdog': 'exit 1',
     'Post_Install_Setup_Utility': 'exit 1',
