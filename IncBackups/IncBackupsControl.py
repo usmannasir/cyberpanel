@@ -392,6 +392,14 @@ class IncJobs(multi.Thread):
             raise BaseException('The database %s does not belong to %s.' % (name, website))
         return name
 
+    def noteKeptObjects(self, restored, database):
+        """Say so when the data is restored but views, triggers or routines stay with the locked import account."""
+        if restored == 2:
+            logging.statusWriter(self.statusPath,
+                                 'Database %s was restored. Its views, triggers or routines could not be given to '
+                                 'the database user and belong to a locked import account; see the CyberPanel main '
+                                 'log.' % database, 1)
+
     def restoreDatabase(self):
         try:
 
@@ -419,9 +427,11 @@ class IncJobs(multi.Thread):
 
                 ##
 
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(database,
-                                                                       '/usr/local/CyberCP/tmp', 'dummy', 'dummy') == 0:
+                restored = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(database,
+                                                                                 '/usr/local/CyberCP/tmp', 'dummy', 'dummy')
+                if restored == 0:
                     raise BaseException
+                self.noteKeptObjects(restored, database)
             else:
 
                 database = self.databaseOfDump(self.jobid.type.split(':')[1])
@@ -437,9 +447,11 @@ class IncJobs(multi.Thread):
                         return 0
 
 
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(database,
-                                                                       '/home/%s' % (self.website), 'dummy', 'dummy') == 0:
+                restored = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(database,
+                                                                                 '/home/%s' % (self.website), 'dummy', 'dummy')
+                if restored == 0:
                     raise BaseException('Can not restore database backup.')
+                self.noteKeptObjects(restored, database)
 
             try:
                 if self.reconstruct == 'remote':

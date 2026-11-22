@@ -1,3 +1,4 @@
+import io
 import json
 import unittest
 from types import SimpleNamespace
@@ -53,7 +54,7 @@ class DatabaseRestoreOutcomeTests(unittest.TestCase):
             # The import succeeds when its source ended well and the client reported no error.
             return 1 if feed(mock.Mock()) and mysql_rc == 0 else 0
 
-        with mock.patch('builtins.open', mock.mock_open(read_data=config)), mock.patch.object(module.os.path, 'exists', return_value=True), mock.patch.object(mysqlUtilities, 'detectBackupFormat', return_value={'compressed': compressed}), mock.patch.object(module.subprocess, 'Popen', return_value=decompressor), mock.patch.object(module.databaseImport, 'import_dump', side_effect=import_dump), mock.patch.object(mysqlUtilities, 'registeredUser', return_value='fixture_user'), mock.patch.object(module.logging.CyberCPLogFileWriter, 'writeToFile'), mock.patch.object(mysqlUtilities, 'setupConnection') as connection:
+        with mock.patch('builtins.open', mock.mock_open(read_data=config)), mock.patch.object(module.os.path, 'exists', return_value=True), mock.patch.object(mysqlUtilities, 'detectBackupFormat', return_value={'compressed': compressed}), mock.patch.object(module.subprocess, 'Popen', return_value=decompressor), mock.patch.object(module.databaseImport, 'import_dump', side_effect=import_dump), mock.patch.object(module.databaseImport, 'open_dump', side_effect=lambda path: io.BytesIO(b'')), mock.patch.object(mysqlUtilities, 'registeredUser', return_value='fixture_user'), mock.patch.object(module.logging.CyberCPLogFileWriter, 'writeToFile'), mock.patch.object(mysqlUtilities, 'setupConnection') as connection:
             result = mysqlUtilities.restoreDatabaseBackup('fixture_db', '/fixture', 'hash', passwordCheck=1)
         connection.assert_not_called()
         return result

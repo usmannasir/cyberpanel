@@ -381,7 +381,8 @@ class mysqlUtilities:
             if not mysqlUtilities.usableInCommands(databaseName):
                 logging.CyberCPLogFileWriter.writeToFile(
                     'A database with this name cannot be backed up. [createDatabaseBackup]')
-                return 0
+                # A repository backup answers with (status, snapshot or reason).
+                return (0, 'A database with this name cannot be backed up.') if rustic else 0
 
             # Check if new features are enabled (via config file or parameter)
             if use_new_features is None:
@@ -506,7 +507,7 @@ class mysqlUtilities:
             return 1
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabaseBackup]")
-            return 0
+            return (0, str(msg)) if rustic else 0
 
     @staticmethod
     def usableInCommands(databaseName):
@@ -583,9 +584,10 @@ password=%s
 
             # The dump comes from a repository the website's account can write
             # to: it is loaded by an account that may use this database only.
-            if databaseImport.import_dump(databaseName, feed, mysqlhost, mysqlport,
-                                          mysqlUtilities.registeredUser(databaseName)) == 1:
-                return 1
+            imported = databaseImport.import_dump(databaseName, feed, mysqlhost, mysqlport,
+                                                  mysqlUtilities.registeredUser(databaseName))
+            if imported in (databaseImport.LOADED, databaseImport.LOADED_OBJECTS_KEPT):
+                return imported
             logging.CyberCPLogFileWriter.writeToFile(
                 'Rustic database restore failed for %s.' % databaseName)
             return 0
@@ -652,22 +654,26 @@ password=%s
                     return 0
 
                 def feed(sink):
-                    if backup_format['compressed']:
-                        decompress = subprocess.Popen(['gunzip', '-c', backup_file], stdout=subprocess.PIPE,
-                                                      stderr=subprocess.DEVNULL)
-                        try:
-                            databaseImport.copy(decompress.stdout, sink)
-                        finally:
-                            decompress.stdout.close()
-                            decompress.wait()
-                        return decompress.returncode == 0
-                    with open(backup_file, 'rb') as stream:
+                    # The file can lie in a directory the website's account
+                    # writes to: it is read only when the name is a regular
+                    # file itself, never through a link.
+                    with databaseImport.open_dump(backup_file) as stream:
+                        if backup_format['compressed']:
+                            decompress = subprocess.Popen(['gunzip', '-c'], stdin=stream, stdout=subprocess.PIPE,
+                                                          stderr=subprocess.DEVNULL)
+                            try:
+                                databaseImport.copy(decompress.stdout, sink)
+                            finally:
+                                decompress.stdout.close()
+                                decompress.wait()
+                            return decompress.returncode == 0
                         return databaseImport.copy(stream, sink)
 
                 # The dump comes out of an archive somebody else made: it is
                 # loaded by an account that may use this database only.
                 registered = mysqlUtilities.registeredUser(databaseName)
-                if databaseImport.import_dump(databaseName, feed, mysqlhost, mysqlport, registered) != 1:
+                imported = databaseImport.import_dump(databaseName, feed, mysqlhost, mysqlport, registered)
+                if imported not in (databaseImport.LOADED, databaseImport.LOADED_OBJECTS_KEPT):
                     logging.CyberCPLogFileWriter.writeToFile('Database import failed for %s.' % databaseName)
                     return 0
 
@@ -681,7 +687,9 @@ password=%s
                             'The password of the user of %s was not restored.' % databaseName)
                         return 0
 
-                return 1
+                # 1, or 2 when the data is loaded and imported views, triggers or
+                # routines stay with the locked import account.
+                return imported
             else:
                 return mysqlUtilities.restoreRusticDatabase(
                     databaseName, RusticRepoName, externalApp, snapshotid,

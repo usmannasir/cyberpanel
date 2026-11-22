@@ -18,11 +18,14 @@ Views, triggers, routines and events carry a DEFINER. Only an administrative
 account may name somebody else there, so the clause is left out while the dump
 passes through and the objects are made in the name of the import account.
 After the import they are handed to the database's own registered account,
-which is the account the website uses.
+which is the account the website uses. Where that cannot be done the import
+account is not dropped, because what it made would stop working: it is locked,
+keeps its one grant, and the panel log names the database.
 """
 import os
 import pwd
 import re
+import stat
 import subprocess
 import tempfile
 import time
@@ -33,6 +36,17 @@ from plogical import randomPassword
 
 CLIENT = 'mysql'
 ACCOUNT_PREFIX = 'cpimp_'
+
+# What import_dump returns.
+FAILED = 0
+LOADED = 1
+# All of the dump is loaded, but views, triggers, routines or events could not
+# be handed to the database's own account; the locked import account owns them.
+LOADED_OBJECTS_KEPT = 2
+
+# What the panel grants a database user on a managed server whose
+# administrative account may not grant every privilege (mysqlUtilities.createDatabase).
+LIMITED_PRIVILEGES = 'INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE'
 STALE_AFTER = 24 * 3600
 UNPRIVILEGED = ('nobody',)
 CHUNK = 65536
@@ -84,13 +98,43 @@ def drop_account(cursor, user, host):
     cursor.execute('DROP USER IF EXISTS %s@%s', (user, host))
 
 
+def owns_objects(cursor, account):
+    """True when a view, trigger, routine or event of any database has this account as its definer."""
+    definer = '%s@%s' % account
+    for table in ('VIEWS', 'TRIGGERS', 'ROUTINES', 'EVENTS'):
+        if _rows(cursor, 'SELECT 1 FROM information_schema.%s WHERE DEFINER = %%s LIMIT 1' % table, (definer,)):
+            return True
+    return False
+
+
+def lock_account(cursor, user, host):
+    """Close the account for sign-in; what it owns keeps working. Returns how it was closed.
+
+    MariaDB from 10.4.2 and MySQL from 5.7.6 can lock an account. An older
+    server cannot: there the account gets a new password nobody knows.
+    """
+    try:
+        cursor.execute('ALTER USER %s@%s ACCOUNT LOCK', (user, host))
+        return 'locked'
+    except BaseException:
+        cursor.execute('ALTER USER %s@%s IDENTIFIED BY %s', (user, host, randomPassword.generate_pass(28) + '-aZ9'))
+        return 'given a new password nobody knows'
+
+
 def drop_stale_accounts(cursor, now=None):
-    """Remove import accounts that a stopped import left behind a day or longer ago."""
+    """Remove import accounts that a stopped import left behind a day or longer ago.
+
+    An account that still owns views, triggers, routines or events is never
+    removed: they would stop working. It is locked instead.
+    """
     now = time.time() if now is None else now
     for user, host in _rows(cursor, 'SELECT User, Host FROM mysql.user WHERE User LIKE %s', ('cpimp\\_%',)):
         match = ACCOUNT.fullmatch(user)
         if match and now - int(match.group(1), 16) > STALE_AFTER:
-            drop_account(cursor, user, host)
+            if owns_objects(cursor, (user, host)):
+                lock_account(cursor, user, host)
+            else:
+                drop_account(cursor, user, host)
 
 
 def create_account(cursor, database, native_password=False, now=None):
@@ -112,7 +156,11 @@ def create_account(cursor, database, native_password=False, now=None):
     else:
         cursor.execute('CREATE USER %s@%s IDENTIFIED BY %s', (user, host, password))
     try:
-        cursor.execute('GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s' % target, (user, host))
+        try:
+            cursor.execute('GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s' % target, (user, host))
+        except BaseException:
+            # A managed server whose administrative account may not grant every privilege.
+            cursor.execute('GRANT %s ON %s.* TO %%s@%%s' % (LIMITED_PRIVILEGES, target), (user, host))
     except BaseException:
         drop_account(cursor, user, host)
         raise
@@ -134,7 +182,14 @@ def client_identity():
 
 
 def write_defaults(user, password, host, port, identity=None):
-    """A private option file for the client; returns its path."""
+    """A private option file for the client; returns (what the client is told to read, descriptor, path).
+
+    The file has no name by the time the client starts: the client inherits
+    the open descriptor and reads it as /dev/fd/N, so no other process finds
+    the file and nothing is left behind when the import is stopped. `path` is
+    None then. Only where the system has no /dev/fd the file keeps its name
+    until the import ends.
+    """
     descriptor, path = tempfile.mkstemp(prefix='.cpimport-', suffix='.cnf')
     try:
         os.fchmod(descriptor, 0o600)
@@ -142,12 +197,17 @@ def write_defaults(user, password, host, port, identity=None):
             os.fchown(descriptor, identity[0], identity[1])
         content = '[client]\nuser=%s\npassword=%s\nhost=%s\nport=%d\n' % (user, password, host, int(port))
         os.write(descriptor, content.encode('ascii'))
+        if os.path.isdir('/dev/fd'):
+            os.unlink(path)
+            return '/dev/fd/%d' % descriptor, descriptor, None
     except BaseException:
         os.close(descriptor)
-        os.unlink(path)
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
         raise
-    os.close(descriptor)
-    return path
+    return path, descriptor, path
 
 
 def _demote(identity):
@@ -270,7 +330,9 @@ def reassign_definers(cursor, database, made_by, owner):
     """Hand the objects the import made to `owner`; returns how many were handed over.
 
     Each object is written again from the server's own description of it,
-    with the owner in place of the import account.
+    with the owner in place of the import account. The description is read
+    with names between backticks, whatever the server is set to; a trigger or
+    routine is then made again under the sql_mode it was made with.
     """
     objects = imported_objects(cursor, database, made_by)
     if not objects:
@@ -279,6 +341,8 @@ def reassign_definers(cursor, database, made_by, owner):
     new = 'DEFINER=%s@%s' % (quote(owner[0]), quote(owner[1]))
     replaces = 'MariaDB' in str(_rows(cursor, 'SELECT VERSION()')[0][0])
     schema = quote(database)
+    databaseGrants.plain_session(cursor)
+    plain = True
     cursor.execute('USE ' + schema)
     for kind, name, extra in objects:
         target = '%s.%s' % (schema, quote(name))
@@ -286,18 +350,28 @@ def reassign_definers(cursor, database, made_by, owner):
             completion = 'ON COMPLETION PRESERVE' if extra == 'PRESERVE' else 'ON COMPLETION NOT PRESERVE'
             cursor.execute('ALTER %s EVENT %s %s' % (new, target, completion))
             continue
+        if not plain:
+            cursor.execute("SET SESSION sql_mode = ''")
+            plain = True
         row = _rows(cursor, 'SHOW CREATE %s %s' % (kind, target))[0]
-        statement = row[1] if kind == 'VIEW' else row[2]
-        if not isinstance(statement, str) or not statement.startswith('CREATE ') or statement.count(old) < 1:
+        original = row[1] if kind == 'VIEW' else row[2]
+        if not isinstance(original, str) or not original.startswith('CREATE ') or original.count(old) < 1:
             raise ImportRefused('The %s %s is not described the way it was made.' % (kind.lower(), name))
         if kind != 'VIEW':
             cursor.execute('SET SESSION sql_mode = %s', (row[1],))
-        statement = statement.replace(old, new, 1)
+            plain = row[1] == ''
+        statement = original.replace(old, new, 1)
         if kind == 'VIEW' or replaces:
             cursor.execute('CREATE OR REPLACE ' + statement[len('CREATE '):])
         else:
             cursor.execute('DROP %s %s' % (kind, target))
-            cursor.execute(statement)
+            try:
+                cursor.execute(statement)
+            except BaseException:
+                # The server took the object and refused it under its new
+                # owner: it is put back the way it was.
+                cursor.execute(original)
+                raise
     return len(objects)
 
 
@@ -320,34 +394,89 @@ def _native_password():
     return mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1
 
 
+def _usable_name(database):
+    from plogical.mysqlUtilities import mysqlUtilities
+    return mysqlUtilities.usableInCommands(database)
+
+
+TRUST_SETTING = 'log_bin_trust_function_creators'
+
+
+def allow_function_creators(cursor):
+    """Let the import account make triggers and functions on a server that writes a binary log.
+
+    Such a server refuses them from an account without the SUPER privilege
+    unless log_bin_trust_function_creators is on, half-way through a dump.
+    The setting is switched on for the time of the import. Returns True when
+    it was switched on here and has to be put back.
+    """
+    try:
+        rows = _rows(cursor, 'SELECT @@GLOBAL.log_bin, @@GLOBAL.' + TRUST_SETTING)
+    except BaseException:
+        return False
+    if not rows or str(rows[0][0]).upper() in ('0', 'OFF') or str(rows[0][1]).upper() in ('1', 'ON'):
+        return False
+    try:
+        cursor.execute('SET GLOBAL %s = 1' % TRUST_SETTING)
+        return True
+    except BaseException as error:
+        _note('This server writes a binary log and %s is off; the panel may not switch it on (%s). '
+              'A dump with triggers or functions will stop at the first of them.' % (TRUST_SETTING, error))
+        return False
+
+
+def restore_function_creators(cursor):
+    try:
+        cursor.execute('SET GLOBAL %s = 0' % TRUST_SETTING)
+    except BaseException as error:
+        _note('%s was switched on for an import and could not be switched off again: %s' % (TRUST_SETTING, error))
+
+
 def import_dump(database, feed, host='localhost', port=3306, owner=None, connect=None, made=None):
-    """Load a dump into `database`; returns 1 when all of it was loaded, else 0.
+    """Load a dump into `database`.
+
+    Returns LOADED (1) when all of it was loaded, FAILED (0) when it was not,
+    and LOADED_OBJECTS_KEPT (2) when all of it was loaded but views, triggers,
+    routines or events could not be handed to the database's own account and
+    stay with the locked import account.
 
     `feed(sink)` writes the dump into `sink` and returns a true value when its
     source ended well. `owner` is the user name of the database's registered
     account. `made`, a list, receives (database, (user, host)) of the import
-    account when the caller hands the imported objects over itself, later.
+    account when the caller hands the imported objects over itself, later,
+    with `settle`; the account lives until then.
     """
     account = None
     path = None
+    descriptor = None
     loaded = False
+    trusted = False
     try:
+        # The name is the last argument of the client: it must not read as an option or a path.
+        if not _usable_name(database):
+            raise ImportRefused('A database with this name cannot be imported into.')
         options = client_options()
         connection, cursor = _administrator(connect)
         try:
-            drop_stale_accounts(cursor)
+            try:
+                drop_stale_accounts(cursor)
+            except BaseException as error:
+                # Looking for what a stopped import left behind never stops an import.
+                _note('Accounts left by earlier imports were not looked for: %s' % error)
             user, account_host, password = create_account(cursor, database, _native_password())
             account = (user, account_host)
+            trusted = allow_function_creators(cursor)
         finally:
             connection.close()
 
         identity = client_identity()
-        path = write_defaults(user, password, host, port, identity)
+        defaults, descriptor, path = write_defaults(user, password, host, port, identity)
         with tempfile.TemporaryFile() as errors:
             client = subprocess.Popen(
-                [CLIENT, '--defaults-file=' + path] + options + [database],
+                [CLIENT, '--defaults-file=' + defaults] + options + [database],
                 stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=errors, cwd='/',
                 env={'PATH': os.environ.get('PATH', '/usr/local/bin:/usr/bin:/bin'), 'LC_ALL': 'C'},
+                pass_fds=(descriptor,) if path is None else (),
                 preexec_fn=_demote(identity) if identity is not None else None)
             fed = False
             try:
@@ -369,41 +498,83 @@ def import_dump(database, feed, host='localhost', port=3306, owner=None, connect
                 errors.seek(max(0, errors.seek(0, os.SEEK_END) - 2000))
                 said = [line for line in errors.read().decode('utf-8', 'replace').splitlines()
                         if line.startswith('ERROR')]
-                _note('Database import into %s stopped: %s' % (
-                    database, said[-1][:300] if said else 'the dump could not be read to its end'))
+                reason = said[-1][:300] if said else 'the dump could not be read to its end'
+                if 'ERROR 1419' in reason:
+                    reason += (' The server writes a binary log and does not let this account make triggers '
+                               'or functions: set %s=1 on the database server and import again.' % TRUST_SETTING)
+                _note('Database import into %s stopped: %s' % (database, reason))
     except BaseException as error:
         loaded = False
         _note('Database import into %s failed: %s' % (database, error))
     finally:
+        if descriptor is not None:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
         if path is not None:
             try:
                 os.unlink(path)
             except OSError:
                 pass
+        result = FAILED
         if account is not None:
             try:
-                loaded = _finish(database, account, owner, connect, made) and loaded
+                result = _finish(database, account, owner, connect, made, loaded, trusted)
             except BaseException as error:
-                loaded = False
+                result = FAILED
                 _note('Database import into %s could not be finished: %s' % (database, error))
-    return 1 if loaded else 0
+    return result
 
 
-def _finish(database, account, owner, connect, made):
-    """Hand the imported objects to the owner and drop the import account; False when objects stay unowned."""
+def _finish(database, account, owner, connect, made, loaded, trusted):
+    """Settle the import account once the client has ended; returns what import_dump returns."""
     connection, cursor = _administrator(connect)
     try:
-        complete = True
-        if made is not None:
-            made.append((database, account))
-        else:
-            complete = hand_over(cursor, database, account, owner, connection)
-        return complete
-    finally:
         try:
-            drop_account(cursor, account[0], account[1])
+            if made is not None:
+                # The caller hands the objects over when the database's users
+                # exist, and settles the account then.
+                made.append((database, account))
+                return LOADED if loaded else FAILED
+            complete = settle(cursor, database, account, owner, connection)
+            if not loaded:
+                return FAILED
+            return LOADED if complete else LOADED_OBJECTS_KEPT
         finally:
-            connection.close()
+            if trusted:
+                restore_function_creators(cursor)
+    finally:
+        connection.close()
+
+
+def settle(cursor, database, account, owner, connection=None):
+    """Give what the import account made in `database` to the registered account `owner` and remove the import account.
+
+    Returns True when nothing is left with the import account. When objects
+    cannot be handed over, the account is not dropped, because they would stop
+    working: it is locked, keeps its grant on this database alone, and one
+    line in the panel log names the database. Returns False then.
+    """
+    reason = 'the database has no registered account of its own that could own them'
+    complete = False
+    try:
+        complete = hand_over(cursor, database, account, owner, connection)
+    except BaseException as error:
+        reason = str(error)
+    try:
+        if not complete and imported_objects(cursor, database, account):
+            closed = lock_account(cursor, account[0], account[1])
+            _note('Views, triggers, routines or events imported into %s still belong to the import account '
+                  '%s@%s: %s. The account was %s and keeps its grant on this database alone, so they keep '
+                  'working. Give them a definer by hand, then drop the account.'
+                  % (database, account[0], account[1], reason, closed))
+            return False
+        drop_account(cursor, account[0], account[1])
+        return True
+    except BaseException as error:
+        _note('The import account %s@%s of %s could not be settled: %s' % (account[0], account[1], database, error))
+        return False
 
 
 def hand_over(cursor, database, account, owner, connection=None):
@@ -412,8 +583,6 @@ def hand_over(cursor, database, account, owner, connection=None):
         return True
     holder = owner_account(cursor, database, owner, (account[1],))
     if holder is None:
-        _note('The views, triggers, routines or events imported into %s have no owner: the database has no '
-              'registered account of its own that could hold them.' % database)
         return False
     if connection is not None:
         try:
@@ -424,3 +593,19 @@ def hand_over(cursor, database, account, owner, connection=None):
     _note('%d imported view(s), trigger(s), routine(s) or event(s) in %s now belong to %s@%s.'
           % (handed, database, holder[0], holder[1]))
     return True
+
+
+def open_dump(path):
+    """Open a dump file for reading, only when the name is that of a regular file itself.
+
+    A dump can lie in a directory another account writes to. A name that was
+    made a link there is not followed.
+    """
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise ImportRefused('The dump is not a regular file.')
+        return os.fdopen(descriptor, 'rb')
+    except BaseException:
+        os.close(descriptor)
+        raise

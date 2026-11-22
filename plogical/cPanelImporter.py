@@ -719,13 +719,20 @@ class cPanelImporter:
                     logging.statusWriter(self.logFile, message, 1)
 
             # Views, triggers and routines of an imported database belong to
-            # the database's own user, now that the users exist.
+            # the database's own user, now that the users exist. The account
+            # of each import lived until here, so that what it made kept
+            # working; it goes now, or stays locked where objects have no
+            # other owner.
             for importedName, importAccount in imported:
                 try:
-                    owner = Databases.objects.get(dbName=importedName).dbUser
-                    if not databaseImport.hand_over(cursor, importedName, importAccount, owner, connection):
-                        message = 'Views, triggers or routines of %s have no owner; set their definer by hand.' % (
-                            importedName)
+                    try:
+                        owner = Databases.objects.get(dbName=importedName).dbUser
+                    except BaseException:
+                        owner = None
+                    if not databaseImport.settle(cursor, importedName, importAccount, owner, connection):
+                        message = ('Views, triggers or routines of %s could not be given to a database user. They '
+                                   'keep working under the locked account of the import; set their definer by '
+                                   'hand.' % (importedName))
                         logging.statusWriter(self.logFile, message, 1)
                 except BaseException as msg:
                     message = 'Could not hand the views, triggers or routines of %s to its user: %s' % (
