@@ -70,12 +70,16 @@ def ols_upgrade_lock(root='/usr/local/lsws'):
 # Where this script and the helpers staged beside it are. Before Python 3.9 a
 # script started by a relative name has a relative __file__, so the folder is
 # taken once, here, before the upgrade changes its working directory.
-UPGRADE_SCRIPT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+try:
+    UPGRADE_SCRIPT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+except NameError:  # run from text, without a file name
+    UPGRADE_SCRIPT_DIRECTORY = None
 
 
 def load_ols_diagnostic_helper(filename):
     import importlib.util
-    path = os.path.join(UPGRADE_SCRIPT_DIRECTORY, filename)
+    folder = globals().get('UPGRADE_SCRIPT_DIRECTORY') or os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(folder, filename)
     spec = importlib.util.spec_from_file_location('upgrade_' + filename[:-3], path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

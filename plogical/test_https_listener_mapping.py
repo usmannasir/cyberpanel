@@ -1445,8 +1445,7 @@ class HelperLocationTests(unittest.TestCase):
     def test_a_script_started_by_a_relative_name_still_finds_its_helpers_later(self):
         body = ast.parse(Path(__file__).with_name('upgrade.py').read_text()).body
         wanted = [node for node in body
-                  if (isinstance(node, ast.Assign)
-                      and getattr(node.targets[0], 'id', '') == 'UPGRADE_SCRIPT_DIRECTORY')
+                  if (isinstance(node, ast.Try) and 'UPGRADE_SCRIPT_DIRECTORY' in ast.dump(node))
                   or (isinstance(node, ast.FunctionDef) and node.name == 'load_ols_diagnostic_helper')]
         self.assertEqual(2, len(wanted))
         before = os.getcwd()
@@ -1461,6 +1460,25 @@ class HelperLocationTests(unittest.TestCase):
                 self.assertEqual(7, scope['load_ols_diagnostic_helper']('helperForTest.py').VALUE)
             finally:
                 os.chdir(before)
+
+    def test_the_helper_loader_also_works_where_only_the_function_was_taken(self):
+        # Other tests run the loader alone, without the line that remembers the folder.
+        body = ast.parse(Path(__file__).with_name('upgrade.py').read_text()).body
+        loader = [node for node in body
+                  if isinstance(node, ast.FunctionDef) and node.name == 'load_ols_diagnostic_helper']
+        with tempfile.TemporaryDirectory() as staged:
+            Path(staged, 'helperForTest.py').write_text('VALUE = 9\n')
+            scope = {'os': os, '__file__': os.path.join(staged, 'upgrade.py')}
+            exec(compile(ast.Module(body=loader, type_ignores=[]), 'upgrade.py', 'exec'), scope)
+            self.assertEqual(9, scope['load_ols_diagnostic_helper']('helperForTest.py').VALUE)
+
+    def test_the_script_can_be_run_from_text_without_a_file_name(self):
+        body = ast.parse(Path(__file__).with_name('upgrade.py').read_text()).body
+        remember = [node for node in body
+                    if isinstance(node, ast.Try) and 'UPGRADE_SCRIPT_DIRECTORY' in ast.dump(node)]
+        scope = {'os': os}
+        exec(compile(ast.Module(body=remember, type_ignores=[]), 'upgrade.py', 'exec'), scope)
+        self.assertIsNone(scope['UPGRADE_SCRIPT_DIRECTORY'])
 
 
 if __name__ == '__main__':
