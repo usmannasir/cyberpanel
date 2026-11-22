@@ -153,10 +153,15 @@ class SuccessfulRunTests(unittest.TestCase):
         machine = Installer(self)
         machine.run('-v', 'ols')
         first = machine.event_lines()
-        machine.run('-v', 'ols')
+        # The panel is there now, so the second run is refused; its lines follow
+        # the first run's, which stay as they were.
+        result = machine.run('-v', 'ols')
+        self.assertEqual(1, result.returncode)
         lines = machine.event_lines()
         self.assertEqual(first, lines[:len(first)])
-        self.assertEqual(COMPLETE_RUN, [' '.join(line.split()[2:]) for line in lines[len(first):]])
+        self.assertEqual(['install started 3.0.11', 'preflight running', 'preflight failed already_installed',
+                          'install failed already_installed'],
+                         [' '.join(line.split()[2:]) for line in lines[len(first):]])
         self.assertNotEqual(first[0].split()[1], lines[-1].split()[1])
 
     def test_progress_log_lines_are_what_they_were(self):

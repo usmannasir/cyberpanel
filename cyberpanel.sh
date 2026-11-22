@@ -182,14 +182,19 @@ Install_On_Exit() {
 # Runs whenever the script ends. A run that was started and did not reach
 # "install complete" is recorded as failed and never ends with status 0,
 # whatever the line that ended it looked like.
-local status=$? step reason
+local status=$? step reason panel_complete="No"
 if [[ "$Install_Run_Active" != "Yes" ]]; then
   return
 fi
 Install_Run_Active="No"
 step=$(Install_Open_Step)
 reason="${Install_Fail_Code:-$(Install_Default_Reason "$step")}"
-if [[ "$step" = "hostname_ssl" && "${Hostname_SSL_Result:-}" = "certificate_failed" ]]; then
+if [[ "$step" = "hostname_ssl" ]] && Admin_Password_Is_Set; then
+  # The panel was complete before this step, whatever became of the step,
+  # and its administrator has the password of this installation.
+  panel_complete="Yes"
+fi
+if [[ "$panel_complete" = "Yes" && "${Hostname_SSL_Result:-}" = "certificate_failed" ]]; then
   # The panel is installed and its website for the hostname exists; only the
   # certificate is missing. The exit status stays what it was, and the person
   # installing is told how to reach the panel.
@@ -203,8 +208,7 @@ if [[ "$step" = "hostname_ssl" && "${Hostname_SSL_Result:-}" = "certificate_fail
 elif [[ -n "$step" ]]; then
   Install_Event "$step" failed "$reason"
 fi
-if [[ "$step" = "hostname_ssl" ]] && Panel_Answers 15; then
-  # The panel was complete before this step, whatever became of the step.
+if [[ "$panel_complete" = "Yes" ]] && Panel_Answers 15; then
   Install_Event panel ready
 fi
 Install_Event install failed "$reason"
@@ -2507,6 +2511,12 @@ if [[ "${Hostname_SSL_Result:-}" = "skipped" ]]; then
   Install_Event hostname_ssl skipped
 fi
 Install_Step ready
+if ! Admin_Password_Is_Set; then
+  echo -e "\nCyberPanel was installed, but its administrator does not have the password of this installation."
+  echo -e "Set one with: adminPass 'a new password'\n"
+  log_error "The panel's administrator does not have the password of this installation"
+  Fail_Install panel_setup
+fi
 if ! Panel_Answers; then
   echo -e "\nCyberPanel was installed, but the panel does not answer on port 8090."
   echo -e "Check it with: systemctl status lscpd\n"
@@ -2952,6 +2962,45 @@ log_error "No installed executable LiteSpeed PHP runtime is available for the ho
 return 1
 }
 
+Set_Admin_Password() {
+# Stores the admin password where root can read it and gives it to the panel.
+# The panel tree is the version that was asked for (version.txt, -b), which can
+# be older than this script. Its adminPass.py reads the password from the file
+# when it knows how to, so that the password is not part of a command line
+# other accounts on the server can see; an older one gets it the only way it
+# takes it. The status is that of adminPass.py.
+( umask 077; printf '%s\n' "$Admin_Pass" > /etc/cyberpanel/adminPass )
+chmod 600 /etc/cyberpanel/adminPass
+if grep -q -- '--password-file' /usr/local/CyberCP/plogical/adminPass.py 2>/dev/null; then
+  /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password-file /etc/cyberpanel/adminPass
+else
+  /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$Admin_Pass"
+fi
+}
+
+Admin_Password_Is_Set() {
+# True when the panel has an administrator "admin" whose stored password is
+# the first line of /etc/cyberpanel/adminPass. The panel is asked itself, with
+# its interpreter and its own password check, and reads the password from the
+# file. Without an administrator the panel would create "admin" with a
+# well-known password on the first request it gets.
+( cd /usr/local/CyberCP && /usr/local/CyberCP/bin/python - <<'VERIFY'
+import os
+import sys
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CyberCP.settings')
+import django
+django.setup()
+from loginSystem.models import Administrator
+from plogical import hashPassword
+with open('/etc/cyberpanel/adminPass', encoding='utf-8') as source:
+    password = source.readline().rstrip('\r\n')
+admin = Administrator.objects.filter(userName='admin').first()
+sys.exit(0 if admin is not None and password and hashPassword.check_password(admin.password, password) else 1)
+VERIFY
+)
+}
+
 Post_Install_Tweak() {
 log_function_start "Post_Install_Tweak"
 log_info "Applying post-installation tweaks and configurations"
@@ -2977,17 +3026,19 @@ fi
 rm -rf /etc/profile.d/cyberpanel*
 curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/dev/null
 chmod 700 /etc/profile.d/cyberpanel.sh
-( umask 077; printf '%s\n' "$Admin_Pass" > /etc/cyberpanel/adminPass )
-chmod 600 /etc/cyberpanel/adminPass
-# The password is read from the file, so that it is not part of a command line
-# that other accounts on the server can see while this runs.
-/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password-file /etc/cyberpanel/adminPass
 mkdir -p /etc/opendkim
 
 echo '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"' > /usr/bin/adminPass
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
 echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
+
+if ! Set_Admin_Password; then
+  echo -e "\nThe admin password could not be set in the panel, so the installation is not complete."
+  echo -e "Once the cause is removed, set one with: adminPass 'a new password'\n"
+  log_error "The admin password could not be set in the panel"
+  Fail_Install panel_setup
+fi
 
 Configure_Default_PHP_CLI || return 1
 
