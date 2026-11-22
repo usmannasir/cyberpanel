@@ -78,31 +78,34 @@ class OwnerTests(unittest.TestCase):
 
 
 class ReportTests(unittest.TestCase):
-    def report(self, missing):
-        sites = [SimpleNamespace(SiteName='flows', port='11000', admin=SimpleNamespace(domain='flows.example')),
-                 SimpleNamespace(SiteName='fresh', port='11001', admin=SimpleNamespace(domain='fresh.example'))]
+    def report(self, missing, sites=None, select=None, clock=None, client_error=None, **arguments):
+        if sites is None:
+            sites = [SimpleNamespace(SiteName='flows', port='11000', admin=SimpleNamespace(domain='flows.example')),
+                     SimpleNamespace(SiteName='fresh', port='11001', admin=SimpleNamespace(domain='fresh.example'))]
         models = SimpleNamespace(DockerSites=mock.Mock())
         models.DockerSites.objects.filter.return_value = sites
         containers = {('flows', 'flows'): [SimpleNamespace(attrs=OLD)], ('flows', None): [SimpleNamespace(attrs=OLD), SimpleNamespace(attrs=DATABASE)],
                       ('fresh', 'fresh'): [SimpleNamespace(attrs=NEW)], ('fresh', None): [SimpleNamespace(attrs=NEW), SimpleNamespace(attrs=DATABASE)]}
 
-        def select(client, name, domain, service=None):
+        def selected(client, name, domain, service=None):
             self.assertEqual(name + '.example', domain)
             return containers[(name, service)]
 
         with mock.patch.dict(sys.modules, {'websiteFunctions.models': models}), \
-                mock.patch.object(docker_sites.docker, 'from_env'), \
-                mock.patch.object(docker_sites, 'site_containers', side_effect=select), \
-                mock.patch.object(docker_sites, 'n8n_owner_missing', side_effect=lambda port: missing[port]):
-            report = Docker_Sites.CheckN8NSites()
+                mock.patch.object(docker_sites.docker, 'from_env', side_effect=client_error) as self.docker, \
+                mock.patch.object(docker_sites, 'site_containers', side_effect=select or selected) as self.selected, \
+                mock.patch.object(docker_sites.time, 'time', side_effect=clock or (lambda: 0)), \
+                mock.patch.object(docker_sites, 'n8n_owner_missing',
+                                  side_effect=lambda port, timeout: missing[port]) as self.owner:
+            report = Docker_Sites.CheckN8NSites(**arguments)
         models.DockerSites.objects.filter.assert_called_once_with(SiteType=Docker_Sites.N8N)
         return report
 
     def test_an_old_site_without_an_owner_is_reported_first_of_all(self):
         report = self.report({'11000': True, '11001': False})
         self.assertEqual(4, len(report))
-        self.assertTrue(report[0].startswith('flows.example (flows): HAS NO OWNER ACCOUNT'))
-        self.assertTrue(all(line.startswith('flows.example (flows): ') for line in report))
+        self.assertTrue(report[0].startswith('n8n site flows.example (flows): HAS NO OWNER ACCOUNT'))
+        self.assertTrue(all(line.startswith('n8n site flows.example (flows): ') for line in report))
 
     def test_an_old_site_with_an_owner_keeps_its_other_remarks(self):
         report = self.report({'11000': False, '11001': False})
@@ -113,6 +116,38 @@ class ReportTests(unittest.TestCase):
         # Its database container runs as root in both ways of deploying; that is not a remark about n8n.
         report = self.report({'11000': None, '11001': None})
         self.assertFalse([line for line in report if 'fresh' in line])
+
+    def test_a_panel_without_an_n8n_site_is_answered_before_docker_is_asked_anything(self):
+        self.assertEqual([], self.report({}, sites=[]))
+        self.docker.assert_not_called()
+        self.selected.assert_not_called()
+        self.owner.assert_not_called()
+
+    def test_each_site_gets_a_few_seconds_and_docker_a_short_time_limit(self):
+        self.report({'11000': False, '11001': False})
+        self.docker.assert_called_once_with(timeout=10)
+        self.assertEqual([mock.call('11000', timeout=5), mock.call('11001', timeout=5)], self.owner.call_args_list)
+
+    def test_a_docker_that_does_not_answer_is_asked_once_and_the_rest_is_still_reported(self):
+        def no_answer(client, name, domain, service=None):
+            raise OSError('Docker does not answer')
+
+        report = self.report({'11000': True, '11001': None}, select=no_answer)
+        self.assertEqual(['n8n site flows.example (flows): HAS NO OWNER ACCOUNT: whoever opens it first becomes '
+                          'its owner'], report)
+        self.assertEqual(1, self.selected.call_count)
+
+    def test_a_server_without_docker_gets_a_report_without_an_error(self):
+        self.assertEqual([], self.report({'11000': None, '11001': None}, client_error=OSError('no Docker')))
+        self.selected.assert_not_called()
+
+    def test_the_whole_check_stops_at_its_time_limit_and_says_what_it_did_not_look_at(self):
+        sites = [SimpleNamespace(SiteName='flows', port='11000', admin=SimpleNamespace(domain='flows.example'))] * 5
+        moments = iter([0, 10, 50, 91, 200, 300, 400])
+        report = self.report({'11000': True}, sites=sites, clock=lambda: next(moments), time_limit=90)
+        self.assertEqual(2, self.owner.call_count)
+        self.assertEqual('n8n site check stopped at its time limit: 3 of 5 sites were not looked at', report[-1])
+        self.assertTrue(all(line.startswith('n8n site ') for line in report))
 
     def test_the_check_is_reachable_from_the_command_line(self):
         with mock.patch.object(sys, 'argv', ['DockerSites.py', 'CheckN8NSites']), \

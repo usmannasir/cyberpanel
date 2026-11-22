@@ -1942,34 +1942,64 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
         raise DockerDeploymentError('n8n did not become ready to create its administrator account.')
 
     @staticmethod
-    def CheckN8NSites():
+    def CheckN8NSites(time_limit=90):
         """
         Report the n8n sites that were deployed the way earlier versions did it.
 
         Nothing is changed. A site is listed with what is open about it: an
         instance without an owner account, a port published on every address,
-        the shared encryption key, a container that runs as root.
+        the shared encryption key, a container that runs as root. Every line
+        starts with "n8n site".
+
+        The upgrade runs this check, so it has to be quick and must never
+        hang: a panel without an n8n site is answered before Docker is asked
+        anything, each site gets a few seconds, and the whole check stops at
+        its time limit and says how many sites it did not look at.
         """
         from websiteFunctions.models import DockerSites
 
-        report = []
-        client = docker.from_env()
+        sites = list(DockerSites.objects.filter(SiteType=Docker_Sites.N8N))
 
-        for site in DockerSites.objects.filter(SiteType=Docker_Sites.N8N):
+        if not sites:
+            return []
+
+        report = []
+        started = time.time()
+
+        try:
+            client = docker.from_env(timeout=10)
+        except BaseException:
+            client = None
+
+        for position, site in enumerate(sites):
+            if time.time() - started > time_limit:
+                report.append('n8n site check stopped at its time limit: %s of %s sites were not looked at'
+                              % (len(sites) - position, len(sites)))
+                break
+
             remarks = []
 
-            if n8n_owner_missing(site.port) is True:
+            if n8n_owner_missing(site.port, timeout=5) is True:
                 remarks.append('HAS NO OWNER ACCOUNT: whoever opens it first becomes its owner')
 
             # The application container only: the database container beside it is not n8n.
-            for container in site_containers(client, site.SiteName, site.admin.domain,
-                                             site.SiteName.replace(' ', '-')):
+            containers = []
+
+            if client is not None:
+                try:
+                    containers = site_containers(client, site.SiteName, site.admin.domain,
+                                                 site.SiteName.replace(' ', '-'))
+                except BaseException:
+                    # Docker does not answer; it will not answer for the next site either.
+                    client = None
+
+            for container in containers:
                 for remark in n8n_container_remarks(container.attrs):
                     if remark not in remarks:
                         remarks.append(remark)
 
             for remark in remarks:
-                report.append('%s (%s): %s' % (site.admin.domain, site.SiteName, remark))
+                report.append('n8n site %s (%s): %s' % (site.admin.domain, site.SiteName, remark))
 
         return report
 
