@@ -87,6 +87,8 @@ curl() {
     *cyberpanel.sh/?country*) printf 'US' ;;
     *latest.php*) printf 'LSWS_STABLE=6.3.4 BUILD 1\n' ;;
     *127.0.0.1:8090*)
+      # QA_PROBE_SIGNAL: the script is sent this signal while the panel is asked.
+      if [ -n "$QA_PROBE_SIGNAL" ]; then kill -s "$QA_PROBE_SIGNAL" "$$"; fi
       if [ "$QA_PANEL_EXIT" != 0 ] && [ "$QA_PANEL_HANGS" = 1 ]; then
         # A request that gets no answer lasts as long as it was allowed to.
         local limit="$*"
@@ -102,6 +104,12 @@ id() { printf '%s\n' "$QA_UID"; }
 hostnamectl() { :; }
 systemctl() {
   note "systemctl $*"
+  # QA_STOP_SIGNAL=<n>:<signal>: the script is sent the signal while the
+  # panel's service is stopped for the n-th time.
+  if [ "$*" = "stop lscpd" ] && [ -n "$QA_STOP_SIGNAL" ]; then
+    Panel_Stops=$((${Panel_Stops:-0} + 1))
+    if [ "$Panel_Stops" = "${QA_STOP_SIGNAL%%:*}" ]; then kill -s "${QA_STOP_SIGNAL##*:}" "$$"; fi
+  fi
   if [ "$1" = is-active ]; then [ "$3" = "$QA_ACTIVE_SERVICE" ]; return; fi
   return 0
 }
@@ -350,6 +358,8 @@ class Installer:
             'QA_CREATE_OUTPUT': options.pop('create_output', CLI_OK),
             'QA_TLS_OUTPUT': options.pop('tls_output', CLI_OK),
             'QA_TLS_SIGNAL': options.pop('tls_signal', ''),
+            'QA_PROBE_SIGNAL': options.pop('probe_signal', ''),
+            'QA_STOP_SIGNAL': options.pop('stop_signal', ''),
             'QA_FAIL_AT': options.pop('fail_at', ''),
             'QA_SIGNAL_AT': options.pop('signal_at', ''),
             'QA_SIGNAL': options.pop('signal', 'TERM'),

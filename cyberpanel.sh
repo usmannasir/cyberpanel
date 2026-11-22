@@ -204,8 +204,12 @@ exit 0
 Install_On_Exit() {
 # Runs whenever the script ends. A run that was started and did not reach
 # "install complete" is recorded as failed and never ends with status 0,
-# whatever the line that ended it looked like.
+# whatever the line that ended it looked like. Once this has begun, a signal
+# no longer ends the script: a run that is being closed is closed, with the
+# reason it ended for. What is done here is bounded (the panel is asked for
+# 30 seconds at most).
 local status=$? step reason panel_complete="No"
+trap '' HUP INT TERM
 if [[ "$Install_Run_Active" != "Yes" ]]; then
   return
 fi
@@ -1032,6 +1036,8 @@ echo -e "The names count wherever they stand on the command line, also before \e
 echo -e "\n\e[31m-b\e[39m or \e[31m--branch\e[39m : install with given branch/version , must be higher than 1.9.4"
 echo -e "e.g.  \e[31m-b 2.0.2\e[39m will install 2.0.2 version"
 echo -e "\n\e[31m--mirror\e[39m : this argument force to use mirror server for majority of repositories, only suggest to use for servers within China"
+echo -e "\nTo stop an installation, press Ctrl-C in the terminal it runs in. From elsewhere, send the signal to the process group of the installer:"
+echo -e "a signal sent to the script alone takes effect only when the command that is running has ended."
 echo -e "\nExample:"
 echo -e "\nsh <(curl cyberpanel.sh) -v ols -p r or ./cyberpanel.sh --version ols --password random"
 echo -e "\nThis will install CyberPanel OpenLiteSpeed and randomly generate the password."
