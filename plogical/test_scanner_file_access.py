@@ -730,6 +730,42 @@ class ChangeTests(SiteTree):
                          [name for name in os.listdir(self.root) if name.startswith(('big', 'large'))])
 
 
+class OddHomeTests(unittest.TestCase):
+
+    def test_a_home_with_a_backslash_and_a_space_in_its_name_is_worked_in(self):
+        base = os.path.realpath(tempfile.mkdtemp(prefix='secai'))
+        self.addCleanup(shutil.rmtree, base, True)
+        home = os.path.join(base, 'home', 'secai\\n \\c.test')
+        root = os.path.join(home, 'public html')
+        temp = os.path.join(base, 'tmp')
+        os.makedirs(temp)
+        write(os.path.join(root, 'sub dir', 'a.php'), b'<?php // a\n')
+
+        def temp_writer(content):
+            path = os.path.join(temp, secrets.token_hex(8))
+            with open(path, 'wb') as handle:
+                handle.write(content)
+            return path
+
+        site = SiteFiles('secaiuser', home, root, runner=LocalRunner(), temp_writer=temp_writer)
+        self.assertEqual(['sub dir'], [item['name'] for item in site.list_directory('')])
+        self.assertEqual(b'<?php // a\n', site.read_file('sub dir/a.php')['data'])
+        replaced = site.replace_file('sub dir/a.php', b'<?php // b\n')
+        self.assertEqual(os.path.join(home, '.ai-scanner-backups'),
+                         os.path.dirname(os.path.dirname(replaced['backup_path'])))
+        with open(replaced['backup_path'], 'rb') as handle:
+            self.assertEqual(b'<?php // a\n', handle.read())
+        site.rename_file('sub dir/a.php', 'sub dir/a.php.quarantined.1')
+        self.assertEqual(['a.php.quarantined.1'], os.listdir(os.path.join(root, 'sub dir')))
+        # A site directory that is the home itself is worked in too; one outside it is not.
+        whole = SiteFiles('secaiuser', home, home, runner=LocalRunner(), temp_writer=temp_writer)
+        self.assertEqual(['public html'], [item['name'] for item in whole.list_directory('')])
+        other = SiteFiles('secaiuser', home, base, runner=LocalRunner(), temp_writer=temp_writer)
+        with self.assertRaises(Refused) as caught:
+            other.list_directory('')
+        self.assertEqual('path_not_allowed', caught.exception.code)
+
+
 class UntrustedStatusTests(SiteTree):
     """Every operation against a runner that says each command succeeded, as the helper's last byte did."""
 

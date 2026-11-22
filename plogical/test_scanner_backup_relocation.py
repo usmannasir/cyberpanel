@@ -159,7 +159,7 @@ class RelocateTests(unittest.TestCase):
         self.assertEqual('/', options['cwd'])
         self.assertNotIn('shell', options)
         # The text of the command is fixed: nothing of a path is ever part of it.
-        self.assertNotIn('%', relocation.MOVE.replace('${p%??}', ''))
+        self.assertNotIn('%', relocation.MOVE.replace('${p%??}', '').replace('printf "%s\\n"', ''))
         self.assertNotIn("'", relocation.MOVE)
 
 
@@ -265,6 +265,15 @@ class MoveTests(unittest.TestCase):
                            'the folder is not inside the home of its website']], result['skipped'])
         self.assertEqual({'.ai-scanner-backups/x.bak': b'not ours\n'}, self.tree(outside))
         self.assertFalse(os.path.lexists(self.private))
+
+    def test_a_home_with_a_backslash_and_a_space_in_its_name_is_reported_as_it_is(self):
+        home = os.path.join(self.base, 'home', 'secai\\n \\c.test')
+        root = os.path.join(home, 'public html')
+        write(os.path.join(root, '.ai-scanner-backups', '2025-10-25', 'a.bak'), b'a\n')
+        result = relocation.relocate([('secaiuser', home, root)], local_runner)
+        target = os.path.join(home, '.ai-scanner-backups', 'from-public_html-1')
+        self.assertEqual({'moved': [[os.path.join(root, '.ai-scanner-backups'), target]], 'skipped': []}, result)
+        self.assertEqual({'2025-10-25/a.bak': b'a\n'}, self.tree(target))
 
     def test_a_file_of_that_name_is_no_folder_to_move(self):
         shutil.rmtree(self.old)
