@@ -4112,6 +4112,30 @@ passdb {
             Upgrade.stdOut('Sensitive-file protection migration error: ' + str(msg), 0)
 
     @staticmethod
+    def reconcileHTTPSListenerMaps():
+        """Map every website that has a certificate on the IPv4 and the IPv6 HTTPS listener.
+
+        A website mapped on one of the two only answers the other address
+        family with another website's certificate. A change OpenLiteSpeed does
+        not accept is taken back and reported; it does not stop the upgrade.
+        """
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            return
+
+        try:
+            from plogical.httpsListenerMapping import plan_listener_repair
+            changes, completed = plan_listener_repair()
+            apply_ols_config_changes(changes)
+            Upgrade.stdOut(
+                'HTTPS listener maps: %s mapping(s) completed, %s file(s) updated%s' % (
+                    len(completed), len(changes),
+                    ''.join('\n  %s: %s' % pair for pair in completed)),
+                0,
+            )
+        except Exception as msg:
+            Upgrade.stdOut('WARNING: HTTPS listener maps were not reconciled: ' + str(msg), 0)
+
+    @staticmethod
     def pdnsSchemaMigrations():
         """
         Bring the PowerDNS gmysql schema up to PDNS 4.7+/5.x expectations.
@@ -5941,6 +5965,9 @@ pm.max_spare_servers = 3
         
         ## Fix Apache configuration issues after upgrade
         Upgrade.fixApacheConfiguration()
+
+        ## Websites with a certificate answer with it on IPv4 and on IPv6
+        Upgrade.reconcileHTTPSListenerMaps()
 
         ### General migrations are not needed any more
 

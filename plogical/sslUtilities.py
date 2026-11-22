@@ -9,7 +9,8 @@ import subprocess
 import socket
 import tempfile
 from plogical.processUtilities import ProcessUtilities
-from plogical.domainAliasUtilities import has_https_listener, ensure_https_vhost_mapping
+from plogical.domainAliasUtilities import has_https_listener
+from plogical.httpsListenerMapping import install_vhost_certificate
 
 try:
     from websiteFunctions.models import ChildDomains, Websites
@@ -600,145 +601,9 @@ context /.well-known/acme-challenge {
             logging.CyberCPLogFileWriter.writeToFile('%s [installSSLForDomain:72]' % (str(msg)))
 
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
-            completePathToConfigFile = confPath + "/vhost.conf"
-
             try:
-                map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-
-                if sslUtilities.checkSSLListener() != 1:
-
-                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
-
-                    listener = "listener SSL {" + "\n"
-                    address = "  address                 *:443" + "\n"
-                    secure = "  secure                  1" + "\n"
-                    keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                    certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
-                    certChain = "  certChain               1" + "\n"
-                    sslProtocol = "  sslProtocol             24" + "\n"
-                    enableECDHE = "  enableECDHE             1" + "\n"
-                    renegProtection = "  renegProtection         1" + "\n"
-                    sslSessionCache = "  sslSessionCache         1" + "\n"
-                    enableSpdy = "  enableSpdy              15" + "\n"
-                    enableStapling = "  enableStapling           1" + "\n"
-                    ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
-                    map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-                    final = "}" + "\n" + "\n"
-
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.writelines(listener)
-                    writeDataToFile.writelines(address)
-                    writeDataToFile.writelines(secure)
-                    writeDataToFile.writelines(keyFile)
-                    writeDataToFile.writelines(certFile)
-                    writeDataToFile.writelines(certChain)
-                    writeDataToFile.writelines(sslProtocol)
-                    writeDataToFile.writelines(enableECDHE)
-                    writeDataToFile.writelines(renegProtection)
-                    writeDataToFile.writelines(sslSessionCache)
-                    writeDataToFile.writelines(enableSpdy)
-                    writeDataToFile.writelines(enableStapling)
-                    writeDataToFile.writelines(ocspRespMaxAge)
-                    writeDataToFile.writelines(map)
-                    writeDataToFile.writelines(final)
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.close()
-
-                elif sslUtilities.checkSSLIPv6Listener() != 1:
-
-                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
-
-                    listener = "listener SSL IPv6 {" + "\n"
-                    address = "  address                 [ANY]:443" + "\n"
-                    secure = "  secure                  1" + "\n"
-                    keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                    certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
-                    certChain = "  certChain               1" + "\n"
-                    sslProtocol = "  sslProtocol             24" + "\n"
-                    enableECDHE = "  enableECDHE             1" + "\n"
-                    renegProtection = "  renegProtection         1" + "\n"
-                    sslSessionCache = "  sslSessionCache         1" + "\n"
-                    enableSpdy = "  enableSpdy              15" + "\n"
-                    enableStapling = "  enableStapling           1" + "\n"
-                    ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
-                    map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
-                    final = "}" + "\n" + "\n"
-
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.writelines(listener)
-                    writeDataToFile.writelines(address)
-                    writeDataToFile.writelines(secure)
-                    writeDataToFile.writelines(keyFile)
-                    writeDataToFile.writelines(certFile)
-                    writeDataToFile.writelines(certChain)
-                    writeDataToFile.writelines(sslProtocol)
-                    writeDataToFile.writelines(enableECDHE)
-                    writeDataToFile.writelines(renegProtection)
-                    writeDataToFile.writelines(sslSessionCache)
-                    writeDataToFile.writelines(enableSpdy)
-                    writeDataToFile.writelines(enableStapling)
-                    writeDataToFile.writelines(ocspRespMaxAge)
-                    writeDataToFile.writelines(map)
-                    writeDataToFile.writelines(final)
-                    writeDataToFile.writelines("\n")
-                    writeDataToFile.close()
-
-                else:
-
-                    config_path = "/usr/local/lsws/conf/httpd_config.conf"
-                    with open(config_path) as config_file:
-                        updated = ensure_https_vhost_mapping(config_file.read(), virtualHostName)
-                    with open(config_path, 'w') as config_file:
-                        config_file.write(updated)
-
-                    ###################### Write per host Configs for SSL ###################
-
-                    data = open(completePathToConfigFile, "r").readlines()
-
-                    ## check if vhssl is already in vhconf file
-
-                    vhsslPresense = 0
-
-                    for items in data:
-                        if items.find("vhssl") > -1:
-                            vhsslPresense = 1
-
-                    if vhsslPresense == 0:
-                        writeSSLConfig = open(completePathToConfigFile, "a")
-
-                        vhssl = "vhssl  {" + "\n"
-                        keyFile = "  keyFile                 /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
-                        certFile = "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
-                        certChain = "  certChain               1" + "\n"
-                        sslProtocol = "  sslProtocol             24" + "\n"
-                        enableECDHE = "  enableECDHE             1" + "\n"
-                        renegProtection = "  renegProtection         1" + "\n"
-                        sslSessionCache = "  sslSessionCache         1" + "\n"
-                        enableSpdy = "  enableSpdy              15" + "\n"
-                        enableStapling = "  enableStapling           1" + "\n"
-                        ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
-                        final = "}"
-
-                        writeSSLConfig.writelines("\n")
-
-                        writeSSLConfig.writelines(vhssl)
-                        writeSSLConfig.writelines(keyFile)
-                        writeSSLConfig.writelines(certFile)
-                        writeSSLConfig.writelines(certChain)
-                        writeSSLConfig.writelines(sslProtocol)
-                        writeSSLConfig.writelines(enableECDHE)
-                        writeSSLConfig.writelines(renegProtection)
-                        writeSSLConfig.writelines(sslSessionCache)
-                        writeSSLConfig.writelines(enableSpdy)
-                        writeSSLConfig.writelines(enableStapling)
-                        writeSSLConfig.writelines(ocspRespMaxAge)
-                        writeSSLConfig.writelines(final)
-
-                        writeSSLConfig.writelines("\n")
-
-                        writeSSLConfig.close()
-
+                # Maps the website on the IPv4 and the IPv6 listener and gives it its vhssl block.
+                install_vhost_certificate(virtualHostName, sslUtilities.Server_root)
                 return 1
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")

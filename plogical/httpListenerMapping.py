@@ -6,17 +6,23 @@ import tempfile
 from plogical.domainAliasUtilities import ensure_http_vhost_mapping
 
 
-def update_http_listener_mappings(path, domain):
+def rewrite_config(path, transform):
+    """Replace a configuration file with transform(its text) in one step.
+
+    The file keeps its owner and mode, and is left untouched when the
+    transform raises or changes nothing. Returns whether it was rewritten.
+    """
+    path = os.path.realpath(path)
     with open(path) as source:
         metadata = os.fstat(source.fileno())
         original = source.read()
-    updated = ensure_http_vhost_mapping(original, domain)
+    updated = transform(original)
     if updated == original:
-        return
+        return False
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(mode='w', dir=os.path.dirname(path),
-                                         prefix='.http-map-', delete=False) as target:
+                                         prefix='.config-', delete=False) as target:
             temporary = target.name
             target.write(updated)
             target.flush()
@@ -28,3 +34,8 @@ def update_http_listener_mappings(path, domain):
     finally:
         if temporary is not None:
             os.unlink(temporary)
+    return True
+
+
+def update_http_listener_mappings(path, domain):
+    rewrite_config(path, lambda config: ensure_http_vhost_mapping(config, domain))
