@@ -124,6 +124,14 @@ its result, and installs only the components it is asked for.
   password given with `-p` is masked in the installer's logs.
 - When the hostname certificate cannot be issued the installer says how the
   panel is reached and records a warning.
+- The panel is enabled and started only once the administrator's password
+  has been set and confirmed, also when an older release is installed with
+  `-b`. An installation that fails or is interrupted before that leaves the
+  panel disabled, so that it cannot come up with a well-known password; the
+  `adminPass` command sets a password and starts it.
+- The values of `-p`, `-b` and `-v` are checked before anything on the
+  server is changed, `--help` is answered wherever it stands, and an
+  installation ended by a signal is recorded as interrupted.
 
 ### Web Terminal
 - The Web Terminal service is started once its interpreter exists, at the

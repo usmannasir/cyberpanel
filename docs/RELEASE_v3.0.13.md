@@ -1,6 +1,6 @@
 # CyberPanel v3.0.13 (build 13) — reliability
 
-_Release candidate._
+_Released 2026-11-22._
 
 This release corrects nine defects found in acceptance testing of 3.0.11:
 certificates on servers with more than one website, website suspension, the
@@ -28,7 +28,10 @@ missing system user out of use. The changes are listed in CHANGELOG.md.
   same collection on the published v3.0.12 tree; no test may fail that
   passed there.
 - Install the candidate on clean servers: the Web Terminal service is active
-  after the installation.
+  after the installation, the administrator signs in with the password given
+  to the installer and the well-known password is refused. With the
+  administrator's password made impossible to set, the installation fails
+  and the panel stays disabled across a restart of the server.
 - Apply the [OpenLiteSpeed upgrade release gate](../CONTRIBUTING.md#openlitespeed-upgrade-release-gate):
   this release changes the upgrader.
 
