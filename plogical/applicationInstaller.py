@@ -36,7 +36,18 @@ from plogical.wordpressInstallerUtilities import (
     build_wordpress_core_install_command,
     directory_allows_install,
     php_binary_for_selection,
+    build_directory_listing_command,
+    build_entry_removal_command,
+    change_php_succeeded,
+    current_wordpress_version,
+    directory_entry_names,
+    entries_added_since,
+    single_line_value,
+    wordpress_cli_command,
+    wordpress_config_set_command,
+    wordpress_table_prefix_command,
 )
+from plogical.scannerFileAccess import run_as_site_user
 from managePHP.phpConfig import stored_php_selection
 from random import randint
 import secrets
@@ -704,10 +715,67 @@ class ApplicationInstaller(multi.Thread):
         except BaseException as msg:
             logging.writeToFile(str(msg) + '[ApplicationInstallerdbCreation]')
 
+    @staticmethod
+    def siteCommand(command, user, withErrors=True):
+        """Run one command as a website's user: (1 when it exited with status 0, else 0; what it printed).
+
+        The plain reply of the privileged helper ends the same way for a
+        failed command as for a successful one. A step that later steps
+        depend on is therefore run through the runner that reports the real
+        exit status. withErrors adds the command's error output to what is
+        returned.
+        """
+        if withErrors:
+            command = command + ' 2>&1'
+        succeeded, output = run_as_site_user(command, user)
+        if isinstance(output, bytes):
+            output = output.decode('utf-8', errors='replace')
+        return (1 if succeeded else 0), output
+
+    def directoryEntries(self, path, user):
+        """The names directly inside a website directory, or None when it could not be read."""
+        try:
+            success, output = ApplicationInstaller.siteCommand(build_directory_listing_command(path), user, False)
+        except Exception as error:
+            logging.writeToFile(str(error) + ' [ApplicationInstaller.directoryEntries]')
+            return None
+        return directory_entry_names(success, output)
+
+    def removeAddedEntries(self, path, user, before):
+        """Remove from a website directory what was put there after `before` was read, and nothing else."""
+        if before is None:
+            return
+        for name in entries_added_since(before, self.directoryEntries(path, user)):
+            ProcessUtilities.executioner(build_entry_removal_command(path, name), user)
+
+    def removeCreatedWebsite(self, domain):
+        """Remove a website that this job created itself, after the job failed.
+
+        Call it only for a website that did not exist before the job and was
+        created by it. Returns the sentence that tells the user what happened
+        to that website.
+        """
+        from plogical.websiteDeletion import wait_for_deletion
+        execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
+        execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + shlex.quote(domain)
+        try:
+            state = wait_for_deletion(execPath, ProcessUtilities.outputExecutioner,
+                                      lambda message: logging.writeToFile('%s: %s' % (domain, message)), 600)
+            removed = state == 'completed' and not Websites.objects.filter(domain=domain).exists()
+        except BaseException as msg:
+            logging.writeToFile('%s: %s [removeCreatedWebsite]' % (domain, str(msg)))
+            removed = False
+        if removed:
+            return 'The website %s that was created for this job has been removed again.' % domain
+        return ('The website %s that was created for this job could not be removed; '
+                'delete it under Websites before trying again.' % domain)
+
     def installWordPress(self):
+        # What the install directory held before WordPress was unpacked into it.
+        entriesBefore = None
         try:
             logging.writeToFile(f"installWordPress started with extraArgs: {self.extraArgs}")
-            
+
             domainName = self.extraArgs['domainName']
             home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
@@ -845,6 +913,11 @@ class ApplicationInstaller(multi.Thread):
 
             if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
                 raise BaseException('Directory is not empty.')
+
+            # From here on a failure removes what this installation added to
+            # the directory, so that no site is left pointing at a database
+            # that the failure handler has deleted.
+            entriesBefore = self.directoryEntries(finalPath, externalApp)
 
             ####
 
@@ -1076,6 +1149,12 @@ class ApplicationInstaller(multi.Thread):
                     db.delete()
                 except:
                     pass
+
+                # The database is gone, so the files that point at it go too.
+                try:
+                    self.removeAddedEntries(finalPath, externalApp, entriesBefore)
+                except BaseException as error:
+                    logging.writeToFile(str(error) + ' [ApplicationInstaller.installWordPress cleanup]')
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
@@ -2008,6 +2087,12 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
     def wordpressInstallNew(self):
+        # True once this job's own website creation has succeeded: only such a
+        # website is removed again when the rest of the job fails.
+        websiteCreated = False
+        # installWordPress() is given a status file of its own further down;
+        # this is the one the caller of this job reads.
+        callerStatusPath = self.extraArgs.get('tempStatusPath')
         try:
 
             from websiteFunctions.website import WebsiteManager
@@ -2038,6 +2123,14 @@ class ApplicationInstaller(multi.Thread):
 
             try:
                 website = Websites.objects.get(domain=DataToPass['domainName'])
+
+                # A caller that brings its own content for a new website (a
+                # restore) must never be handed one that already exists.
+                if self.extraArgs.get('newWebsiteOnly'):
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('This website already exists. [404]')
+                    statusFile.close()
+                    return 0
 
                 admin = Administrator.objects.get(pk=self.extraArgs['adminID'])
 
@@ -2083,6 +2176,8 @@ class ApplicationInstaller(multi.Thread):
                         statusFile.close()
                         time.sleep(2)
 
+                websiteCreated = True
+
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Installing WordPress....,30')
                 statusFile.close()
@@ -2115,8 +2210,15 @@ class ApplicationInstaller(multi.Thread):
                 if lastLine.find('[200]') > -1:
                     break
                 elif lastLine.find('[404]') > -1:
+                    # A website created for this installation is of no use
+                    # without it, and would block a second attempt.
+                    removal = ''
+                    if websiteCreated:
+                        websiteCreated = False
+                        removal = self.removeCreatedWebsite(self.extraArgs['domainName']) + ' '
                     statusFile = open(currentTemp, 'w')
-                    statusFile.writelines('Failed to install WordPress: error: %s[404]' % lastLine)
+                    statusFile.writelines('Failed to install WordPress: error: %s %s[404]' % (
+                        lastLine.replace('[404]', '').strip(), removal))
                     statusFile.close()
                     return 0
                 else:
@@ -2157,6 +2259,17 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException as msg:
             logging.writeToFile("Error WP web creating  ....... %s" % str(msg))
+            # Whoever waits for this job reads its status file: end it there,
+            # after taking back the website the job had created.
+            try:
+                removal = ''
+                if websiteCreated:
+                    removal = self.removeCreatedWebsite(self.extraArgs['domainName']) + ' '
+                statusFile = open(callerStatusPath, 'w')
+                statusFile.writelines('Failed to install WordPress: error: %s. %s[404]' % (str(msg), removal))
+                statusFile.close()
+            except BaseException as error:
+                logging.writeToFile("Error WP web creating  ....... %s" % str(error))
             return 0
 
     def UpdateWPTheme(self):
@@ -3185,6 +3298,226 @@ class ApplicationInstaller(multi.Thread):
             logging.statusWriter(self.tempStatusPath, f'{str(msg)}. [404]')
             return 0, str(msg), None
 
+    def pathPresent(self, path, kind=None):
+        """Whether a path exists, asked with root's rights: True, False, or None when that is not known.
+
+        kind narrows it to a directory ('d') or a regular file ('f'). The
+        answer is read from what the command prints, because the helper's
+        plain reply ends the same way whether the command failed or not.
+        """
+        test = '' if kind is None else ' -type %s' % kind
+        command = 'sudo find %s -maxdepth 0%s -printf present 2>/dev/null' % (shlex.quote(path), test)
+        output = str(ProcessUtilities.outputExecutioner(command)).strip()
+        if output == 'present':
+            return True
+        if output == '':
+            return False
+        return None
+
+    def restoreStep(self, command, user, failure):
+        """Run one step of a restore as the website's user and return what it printed.
+
+        A step that did not succeed ends the restore with `failure` and the
+        step's own output, so nothing that depends on it runs afterwards.
+        """
+        result, output = ApplicationInstaller.siteCommand(command, user)
+        if result == 0 or output.find('Error:') > -1:
+            raise BaseException('%s: %s' % (failure, output.strip() or 'the command failed'))
+        return output
+
+    def siteConfigValue(self, phpPath, path, user, key):
+        """One value of a site's wp-config.php (a database constant or the table prefix)."""
+        result, output = ApplicationInstaller.siteCommand(
+            wordpress_cli_command(phpPath, path, 'config', 'get', key), user, False)
+        try:
+            if result == 0 or output.find('Error:') > -1:
+                raise ValueError(output.strip())
+            return single_line_value(output)
+        except ValueError as error:
+            raise BaseException('%s could not be read from wp-config.php in %s: %s' % (
+                key, path, str(error) or 'the command failed'))
+
+    def unpackBackupAs(self, user, BackUpFileName):
+        """Unpack the backup archive in this job's work folder as a website's own account.
+
+        A backup holds a site's files with the owner and the modes they had
+        on the site it was made from. Unpacked by the destination's account
+        they all belong to that account, so none of them is closed to it.
+        """
+        archive = '%s/%s.tar.gz' % (self.tempPath, BackUpFileName)
+        unpacked = self.tempPath + '/ab'
+        ProcessUtilities.executioner('rm -rf %s' % shlex.quote(unpacked))
+        ProcessUtilities.executioner('chown -h %s:%s %s %s' % (
+            shlex.quote(user), shlex.quote(user), shlex.quote(self.tempPath), shlex.quote(archive)))
+        self.restoreStep('mkdir %s' % shlex.quote(unpacked), user, 'The backup file could not be unpacked')
+        result, output = ApplicationInstaller.siteCommand(
+            'tar -xf %s -C %s' % (shlex.quote(archive), shlex.quote(unpacked)), user)
+        if result == 0:
+            raise BaseException('The backup file could not be unpacked: %s' % (
+                output.strip()[-500:] or 'the command failed'))
+
+    def restoreToNewSite(self, config, kind, userID, DomainName, BackUpFileName, oldtemppath, DumpFileName,
+                         oldurl, WebOwner, packegs):
+        """Restore a backup that holds a site's files ('files' or 'both') into a website created for it.
+
+        The new website is created by this job and by nothing else. Once it
+        exists, any step that fails takes it away again, so the restore ends
+        with a working copy of the site or with no new website at all.
+        """
+        import json
+        import requests
+        from websiteFunctions.website import WebsiteManager
+        from websiteFunctions.wordpressRestore import restored_site_address
+
+        if (Websites.objects.filter(domain=DomainName).exists()
+                or ChildDomains.objects.filter(domain=DomainName).exists()):
+            raise BaseException('%s already exists on this server. Restore to the existing site instead, '
+                                'or choose a domain that is not in use' % DomainName)
+
+        # The new site starts as a plain installation of the current WordPress
+        # release, the one the plugins installed with it are made for. The
+        # backup's own files and database then replace it.
+        try:
+            WPVersion = current_wordpress_version(requests.get)
+        except Exception as error:
+            logging.writeToFile('Current WordPress release not available: %s [restoreToNewSite]' % str(error))
+            raise BaseException('The current WordPress version could not be determined, so no website was '
+                                'created. Try the restore again')
+
+        DataToPass = {}
+        DataToPass['title'] = config['WPtitle']
+        DataToPass['domain'] = DomainName
+        DataToPass['WPVersion'] = WPVersion
+        DataToPass['adminUser'] = config['WebVHuser']
+        DataToPass['Email'] = config['WebadminEmail']
+        # The login of the plain installation; a backup with a database
+        # brings the site's real users.
+        DataToPass['PasswordByPass'] = randomPassword.generate_pass(20)
+        DataToPass['AutomaticUpdates'] = config['WPAutoUpdates']
+        DataToPass['Plugins'] = config['WPPluginUpdates']
+        DataToPass['Themes'] = config['WPThemeUpdates']
+        DataToPass['websiteOwner'] = WebOwner
+        DataToPass['package'] = packegs
+        DataToPass['apacheBackend'] = 0
+        DataToPass['path'] = self.extraArgs['path']
+        DataToPass['home'] = self.extraArgs['home']
+        # Never an existing website: what this job is given, it may remove.
+        DataToPass['newWebsiteOnly'] = 1
+
+        coreResult = json.loads(WebsiteManager().submitWorpressCreation(userID, DataToPass).content)
+        logging.writeToFile("WP Creating website result....%s" % coreResult)
+        # A refused creation answers with status 0 and its reason in
+        # error_message, and starts no worker to wait for.
+        if coreResult.get('status') != 1:
+            raise BaseException('The new WordPress site could not be created: %s' % coreResult.get('error_message'))
+
+        # That worker removes its own website again when it fails.
+        while (1):
+            lastLine = open(coreResult['tempStatusPath'], 'r').read()
+            if lastLine.find('[200]') > -1:
+                break
+            elif lastLine.find('[404]') > -1:
+                raise BaseException('The new WordPress site could not be created: %s' % (
+                    lastLine.replace('[404]', '').strip().rstrip('.')))
+            else:
+                logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
+                time.sleep(2)
+
+        try:
+            self.fillNewSiteFromBackup(config, kind, DomainName, BackUpFileName, oldtemppath, DumpFileName, oldurl,
+                                       restored_site_address(DomainName, self.extraArgs['path']))
+        except BaseException as msg:
+            logging.writeToFile("Error RestoreWPbackupNow ....... %s" % str(msg))
+            raise BaseException('%s. %s' % (str(msg).rstrip('. \n'),
+                                            self.removeCreatedWebsite(DomainName).rstrip('.')))
+
+    def fillNewSiteFromBackup(self, config, kind, DomainName, BackUpFileName, oldtemppath, DumpFileName, oldurl,
+                              newurl):
+        """Put a backup's files, and its database when it has one, into the plain site just created for it."""
+        from plogical.phpUtilities import phpUtilities
+        from websiteFunctions.wordpressRestore import backup_parts
+
+        logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
+        NewWPsite = WPSites.objects.get(owner__domain=DomainName, FinalURL=newurl)
+        VHuser = NewWPsite.owner.externalApp
+        newWPpath = NewWPsite.path
+        vhFile = '/usr/local/lsws/conf/vhosts/%s/vhost.conf' % NewWPsite.owner.domain
+        FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, NewWPsite.owner.domain)
+
+        # The new site's own database: its settings are read before the
+        # backup's wp-config.php replaces the new one, and written back after.
+        Finaldbname = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_NAME')
+        Finaldbuser = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_USER')
+        Finaldbpasswd = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_PASSWORD')
+        tablePrefix = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'table_prefix')
+
+        # The site runs on the PHP version it had when the backup was made,
+        # when this server has it; otherwise it keeps the one it was created with.
+        selection = stored_php_selection(str(config.get('WebphpSelection')))
+        try:
+            wantedPHP = php_binary_for_selection(selection)
+        except ValueError:
+            wantedPHP = None
+        if wantedPHP is not None and wantedPHP != FinalPHPPath and os.path.isfile(wantedPHP):
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
+            execPath = execPath + " changePHP --phpVersion " + shlex.quote(selection) + " --path " + shlex.quote(vhFile)
+            if change_php_succeeded(ProcessUtilities.outputExecutioner(execPath)):
+                FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, NewWPsite.owner.domain)
+            else:
+                logging.writeToFile('%s keeps the PHP version it was created with: %s could not be selected.' % (
+                    DomainName, selection))
+
+        logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,40')
+
+        self.unpackBackupAs(VHuser, BackUpFileName)
+        backupFiles, backupDump = backup_parts(kind, self.tempPath, oldtemppath, DumpFileName)
+
+        logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
+        self.restoreStep('cp -Rf %s %s' % (shlex.quote(backupFiles + '/.'), shlex.quote(newWPpath)),
+                         VHuser, 'The website files could not be copied')
+
+        for key, value in (('DB_NAME', Finaldbname), ('DB_USER', Finaldbuser), ('DB_PASSWORD', Finaldbpasswd)):
+            self.restoreStep(wordpress_config_set_command(FinalPHPPath, newWPpath, key, value),
+                             VHuser, 'The database settings could not be written to wp-config.php')
+
+        if backupDump is None:
+            # No database came with the backup: the site keeps the tables of
+            # its plain installation, which carry the prefix read above.
+            self.restoreStep(wordpress_table_prefix_command(FinalPHPPath, newWPpath, tablePrefix),
+                             VHuser, 'The table prefix could not be written to wp-config.php')
+        else:
+            logging.statusWriter(self.tempStatusPath, 'Restoring Data Base...,80')
+            self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', backupDump),
+                             VHuser, 'The database could not be imported')
+
+            logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
+            self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'search-replace', oldurl, newurl),
+                             VHuser, 'The site address could not be rewritten in the database')
+            self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'search-replace',
+                                                   'https://www.%s' % newurl, 'http://%s' % newurl),
+                             VHuser, 'The site address could not be rewritten in the database')
+
+        # The result has to be a WordPress that finds its tables in its own
+        # database and answers under the new domain.
+        self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'core', 'is-installed'),
+                         VHuser, 'The restored site does not start with its database')
+        address = self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'option', 'get', 'siteurl'),
+                                   VHuser, 'The address of the restored site could not be read')
+        if address.find(DomainName) == -1:
+            raise BaseException('The restored site still uses the address %s instead of %s' % (
+                address.strip(), DomainName))
+
+        # Empties the page cache when the site has the LiteSpeed plugin; a
+        # site without it has no such command and nothing to empty.
+        command = '%s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp ' \
+                  'litespeed-purge all --path=%s' % (shlex.quote(FinalPHPPath), shlex.quote(newWPpath))
+        ApplicationInstaller.siteCommand(command, VHuser)
+
+        if not os.path.exists(ProcessUtilities.debugPath):
+            ProcessUtilities.executioner('rm -rf %s' % shlex.quote(self.tempPath))
+
+        installUtilities.reStartLiteSpeed()
+
     def RestoreWPbackupNow(self):
         try:
             import json
@@ -3227,6 +3560,20 @@ class ApplicationInstaller(multi.Thread):
             BackupType = config['Backuptype']
             BackupDestination = config['BackupDestination']
             RemoteBackupID = config['SFTP_ID']
+
+            # A request that this kind of backup cannot serve ends here,
+            # before anything is downloaded, created or changed.
+            from websiteFunctions.wordpressRestore import restore_plan, backup_parts
+            try:
+                backupKind, restoreTarget = restore_plan(BackupType, DesSiteID, DomainName)
+            except ValueError as error:
+                raise BaseException(str(error).rstrip('.'))
+
+            # A backup fetched from remote storage is removed again after the
+            # restore, unless a file of that name was already kept here.
+            localArchive = '/home/backup/%s.tar.gz' % BackUpFileName
+            downloadedArchive = None
+            archiveWasHere = self.pathPresent(localArchive) is not False
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(f"Starting sftp download {str(config)}")
@@ -3282,6 +3629,9 @@ class ApplicationInstaller(multi.Thread):
 
                 command = "mv %s /home/backup/" % shlex.quote(loaclpath)
                 ProcessUtilities.executioner(command)
+
+                if not archiveWasHere:
+                    downloadedArchive = localArchive
 
                 ##
 
@@ -4437,9 +4787,13 @@ class ApplicationInstaller(multi.Thread):
                     client.download_file(BucketName, uploadfilename, FinalZipPath)
                 except BaseException as msg:
                     logging.writeToFile("Error in downloadfile: ..%s" % str(msg))
+                    raise BaseException('The backup could not be downloaded from the storage: %s' % str(msg))
 
-                command = "mv %s /home/backup/" % FinalZipPath
+                command = "mv %s /home/backup/" % shlex.quote(FinalZipPath)
                 ProcessUtilities.executioner(command)
+
+                if not archiveWasHere and uploadfilename == BackUpFileName:
+                    downloadedArchive = localArchive
 
                 # ##### CHeck if Backup type is Only Database
                 # if BackupType == 'DataBase Backup':
@@ -5573,18 +5927,26 @@ class ApplicationInstaller(multi.Thread):
 
             logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
 
-            #### Make temp dir ab for unzip
-            command = "mkdir %s/ab" % (self.tempPath)
-            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+            if restoreTarget == 'existing':
+                # The destination's own account unpacks the archive, so that
+                # every file in it is one that account can read and copy.
+                self.unpackBackupAs(WPSites.objects.get(pk=DesSiteID).owner.externalApp, BackUpFileName)
+                stdout = ''
+            else:
+                # A new site has no account yet. The archive is looked into
+                # with root's rights here, and unpacked again by the new
+                # site's account once that exists.
+                command = "mkdir %s/ab" % (self.tempPath)
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-            if result == 0:
-                raise BaseException(stdout)
+                if result == 0:
+                    raise BaseException(stdout)
 
-            command = "sudo tar -xvf  %s/%s.tar.gz -C %s/ab" % ( self.tempPath, BackUpFileName, self.tempPath)
-            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                command = "sudo tar -xvf  %s/%s.tar.gz -C %s/ab" % ( self.tempPath, BackUpFileName, self.tempPath)
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-            if result == 0:
-                raise BaseException(stdout)
+                if result == 0:
+                    raise BaseException(stdout)
 
             if os.path.exists(ProcessUtilities.debugPath):
 
@@ -5596,6 +5958,14 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f'Listing files {str(stdout)}')
 
+
+            # The archive must hold what this kind of backup promises. Checked
+            # here, where a missing or unreadable backup changes nothing yet.
+            backupFiles, backupDump = backup_parts(backupKind, self.tempPath, oldtemppath, DumpFileName)
+            if backupFiles is not None and self.pathPresent(backupFiles, 'd') is not True:
+                raise BaseException('The backup file could not be unpacked or holds no website files')
+            if backupDump is not None and self.pathPresent(backupDump, 'f') is not True:
+                raise BaseException('The backup file could not be unpacked or holds no database dump')
 
             ##### Check if Backup type is Only Database
             if BackupType == 'DataBase Backup':
@@ -5648,13 +6018,8 @@ class ApplicationInstaller(multi.Thread):
 
                     unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
                     # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
-                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
-                        VHuser, FinalPHPPath, newWPpath, unzippathdb)
-
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
+                    self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', unzippathdb),
+                                     VHuser, 'The database could not be imported')
 
                     logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,70')
                     # #####SetUp DataBase Settings
@@ -5685,26 +6050,16 @@ class ApplicationInstaller(multi.Thread):
 
                     logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
                     ########Now Replace URL's
-                    command = F'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
-                        VHuser, newWPpath, oldurl, newurl)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'search-replace', oldurl, newurl),
+                                     VHuser, 'The site address could not be rewritten in the database')
 
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
+                    self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'search-replace',
+                                                           'https://%s' % newurl, 'http://%s' % newurl),
+                                     VHuser, 'The site address could not be rewritten in the database')
 
-                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "https://%s" "http://%s"' % (
-                        VHuser, newWPpath, newurl, newurl)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
-                        VHuser, newWPpath, newurl, newurl)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
+                    self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'search-replace',
+                                                           'https://www.%s' % newurl, 'http://%s' % newurl),
+                                     VHuser, 'The site address could not be rewritten in the database')
 
                     command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp litespeed-purge all --path={newWPpath}'
                     ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -5813,17 +6168,8 @@ class ApplicationInstaller(multi.Thread):
 
                         unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
 
-                        command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, WPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
-
-                        command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, WPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
+                        self.restoreStep('cp -Rf %s %s' % (shlex.quote(unzippath + '.'), shlex.quote(WPpath)),
+                                         VHuser, 'The website files could not be copied')
 
                         ### why replace urls in only website data restore???
 
@@ -5860,167 +6206,9 @@ class ApplicationInstaller(multi.Thread):
                         if result == 0:
                             raise BaseException(stdout)
 
-                ### need to check, this code should not run
                 elif (DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
-
-
-                    DataToPass = {}
-
-                    DataToPass['title'] = config['WPtitle']
-                    DataToPass['domain'] = DomainName
-                    DataToPass['WPVersion'] = "6.0"
-                    DataToPass['adminUser'] = config['WebVHuser']
-                    DataToPass['Email'] = config['WebadminEmail']
-                    DataToPass['PasswordByPass'] = config['DatabaseUser']
-                    DataToPass['AutomaticUpdates'] = config['WPAutoUpdates']
-                    DataToPass['Plugins'] = config['WPPluginUpdates']
-                    DataToPass['Themes'] = config['WPThemeUpdates']
-                    DataToPass['websiteOwner'] = WebOwner
-                    DataToPass['package'] = packegs
-                    try:
-                        oldpath = config['WPsitepath']
-                        abc = oldpath.split("/")
-                        newpath = abc[4]
-                        oldhome = "0"
-                    except BaseException as msg:
-                        oldhome = "1"
-
-                    if self.extraArgs['path'] == '':
-                        newurl = DomainName
-                    else:
-                        newurl = "%s/%s" % (DomainName, self.extraArgs['path'])
-
-                    DataToPass['path'] = self.extraArgs['path']
-
-                    DataToPass['home'] = self.extraArgs['home']
-
-                    ab = WebsiteManager()
-                    coreResult = ab.submitWorpressCreation(userID, DataToPass)
-                    coreResult1 = json.loads((coreResult).content)
-                    logging.writeToFile("WP Creating website result....%s" % coreResult1)
-                    reutrntempath = coreResult1['tempStatusPath']
-                    while (1):
-                        lastLine = open(reutrntempath, 'r').read()
-                        logging.writeToFile("Error WP creating lastline ....... %s" % lastLine)
-                        if lastLine.find('[200]') > -1:
-                            break
-                        elif lastLine.find('[404]') > -1:
-                            logging.statusWriter(self.tempStatusPath,
-                                                 'Failed to Create WordPress: error: %s. [404]' % lastLine)
-                            return 0
-                        else:
-                            logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
-                            time.sleep(2)
-
-                    logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
-                    NewWPsite = WPSites.objects.get(FinalURL=newurl)
-                    VHuser = NewWPsite.owner.externalApp
-                    PhpVersion = NewWPsite.owner.phpSelection
-                    newWPpath = NewWPsite.path
-
-                    ###### Same code already used in Existing site
-
-                    ### get WPsite Database name and usr
-                    php = PHPManager.getPHPString(PhpVersion)
-                    FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-
-                    ### Create secure folder
-
-                    ACLManager.CreateSecureDir()
-                    RandomPath = secrets.token_hex(16)
-                    self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
-
-                    command = f'mkdir -p {self.tempPath}'
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    command = f'chown -R {NewWPsite.owner.externalApp}:{NewWPsite.owner.externalApp} {self.tempPath}'
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,40')
-
-                    ###First copy backup file to temp and then Unzip
-                    command = "sudo -u %s cp -R /home/backup/%s* %s" % (VHuser, BackUpFileName, self.tempPath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    #### Make temp dir ab for unzip
-                    command = "sudo -u %s mkdir %s/ab" % (VHuser, self.tempPath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    command = f'chown {VHuser}:{VHuser} {self.tempPath}/{BackUpFileName}.tar.gz'
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (
-                        VHuser, self.tempPath, BackUpFileName, self.tempPath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
-                    ###Copy backup content to newsite
-                    if oldhome == "0":
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-                    else:
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (
-                            self.tempPath, oldtemppath)
-
-                    command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
-                    ########Now Replace URL's
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
-                        VHuser, newWPpath, oldurl, newurl)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
-                        VHuser, newWPpath, newurl, newurl)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
-                    ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    ##Remove temppath
-                    command = f'rm -rf {self.tempPath}'
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    ###Restart Server
-
-                    from plogical.installUtilities import installUtilities
-                    installUtilities.reStartLiteSpeed()
+                    self.restoreToNewSite(config, backupKind, userID, DomainName, BackUpFileName, oldtemppath,
+                                          DumpFileName, oldurl, WebOwner, packegs)
             ####Check if backup type is Both web and DB
             else:
                 ############## Existing site
@@ -6065,38 +6253,12 @@ class ApplicationInstaller(multi.Thread):
                             logging.writeToFile(f'WP Path where things are happening: {newWPpath}')
 
 
-                        ######Get DBname
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
-                             newWPpath)
-
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-                        else:
-                            Finaldbname = stdout.rstrip("\n")
-
-                        ######Get DBuser
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
-                         newWPpath)
-
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-                        else:
-                            Finaldbuser = stdout.rstrip("\n")
-
-                        #####Get DBpsswd
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
-                              newWPpath)
-
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-                        else:
-                            Finaldbpasswd = stdout.rstrip("\n")
+                        # The site keeps its own database: its name, user and
+                        # password are read before the backup's files replace
+                        # wp-config.php, and written back afterwards.
+                        Finaldbname = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_NAME')
+                        Finaldbuser = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_USER')
+                        Finaldbpasswd = self.siteConfigValue(FinalPHPPath, newWPpath, VHuser, 'DB_PASSWORD')
 
                         ##
 
@@ -6104,61 +6266,23 @@ class ApplicationInstaller(multi.Thread):
 
                         unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
 
-                        command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, WPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
-
-                        command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, WPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
-
-
-                        #### replace db user
+                        self.restoreStep('cp -Rf %s %s' % (shlex.quote(unzippath + '.'), shlex.quote(WPpath)),
+                                         VHuser, 'The website files could not be copied')
 
                         # These three values were read from the site's own
                         # wp-config.php, a file its owner edits freely: each is
                         # written back as one quoted argument, by the site's user.
-                        from plogical.wordpressInstallerUtilities import wordpress_config_set_command
-                        command = wordpress_config_set_command(FinalPHPPath, WPpath, 'DB_USER', Finaldbuser)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
-
-
-                        ### replace db name
-
-                        command = wordpress_config_set_command(FinalPHPPath, WPpath, 'DB_NAME', Finaldbname)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
-
-                        ### replace db password
-
-                        command = wordpress_config_set_command(FinalPHPPath, WPpath, 'DB_PASSWORD', Finaldbpasswd)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
-
-
+                        for key, value in (('DB_USER', Finaldbuser), ('DB_NAME', Finaldbname),
+                                           ('DB_PASSWORD', Finaldbpasswd)):
+                            self.restoreStep(wordpress_config_set_command(FinalPHPPath, WPpath, key, value),
+                                             VHuser, 'The database settings could not be written to wp-config.php')
 
                         # dump Mysql file in unzippath path
                         unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                 self.tempPath, oldtemppath, DumpFileName)
                         # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --allow-root ' \
-                                      f'--skip-plugins --skip-themes --path=%s --quiet db import %s' % (
-                                      newWPpath, unzippath2)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
+                        self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', unzippath2),
+                                         VHuser, 'The database could not be imported')
 
                         logging.statusWriter(self.tempStatusPath, 'Restoring Database...,70')
 
@@ -6166,21 +6290,12 @@ class ApplicationInstaller(multi.Thread):
                         logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
 
                         ######## Now Replace URL's
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace ' \
-                                  f'--skip-plugins --skip-themes --path=%s "%s" "%s"' % (
-                                      WPpath, oldurl, Newurl)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        self.restoreStep(wordpress_cli_command(FinalPHPPath, WPpath, 'search-replace', oldurl, Newurl),
+                                         VHuser, 'The site address could not be rewritten in the database')
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-
-                        command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace ' \
-                                  f'--skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
-                                      WPpath, Newurl, Newurl)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                        self.restoreStep(wordpress_cli_command(FinalPHPPath, WPpath, 'search-replace',
+                                                               'https://www.%s' % Newurl, 'http://%s' % Newurl),
+                                         VHuser, 'The site address could not be rewritten in the database')
 
                         command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp litespeed-purge all --path={WPpath}'
                         ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -6454,220 +6569,17 @@ class ApplicationInstaller(multi.Thread):
 
                 ############## New Site
                 elif (DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
+                    self.restoreToNewSite(config, backupKind, userID, DomainName, BackUpFileName, oldtemppath,
+                                          DumpFileName, oldurl, WebOwner, packegs)
 
-                    ###############Create New WordPressSite First
-                    # logging.writeToFile("New Website Domain ....... %s" % str(DomainName))
-                    # logging.writeToFile("New Website Domain path....... %s" % str(self.extraArgs['path']))
-                    DataToPass = {}
-
-                    DataToPass['title'] = config['WPtitle']
-                    DataToPass['domain'] = DomainName
-                    DataToPass['WPVersion'] = "6.0"
-                    DataToPass['adminUser'] = config['WebVHuser']
-                    DataToPass['Email'] = config['WebadminEmail']
-                    DataToPass['PasswordByPass'] = config['DatabaseUser']
-                    DataToPass['AutomaticUpdates'] = config['WPAutoUpdates']
-                    DataToPass['Plugins'] = config['WPPluginUpdates']
-                    DataToPass['Themes'] = config['WPThemeUpdates']
-                    DataToPass['websiteOwner'] = WebOwner
-                    DataToPass['package'] = packegs
-                    DataToPass['apacheBackend'] = 0
-                    try:
-                        oldpath = config['WPsitepath']
-                        abc = oldpath.split("/")
-                        newpath = abc[4]
-                        oldhome = "0"
-                    except BaseException as msg:
-                        oldhome = "1"
-
-                    if self.extraArgs['path'] == '':
-                        newurl = DomainName
-                    else:
-                        newurl = "%s/%s" % (DomainName, self.extraArgs['path'])
-
-                    DataToPass['path'] = self.extraArgs['path']
-
-                    DataToPass['home'] = self.extraArgs['home']
-
-                    ab = WebsiteManager()
-                    coreResult = ab.submitWorpressCreation(userID, DataToPass)
-                    coreResult1 = json.loads((coreResult).content)
-                    logging.writeToFile("WP Creating website result....%s" % coreResult1)
-                    reutrntempath = coreResult1['tempStatusPath']
-                    while (1):
-                        lastLine = open(reutrntempath, 'r').read()
-                        logging.writeToFile("Error WP creating lastline ....... %s" % lastLine)
-                        if lastLine.find('[200]') > -1:
-                            break
-                        elif lastLine.find('[404]') > -1:
-                            logging.statusWriter(self.tempStatusPath,
-                                                 'Failed to Create WordPress: error: %s. [404]' % lastLine)
-                            return 0
-                        else:
-                            logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
-                            time.sleep(2)
-
-
-                    logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
-                    NewWPsite = WPSites.objects.get(FinalURL=newurl)
-                    VHuser = NewWPsite.owner.externalApp
-                    PhpVersion = NewWPsite.owner.phpSelection
-                    newWPpath = NewWPsite.path
-
-                    #### change PHP version of newly created site to the one found in the config
-
-                    from plogical.vhost import vhost
-                    vhFile = f'/usr/local/lsws/conf/vhosts/{NewWPsite.owner.domain}/vhost.conf'
-                    execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
-                    # The selection comes from the backup's own description.
-                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(stored_php_selection(str(config['WebphpSelection']))) + "  --path " + shlex.quote(vhFile)
-                    ProcessUtilities.popenExecutioner(execPath)
-
-                    ###### Same code already used in Existing site
-
-                    ### get WPsite Database name and usr
-                    from plogical.phpUtilities import phpUtilities
-
-                    vhFile = f'/usr/local/lsws/conf/vhosts/{NewWPsite.owner.domain}/vhost.conf'
-                    FinalPHPPath = phpUtilities.GetPHPVersionFromFile(vhFile, NewWPsite.owner.domain)
-
-                    ######Get DBname
-                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
-                        VHuser, FinalPHPPath, newWPpath)
-
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-                    else:
-                        Finaldbname = stdout.rstrip("\n")
-
-                    ######Get DBuser
-                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
-                        VHuser, FinalPHPPath, newWPpath)
-
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-                    else:
-                        Finaldbuser = stdout.rstrip("\n")
-
-                    #####Get DBpsswd
-                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
-                        VHuser, FinalPHPPath, newWPpath)
-
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-                    else:
-                        Finaldbpasswd = stdout.rstrip("\n")
-
-                    ### Create secure folder
-
-                    logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
-                    ###Copy backup content to newsite
-                    if oldhome == "0":
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-                    else:
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (
-                        self.tempPath, oldtemppath)
-
-                    command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, newWPpath)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
-
-                    # These three values were read from the site's own
-                    # wp-config.php, a file its owner edits freely: each is
-                    # written back as one quoted argument, by the site's user.
-                    from plogical.wordpressInstallerUtilities import wordpress_config_set_command
-
-                    # set DBName
-                    command = wordpress_config_set_command(FinalPHPPath, newWPpath, 'DB_NAME', Finaldbname)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    ##set DBuser
-                    command = wordpress_config_set_command(FinalPHPPath, newWPpath, 'DB_USER', Finaldbuser)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    # set DBpasswd
-                    command = wordpress_config_set_command(FinalPHPPath, newWPpath, 'DB_PASSWORD', Finaldbpasswd)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    # dump Mysql file in unzippath path
-
-                    unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-
-                    # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
-
-                    logging.statusWriter(self.tempStatusPath, 'Restoring Data Base...,80')
-
-                    command = 'sudo -u %s %s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp --skip-plugins --skip-themes --path=%s db import %s' % (
-                        VHuser, FinalPHPPath, newWPpath, unzippath2)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-
-                    ####SetUp DataBase Settings
-
-                    logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
-                    ########Now Replace URL's
-                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
-                        VHuser, newWPpath, oldurl, newurl)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    command = f'sudo -u %s {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
-                        VHuser, newWPpath, newurl, newurl)
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if stdout.find('Error:') > -1:
-                        raise BaseException(stdout)
-
-                    command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp litespeed-purge all --path={newWPpath}'
-                    ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if not os.path.exists(ProcessUtilities.debugPath):
-
-                        ##Remove temppath
-                        command = f'rm -rf {self.tempPath}'
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-
-                    ###Restart Server
-
-                    from plogical.installUtilities import installUtilities
-                    installUtilities.reStartLiteSpeed()
-
-            if not os.path.exists(ProcessUtilities.debugPath):
-                if BackupDestination == 'SFTP' or BackupDestination == 'S3':
-                    command = f'rm -rf /home/backup/{loaclpath}'
+            # The restore itself is complete: a leftover download is no reason
+            # to report it as failed.
+            if downloadedArchive is not None and not os.path.exists(ProcessUtilities.debugPath):
+                try:
+                    command = 'rm -f %s' % shlex.quote(downloadedArchive)
                     ProcessUtilities.executioner(command)
-
+                except BaseException as error:
+                    logging.writeToFile("Error RestoreWPbackupNow ....... %s" % str(error))
 
             logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
 
@@ -6678,6 +6590,13 @@ class ApplicationInstaller(multi.Thread):
                     command = f'rm -rf {self.tempPath}'
                     ProcessUtilities.executioner(command)
 
+            except:
+                pass
+
+            # A failed restore does not keep the archive it fetched either.
+            try:
+                if downloadedArchive is not None and not os.path.exists(ProcessUtilities.debugPath):
+                    ProcessUtilities.executioner('rm -f %s' % shlex.quote(downloadedArchive))
             except:
                 pass
 
