@@ -3322,6 +3322,7 @@ Require valid-user
             ####
 
             newOwner = Administrator.objects.get(userName=newUser)
+            previousOwner = modifyWeb.admin
 
             modifyWeb.package = webpack
             modifyWeb.adminEmail = email
@@ -3329,6 +3330,11 @@ Require valid-user
             modifyWeb.admin = newOwner
 
             modifyWeb.save()
+
+            # The former owner no longer reaches this website's databases through phpMyAdmin.
+            if previousOwner.pk != newOwner.pk:
+                from databases import phpmyadminAccess
+                phpmyadminAccess.retire_for_website(previousOwner)
 
             if quota_plan is not None:
                 try:

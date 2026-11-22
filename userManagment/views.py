@@ -14,6 +14,7 @@ from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
 from plogical.securityUtils import ensure_api_token, rotate_api_token
 from plogical.panelUserNames import new_name_refusal
+from databases import phpmyadminAccess
 
 
 def loadUserHome(request):
@@ -503,6 +504,9 @@ def submitUserDeletion(request):
 
                 childUsers = Administrator.objects.filter(owner=user.pk)
 
+                # The database accounts phpMyAdmin used for these users go with them.
+                phpmyadminAccess.retire([user] + list(childUsers))
+
                 for items in childUsers:
                     items.delete()
 
@@ -647,6 +651,9 @@ def submitACLModifications(request):
             acl.config = json.dumps(data)
             acl.save()
 
+            # What these users may reach changed: phpMyAdmin access is built again on their next visit.
+            phpmyadminAccess.retire(list(acl.administrator_set.all()))
+
             if int(data['adminStatus']) == 1:
                 allUsers = acl.administrator_set.all()
 
@@ -711,6 +718,7 @@ def changeACLFunc(request):
 
             selectedUser.acl = selectedACL
             selectedUser.save()
+            phpmyadminAccess.retire([selectedUser])
 
             finalResponse = {'status': 1}
         elif currentACL['changeUserACL'] == 1:
@@ -726,6 +734,7 @@ def changeACLFunc(request):
             else:
                 selectedUser.acl = selectedACL
                 selectedUser.save()
+                phpmyadminAccess.retire([selectedUser])
                 finalResponse = {'status': 1}
         else:
             finalResponse = ACLManager.loadErrorJson()
@@ -799,12 +808,17 @@ def saveResellerChanges(request):
         except:
             pass
 
+        previousOwner = userToBeModified.owner
         userToBeModified.owner = newOwner.pk
         try:
             userToBeModified.initWebsitesLimit = data['websitesLimit']
         except:
             pass
         userToBeModified.save()
+
+        # The reseller this user leaves no longer reaches the user's databases.
+        if previousOwner != newOwner.pk:
+            phpmyadminAccess.retire(list(Administrator.objects.filter(pk=previousOwner)))
 
         finalResponse = {'status': 1}
         json_data = json.dumps(finalResponse)
@@ -942,6 +956,9 @@ def controlUserState(request):
                 user.state = 'ACTIVE'
 
             user.save()
+
+            if state == 'SUSPEND':
+                phpmyadminAccess.retire([user])
 
             extraArgs = {}
             extraArgs['user'] = user
