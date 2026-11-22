@@ -46,7 +46,7 @@ def load_wordpress_manager():
         'wpplugins', 'Websites', 'ApplicationInstaller', 'mailUtilities',
         'ProcessUtilities', 'subprocess', 'os', 'time', 'requests', 'httpProc',
         'PHPManager', 'randomPassword', 'virtualHostUtilities', 'logging',
-        'ApacheVhost', 'validators', 'open',
+        'ApacheVhost', 'ApacheController', 'validators', 'open',
     )}
     namespace = {
         **services, 'wraps': wraps, 'json': json, 'HttpResponse': Response,

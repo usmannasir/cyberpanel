@@ -357,6 +357,7 @@ class ConversionPreflightTests(unittest.TestCase):
             ACLManager=self.acl, Administrator=Mock(), Package=self.packages,
             Websites=self.websites, ChildDomains=self.children, ProcessUtilities=self.process,
             PHPManager=SimpleNamespace(getPHPString=lambda version: '83'),
+            normalize_apache_backend=lambda value: int(value or 0),
             apache_backend_entitlement_error=lambda data: None,
             php_selection_digits=php_selection_digits,
             HttpResponse=lambda content: SimpleNamespace(content=content.encode())))
