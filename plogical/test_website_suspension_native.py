@@ -145,6 +145,46 @@ def run_native_acceptance():
     api('child.test','Suspend');expected('child.test',True);api('child.test','Un-Suspend');expected('child.test',False)
     assert fingerprint()==before
 
+    # A faulty rule among a child's own rewrite rules is reported while the
+    # child is active ("[(null)] [REWRITE] Unknown rewrite rule flag", status
+    # 2) and not while it is suspended, because suspension comments the rules
+    # out. Restoring the parent puts the rule back with the rest of the
+    # child's configuration: the error returns, in a line that names no
+    # website, and must not keep parent, child and sibling suspended.
+    import re
+    child_conf=Path('/usr/local/lsws/conf/vhosts/child.test/vhost.conf');child_original=child_conf.read_bytes()
+    text=child_original.decode();rule='RewriteRule ^(bad[ /x [L\n'
+    rules=re.search(r'^[ \t]*rules[ \t]+<<<[ \t]*END_rules[ \t]*\n',text,re.M)
+    faulty_text=text[:rules.end()]+rule+text[rules.end():] if rules else None
+    if not faulty_text or '#'+rule not in websiteSuspension.render_suspension(faulty_text,True):
+        # The fixture has no rules of its own at the top of the file: give it some.
+        faulty_text=text+('' if text.endswith('\n') else '\n')+'rewrite {\n  enable 1\n  rules <<<END_rules\n'+rule+'END_rules\n}\n'
+    def native_test():
+        return subprocess.run(['/usr/local/lsws/bin/openlitespeed','-t'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    child_conf.write_bytes(faulty_text.encode())
+    try:
+        active=native_test()
+        assert active.returncode==2 and b'[REWRITE]' in active.stdout,(active.returncode,active.stdout)
+        api('parent.test','Suspend')
+        for domain in ['parent.test','child.test','sibling.test']:expected(domain,True)
+        held=native_test()
+        assert b'[REWRITE]' not in held.stdout,held.stdout
+        result=api('parent.test','Un-Suspend')
+        assert result['state']=='Active',result
+        assert child_conf.read_bytes()==faulty_text.encode()
+        assert Websites.objects.get(domain='parent.test').state==1
+        returned=native_test()
+        assert returned.returncode==2 and b'[REWRITE]' in returned.stdout,(returned.returncode,returned.stdout)
+        expected('parent.test',False);expected('sibling.test',False)
+    finally:
+        child_conf.write_bytes(child_original)
+        subprocess.run(['/usr/local/lsws/bin/lswsctrl','restart'],check=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    subprocess.run(['/usr/local/lsws/bin/openlitespeed','-t'],check=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    for domain in ['parent.test','child.test','sibling.test']:expected(domain,False)
+    assert fingerprint()==before
+    receipt['returning_error']=returned.stdout.decode(errors='replace')[-2000:]
+    passed('a parent is restored with a child whose own rewrite rules have an error that names no website')
+
     # Inject one reload failure; rollback must restore original bytes, validate and
     # actually reload the original serving configuration on its recovery attempt.
     ctrl=Path('/usr/local/lsws/bin/lswsctrl');real=ctrl.read_bytes();before=fingerprint()

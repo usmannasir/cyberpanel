@@ -46,14 +46,17 @@ Three consequences of judging a change by what it added:
   it first: `/usr/local/lsws/bin/openlitespeed -t` lists it.
 - Restoring a website puts back the configuration it had before it was
   suspended. Its rewrite rules are commented out while it is suspended, so an
-  error in them is not reported then and returns with them. An error line
-  about a website that is being restored therefore does not refuse the
-  restore, of that website or of the parent and siblings restored with it. A
-  line is about a website when its context names the virtual host
-  (`[config:server:vhosts:vhost:NAME...]`) or when the only website directory
-  it names is `conf/vhosts/NAME/`. A new error about any other website, a
-  server-wide one, a fatal one, or one that names no website still refuses the
-  restore and leaves the websites suspended.
+  error in them is not reported then and returns with them, in a line that
+  need not name the website: OpenLiteSpeed reports a faulty rule as
+  `[ERROR] [(null)] [REWRITE] Unknown rewrite rule flag while parsing: ...`
+  with status 2. A change that only restores websites differs from the state
+  before it by nothing but that restored text, so an error line that appears
+  with it does not refuse the restore, of that website or of the parent and
+  siblings restored with it. A restore is undone only for damage: a `[FATAL]`
+  line that was not there before, a test that cannot run or ends with another
+  status than 0, 1 or 2, or a restart that fails. The websites then stay
+  suspended. Suspending keeps the strict rule: any error line it adds
+  refuses it.
 - Line numbers are ignored when comparing, but only in messages about the
   websites whose files the change edits, because suspension moves the lines
   of exactly those files.
@@ -113,8 +116,9 @@ CYBERPANEL_RUN_NATIVE_SUSPENSION_TESTS=isolated-qa python -m unittest plogical.t
 The runner mutates fixture vhosts and schema, injects one reload failure, and
 writes `/qa/native-receipt.json`. Against the real configuration test it
 checks both sides of the rule above: a fault in another website from before
-the change is tolerated, and a change that itself adds an error (the worker's
-code, writing a block with a stray closing brace) is refused and undone. Native creation checks invoke the actual
+the change is tolerated, a change that itself adds an error (the worker's
+code, writing a block with a stray closing brace) is refused and undone, and
+a parent is restored with a child whose own rewrite rules have an error. Native creation checks invoke the actual
 inheritance hook before saving/activating its synthetic child; unit tests
 separately execute the creation dispatcher's ordering and failure paths. They
 do not establish external DNS/ACME issuance on every installation type.

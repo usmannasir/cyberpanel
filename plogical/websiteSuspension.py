@@ -265,29 +265,9 @@ def _checked(command):
         raise RuntimeError('Web server configuration activation failed: ' + output[-2000:])
 
 
-_VHOST_FILE = re.compile(r'/conf/vhosts/([^/\s]+)/')
 # After a path: `:25` (also behind a closing quote) or `(25)`.
 _FILE_LINE = r'''[^\s:,;()\[\]'"]*['"]?)(?::[0-9]+(?![0-9])|\([0-9]+\))'''
 _LINE_WORD = re.compile(r'\b(line)[ :#]*[0-9]+', re.I)
-
-
-def _website(line, classifier):
-    """The one website an error line is about, or None.
-
-    The upgrader's rule reads the name from the virtual host in the message's
-    context, `[config:server:vhosts:vhost:NAME...]`, or from the website file
-    that a parser message ends with. A message that has neither in that form
-    is still about one website when the only website directory it names,
-    `/conf/vhosts/NAME/`, is that website's. A fatal message and a disabled
-    module are never one website's.
-    """
-    scope = classifier.site_scope(line)
-    if scope:
-        return scope[len('website '):] if scope.startswith('website ') else None
-    if '[ERROR]' not in line or '[FATAL]' in line or classifier.ABI_DIAGNOSTIC in line:
-        return None
-    names = set(_VHOST_FILE.findall(line))
-    return names.pop() if len(names) == 1 else None
 
 
 def _comparable(line, classifier, changed):
@@ -299,17 +279,17 @@ def _comparable(line, classifier, changed):
     and after the word "line" in a message about that website.
     """
     line = classifier._STAMP.sub(r'\1 ', line)
-    website = _website(line, classifier)
+    website = classifier.site_scope(line)
     for domain in changed:
         directory = '/conf/vhosts/%s/' % domain
-        if website == domain or directory in line:
+        if website == 'website ' + domain or directory in line:
             line = re.sub('(' + re.escape(directory) + _FILE_LINE, r'\1', line)
             line = _LINE_WORD.sub(r'\1', line)
     return line
 
 
 def config_errors_added(before, after, changed=None):
-    """The errors a change brought into the web server's configuration test.
+    """Why a change must be undone, judged by the web server's configuration test.
 
     `before` and `after` are the (exit status, output) of the test on either
     side of the change. OpenLiteSpeed ends the test with 1 after warnings and
@@ -320,16 +300,21 @@ def config_errors_added(before, after, changed=None):
     there before, or an exit status that became an error status without one.
 
     `changed` names the websites whose files the change edited, with False for
-    a website that was restored. Restoring puts back the configuration the
-    website had before it was suspended. Its rewrite rules were commented out
-    meanwhile, so an error in them was not reported and comes back with them.
-    That error is the website's own, not the change's: an added error line
-    about a restored website does not count. One about any other website, or
-    about none, still does.
+    a website that was restored. A change that only restores websites differs
+    from the state before it by nothing but the text it puts back, and that
+    text is each website's own configuration from before it was suspended. Its
+    rewrite rules were commented out meanwhile, so an error in them was not
+    reported and returns with them, in a message that need not name the
+    website: OpenLiteSpeed reports a faulty rule under `[(null)] [REWRITE]`.
+    Refusing such a change would keep the website, and a parent with its other
+    children, suspended for good. A restore is therefore undone only for
+    damage: a fatal message that was not there before, or a test that ends
+    with another status than 0, 1 or 2. A change that suspends any website,
+    and the files put back after a failure, keep the strict rule.
     """
     from plogical import olsStockClassifier
     changed = changed or {}
-    restored = set(domain for domain, suspended in changed.items() if not suspended)
+    restore = bool(changed) and not any(changed.values())
 
     def errors(output):
         # The upgrader's rule for an error line, with no website excused.
@@ -343,10 +328,12 @@ def config_errors_added(before, after, changed=None):
             known[key] -= 1
         else:
             added.append(line)
-    refused = [line for line in added if _website(line, olsStockClassifier) not in restored]
-    # A restored website's own error accounts for status 2. Any other status
-    # than 0 or 1 has to be the one from before the change.
-    explained = after[0] in (0, 1) or after[0] == before[0] or (after[0] == 2 and added)
+    if restore:
+        refused = [line for line in added if '[FATAL]' in line]
+        explained = after[0] in (0, 1, 2) or after[0] == before[0]
+    else:
+        refused = added
+        explained = after[0] in (0, 1) or after[0] == before[0]
     if not refused and not explained:
         refused.append('The configuration test ended with status %s; before the change it ended with %s. %s'
                        % (after[0], before[0], after[1].strip()[-1500:]))
