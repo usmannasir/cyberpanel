@@ -138,16 +138,27 @@ class phpUtilities:
     stagingDirectory = '/home/cyberpanel'
     stagedIniName = re.compile(r'phpini\.[A-Za-z0-9_]{1,40}')
 
+    # The directories the managed php.ini files live below. One of them may
+    # itself be a link to another disk; only root can make a link there.
+    managedIniBases = ('/usr/local/lsws', '/etc/php', '/etc/opt/remi')
+
     @staticmethod
     def managedIniPath(path):
         """Return the path when it is a php.ini the PHP settings pages manage, else raise ValueError.
 
-        The path must have one of the managed forms and must be the file
-        itself: a link anywhere on the way to another place is refused.
+        The path must have one of the managed forms, the file itself must
+        not be a link, and below the base directory of its form nothing may
+        be a link: the real location is the real base directory followed by
+        the rest of the path as it was given.
         """
-        if not is_managed_ini(path) or os.path.realpath(path) != path:
-            raise ValueError('This is not a PHP configuration file that the panel manages.')
-        return path
+        if is_managed_ini(path):
+            for base in phpUtilities.managedIniBases:
+                if path.startswith(base + '/'):
+                    if not os.path.islink(path) and \
+                            os.path.realpath(path) == os.path.realpath(base) + path[len(base):]:
+                        return path
+                    break
+        raise ValueError('This is not a PHP configuration file that the panel manages.')
 
     @staticmethod
     def readStagedIni(tempPath):
