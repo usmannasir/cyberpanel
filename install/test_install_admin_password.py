@@ -148,6 +148,30 @@ class PasswordFileReaderTests(unittest.TestCase):
         self.assertEqual((0, SECRET, ''), (result.returncode, result.stdout, result.stderr))
 
 
+class RootOnlyTestsAreMarkedTests(unittest.TestCase):
+    """A test of the reader that makes a password file needs root: for another
+    account every such file is refused for its owner, and a test that expects
+    a refusal would pass without having tested what it names."""
+
+    def test_every_reader_test_that_makes_a_password_file_is_skipped_without_root(self):
+        tree = ast.parse(Path(__file__).read_text())
+        checked = []
+        for cls in tree.body:
+            if not isinstance(cls, ast.ClassDef) or cls.name not in ('PasswordFileReaderTests', 'InstallationTests'):
+                continue
+            for method in cls.body:
+                if not isinstance(method, ast.FunctionDef) or not method.name.startswith('test_'):
+                    continue
+                makes_file = any(isinstance(node, ast.Call) and getattr(node.func, 'id', '') == 'password_file'
+                                 for node in ast.walk(method))
+                marked = any(getattr(decorator, 'id', '') == 'AS_ROOT' for decorator in method.decorator_list)
+                if makes_file:
+                    checked.append(method.name)
+                    self.assertTrue(marked, '%s.%s makes a password file and is not marked AS_ROOT'
+                                    % (cls.name, method.name))
+        self.assertGreater(len(checked), 8)
+
+
 class MaskedArgumentTests(unittest.TestCase):
     def masked(self, *arguments):
         script = function('Mask_Arguments') + ('Mask_Arguments "$@"\n'
