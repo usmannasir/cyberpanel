@@ -479,6 +479,19 @@ context / {{
             return False
     
     @staticmethod
+    def htaccess_rules(port, domain=None):
+        """The lines the panel adds to a website's .htaccess for a Docker site."""
+        rules = f'''
+RewriteEngine On
+REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
+'''
+        if domain:
+            rules = ('RewriteEngine On\nRewriteCond %{HTTPS} !=on\n'
+                'RewriteRule ^ https://' + domain + '%{REQUEST_URI} [R=301,L]\n'
+                + rules)
+        return rules
+
+    @staticmethod
     def SetupHTAccess(port, htaccess, domain=None):
         ### Update htaccess
 
@@ -492,17 +505,46 @@ context / {{
         print(f'value of content {Content}')
 
         if Content.find(StringCheck) == -1:
-            HTAccessContent = f'''
-RewriteEngine On
-REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
-'''
-            if domain:
-                HTAccessContent = ('RewriteEngine On\nRewriteCond %{HTTPS} !=on\n'
-                    'RewriteRule ^ https://' + domain + '%{REQUEST_URI} [R=301,L]\n'
-                    + HTAccessContent)
             WriteToFile = open(htaccess, 'a')
-            WriteToFile.write(HTAccessContent)
+            WriteToFile.write(Docker_Sites.htaccess_rules(port, domain))
             WriteToFile.close()
+
+    @staticmethod
+    def RemoveHTAccess(htaccess, domain=None):
+        """
+        Take the panel's Docker site rules out of a website's .htaccess.
+
+        Runs as the website's own account. Everything the customer has in the
+        file stays; the file itself is removed only when the panel's rules were
+        all it held.
+        """
+        try:
+            Content = open(htaccess, 'r').read()
+        except (IOError, OSError, UnicodeDecodeError):
+            return 0
+
+        ports = set(re.findall(r'HTTP://docker(\d+)/\$1 \[P\]', Content))
+        Remaining = Content
+
+        for port in ports:
+            if domain:
+                Remaining = Remaining.replace(Docker_Sites.htaccess_rules(port, domain), '')
+            Remaining = Remaining.replace(Docker_Sites.htaccess_rules(port), '')
+            # The rule alone, where the lines around it were changed by hand.
+            Remaining = re.sub(r'(?m)^[ \t]*REWRITERULE \^\(\.\*\)\$ HTTP://docker%s/\$1 \[P\][ \t]*\n?' % port,
+                               '', Remaining)
+
+        if Remaining == Content:
+            return 0
+
+        if Remaining.strip() == '':
+            os.remove(htaccess)
+        else:
+            WriteToFile = open(htaccess, 'w')
+            WriteToFile.write(Remaining)
+            WriteToFile.close()
+
+        return 1
 
     # Takes
     # ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,
@@ -921,8 +963,16 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             command = f'rm -rf {shlex.quote("/home/docker/" + domain)}'
             ProcessUtilities.executioner(command)
 
-            command = f'rm -f /home/{self.data["domain"]}/public_html/.htaccess'
-            ProcessUtilities.executioner(command)
+            ## The website's .htaccess belongs to the customer. Only the rules the
+            ## panel added for the Docker site are taken out of it, and by the
+            ## website's own account, which reaches nothing but its own files.
+
+            account = self.website_account(domain)
+
+            if account is not None:
+                execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
+                execPath = execPath + f" RemoveHTAccess --htaccess /home/{domain}/public_html/.htaccess --domain {domain}"
+                ProcessUtilities.executioner(execPath, account)
 
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
@@ -930,6 +980,19 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
         except BaseException as msg:
             logging.writeToFile("Error Delete Docker APP ....... %s" % str(msg))
             return 0
+
+    def website_account(self, domain):
+        """The system account of the website a Docker site is installed on, or None."""
+        try:
+            from websiteFunctions.models import Websites
+            account = Websites.objects.get(domain=domain).externalApp
+        except BaseException as msg:
+            logging.writeToFile("Error Delete Docker APP ....... no account for %s: %s" % (domain, str(msg)))
+            return None
+
+        if isinstance(account, str) and re.fullmatch('[A-Za-z0-9_][A-Za-z0-9_-]*', account):
+            return account
+        return None
 
     ## This function need site name which was passed while creating the app
     def ListContainers(self):
@@ -1806,6 +1869,8 @@ def Main():
             Docker_Sites.SetupProxy(args.port)
         elif args.function == 'SetupHTAccess':
             Docker_Sites.SetupHTAccess(args.port, args.htaccess, args.domain)
+        elif args.function == 'RemoveHTAccess':
+            Docker_Sites.RemoveHTAccess(args.htaccess, args.domain)
         elif args.function == 'SetupN8NVhost' or args.function == 'SetupAppVhost':
             Docker_Sites.SetupAppVhost(args.domain, args.port)
         elif args.function == 'DeployWPDocker':
