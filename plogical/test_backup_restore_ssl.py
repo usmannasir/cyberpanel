@@ -10,6 +10,7 @@ from unittest.mock import Mock, MagicMock, patch
 from xml.etree import ElementTree
 
 from plogical.backupMetadata import backup_includes_mail_domain
+from managePHP.phpConfig import normalized_php_selection
 
 
 def load_method(filename, classname, methodname, namespace):
@@ -200,7 +201,7 @@ class RestoreSSLTests(unittest.TestCase):
                              ProcessUtilities=Mock(OLS=1), installUtilities=Mock(),
                              backup_includes_mail_domain=backup_includes_mail_domain,
                              backup_uses_full_directory_layout=lambda *args: True,
-                             copy=copy_certificate)
+                             copy=copy_certificate, normalized_php_selection=normalized_php_selection)
             namespace['Administrator'].objects.get.return_value = user
             namespace['backupUtilities'].createWebsiteFromBackup.return_value = (1, 'None')
             if ownership_error:
