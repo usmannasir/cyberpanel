@@ -250,13 +250,10 @@ class ApacheVhost:
             # and on the port its virtual hosts listen on: 8083 without SSL,
             # 8082 with it. Blocks an earlier release repeated for every
             # website, or wrote with the two ports exchanged, are removed.
-            with open(ApacheVhost.lswsMainConf, 'r') as confFile:
-                data = confFile.read()
-
-            updated = apacheConfigCheck.with_proxy_backends(
-                data, vhostConfs.proxyApacheBackend, vhostConfs.proxyApacheBackendSSL)
-            if updated != data:
-                apacheConfigCheck.replace_file(ApacheVhost.lswsMainConf, updated)
+            # Every other byte of the file stays as it is.
+            apacheConfigCheck.correct_proxy_backends(
+                ApacheVhost.lswsMainConf, (vhostConfs.proxyApacheBackend, vhostConfs.proxyApacheBackendSSL),
+                logging.writeToFile)
 
             return [1, 'None']
         except BaseException as msg:
