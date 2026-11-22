@@ -31,6 +31,8 @@ from serverStatus.serverStatusUtil import ServerStatusUtil
 import threading as multi
 from plogical.httpProc import httpProc
 
+RATE_LIMIT_DIRECTORY = '/home/cyberpanel/docker_rate_limit'
+
 # Use default socket to connect
 class ContainerManager(multi.Thread):
 
@@ -1652,19 +1654,23 @@ class ContainerManager(multi.Thread):
         import time
         import os
         import json
+        import re
         
-        # Create rate limit tracking directory
-        rate_limit_dir = '/tmp/cyberpanel_docker_rate_limit'
+        # The counters live in the panel's own directory, which no other account
+        # of the server can write to. A name in a shared directory such as /tmp
+        # can be prepared by somebody else before the panel first uses it.
+        rate_limit_dir = RATE_LIMIT_DIRECTORY
         if not os.path.exists(rate_limit_dir):
             try:
-                os.makedirs(rate_limit_dir, mode=0o755)
+                os.makedirs(rate_limit_dir, mode=0o700)
             except Exception as e:
                 # If we can't create rate limit tracking, allow the command but log it
                 logging.CyberCPLogFileWriter.writeToFile(f'Warning: Could not create rate limit directory: {str(e)}')
                 return True
         
         # Rate limit file per user-container
-        rate_file = os.path.join(rate_limit_dir, f'user_{userID}_container_{containerName}')
+        rate_file = os.path.join(rate_limit_dir, 'user_%s_container_%s' % (
+            re.sub('[^A-Za-z0-9_.-]', '_', str(userID)), re.sub('[^A-Za-z0-9_.-]', '_', str(containerName))))
         current_time = time.time()
         
         try:
