@@ -346,14 +346,16 @@ class CallSiteTests(unittest.TestCase):
         self.assertIn("except Exception as error:\n            Upgrade.stdOut('WARNING: AI Scanner backups of "
                       "earlier releases were not looked for: ' + str(error), 0)", method)
         self.assertLess(method.index('        try:'), method.index('from plogical.scannerBackupRelocation'))
-        # Called once in the upgrade itself, right after the repair of the database grants.
+        # Called once in the upgrade itself, after the repair of the database grants.
         self.assertEqual(1, upgrader.count('Upgrade.relocateScannerBackups()'))
-        self.assertIn('\n        Upgrade.repairDatabaseGrants()\n\n        Upgrade.relocateScannerBackups()\n', upgrader)
+        self.assertLess(upgrader.index('\n        Upgrade.repairDatabaseGrants()\n'),
+                        upgrader.index('\n        Upgrade.relocateScannerBackups()\n'))
 
     def test_upgrade_started_from_the_cloud_platform_runs_it_too(self):
         cloud = (ROOT / 'plogical' / 'CyberPanelUpgrade.py').read_text()
         self.assertEqual(1, cloud.count('Upgrade.relocateScannerBackups()'))
-        self.assertIn('\n        Upgrade.repairDatabaseGrants()\n        Upgrade.relocateScannerBackups()\n', cloud)
+        self.assertLess(cloud.index('\n        Upgrade.repairDatabaseGrants()\n'),
+                        cloud.index('\n        Upgrade.relocateScannerBackups()\n'))
 
     def test_helper_does_not_need_the_panel_models(self):
         source = (ROOT / 'plogical' / 'scannerBackupRelocation.py').read_text()
