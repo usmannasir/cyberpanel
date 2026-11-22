@@ -1,6 +1,6 @@
 # CyberPanel v3.0.12 (build 12) — security and reliability
 
-_Release candidate, 2026-11-22._
+_Released 2026-11-22._
 
 This release hardens databases, Docker sites, the PHP manager, the AI Scanner
 and the panel's request handling, and adds a link to where a Multi-Server
