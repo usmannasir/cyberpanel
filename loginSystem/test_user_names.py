@@ -40,5 +40,50 @@ class NewUserTests(unittest.TestCase):
         self.assertEqual(4, self.stored.call_count)
 
 
+class RestoredOwnerTests(unittest.TestCase):
+    def setUp(self):
+        patcher = mock.patch.object(models.Model, 'save')
+        self.stored = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def user(self, name):
+        return Administrator(userName=name, password='x', email='a@example.com', type=3)
+
+    def test_owner_from_a_backup_is_saved_under_a_name_earlier_releases_accepted(self):
+        for name in ('john', 'John Smith', 'jürgen', 'john+tag@example.com', '_john'):
+            self.user(name).save(name_from_backup=True)
+        self.assertEqual(5, self.stored.call_count)
+        # The model's own save never sees the argument.
+        for call in self.stored.call_args_list:
+            self.assertEqual({}, call[1])
+
+    def test_owner_from_a_backup_never_gets_a_name_of_the_server_or_one_that_cannot_be_carried(self):
+        for name in ('root', 'ROOT', 'cyberpanel', 'mysql', 'cp-pma-5', "o'brien", 'a/../b', 'x;y', ' x', 'x\ny',
+                     '', None, 'x' * 51):
+            with self.assertRaises(ValueError):
+                self.user(name).save(name_from_backup=True)
+        self.stored.assert_not_called()
+
+    def test_only_the_argument_of_the_restore_selects_that_rule(self):
+        # It is not a value of the user, so it cannot arrive with the values of a new user.
+        with self.assertRaises(TypeError):
+            Administrator(userName='John Smith', password='x', email='a@example.com', type=3, name_from_backup=True)
+        for value in (1, 'true', 'yes', [True], None, False):
+            with self.assertRaises(ValueError):
+                self.user('John Smith').save(name_from_backup=value)
+        user = self.user('John Smith')
+        user.name_from_backup = True
+        with self.assertRaises(ValueError):
+            user.save()
+        self.stored.assert_not_called()
+
+    def test_no_other_place_in_the_panel_passes_the_argument(self):
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1]
+        places = [str(path.relative_to(root)) for path in sorted(root.rglob('*.py'))
+                  if not path.name.startswith('test_') and 'name_from_backup=' in path.read_text(errors='replace')]
+        self.assertEqual(['plogical/backupUtilities.py'], places)
+
+
 if __name__ == '__main__':
     unittest.main()
