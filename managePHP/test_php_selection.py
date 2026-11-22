@@ -1,7 +1,7 @@
 """The one check of a PHP selection, and the names that are built from its digits."""
 import unittest
 
-from managePHP.phpConfig import fpm_service_for_selection, php_selection_digits
+from managePHP.phpConfig import fpm_service_for_selection, normalized_php_selection, php_selection_digits
 
 # Every version a page or an installer of the panel offers, and a two-digit
 # minor number as findPHPVersions would report it for /usr/local/lsws/lsphp810.
@@ -19,6 +19,18 @@ NOT_A_SELECTION = (
     'PHP \u0668.\u0663', 'PHP 8\u200b.3', 'latest', '8.3', '', None, 83, 8.3, True,
     ['PHP 8.3'], {'PHP 8.3': 1}, b'PHP 8.3')
 
+# How earlier releases also wrote a version in storage, in backups and on the
+# command line, and the selection each one stands for.
+OLDER_SPELLINGS = {
+    'PHP 74': 'PHP 7.4', 'php 7.4': 'PHP 7.4', 'PHP  7.4': 'PHP 7.4', '7.4': 'PHP 7.4', '74': 'PHP 7.4',
+    'Php 8.3': 'PHP 8.3', 'PHP8.3': 'PHP 8.3', 'php83': 'PHP 8.3', 'PHP 80': 'PHP 8.0', '56': 'PHP 5.6',
+    'PHP 810': 'PHP 8.10', '810': 'PHP 8.10', '8.10': 'PHP 8.10', 'PHP  8.3': 'PHP 8.3', 'php 8.3': 'PHP 8.3',
+    '8.3': 'PHP 8.3',
+}
+# Still no version in any spelling.
+NOT_A_SPELLING = ('7', 'PHP 7', 'PHP', '7.4.1', '7405', '704', 'PHP 7.04', '07.4', 'PHP 7.4 ', ' 7.4', '7.4\n',
+                  'PHP\t7.4', 'PHP 7 4', 'PHP 7,4', 'v7.4', 'PHP-7.4', 'lsphp74', 'PHP 7.x', 74, 7.4)
+
 
 class PHPSelectionTests(unittest.TestCase):
     def test_every_offered_version_is_a_selection(self):
@@ -33,6 +45,32 @@ class PHPSelectionTests(unittest.TestCase):
             with self.subTest(value=value):
                 with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
                     php_selection_digits(value)
+
+    def test_an_older_spelling_becomes_the_selection_it_stands_for(self):
+        for spelling, selection in OLDER_SPELLINGS.items():
+            with self.subTest(spelling=spelling):
+                self.assertEqual(selection, normalized_php_selection(spelling))
+
+    def test_a_selection_is_its_own_normal_form(self):
+        for selection in OFFERED:
+            self.assertEqual(selection, normalized_php_selection(selection))
+
+    def test_the_normal_form_always_passes_the_one_check(self):
+        for spelling in OLDER_SPELLINGS:
+            php_selection_digits(normalized_php_selection(spelling))
+
+    def test_text_that_is_no_version_in_any_spelling_is_refused(self):
+        for value in NOT_A_SPELLING + tuple(value for value in NOT_A_SELECTION
+                                            if not (isinstance(value, str) and value in OLDER_SPELLINGS)):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
+                    normalized_php_selection(value)
+
+    def test_the_strict_check_still_refuses_the_older_spellings(self):
+        for spelling, selection in OLDER_SPELLINGS.items():
+            with self.subTest(spelling=spelling):
+                with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
+                    php_selection_digits(spelling)
 
     def test_fpm_service_is_built_from_the_digits(self):
         for selection in OFFERED:

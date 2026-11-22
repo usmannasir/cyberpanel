@@ -15,6 +15,7 @@ from plogical.childDomainState import (
     normalize_child_state, child_backup_record, append_child_backup_xml,
 )
 from plogical import websiteSuspension
+from managePHP.phpConfig import normalized_php_selection
 from plogical.test_child_creation_suspension import load_creation_methods
 
 
@@ -68,7 +69,8 @@ class ChildXmlRestoreTests(unittest.TestCase):
         self.worker = MagicMock()
         self.worker.createDomain.return_value = (1, 'None')
         self.ns = {'os': os, 'ElementTree': ElementTree, 'logging': MagicMock(),
-                   'Websites': MagicMock(), 'virtualHostUtilities': self.worker}
+                   'Websites': MagicMock(), 'virtualHostUtilities': self.worker,
+                   'normalized_php_selection': normalized_php_selection}
         exec(compile(ast.Module(body=[method], type_ignores=[]), 'restoreMeta', 'exec'), self.ns)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -117,7 +119,8 @@ class ChildJsonRestoreTests(unittest.TestCase):
         instance = SimpleNamespace(website=SimpleNamespace(domain='parent.test', admin=SimpleNamespace(userName='owner')),
                                    extraArgs={'tempStatusPath': '/tmp/test-status'})
         ns = {'self': instance, 'childDomains': [metadata], 'ChildDomains': children,
-              'logging': MagicMock(), 'virtualHostUtilities': worker, 'randint': lambda *args: 1234}
+              'logging': MagicMock(), 'virtualHostUtilities': worker, 'randint': lambda *args: 1234,
+              'normalized_php_selection': normalized_php_selection}
         exec(compile(ast.Module(body=[loop], type_ignores=[]), method_name, 'exec'), ns)
         return worker
 

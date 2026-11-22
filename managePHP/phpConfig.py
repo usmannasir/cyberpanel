@@ -21,6 +21,31 @@ def php_selection_digits(selection):
     return match.groups()
 
 
+# How earlier releases also wrote a PHP version in storage, in backups and on
+# the command line: 'PHP 74', 'php 7.4', 'PHP  7.4', '7.4', '74'.
+PHP_SELECTION_SPELLING = re.compile(
+    r'(?:[Pp][Hh][Pp] *)?(?:([0-9])\.([0-9]{1,2})|([0-9])([0-9]{1,2}))')
+
+
+def normalized_php_selection(value):
+    """Return the panel's own form, 'PHP 7.4', for an older spelling of a PHP version.
+
+    For values that come from storage, from a backup or from the command
+    line; a request from a page is checked with php_selection_digits and
+    nothing else. Without a dot the first digit is the major number and the
+    rest the minor one ('74' is 7.4, '810' is 8.10). The result is built from
+    the digits and passes php_selection_digits; anything else raises
+    ValueError.
+    """
+    match = PHP_SELECTION_SPELLING.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        raise ValueError('Invalid PHP version selected.')
+    major, minor = [part for part in match.groups() if part is not None]
+    selection = 'PHP %s.%s' % (major, minor)
+    php_selection_digits(selection)
+    return selection
+
+
 def fpm_service_for_selection(selection, rpm_family):
     """Return the PHP-FPM service of a selection.
 

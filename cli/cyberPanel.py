@@ -26,6 +26,7 @@ from plogical.ftpUtilities import FTPUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.backupSchedule import backupSchedule
+from managePHP.phpConfig import normalized_php_selection
 
 # All that we see or seem is but a dream within a dream.
 
@@ -50,7 +51,7 @@ class cyberPanel:
         try:
             from random import randint
             externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999))
-            phpSelection = 'PHP ' + php
+            phpSelection = normalized_php_selection(php)
 
             try:
                 counter = 0
@@ -79,7 +80,7 @@ class cyberPanel:
         try:
 
             complete_path = '/home/' + masterDomain + '/' + path
-            phpSelection = 'PHP ' + php
+            phpSelection = normalized_php_selection(php)
 
             result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, complete_path, ssl, dkim, openBasedir, owner, 0)
 
@@ -171,7 +172,7 @@ class cyberPanel:
     def changePHP(self, virtualHostName, phpVersion):
         try:
 
-            phpVersion = 'PHP ' + phpVersion
+            phpVersion = normalized_php_selection(phpVersion)
 
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + virtualHostName
             completePathToConfigFile = confPath + "/vhost.conf"

@@ -22,7 +22,7 @@ from plogical.dnsUtilities import DNS
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
-from managePHP.phpConfig import php_selection_digits
+from managePHP.phpConfig import normalized_php_selection, php_selection_digits
 from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.domainAliasUtilities import add_https_alias_mapping
@@ -297,7 +297,7 @@ class vhost:
                     currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(normalized_php_selection(phpVersion)))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 
@@ -312,7 +312,7 @@ class vhost:
                     currentConf = currentConf.replace('{master}', virtualHostName)
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(normalized_php_selection(phpVersion)))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 
@@ -1230,7 +1230,7 @@ class vhost:
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{path}', path)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(normalized_php_selection(phpVersion)))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 
@@ -1246,7 +1246,7 @@ class vhost:
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{path}', path)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(phpVersion))
+                    currentConf = currentConf.replace('{php}', '%s.%s' % php_selection_digits(normalized_php_selection(phpVersion)))
                     currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
                     currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
 

@@ -46,7 +46,7 @@ from plogical.systemPassword import (
 )
 from plogical.securityUtils import generate_api_token
 from managePHP.phpManager import PHPManager
-from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name, php_selection_digits
+from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name, normalized_php_selection, php_selection_digits
 from ApachController.ApacheVhosts import ApacheVhost
 from ApachController.ApacheController import ApacheController
 from plogical.vhostConfs import vhostConfs
@@ -2354,6 +2354,11 @@ Require valid-user
             domain = data['domainName']
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
+            # The cloud interface hands its whole request over, its controller
+            # field included. Like /api/createWebsite it took older spellings
+            # of a version in earlier releases ('PHP 74', 'php 7.4').
+            if data.get('controller') == 'submitWebsiteCreation':
+                phpSelection = normalized_php_selection(phpSelection)
             # Exactly 'PHP x.y': the selection is stored with the website and
             # becomes part of its configuration, paths and command lines.
             php_selection_digits(phpSelection)
@@ -2526,7 +2531,8 @@ Require valid-user
                             return entitlement_error
                     data['apacheBackend'] = 1
 
-                phpSelection = Websites.objects.get(domain=masterDomain).phpSelection
+                # The master's stored selection may have an older spelling.
+                phpSelection = normalized_php_selection(Websites.objects.get(domain=masterDomain).phpSelection)
 
             php_selection_digits(phpSelection)
 
@@ -5326,6 +5332,10 @@ StrictHostKeyChecking no
                             'error_message': "Could not authorize access to API"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+            # Earlier releases took older spellings of a version here
+            # ('PHP 74', 'php 7.4'); the website is created with the panel's own.
+            data['phpSelection'] = normalized_php_selection(data['phpSelection'])
 
             return self.submitWebsiteCreation(admin.pk, data)
 
