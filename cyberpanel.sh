@@ -1164,8 +1164,13 @@ Check_Usage() {
 # on it is changed: a request for help ends here with status 0, a command line
 # that cannot be understood, or that holds a value that cannot be used, with
 # status 2. Neither starts an installation, so neither is recorded as one. The
-# options are those of Check_Argument.
-local problem=""
+# options are those of Check_Argument, and their values are passed over as it
+# passes over them. A request for help is answered wherever it stands, also
+# after a value that cannot be used: such a value ends the check only once all
+# arguments were looked at. Of -p and -b the first value that cannot be used
+# is the one that is named; of -v the last value counts, as it does in
+# Check_Argument.
+local problem="" license_problem=""
 if [[ "${1:-}" = "help" ]]; then
   Show_Help
   exit 0
@@ -1183,20 +1188,24 @@ while [[ -n "${1:-}" ]]; do
     if [[ "${1:-}" = "" ]]; then
       Show_Help
       exit 2
-    elif [[ "${1^^}" != "OLS" ]]; then
-      problem=$(License_Problem "$1")
+    fi
+    license_problem=""
+    if [[ "${1^^}" != "OLS" ]]; then
+      license_problem=$(License_Problem "$1")
     fi
   ;;
   -p | --password)
     shift
     # Not looked at when the password comes from a file: it is not used then.
-    if [[ -z "$Admin_Pass_From_File" ]]; then
+    if [[ -z "$Admin_Pass_From_File" && -z "$problem" ]]; then
       problem=$(Password_Problem "${1:-}")
     fi
   ;;
   -b | --branch)
     shift
-    problem=$(Branch_Problem "${1:-}")
+    if [[ -z "$problem" ]]; then
+      problem=$(Branch_Problem "${1:-}")
+    fi
   ;;
   -m | --minimal | -a | --addons | --debug | --mirror)
   ;;
@@ -1208,12 +1217,13 @@ while [[ -n "${1:-}" ]]; do
     fi
   ;;
   esac
-  if [[ -n "$problem" ]]; then
-    echo -e "\n$problem\n"
-    exit 2
-  fi
   shift
 done
+problem="${problem:-$license_problem}"
+if [[ -n "$problem" ]]; then
+  echo -e "\n$problem\n"
+  exit 2
+fi
 }
 
 Check_Argument() {
