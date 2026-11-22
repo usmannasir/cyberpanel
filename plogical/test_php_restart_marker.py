@@ -18,7 +18,11 @@ OLS, ENTERPRISE = 'ols', 'lsws'
 
 
 def load_methods(relative_path, class_name, names, namespace):
-    """Run the named methods of a class from the source file with the given names in scope."""
+    """Run the named methods of a class from the source file with the given names in scope.
+
+    A name the class does not have gives None, so the tests can also be run
+    against a version of the source that lacks a helper.
+    """
     source = ROOT / relative_path
     owner = next(node for node in ast.parse(source.read_text()).body
                  if isinstance(node, ast.ClassDef) and node.name == class_name)
@@ -26,7 +30,7 @@ def load_methods(relative_path, class_name, names, namespace):
         if isinstance(node, ast.FunctionDef) and node.name in names:
             node.decorator_list = []
             exec(compile(ast.Module(body=[node], type_ignores=[]), str(source), 'exec'), namespace)
-    return [namespace[name] for name in names]
+    return [namespace.get(name) for name in names]
 
 
 class Missing(Exception):

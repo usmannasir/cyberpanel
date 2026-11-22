@@ -8,6 +8,7 @@ from unittest import mock
 from managePHP import phpConfig
 from managePHP.test_php_selection import NOT_A_SELECTION, OFFERED
 from managePHP.test_request_methods import load_views, post
+from plogical.test_php_restart_marker import load_methods
 
 GOOD = dict(allow_url_fopen=True, display_errors=False, file_uploads=True, allow_url_include=False,
             memory_limit='256M', max_execution_time='30', upload_max_filesize='64M', max_input_time='-1',
@@ -58,6 +59,39 @@ class ManagedIniPathTests(unittest.TestCase):
                      '/etc/opt/remi/php83/php-fpm.d/www.conf', '', None, 7):
             with self.subTest(path=path):
                 self.assertFalse(phpConfig.is_managed_ini(path))
+
+
+class PathOfTheSettingsPagesTests(unittest.TestCase):
+    """ApacheVhost.DecidePHPPathforManager, which the pages and the worker call for the path."""
+
+    def decide(self, distro):
+        process = mock.Mock(centos='centos', cent8='cent8', debugPath='/nonexistent-debug-marker')
+        process.decideDistro.return_value = distro
+        namespace = dict(ProcessUtilities=process, managed_ini_path=phpConfig.managed_ini_path,
+                         PHPManager=NS(getPHPString=lambda text: text.split()[1].replace('.', '')),
+                         os=NS(path=NS(exists=lambda path: False)), logging=mock.Mock())
+        return load_methods('ApachController/ApacheVhosts.py', 'ApacheVhost', ['DecidePHPPathforManager'],
+                            namespace)[0]
+
+    def test_each_page_gets_the_file_of_its_layout(self):
+        for distro, apache, expected in (
+                ('ubuntu', None, '/usr/local/lsws/lsphp83/etc/php/8.3/litespeed/php.ini'),
+                ('ubuntu', 0, '/usr/local/lsws/lsphp83/etc/php/8.3/litespeed/php.ini'),
+                ('ubuntu', 'apache', '/etc/php/8.3/fpm/php.ini'), ('ubuntu', 1, '/etc/php/8.3/fpm/php.ini'),
+                ('cent8', None, '/usr/local/lsws/lsphp83/etc/php.ini'), ('cent8', 1, '/etc/opt/remi/php83/php.ini'),
+                ('centos', 'apache', '/etc/opt/remi/php83/php.ini')):
+            with self.subTest(distro=distro, apache=apache):
+                self.assertEqual(expected, self.decide(distro)(apache, 'PHP 8.3'))
+
+    def test_no_path_is_built_from_text_that_is_not_a_selection(self):
+        for distro in ('ubuntu', 'cent8'):
+            decide = self.decide(distro)
+            for apache in (None, 'apache'):
+                for value in ('PHP 8.3/../../../etc/cron.d x', 'PHP ../../root/.ssh', 'PHP 8.3 /etc/shadow',
+                              'PHP 8.3;id', 'PHP $(id)'):
+                    with self.subTest(distro=distro, apache=apache, value=value):
+                        with self.assertRaises(ValueError):
+                            decide(apache, value)
 
 
 class BasicSettingValueTests(unittest.TestCase):
