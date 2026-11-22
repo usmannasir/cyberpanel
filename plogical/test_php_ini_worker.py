@@ -197,5 +197,109 @@ class ReplaceIniFileTests(unittest.TestCase):
             utilities.managedIniPath(str(self.ini))
 
 
+class ManagedIniLocationTests(unittest.TestCase):
+    """Where a managed php.ini may really be: a small tree of real directories, files and links.
+
+    The tree stands for the root of the file system. The worker's questions
+    about links are answered from it, so the rule is tried on real links.
+    """
+
+    def setUp(self):
+        self.module, _ = load_php_utilities()
+        self.utilities = self.module.phpUtilities
+        self.temp = tempfile.TemporaryDirectory(prefix='php-ini-location-test-')
+        self.addCleanup(self.temp.cleanup)
+        self.root = os.path.realpath(self.temp.name)
+        for patcher in (
+                mock.patch.object(self.module.os.path, 'realpath', side_effect=self.realpath),
+                mock.patch.object(self.module.os.path, 'islink', side_effect=self.islink)):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    real_realpath = staticmethod(os.path.realpath)
+    real_islink = staticmethod(os.path.islink)
+
+    def realpath(self, path):
+        real = self.real_realpath(self.root + path)
+        return real[len(self.root):] if real.startswith(self.root + '/') else real
+
+    def islink(self, path):
+        return self.real_islink(self.root + path)
+
+    def directory(self, path):
+        os.makedirs(self.root + path)
+
+    def file(self, path):
+        if not os.path.isdir(os.path.dirname(self.root + path)):
+            os.makedirs(os.path.dirname(self.root + path))
+        with open(self.root + path, 'w') as handle:
+            handle.write('memory_limit = 128M\n')
+
+    def link(self, target, path):
+        if not os.path.isdir(os.path.dirname(self.root + path)):
+            os.makedirs(os.path.dirname(self.root + path))
+        os.symlink(self.root + target, self.root + path)
+
+    def assert_refused(self, path):
+        with self.assertRaisesRegex(ValueError, 'not a PHP configuration file that the panel manages'):
+            self.utilities.managedIniPath(path)
+
+    def test_a_plain_file_is_accepted(self):
+        for path in (FPM_INI, LSPHP_INI, '/usr/local/lsws/lsphp83/etc/php.ini', '/etc/opt/remi/php83/php.ini'):
+            with self.subTest(path=path):
+                self.file(path)
+                self.assertEqual(path, self.utilities.managedIniPath(path))
+
+    def test_a_base_directory_that_is_a_link_to_another_disk_is_accepted(self):
+        for base, path in (('/etc/php', FPM_INI), ('/usr/local/lsws', LSPHP_INI),
+                           ('/usr/local/lsws', '/usr/local/lsws/lsphp83/etc/php.ini'),
+                           ('/etc/opt/remi', '/etc/opt/remi/php83/php.ini')):
+            with self.subTest(path=path):
+                if not os.path.lexists(self.root + base):
+                    disk = '/mnt/disk%d' % len(os.listdir(self.root))
+                    self.directory(disk)
+                    self.link(disk, base)
+                self.file(path)
+                self.assertTrue(self.real_islink(self.root + base))
+                self.assertEqual(path, self.utilities.managedIniPath(path))
+
+    def test_a_link_below_the_base_directory_is_refused(self):
+        self.file('/elsewhere/8.3/fpm/php.ini')
+        self.link('/elsewhere/8.3', '/etc/php/8.3')
+        self.assert_refused(FPM_INI)
+        self.file('/elsewhere/fpm/php.ini')
+        self.directory('/etc/php/8.2')
+        self.link('/elsewhere/fpm', '/etc/php/8.2/fpm')
+        self.assert_refused('/etc/php/8.2/fpm/php.ini')
+        self.file('/elsewhere/lsphp83/etc/php.ini')
+        self.link('/elsewhere/lsphp83', '/usr/local/lsws/lsphp83')
+        self.assert_refused('/usr/local/lsws/lsphp83/etc/php.ini')
+
+    def test_a_link_below_a_linked_base_directory_is_refused(self):
+        self.directory('/mnt/disk2')
+        self.link('/mnt/disk2', '/etc/php')
+        self.file('/elsewhere/8.3/fpm/php.ini')
+        self.link('/elsewhere/8.3', '/mnt/disk2/8.3')
+        self.assert_refused(FPM_INI)
+
+    def test_a_file_that_is_a_link_is_refused(self):
+        self.file('/outside/file')
+        self.link('/outside/file', FPM_INI)
+        self.assert_refused(FPM_INI)
+        # Also when it leads to a file beside it, or back to itself.
+        self.file('/etc/opt/remi/php83/php.ini.real')
+        self.link('/etc/opt/remi/php83/php.ini.real', '/etc/opt/remi/php83/php.ini')
+        self.assert_refused('/etc/opt/remi/php83/php.ini')
+        self.link(LSPHP_INI, LSPHP_INI)
+        self.assert_refused(LSPHP_INI)
+
+    def test_a_path_without_a_managed_form_is_refused_whatever_is_there(self):
+        for path in ('/etc/php/8.3/cli/php.ini', '/etc/php/8.3/fpm/pool.d/www.conf', '/etc/php/php.ini',
+                     '/usr/local/lsws/conf/httpd_config.conf', '/etc/opt/remi/php83/php-fpm.conf'):
+            with self.subTest(path=path):
+                self.file(path)
+                self.assert_refused(path)
+
+
 if __name__ == '__main__':
     unittest.main()
