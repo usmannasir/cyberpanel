@@ -13,6 +13,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
 from plogical.securityUtils import ensure_api_token, rotate_api_token
+from plogical.panelUserNames import new_name_refusal
 
 
 def loadUserHome(request):
@@ -141,6 +142,12 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
+
+            refusal = new_name_refusal(userName)
+            if refusal is not None:
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': refusal}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
                 data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain alphabetic characters, and should be more than 2 characters long...'}

@@ -5227,6 +5227,14 @@ StrictHostKeyChecking no
                                 'error_message': "You've reached maximum websites limit as a reseller."}
                     return HttpResponse(json.dumps(data_ret))
 
+                if not Administrator.objects.filter(userName=websiteOwner).exists():
+                    from plogical.panelUserNames import new_name_refusal
+                    refusal = new_name_refusal(websiteOwner)
+                    if refusal is not None:
+                        data_ret = {'status': 0, 'createWebSiteStatus': 0, 'existsStatus': 0,
+                                    'error_message': refusal}
+                        return HttpResponse(json.dumps(data_ret))
+
                 try:
                     websiteOwn = Administrator(userName=websiteOwner,
                                                password=hashPassword.hash_password(ownerPassword),

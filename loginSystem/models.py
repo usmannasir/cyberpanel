@@ -95,3 +95,13 @@ class Administrator(models.Model):
 
     ####
     defaultSite = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        # The name of a new user is held to the written rule on every path
+        # that creates one. Users saved earlier keep the name they have.
+        if self._state.adding:
+            from plogical.panelUserNames import new_name_refusal
+            refusal = new_name_refusal(self.userName)
+            if refusal is not None:
+                raise ValueError(refusal)
+        super(Administrator, self).save(*args, **kwargs)
