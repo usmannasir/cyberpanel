@@ -211,6 +211,25 @@
                     <label><input ng-model="deleteFTPAccount" type="checkbox" value=""> {% trans "Delete FTP Account" %}</label>
                     <label><input ng-model="listFTPAccounts" type="checkbox" value=""> {% trans "List FTP Accounts" %}</label>
                 </div>
+                <div class="checkbox-wrapper">
+                    <div class="form-label" style="margin-bottom: 0.5rem;">{% trans "Backup Management" %}</div>
+                    <label><input ng-model="createBackup" type="checkbox" value=""> {% trans "Create Backup" %}</label>
+                    <label><input ng-model="googleDriveBackups" type="checkbox" value=""> {% trans "Google Drive Backups" %}</label>
+                    <label><input ng-model="restoreBackup" type="checkbox" value=""> {% trans "Restore Backup" %}</label>
+                    <label><input ng-model="addDeleteDestinations" type="checkbox" value=""> {% trans "Add/Delete Destination" %}</label>
+                    <label><input ng-model="scheduleBackups" type="checkbox" value=""> {% trans "Schedule Backup" %}</label>
+                    <label><input ng-model="remoteBackups" type="checkbox" value=""> {% trans "Remote Backups" %}</label>
+                </div>
+                <div class="checkbox-wrapper">
+                    <div class="form-label" style="margin-bottom: 0.5rem;">{% trans "SSL Management" %}</div>
+                    <label><input ng-model="manageSSL" type="checkbox" value=""> {% trans "Manage SSL" %}</label>
+                    <label><input ng-model="hostnameSSL" type="checkbox" value=""> {% trans "Hostname SSL" %}</label>
+                    <label><input ng-model="mailServerSSL" type="checkbox" value=""> {% trans "MailServer SSL" %}</label>
+                </div>
+                <div class="checkbox-wrapper">
+                    <div class="form-label" style="margin-bottom: 0.5rem;">{% trans "AI Scanner" %}</div>
+                    <label><input ng-model="aiScannerAccess" type="checkbox" value=""> {% trans "Use AI Scanner" %}</label>
+                </div>
                 <div class="form-group" style="margin-top: 2rem;">
                     <button type="button" ng-click="createACLFunc()" class="btn-primary">
                         <i class="fa fa-plus"></i> {% trans "Create ACL" %}

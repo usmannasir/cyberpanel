@@ -8,6 +8,7 @@ from loginSystem.models import Administrator, ACL
 import json
 from plogical import hashPassword
 from plogical.acl import ACLManager
+from plogical.aclPermissions import stored_config, effective_config
 from plogical.httpProc import httpProc
 from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
@@ -546,15 +547,11 @@ def createACLFunc(request):
         if currentACL['admin'] == 1:
             data = json.loads(request.body)
 
-            ## Version Management
+            # Only the permissions the request switches on are granted; one it leaves out is not.
+            config = stored_config(data, data['makeAdmin'])
 
-            if data['makeAdmin']:
-                data['adminStatus'] = 1
-            else:
-                data['adminStatus'] = 0
-
-            newACL = ACL(name=data['aclName'], adminStatus=data['adminStatus'],
-                         config=json.dumps(data))
+            newACL = ACL(name=data['aclName'], adminStatus=config['adminStatus'],
+                         config=json.dumps(config))
             newACL.save()
 
             finalResponse = {'status': 1}
@@ -619,10 +616,10 @@ def fetchACLDetails(request):
         if currentACL['admin'] == 1:
             data = json.loads(request.body)
 
-            ## Version Management
-            finalResponse = {}
+            # Every permission is sent at the value in force, so the page shows a box for
+            # each one, ticked or not, whatever the ACL was created with.
             acl = ACL.objects.get(name=data['aclToModify'])
-            finalResponse = json.loads(acl.config)
+            finalResponse = effective_config(json.loads(acl.config))
             finalResponse['status'] = 1
         else:
             return ACLManager.loadErrorJson()
@@ -644,17 +641,18 @@ def submitACLModifications(request):
         if currentACL['admin'] == 1:
             data = json.loads(request.body)
 
-            ## Version Management
+            # Only the permissions the request switches on are granted; one it leaves out is not.
+            config = stored_config(data, data['adminStatus'])
 
             acl = ACL.objects.get(name=data['aclToModify'])
-            acl.adminStatus = int(data['adminStatus'])
-            acl.config = json.dumps(data)
+            acl.adminStatus = config['adminStatus']
+            acl.config = json.dumps(config)
             acl.save()
 
             # What these users may reach changed: phpMyAdmin access is built again on their next visit.
             phpmyadminAccess.retire(list(acl.administrator_set.all()))
 
-            if int(data['adminStatus']) == 1:
+            if config['adminStatus'] == 1:
                 allUsers = acl.administrator_set.all()
 
                 for items in allUsers:
@@ -669,7 +667,7 @@ def submitACLModifications(request):
 
             finalResponse = {'status': 1}
         else:
-            finalResponse = ACLManager.loadErrorJson()
+            return ACLManager.loadErrorJson()
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
