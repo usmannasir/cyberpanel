@@ -14,11 +14,24 @@ READY=/tmp/cyberpanel-wordpress-ready
 : "${DB_Host:?Database host required}"
 SITE_NAME=${SITE_NAME:-"CyberPanel Site"}
 
+# WordPress, its plugins and wp-config.php are files the website itself can
+# rewrite, and wp-cli runs them. It therefore runs as the web server's user,
+# never as root. An image without a tool to change user keeps the old way.
+if command -v setpriv >/dev/null 2>&1; then
+    as_site() { setpriv --reuid=nobody --regid=nogroup --clear-groups "$@"; }
+elif command -v runuser >/dev/null 2>&1; then
+    as_site() { runuser -u nobody -g nogroup -- "$@"; }
+else
+    as_site() { "$@" --allow-root; }
+fi
+
 wp() {
-    "$PHP" -d memory_limit=512M /usr/bin/wp --path="$ROOT" --allow-root "$@"
+    HOME=/tmp WP_CLI_CACHE_DIR=/tmp/.wp-cli-cache \
+        as_site "$PHP" -d memory_limit=512M /usr/bin/wp --path="$ROOT" "$@"
 }
 
 rm -f "$READY"
+chown -R nobody:nogroup "$ROOT"
 if [ ! -f "$ROOT/wp-includes/version.php" ]; then
     wp core download
 fi
@@ -53,7 +66,6 @@ if ! wp core is-installed >/dev/null 2>&1; then
     wp plugin install litespeed-cache --activate
 fi
 wp core is-installed
-chown -R nobody:nogroup "$ROOT"
 /usr/local/lsws/bin/lswsctrl start
 touch "$READY"
 
