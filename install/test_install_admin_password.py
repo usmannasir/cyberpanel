@@ -1,8 +1,10 @@
 """The admin password given in a file stays out of sight, and -p out of the logs."""
 import argparse
 import ast
+import json
 import os
 from pathlib import Path
+import re
 import stat
 import subprocess
 import sys
@@ -10,7 +12,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from install.installer_test_harness import ROOT, Installer, parse_as_python_36, script_parts
+from install.installer_test_harness import CLI_FAILED, ROOT, Installer, parse_as_python_36, script_parts
 
 SECRET = 'Tr0ub4dor&3 -e \\n $HOME `id` "quoted"'
 AS_ROOT = unittest.skipUnless(os.geteuid() == 0, 'a file owned by root is needed')
@@ -181,53 +183,262 @@ class InstallationTests(unittest.TestCase):
 
 
 class PanelAccountTests(unittest.TestCase):
-    """The lines of Post_Install_Tweak that store the password and set it."""
+    """Set_Admin_Password: the password is stored for root and given to the tree's adminPass.py."""
 
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
-        source = function('Post_Install_Tweak')
-        start = source.index('( umask 077; printf')
-        end = source.index('\n', source.index('adminPass.py --password-file')) + 1
-        self.lines = source[start:end]
+        self.stored = self.root / 'adminPass'
+        self.tool = self.root / 'adminPass.py'
+        self.python = self.root / 'python'
+        self.python.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$0.arguments"\n'
+                               'stat -c %a "$QA_STORED" > "$0.mode"\nexit "$QA_STATUS"\n')
+        self.python.chmod(0o755)
 
-    def run_lines(self, password, umask='022'):
-        stored = self.root / 'adminPass'
-        python = self.root / 'python'
-        python.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$0.arguments"\n'
-                          'stat -c %a "$3" > "$0.mode"\n')
-        python.chmod(0o755)
-        lines = self.lines.replace('/etc/cyberpanel/adminPass', str(stored))
-        lines = lines.replace('/usr/local/CyberPanel/bin/python', str(python))
-        self.assertNotIn('/etc/', lines)
-        result = subprocess.run(['bash', '-c', 'umask %s\n%s' % (umask, lines)], stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, universal_newlines=True, timeout=20,
-                                env={'PATH': os.environ['PATH'], 'Admin_Pass': password})
-        self.assertEqual((0, '', ''), (result.returncode, result.stdout, result.stderr))
-        return stored, (self.root / 'python.arguments').read_text().splitlines(), \
+    def set_password(self, password, tree='new', umask='022', status=0):
+        if tree == 'missing':
+            if self.tool.exists():
+                self.tool.unlink()
+        else:
+            self.tool.write_text("parser.add_argument('--password', help='New Password')\n"
+                                 + ("parser.add_argument('--password-file')\n" if tree == 'new' else ''))
+        source = function('Set_Admin_Password')
+        for real, stand_in in (('/etc/cyberpanel/adminPass', self.stored),
+                               ('/usr/local/CyberPanel/bin/python', self.python),
+                               ('/usr/local/CyberCP/plogical/adminPass.py', self.tool)):
+            self.assertIn(real, source)
+            source = source.replace(real, str(stand_in))
+        self.assertNotIn('/etc/', source)
+        self.assertNotIn('/usr/local/', source)
+        result = subprocess.run(['bash', '-c', 'umask %s\n%s\nSet_Admin_Password' % (umask, source)],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=20,
+                                env={'PATH': os.environ['PATH'], 'Admin_Pass': password,
+                                     'QA_STORED': str(self.stored), 'QA_STATUS': str(status)})
+        self.assertEqual(('', ''), (result.stdout, result.stderr))
+        return result.returncode, (self.root / 'python.arguments').read_text().splitlines(), \
             (self.root / 'python.mode').read_text().strip()
 
-    def test_password_is_handed_over_in_the_file_not_on_the_command_line(self):
+    def test_tree_that_can_read_a_file_never_gets_the_password_on_its_command_line(self):
         for password in (SECRET, '-eEnnEEnn', '1234567'):
             with self.subTest(password=password):
-                stored, arguments, mode_when_read = self.run_lines(password)
-                self.assertEqual(password + '\n', stored.read_text())
-                self.assertEqual(['/usr/local/CyberCP/plogical/adminPass.py', '--password-file', str(stored)], arguments)
+                status, arguments, mode_when_read = self.set_password(password)
+                self.assertEqual(0, status)
+                self.assertEqual(password + '\n', self.stored.read_text())
+                self.assertEqual([str(self.tool), '--password-file', str(self.stored)], arguments)
                 self.assertEqual('600', mode_when_read)
-                self.assertEqual(0o600, stat.S_IMODE(stored.stat().st_mode))
+                self.assertEqual(0o600, stat.S_IMODE(self.stored.stat().st_mode))
 
-    def test_stored_password_is_never_readable_by_others(self):
-        self.assertEqual(1, self.lines.count('umask 077'))
-        stored, _, mode_when_read = self.run_lines(SECRET, umask='000')
+    def test_older_tree_gets_the_password_the_way_it_takes_it(self):
+        # adminPass.py of 3.0.12 and before knows --password only; given the new
+        # option it ends with status 2 and sets nothing.
+        status, arguments, mode_when_read = self.set_password(SECRET, tree='old')
+        self.assertEqual(0, status)
+        self.assertEqual([str(self.tool), '--password', SECRET], arguments)
+        self.assertEqual(SECRET + '\n', self.stored.read_text())
         self.assertEqual('600', mode_when_read)
 
-    def test_no_command_of_the_installer_carries_the_password(self):
+    def test_tool_that_is_not_there_is_called_the_old_way_and_its_failure_is_the_status(self):
+        # Nothing is printed for the missing file; the interpreter's failure to
+        # run it is what ends the run.
+        status, arguments, _ = self.set_password(SECRET, tree='missing', status=2)
+        self.assertEqual(2, status)
+        self.assertEqual([str(self.tool), '--password', SECRET], arguments)
+
+    def test_status_is_that_of_the_tool(self):
+        for tree in ('new', 'old'):
+            for status in (0, 1, 2):
+                with self.subTest(tree=tree, status=status):
+                    self.assertEqual(status, self.set_password(SECRET, tree=tree, status=status)[0])
+
+    def test_stored_password_is_never_readable_by_others(self):
+        self.assertEqual(1, function('Set_Admin_Password').count('umask 077'))
+        _, _, mode_when_read = self.set_password(SECRET, umask='000')
+        self.assertEqual('600', mode_when_read)
+
+    def test_the_password_is_part_of_one_command_only_and_only_for_an_older_tree(self):
         source = (ROOT / 'cyberpanel.sh').read_text()
-        self.assertNotIn('--password "$Admin_Pass"', source)
-        for line in source.splitlines():
-            if 'Admin_Pass' in line and 'printf' not in line:
-                self.assertNotRegex(line, r'^\s*(/|python|cyberpanel |curl|wget)', line)
+        carrying = [line.strip() for line in source.splitlines()
+                    if 'Admin_Pass' in line and re.match(r'\s*(/|python|cyberpanel |curl|wget)', line)]
+        self.assertEqual(['/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py '
+                          '--password "$Admin_Pass"'], carrying)
+        fallback = function('Set_Admin_Password')
+        self.assertLess(fallback.index("grep -q -- '--password-file'"), fallback.index('--password-file /etc'))
+        self.assertLess(fallback.index('\nelse\n'), fallback.index('--password "$Admin_Pass"'))
+
+
+LEGACY_HASH = 'import hashlib\nprint(hashlib.sha256(b"salt" + %r.encode()).hexdigest() + ":salt")\n'
+
+
+class AdminPasswordCheckTests(unittest.TestCase):
+    """Admin_Password_Is_Set: the real check, run by a stand-in for the panel's tree.
+
+    The tree has the panel's real plogical/hashPassword.py, the same file in
+    3.0.12 and now; Django, the administrator table and bcrypt are stand-ins.
+    """
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        self.tree = self.root / 'CyberCP'
+        for package in ('django', 'loginSystem', 'plogical', 'CyberCP'):
+            (self.tree / package).mkdir(parents=True)
+            (self.tree / package / '__init__.py').write_text('')
+        (self.tree / 'django/__init__.py').write_text('def setup():\n    pass\n')
+        (self.tree / 'CyberCP/settings.py').write_text('')
+        (self.tree / 'bcrypt.py').write_text('')
+        (self.tree / 'plogical/hashPassword.py').write_text((ROOT / 'plogical/hashPassword.py').read_text())
+        (self.tree / 'loginSystem/models.py').write_text(
+            'import json\nimport os\n\n\n'
+            'class Row:\n    def __init__(self, password):\n        self.password = password\n\n\n'
+            'class Rows(list):\n    def first(self):\n        return self[0] if self else None\n\n\n'
+            'class Manager:\n    def filter(self, userName):\n'
+            '        with open(os.environ["QA_ADMINISTRATORS"]) as source:\n'
+            '            stored = json.load(source)\n'
+            '        return Rows([Row(stored[userName])] if userName in stored else [])\n\n\n'
+            'class Administrator:\n    objects = Manager()\n')
+        self.stored = self.root / 'adminPass'
+        self.administrators = self.root / 'administrators.json'
+
+    def stored_hash(self, password):
+        return subprocess.run([sys.executable, '-c', LEGACY_HASH % password], stdout=subprocess.PIPE,
+                              universal_newlines=True, check=True).stdout.strip()
+
+    def check(self, administrators, stored='absent'):
+        self.administrators.write_text(json.dumps(administrators))
+        if stored != 'absent':
+            self.stored.write_text(stored, encoding='utf-8')
+        elif self.stored.exists():
+            self.stored.unlink()
+        source = function('Admin_Password_Is_Set')
+        self.assertNotIn('Admin_Pass"', source)
+        for real, stand_in in (('/usr/local/CyberCP/bin/python', sys.executable),
+                               ('/usr/local/CyberCP', self.tree),
+                               ('/etc/cyberpanel/adminPass', self.stored)):
+            self.assertIn(real, source)
+            source = source.replace(real, str(stand_in))
+        self.assertNotIn('/etc/', source)
+        self.assertNotIn('/usr/local/', source)
+        result = subprocess.run(['bash', '-c', source + '\nAdmin_Password_Is_Set'], stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, universal_newlines=True, timeout=60,
+                                env={'PATH': os.environ['PATH'], 'QA_ADMINISTRATORS': str(self.administrators)})
+        self.assertEqual('', result.stdout)
+        return result
+
+    def test_administrator_with_the_stored_password(self):
+        for password in (SECRET, 'p\u00e4ssw\u00f6rd-1234', '1234567'):
+            for ending in ('\n', '', '\r\n'):
+                with self.subTest(password=password, ending=ending):
+                    result = self.check({'admin': self.stored_hash(password)}, password + ending)
+                    self.assertEqual((0, ''), (result.returncode, result.stderr))
+
+    def test_administrator_with_another_password(self):
+        # What a panel has that created its administrator itself on a first request.
+        result = self.check({'admin': self.stored_hash('1234567')}, SECRET + '\n')
+        self.assertEqual((1, ''), (result.returncode, result.stderr))
+
+    def test_no_administrator(self):
+        result = self.check({}, SECRET + '\n')
+        self.assertEqual((1, ''), (result.returncode, result.stderr))
+        result = self.check({'someone': self.stored_hash(SECRET)}, SECRET + '\n')
+        self.assertEqual(1, result.returncode)
+
+    def test_nothing_stored_is_no_password(self):
+        result = self.check({'admin': self.stored_hash('')}, '')
+        self.assertEqual(1, result.returncode)
+        result = self.check({'admin': self.stored_hash(SECRET)})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('adminPass', result.stderr)
+
+    def test_check_that_cannot_run_is_a_failed_check(self):
+        (self.tree / 'loginSystem/models.py').write_text('raise RuntimeError("fixture: no database")\n')
+        result = self.check({'admin': self.stored_hash(SECRET)}, SECRET + '\n')
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn('fixture: no database', result.stderr)
+
+    def test_check_is_valid_for_the_panel_interpreter_of_almalinux_8(self):
+        source = function('Admin_Password_Is_Set')
+        code = source[source.index("<<'VERIFY'\n") + len("<<'VERIFY'\n"):source.index('\nVERIFY\n')]
+        parse_as_python_36(code)
+
+
+class PasswordOutcomeTests(unittest.TestCase):
+    """Whole runs: no installation ends complete with another password than the one given."""
+
+    def probes(self, machine):
+        return [call for call in machine.recorded(machine.calls) if '127.0.0.1:8090' in call]
+
+    def test_tree_that_can_read_a_file_gets_the_file(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', '-p', 'Typed-Secret-99')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual('install complete', machine.events()[-1])
+        call = machine.recorded(machine.adminpass_call)
+        self.assertEqual([str(machine.path('/usr/local/CyberCP/plogical/adminPass.py')), '--password-file',
+                          str(machine.stored_password)], call)
+        self.assertEqual('Typed-Secret-99\n', machine.stored_password.read_text())
+        self.assertEqual(0o600, stat.S_IMODE(machine.stored_password.stat().st_mode))
+
+    def test_older_tree_gets_the_password_and_the_run_completes(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', '-p', 'Typed-Secret-99', tree='old')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual('install complete', machine.events()[-1])
+        self.assertEqual([str(machine.path('/usr/local/CyberCP/plogical/adminPass.py')), '--password',
+                          'Typed-Secret-99'], machine.recorded(machine.adminpass_call))
+
+    def test_the_panel_is_asked_for_the_password_before_it_gets_its_first_request(self):
+        machine = Installer(self)
+        machine.run('-v', 'ols')
+        calls = machine.recorded(machine.calls)
+        self.assertEqual(1, calls.count('password-check'))
+        self.assertEqual(1, len(self.probes(machine)))
+        self.assertLess(calls.index('password-check'), calls.index(self.probes(machine)[0]))
+        check = machine.password_check.read_text()
+        self.assertIn('hashPassword.check_password(admin.password, password)', check)
+        self.assertIn(str(machine.stored_password), check)
+
+    def test_password_that_could_not_be_set_fails_the_run(self):
+        # Status 2 is what an adminPass.py answers that does not know an option.
+        for tree, status in (('new', 2), ('old', 2), ('new', 1)):
+            with self.subTest(tree=tree, status=status):
+                machine = Installer(self)
+                result = machine.run('-v', 'ols', tree=tree, adminpass_exit=status)
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                events = machine.events()
+                self.assertEqual(['finishing failed panel_setup', 'install failed panel_setup'], events[-2:])
+                self.assertNotIn('install complete', events)
+                self.assertNotIn('panel ready', events)
+                self.assertEqual([], self.probes(machine))
+                self.assertIn('The admin password could not be set in the panel', result.stdout)
+                self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+
+    def test_administrator_without_the_given_password_fails_the_run(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', password_check_exit=1)
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        events = machine.events()
+        self.assertEqual(['ready running', 'ready failed panel_setup', 'install failed panel_setup'], events[-3:])
+        self.assertNotIn('install complete', events)
+        self.assertNotIn('panel ready', events)
+        self.assertEqual([], self.probes(machine))
+        self.assertIn('its administrator does not have the password of this installation', result.stdout)
+        self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+
+    def test_failed_certificate_is_no_working_panel_without_the_given_password(self):
+        machine = Installer(self)
+        machine.path('/usr/local/lsws/lsphp83/bin').mkdir(parents=True)
+        runtime = machine.path('/usr/local/lsws/lsphp83/bin/lsphp')
+        runtime.write_text('#!/bin/sh\n')
+        runtime.chmod(0o755)
+        result = machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED, password_check_exit=1)
+        self.assertEqual(1, result.returncode)
+        events = machine.events()
+        self.assertEqual(['hostname_ssl failed panel_setup', 'install failed panel_setup'], events[-2:])
+        self.assertNotIn('panel ready', events)
+        self.assertEqual([], self.probes(machine))
+        self.assertNotIn('Visit: https://', result.stdout)
 
 
 class AdminPassScriptTests(unittest.TestCase):

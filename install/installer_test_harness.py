@@ -110,6 +110,18 @@ phase() {
   printf '%s\n' "$1" >> "$QA_PHASES"
   [ "$QA_FAIL_AT" = "$1" ]
 }
+panel_tree() {
+  # What install.py leaves of the panel, as far as the script looks at it
+  # afterwards: the tree's adminPass.py (QA_TREE=old: one that cannot read the
+  # password from a file) and the panel's interpreter.
+  mkdir -p "$QA_ROOT/etc/cyberpanel" "$QA_ROOT/usr/local/CyberCP/plogical" "$QA_ROOT/usr/local/CyberCP/bin"
+  printf '%s\n' "parser.add_argument('--password', help='New Password')" > "$QA_ROOT/usr/local/CyberCP/plogical/adminPass.py"
+  if [ "$QA_TREE" != old ]; then
+    printf '%s\n' "parser.add_argument('--password-file')" >> "$QA_ROOT/usr/local/CyberCP/plogical/adminPass.py"
+  fi
+  cat "$QA_STAND_INS/panel-python" > "$QA_ROOT/usr/local/CyberCP/bin/python"
+  chmod 755 "$QA_ROOT/usr/local/CyberCP/bin/python"
+}
 Main_Installation() {
   # What cyberpanel.sh does here is covered by test_install_exit_status. This
   # stands in for install.py: the real status module, driven by the name of
@@ -121,8 +133,22 @@ Main_Installation() {
     exit "$Install_Status"
   fi
   [[ "$QA_FAIL_AT" = "No_Completion_Marker" ]] && exit 1
+  panel_tree
   return 0
 }
+'''
+
+# Stand-ins for the two interpreters the script runs after install.py: the one
+# that runs the tree's adminPass.py records how it was called, the panel's own
+# keeps the check it was given. Each ends with the status the test asks for.
+INSTALLER_PYTHON = '''#!/bin/sh
+printf '%s\\n' "$@" > "$QA_ADMINPASS_CALL"
+exit "$QA_ADMINPASS_EXIT"
+'''
+PANEL_PYTHON = '''#!/bin/sh
+printf 'password-check\\n' >> "$QA_CALLS"
+cat > "$QA_PASSWORD_CHECK"
+exit "$QA_PASSWORD_CHECK_EXIT"
 '''
 
 PYTHON_DRIVER = '''
@@ -195,6 +221,16 @@ class Installer:
         self.install_log = self.root / 'var/log/installLogs.txt'
         self.driver = self.root / 'driver.py'
         self.driver.write_text(PYTHON_DRIVER)
+        self.stored_password = self.root / 'etc/cyberpanel/adminPass'
+        self.adminpass_call = self.root / 'adminpass-call'
+        self.password_check = self.root / 'password-check.py'
+        stand_ins = self.root / 'stand-ins'
+        stand_ins.mkdir()
+        (stand_ins / 'panel-python').write_text(PANEL_PYTHON)
+        installer_python = self.root / 'usr/local/CyberPanel/bin/python'
+        installer_python.parent.mkdir(parents=True)
+        installer_python.write_text(INSTALLER_PYTHON)
+        installer_python.chmod(0o755)
 
     def os_release(self, content):
         (self.root / 'etc/os-release').write_text(content)
@@ -207,12 +243,17 @@ class Installer:
 
     def harness(self):
         functions, top_level = script_parts()
+        # Of Post_Install_Tweak, the two parts that decide how a run ends are
+        # the real ones: setting the admin password, and the hostname step.
+        password = functions[functions.index('\nif ! Set_Admin_Password; then\n'):]
+        password = password[:password.index('\nfi\n') + len('\nfi\n')]
         tweak = functions[functions.index('\nInstall_Step hostname_ssl\n'):]
         tweak = tweak[:tweak.index('\n}\n')]
         stubs = [COMMAND_STUBS]
         for name, failure in sorted(STUBBED_PHASES.items()):
             stubs.append('%s() { phase %s && { %s; }; return 0; }\n' % (name, name, failure))
-        stubs.append('Post_Install_Tweak() {\nphase Post_Install_Tweak%s\n}\n' % tweak)
+        stubs.append('Post_Install_Tweak() {\nphase Post_Install_Tweak%s%s\n}\n'
+                     % (self.relocate(password), self.relocate(tweak)))
         return self.relocate(functions) + ''.join(stubs) + self.relocate(top_level)
 
     def run(self, *arguments, **options):
@@ -235,6 +276,13 @@ class Installer:
             'QA_TLS_OUTPUT': options.pop('tls_output', CLI_OK),
             'QA_FAIL_AT': options.pop('fail_at', ''),
             'QA_PYTHON_STEPS': options.pop('python_steps', DEFAULT_PYTHON_STEPS),
+            'QA_ROOT': str(self.root),
+            'QA_STAND_INS': str(self.root / 'stand-ins'),
+            'QA_TREE': options.pop('tree', 'new'),
+            'QA_ADMINPASS_CALL': str(self.adminpass_call),
+            'QA_ADMINPASS_EXIT': str(options.pop('adminpass_exit', 0)),
+            'QA_PASSWORD_CHECK': str(self.password_check),
+            'QA_PASSWORD_CHECK_EXIT': str(options.pop('password_check_exit', 0)),
         }
         environment.update(options.pop('environment', {}))
         stdin = options.pop('stdin', '')
@@ -262,9 +310,10 @@ class Installer:
         return record.read_text().splitlines() if record.exists() else []
 
     def everything_written(self):
-        """All text the run left in files, for searches for a secret."""
+        """All text the run left in files, for searches for a secret. The one
+        file that is there to hold the admin password is left out."""
         text = []
         for path in sorted(self.root.rglob('*')):
-            if path.is_file() and not path.is_symlink() and path.name != 'harness.sh':
+            if path.is_file() and not path.is_symlink() and path not in (self.root / 'harness.sh', self.stored_password):
                 text.append(path.read_text(errors='replace'))
         return '\n'.join(text)
