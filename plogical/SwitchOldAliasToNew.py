@@ -32,7 +32,7 @@ class SwitchOldAliasToNew:
             from websiteFunctions.models import aliasDomains
             from plogical.virtualHostUtilities import virtualHostUtilities
             from plogical.processUtilities import ProcessUtilities
-            from managePHP.phpConfig import normalized_php_selection
+            from managePHP.phpConfig import stored_php_selection
 
             for alias in aliasDomains.objects.all():
                 message = f"{alias.aliasDomain} was alias of {alias.master.domain}. Conversions started.."
@@ -40,7 +40,7 @@ class SwitchOldAliasToNew:
 
                 path = f'/home/{alias.master.domain}/public_html'
 
-                result = virtualHostUtilities.createDomain(alias.master.domain, alias.aliasDomain, normalized_php_selection(alias.master.phpSelection), path, 1, 0,
+                result = virtualHostUtilities.createDomain(alias.master.domain, alias.aliasDomain, stored_php_selection(alias.master.phpSelection), path, 1, 0,
                                                            0, 'admin', 0,'/home/cyberpanel/fakePath', 1, 1)
 
                 if os.path.exists(ProcessUtilities.debugPath):

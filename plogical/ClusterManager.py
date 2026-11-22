@@ -299,14 +299,14 @@ password=%s""" % (rootdbpassword, rootdbpassword)
 
             from plogical.virtualHostUtilities import virtualHostUtilities
             from websiteFunctions.models import Websites, ChildDomains
-            from managePHP.phpConfig import normalized_php_selection
+            from managePHP.phpConfig import stored_php_selection
 
             for website in Websites.objects.all():
 
                 confPath = '%s/%s' % (ClusterManager.vhostConfPath, website.domain)
                 if not os.path.exists(confPath):
                     self.PostStatus('Domain %s found in master server, creating on child server now..' % (website.domain))
-                    virtualHostUtilities.createVirtualHost(website.domain, website.adminEmail, normalized_php_selection(website.phpSelection), website.externalApp, 1, 1, 0, website.admin.userName, website.package.packageName, 0, '/home/cyberpanel/temp', 1, 0)
+                    virtualHostUtilities.createVirtualHost(website.domain, website.adminEmail, stored_php_selection(website.phpSelection), website.externalApp, 1, 1, 0, website.admin.userName, website.package.packageName, 0, '/home/cyberpanel/temp', 1, 0)
                     self.PostStatus('Domain %s successfully created.' % (website.domain))
 
 
@@ -314,7 +314,7 @@ password=%s""" % (rootdbpassword, rootdbpassword)
                 confPath = '%s/%s' % (ClusterManager.vhostConfPath, childDomain.domain)
                 if not os.path.exists(confPath):
                     self.PostStatus('Child Domain %s found in master server, creating on child server now..' % (childDomain.domain))
-                    virtualHostUtilities.createDomain(childDomain.master.domain, childDomain.domain, normalized_php_selection(childDomain.phpSelection), childDomain.path, 1, 1, 0, childDomain.master.admin.userName, 0, 0)
+                    virtualHostUtilities.createDomain(childDomain.master.domain, childDomain.domain, stored_php_selection(childDomain.phpSelection), childDomain.path, 1, 1, 0, childDomain.master.admin.userName, 0, 0)
                     self.PostStatus('Child Domain %s successfully created.' % (childDomain.domain))
 
             ## Cleanup of deleted domains

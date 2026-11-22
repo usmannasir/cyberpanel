@@ -37,7 +37,7 @@ from plogical.wordpressInstallerUtilities import (
     directory_allows_install,
     php_binary_for_selection,
 )
-from managePHP.phpConfig import normalized_php_selection
+from managePHP.phpConfig import stored_php_selection
 from random import randint
 import secrets
 import hashlib
@@ -2343,7 +2343,7 @@ class ApplicationInstaller(multi.Thread):
         DataToPass = {}
         DataToPass['domainName'] = self.data['StagingDomain']
         DataToPass['adminEmail'] = wpobj.owner.adminEmail
-        DataToPass['phpSelection'] = normalized_php_selection(wpobj.owner.phpSelection)
+        DataToPass['phpSelection'] = stored_php_selection(wpobj.owner.phpSelection)
         DataToPass['websiteOwner'] = wpobj.owner.admin.userName
         DataToPass['package'] = 'Default'
         DataToPass['ssl'] = 1
@@ -6520,7 +6520,7 @@ class ApplicationInstaller(multi.Thread):
                     vhFile = f'/usr/local/lsws/conf/vhosts/{NewWPsite.owner.domain}/vhost.conf'
                     execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
                     # The selection comes from the backup's own description.
-                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(normalized_php_selection(str(config['WebphpSelection']))) + "  --path " + shlex.quote(vhFile)
+                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(stored_php_selection(str(config['WebphpSelection']))) + "  --path " + shlex.quote(vhFile)
                     ProcessUtilities.popenExecutioner(execPath)
 
                     ###### Same code already used in Existing site

@@ -125,23 +125,16 @@ class PHPSelectionEntryTests(unittest.TestCase):
         self.assertEqual(1, words.count('--phpVersion'))
         return words[words.index('--phpVersion') + 1]
 
-    def test_cloud_website_creation_takes_an_older_spelling(self):
-        # The cloud interface passes its request on with the controller
-        # field; earlier releases created the website for these spellings.
-        for spelling, selection in OLDER_SPELLINGS.items():
-            with self.subTest(spelling=spelling):
-                self.process.reset_mock()
-                payload = json.loads(self.manager().submitWebsiteCreation(7, dict(
-                    website_data(), phpSelection=spelling, controller='submitWebsiteCreation')).content)
-                self.assertEqual(1, payload['status'], payload)
-                self.assertEqual(selection, self.php_word())
-
     def test_a_page_request_for_a_new_website_keeps_the_strict_check(self):
         for spelling in OLDER_SPELLINGS:
             with self.subTest(spelling=spelling):
                 self.process.reset_mock()
                 payload = json.loads(self.manager().submitWebsiteCreation(
                     7, dict(website_data(), phpSelection=spelling)).content)
+                self.assertEqual(0, payload['status'], payload)
+                # Nor does a field of the request switch the check off.
+                payload = json.loads(self.manager().submitWebsiteCreation(
+                    7, dict(website_data(), phpSelection=spelling, controller='submitWebsiteCreation')).content)
                 self.assertEqual(0, payload['status'], payload)
                 self.assertEqual([], self.worker_commands())
 

@@ -2354,11 +2354,6 @@ Require valid-user
             domain = data['domainName']
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
-            # The cloud interface hands its whole request over, its controller
-            # field included. Like /api/createWebsite it took older spellings
-            # of a version in earlier releases ('PHP 74', 'php 7.4').
-            if data.get('controller') == 'submitWebsiteCreation':
-                phpSelection = normalized_php_selection(phpSelection)
             # Exactly 'PHP x.y': the selection is stored with the website and
             # becomes part of its configuration, paths and command lines.
             php_selection_digits(phpSelection)

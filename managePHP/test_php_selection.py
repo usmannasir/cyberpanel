@@ -1,7 +1,8 @@
 """The one check of a PHP selection, and the names that are built from its digits."""
 import unittest
 
-from managePHP.phpConfig import fpm_service_for_selection, normalized_php_selection, php_selection_digits
+from managePHP.phpConfig import (fpm_service_for_selection, normalized_php_selection, php_selection_digits,
+                                  stored_php_selection)
 
 # Every version a page or an installer of the panel offers, and a two-digit
 # minor number as findPHPVersions would report it for /usr/local/lsws/lsphp810.
@@ -89,6 +90,17 @@ class PHPSelectionTests(unittest.TestCase):
                 with self.subTest(value=value, rpm_family=rpm_family):
                     with self.assertRaises(ValueError):
                         fpm_service_for_selection(value, rpm_family)
+
+
+class StoredSelectionTests(unittest.TestCase):
+    def test_a_stored_older_spelling_gets_the_panels_form(self):
+        self.assertEqual('PHP 7.4', stored_php_selection('PHP 74'))
+        self.assertEqual('PHP 8.1', stored_php_selection('php 8.1'))
+
+    def test_a_stored_value_without_such_a_form_goes_on_as_it_is(self):
+        # The worker refuses it for that one website; the caller's loop goes on.
+        for value in ('PHP seven', '', None, 'PHP 8.3; x'):
+            self.assertIs(value, stored_php_selection(value))
 
 
 if __name__ == '__main__':

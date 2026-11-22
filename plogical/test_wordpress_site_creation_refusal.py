@@ -8,7 +8,7 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest import mock
 
-from managePHP.phpConfig import normalized_php_selection
+from managePHP.phpConfig import normalized_php_selection, stored_php_selection
 from plogical.test_php_restart_marker import load_methods
 
 REFUSAL = 'Apache is not set up on this server yet.'
@@ -37,7 +37,7 @@ class WordPressCreationTests(unittest.TestCase):
         self.namespace = dict(
             Websites=self.websites, Administrator=mock.Mock(), ACLManager=mock.Mock(), ProcessUtilities=process,
             logging=mock.Mock(), os=os, time=mock.Mock(), wpplugins=mock.Mock(),
-            normalized_php_selection=normalized_php_selection)
+            normalized_php_selection=normalized_php_selection, stored_php_selection=stored_php_selection)
         self.create, self.staging_site = load_methods(
             'plogical/applicationInstaller.py', 'ApplicationInstaller',
             ['wordpressInstallNew', '_createStagingWebsite'], self.namespace)

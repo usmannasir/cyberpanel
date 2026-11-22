@@ -46,6 +46,21 @@ def normalized_php_selection(value):
     return selection
 
 
+def stored_php_selection(value):
+    """The panel's own form of a stored PHP version, or the stored value itself when it has none.
+
+    For the places that hand a stored selection on to a worker for one
+    website among others (a restore, a cluster member, a staging site). A
+    value that cannot be normalised goes on as it is: the worker refuses it
+    for that website, as it always did, and the caller's own handling of a
+    refusal decides what happens next.
+    """
+    try:
+        return normalized_php_selection(value)
+    except ValueError:
+        return value
+
+
 def fpm_service_for_selection(selection, rpm_family):
     """Return the PHP-FPM service of a selection.
 
