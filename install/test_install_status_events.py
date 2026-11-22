@@ -10,6 +10,7 @@ import signal
 import socket
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -17,7 +18,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from install.installer_test_harness import (
-    CLI_FAILED, DEBIAN_12, REAL_FUNCTIONS, ROOT, SPECIAL_STUBS, STUBBED_PHASES,
+    CLI_FAILED, DEBIAN_12, PYTHON_DRIVER, REAL_FUNCTIONS, ROOT, SPECIAL_STUBS, STUBBED_PHASES,
     Installer, script_parts, top_level_functions,
 )
 
@@ -610,6 +611,95 @@ class HostnameCertificateTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertEqual(['hostname_ssl failed panel_setup', 'install failed panel_setup'],
                          machine.events()[-2:])
+
+
+class InstallerHandoffTests(unittest.TestCase):
+    """The lines of Main_Installation that run install.py and judge its end,
+    as install/test_install_exit_status.py takes them, here under the real
+    status functions and exit trap, with a stand-in for install.py that uses
+    the real status module."""
+
+    def run_handoff(self, directives, marker, remote='Off'):
+        functions, _ = script_parts()
+        status_functions = functions[functions.index('# Installation status events\n'):
+                                     functions.index('# Initialize logging\n')]
+        start = functions.index('if [[ "$Remote_MySQL" = "On" ]] ; then\n  CP_INSTALL_MYSQL_PASSWORD=')
+        handoff = functions[start:functions.index('\n}\n', start)]
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        events = root / 'install_events.log'
+        log = root / 'installLogs.txt'
+        driver = root / 'driver.py'
+        driver.write_text(PYTHON_DRIVER)
+        # Stands in for "/usr/local/CyberPanel/bin/python install.py <flags>".
+        python = root / 'python'
+        python.write_text(
+            '#!/bin/sh\nprintf "%%s\\n" "$*" > "$0.called"\n'
+            'printf "%%s" "$CP_INSTALL_MYSQL_PASSWORD" > "$0.password"\n'
+            '"%s" -I "%s" "%s" "%s" %s\nstatus=$?\n%s\nexit $status\n'
+            % (sys.executable, driver, ROOT / 'install', events, directives,
+               'echo "CyberPanel installation successfully completed!,80" >> "%s"' % log if marker else ''))
+        python.chmod(0o755)
+        for real, stand_in in (('/var/log/cyberpanel/install_events.log', events),):
+            self.assertIn(real, status_functions)
+            status_functions = status_functions.replace(real, str(stand_in))
+        for real, stand_in in (('/usr/local/CyberPanel/bin/python', python), ('/var/log/installLogs.txt', log)):
+            self.assertIn(real, handoff)
+            handoff = handoff.replace(real, str(stand_in))
+        script = ('Debug_Log2() { :; }\n' + status_functions
+                  + 'Remote_MySQL=%s\nMySQL_Password=fixture-only\nFinal_Flags=(192.0.2.10 --postfix ON)\n' % remote
+                  + 'Install_Run_Start 3.0.11\nInstall_Step web_server\n'
+                  + handoff + '\necho POST_INSTALL_REACHED\nInstall_Step finishing\n'
+                  # The end of a run, as Install_Run_Finish writes it.
+                  'Install_Event finishing done\nInstall_Event install complete\nInstall_Run_Active="No"\n')
+        result = subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                universal_newlines=True, timeout=60, env={'PATH': os.environ['PATH']})
+        lines = events.read_text().splitlines()
+        self.assertEqual(1, len({line.split()[1] for line in lines}), 'install.py wrote under another run name')
+        return result, [' '.join(line.split()[2:]) for line in lines], root
+
+    START = ['install started 3.0.11', 'preflight running', 'preflight done', 'web_server running']
+
+    def test_installer_that_fails_ends_the_run_with_its_status_and_its_step(self):
+        for remote in ('On', 'Off'):
+            for status in (23, 1, 2, 137):
+                with self.subTest(remote=remote, status=status):
+                    result, events, _ = self.run_handoff('step:php step:database exit:%d' % status, True, remote)
+                    self.assertEqual(status, result.returncode, result.stdout + result.stderr)
+                    self.assertEqual(self.START + ['web_server done', 'php running', 'php done', 'database running',
+                                                   'database failed panel_setup', 'install failed panel_setup'],
+                                     events)
+                    self.assertNotIn('POST_INSTALL_REACHED', result.stdout)
+                    self.assertIn('CyberPanel installation failed (exit %d)' % status, result.stdout)
+
+    def test_installer_that_fails_before_its_first_step_fails_the_step_the_script_started(self):
+        result, events, _ = self.run_handoff('exit:1', False)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(self.START + ['web_server failed panel_setup', 'install failed panel_setup'], events)
+
+    def test_installer_that_ends_well_without_its_completion_marker_is_a_failed_run(self):
+        # What an "os._exit(0)" on a failure path looked like to the script.
+        result, events, _ = self.run_handoff('step:php exit:0', False)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(self.START + ['web_server done', 'php running', 'php failed panel_setup',
+                                       'install failed panel_setup'], events)
+        self.assertNotIn('POST_INSTALL_REACHED', result.stdout)
+
+    def test_installer_that_completes_lets_the_script_go_on(self):
+        for remote in ('On', 'Off'):
+            with self.subTest(remote=remote):
+                result, events, root = self.run_handoff(
+                    'step:php step:database skip:ftp step:dns skip:email step:panel finish', True, remote)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertIn('POST_INSTALL_REACHED', result.stdout)
+                self.assertEqual(self.START + ['web_server done', 'php running', 'php done', 'database running',
+                                               'database done', 'ftp skipped', 'dns running', 'dns done',
+                                               'email skipped', 'panel running', 'panel done', 'finishing running',
+                                               'finishing done', 'install complete'], events)
+                self.assertEqual('install.py 192.0.2.10 --postfix ON', (root / 'python.called').read_text().strip())
+                # The remote database password travels in the environment only.
+                self.assertEqual('fixture-only' if remote == 'On' else '', (root / 'python.password').read_text())
 
 
 @unittest.skipUnless(shutil.which('timeout'), 'timeout is needed')
