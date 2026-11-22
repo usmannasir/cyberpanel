@@ -778,6 +778,29 @@ class UntrustedStatusTests(SiteTree):
             self.assertEqual(before + b'more\n', self.read(target))
         self.assertEqual([], os.listdir(self.temp))
 
+    def test_replacing_does_not_wait_for_a_pipe_put_in_the_place_of_the_file(self):
+        # The file becomes a pipe that nobody reads, right after the command looked at it.
+        looked = 'case $1 in 8???);;*)exit 5;;esac\n'
+        waited = []
+
+        def runner(command, user):
+            command = command.replace(looked, looked + 'rm -f -- "$N";mkfifo -- "$N"\n')
+            process = subprocess.Popen(['sh', '-c', command], stdin=subprocess.DEVNULL,
+                                       stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            try:
+                return True, process.communicate(timeout=8)[0]
+            except subprocess.TimeoutExpired:
+                waited.append(command)
+                process.kill()
+                subprocess.call(['pkill', '-f', 'of=./readme.txt'])
+                return True, process.communicate()[0]
+
+        site = SiteFiles('secaiuser', self.home, self.root, runner=runner, temp_writer=self.temp_writer)
+        self.refused('replace_failed', site.replace_file, 'readme.txt', b'new\n', backup=False)
+        self.assertEqual([], waited)
+        self.assertTrue(stat.S_ISFIFO(os.lstat(os.path.join(self.root, 'readme.txt')).st_mode))
+        self.assertEqual([], os.listdir(self.temp))
+
     def test_a_change_that_did_not_happen_is_not_reported_as_done(self):
         target = os.path.join(self.root, 'readme.txt')
         os.chmod(self.root, 0o555)

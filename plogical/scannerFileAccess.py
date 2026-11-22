@@ -109,8 +109,9 @@ BACKUP = FILE + (
 UNCHANGED = '[ -z "$Z" ]||[ "$2" = "$Z" ]||exit 2\n'
 
 # S is the file with the new content. What the file then holds is printed.
+# Nothing is waited for when the name has become a pipe since it was looked at.
 REPLACE = FILE + '[ "$2" -le "$L" ]||exit 7\n' + UNCHANGED + (
-    'dd oflag=nofollow conv=nocreat bs=64k if="$S" of="$N"||exit 6\n'
+    'dd oflag=nofollow,nonblock conv=nocreat bs=64k if="$S" of="$N"||exit 6\n'
     'exec dd iflag=nofollow,nonblock,count_bytes bs=64k count=$((L+1)) if="$N"\n')
 
 # M is the new name, in the same folder. "E" is printed when it is taken; the
