@@ -2636,7 +2636,7 @@ rm -f "$cert_conf"
 # The helper starts the unit only if it is still enabled and that interpreter exists.
 Post_Install_Start_Web_Terminal() {
 log_function_start "Post_Install_Start_Web_Terminal"
-if ! /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/terminalService.py start-installed; then
+if ! timeout 120 /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/terminalService.py start-installed; then
   log_warning "Web Terminal service could not be started; check: systemctl status fastapi_ssh_server"
 fi
 }
