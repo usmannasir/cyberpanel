@@ -46,6 +46,8 @@ class PHPSelectionEntryTests(unittest.TestCase):
         self.process.outputExecutioner.return_value = 'owned.example\n1,None\n'
         self.ns['Package'] = mock.Mock()
         self.ns['ChildDomains'] = mock.Mock()
+        self.ns['ChildDomains'].objects.filter.return_value.first.return_value = None
+        self.services['Websites'].objects.filter.return_value.first.return_value = None
         self.ns['change_php_succeeded'] = lambda output: '1,None' in output
         quota = mock.Mock()
         quota.prepare_package_quota.return_value = None
@@ -61,6 +63,7 @@ class PHPSelectionEntryTests(unittest.TestCase):
     def existing_site(self):
         self.services['Websites'].objects.get.side_effect = None
         self.services['Websites'].objects.get.return_value = self.site
+        self.services['Websites'].objects.filter.return_value.first.return_value = self.site
 
     def entries(self):
         """(name, call with a PHP value, whether the website already exists)."""

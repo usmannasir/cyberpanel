@@ -5,6 +5,7 @@ import unittest
 
 from managePHP import phpConfig
 from plogical.vhostConfs import vhostConfs
+from websiteFunctions.test_stored_domain_name import Rows
 from websiteFunctions.test_wordpress_entitlements import Response, load_wordpress_manager
 
 UBUNTU_POOL = '/etc/php/8.1/fpm/pool.d/owned.example.conf'
@@ -25,7 +26,6 @@ class PoolTuning(unittest.TestCase):
     def setUp(self):
         self.manager, self.ns, self.services = load_wordpress_manager()
         self.ns['vhostConfs'] = vhostConfs
-        self.ns['ChildDomains'] = self.children = SimpleNamespace(objects=SimpleNamespace(get=self.child))
         acl = self.services['ACLManager']
         acl.CheckForPremFeature.return_value = 1
         acl.loadedACL.return_value = {'admin': 0}
@@ -33,7 +33,8 @@ class PoolTuning(unittest.TestCase):
         acl.loadErrorJson.return_value = Response(json.dumps({'status': 0, 'error_message': 'ACL denied'}))
         self.services['Administrator'].objects.get.return_value = SimpleNamespace(pk=7, userName='owner')
         self.site = SimpleNamespace(domain='owned.example', externalApp='owned1234')
-        self.services['Websites'].objects.get.side_effect = self.website
+        self.ns['Websites'] = SimpleNamespace(objects=Rows(self.site))
+        self.ns['ChildDomains'] = SimpleNamespace(objects=Rows())
         paths = self.services['os'].path
         paths.realpath.side_effect = lambda path: path
         paths.basename.side_effect = lambda path: path.rsplit('/', 1)[-1]
@@ -44,13 +45,6 @@ class PoolTuning(unittest.TestCase):
         self.distro('ubuntu')
         self.services['ApacheVhost'].fpmServiceCommand.side_effect = self.service_command
 
-    def website(self, domain):
-        if domain != self.site.domain:
-            raise LookupError(domain)
-        return self.site
-
-    def child(self, domain):
-        raise LookupError(domain)
 
     def distro(self, name):
         self.rpm_family = name != 'ubuntu'
@@ -122,6 +116,17 @@ class PoolNameOnTuningTests(PoolTuning):
             'listen.group = nogroup\nlisten.mode = 0660\nuser = owned1234\ngroup = owned1234\npm = dynamic\n'
             'pm.max_children = 40\npm.start_servers = 3\npm.min_spare_servers = 3\npm.max_spare_servers = 9\n',
             self.written())
+
+
+class PoolOfTheStoredWebsiteTests(PoolTuning):
+    def test_another_spelling_of_the_domain_cannot_name_a_second_pool_file(self):
+        other = UBUNTU_POOL.replace('owned.example', 'OWNED.EXAMPLE')
+        result = self.tune(tuning_data(other, domainName='OWNED.EXAMPLE'))
+        self.assertEqual(0, result['status'])
+        self.assertEqual([], self.helper_commands())
+        # The stored name's own pool file is still tuned under that spelling.
+        self.assertEqual({'status': 1}, self.tune(tuning_data(UBUNTU_POOL, domainName='OWNED.EXAMPLE')))
+        self.assertIn('listen = /var/run/php/owned.example.sock\n', self.written())
 
 
 if __name__ == '__main__':
