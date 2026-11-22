@@ -1,6 +1,7 @@
 """Mail is in a backup when the job says so, and comes back from it without harm to the mail store."""
 import ast
 import errno
+import fcntl
 import io
 import json
 import os
@@ -157,10 +158,30 @@ class OutcomeTests(unittest.TestCase):
         self.assertTrue(runs_one_command(command))
 
     def test_restored_words_say_what_was_left_alone(self):
-        self.assertEqual('36 mail files written', mailArchive.restored_words(36, 0, 0))
-        self.assertEqual('36 mail files written, 7 index files of Dovecot left as they are on the server, '
+        self.assertEqual('36 mail files written', mailArchive.restored_words(dict(written=36)))
+        self.assertEqual('36 mail files written, 40 index, lock and compiled filter files left out (Dovecot makes '
+                         'them again), 7 files of Dovecot left as they are on the server, '
                          '2 second names of files left out because their file was not restored',
-                         mailArchive.restored_words(36, 7, 2))
+                         mailArchive.restored_words(dict(written=36, rebuilt=40, kept=7, unlinked=2, mdbox=[])))
+        words = mailArchive.mdbox_words(['imported', 'other'])
+        self.assertIn('Not restored: imported, other.', words)
+        self.assertIn('older storage files under a mailbox in use would lose the mail that arrived since', words)
+        self.assertIn('Restore them into an empty mailbox folder, or ask support.', words)
+
+    def test_output_is_printed_whatever_the_locale(self):
+        raw = io.BytesIO()
+        # What the program's output is under Python 3.6 with the C locale.
+        plain = io.TextIOWrapper(raw, encoding='ascii')
+        with mock.patch('sys.stdout', plain):
+            mailArchive.say('[mail-archive] failed /home/vmail/example.com/b\u00fcro/Maildir: \u4e0d\udcff')
+        self.assertEqual('[mail-archive] failed /home/vmail/example.com/b\u00fcro/Maildir: \u4e0d?\n',
+                         raw.getvalue().decode('utf-8'))
+        with self.assertRaises(UnicodeEncodeError):
+            plain.write('b\u00fcro')
+            plain.flush()
+        with mock.patch('sys.stdout', io.StringIO()) as printed:
+            mailArchive.say('plain')
+        self.assertEqual('plain\n', printed.getvalue())
 
 
 class SecretTests(TemporaryFolder):
@@ -183,6 +204,12 @@ class SecretTests(TemporaryFolder):
         self.assertFalse(os.path.exists(path))
         mailArchive.forget_secret(path)
         mailArchive.forget_secret(None)
+
+    def test_password_that_is_not_text_leaves_no_file(self):
+        for value in (None, '', 7, ['x'], {'a': 1}, b'bytes'):
+            with self.assertRaises(mailArchive.Refused):
+                mailArchive.keep_secret(value)
+        self.assertEqual([], os.listdir(self.base))
 
     def test_only_a_plain_file_of_the_panel_s_own_folder_is_read(self):
         outside = tempfile.mkdtemp(prefix='mail-archive-test-')
@@ -301,16 +328,43 @@ class JudgeTests(unittest.TestCase):
         self.assertEqual((mailArchive.FAILED, '1a2b3c4d'), (outcome, discard))
 
     def test_restore_pass_is_done_only_when_both_ends_are(self):
-        self.assertEqual((mailArchive.RESTORED, '7 0 0'),
-                         mailArchive.judge_restore(self.FOLDER, '1a2b3c4d', 0, '', 0, 'a warning\n7 0 0\n'))
+        self.assertEqual((mailArchive.RESTORED, '{"written": 7}'),
+                         mailArchive.judge_restore(self.FOLDER, '1a2b3c4d', 0, '', 0, 'a warning\n{"written": 7}\n'))
         outcome, detail = mailArchive.judge_restore(
-            self.FOLDER, '1a2b3c4d', 1, 'Fatal: cannot dump file: path "/vmail-example.com.tar" not found', 1,
-            'empty file\n')
+            self.FOLDER, '1a2b3c4d', 1, 'Fatal: cannot dump file: path "/vmail-example.com.tar" not found',
+            mailArchive.UNREADABLE, 'The archive could not be read: empty file\n')
         self.assertEqual(mailArchive.FAILED, outcome)
         self.assertIn('No mail archive could be read from snapshot 1a2b3c4d', detail)
         self.assertIn('before CyberPanel 3.0.13 hold no mail archive', detail)
-        self.assertEqual((mailArchive.FAILED, 'No space left on device'),
-                         mailArchive.judge_restore(self.FOLDER, '1a2b3c4d', 0, '', 1, 'No space left on device\n'))
+        # An archive that is damaged, from a backup program that ended well.
+        self.assertEqual((mailArchive.FAILED, 'The archive could not be read: unexpected end of data'),
+                         mailArchive.judge_restore(self.FOLDER, '1a2b3c4d', 0, '', mailArchive.UNREADABLE,
+                                                   'The archive could not be read: unexpected end of data\n'))
+
+    def test_reason_the_restore_stopped_is_the_one_reported(self):
+        # The backup program is cut off when the reading end stops, and fails with a broken pipe.
+        for said in ('The archive does not fit: it needs more than 5 bytes or 9 entries, which is what the disk '
+                     'has free less a reserve.', "The archive holds '../x', a name that leaves the mail folder.",
+                     '[Errno 28] No space left on device', 'The archive needs more memory than a restore may use.'):
+            for store_status, store_errors in ((1, 'Fatal: write /dev/stdout: broken pipe'), (-13, ''), (0, '')):
+                self.assertEqual((mailArchive.FAILED, said), mailArchive.judge_restore(
+                    self.FOLDER, '1a2b3c4d', store_status, store_errors, mailArchive.STOPPED, said + '\n'))
+        outcome, detail = mailArchive.judge_restore(self.FOLDER, '1a2b3c4d', -13, '', -9, '')
+        self.assertEqual(mailArchive.FAILED, outcome)
+        self.assertIn('ended by signal 9', detail)
+        self.assertNotEqual(mailArchive.STOPPED, mailArchive.UNREADABLE)
+
+    def test_search_for_links_does_not_fail_over_mail_that_moved_meanwhile(self):
+        gone = ("find: '/home/vmail/example.com/qa/Maildir/new/1700.M1P2.host': No such file or directory\n"
+                "find: '/home/vmail/example.com/qa/Maildir/tmp/x': No such file or directory\n")
+        self.assertEqual('', mailArchive.search_trouble(0, ''))
+        self.assertEqual('', mailArchive.search_trouble(1, gone))
+        for errors in ("find: '/home/vmail/example.com/qa/Maildir': Permission denied\n",
+                       gone + "find: '/home/vmail/example.com/qa': Permission denied\n",
+                       "find: '/home/vmail/example.com/x': Input/output error\n", ''):
+            trouble = mailArchive.search_trouble(1, errors)
+            self.assertTrue(trouble, errors)
+        self.assertIn('Permission denied', mailArchive.search_trouble(1, gone + "find: 'x': Permission denied\n"))
 
 
 class JobEndTests(unittest.TestCase):
@@ -386,7 +440,10 @@ class UnpackTests(TemporaryFolder):
     def restore(self, *members, **options):
         """Both passes, as the program runs them."""
         plan = mailArchive.Unpacker(self.folder, options.get('limits', ROOMY)).check(archive_of(*members))
-        return mailArchive.Unpacker(self.folder, options.get('limits', ROOMY)).write(archive_of(*members), plan)
+        self.counts = mailArchive.Unpacker(self.folder, options.get('limits', ROOMY)).write(
+            archive_of(*members), plan)
+        # written; Dovecot files never restored; Dovecot files kept as they are; second names left out
+        return tuple(self.counts[name] for name in ('written', 'rebuilt', 'kept', 'unlinked'))
 
     def refused(self, *members, **options):
         """The first pass refuses the archive, and nothing at all is written."""
@@ -407,7 +464,8 @@ class UnpackTests(TemporaryFolder):
             ('./qa/Maildir/.Archive/cur/1.host:2,S', tarfile.LNKTYPE, './qa/Maildir/cur/1.host:2,S'),
             ('./qa/sieve/managesieve.sieve', tarfile.REGTYPE, 'keep;'),
             ('./qa/.dovecot.sieve', tarfile.SYMTYPE, 'sieve/managesieve.sieve'))
-        self.assertEqual((4, 0, 0), written)
+        self.assertEqual((4, 0, 0, 0), written)
+        self.assertEqual([], self.counts['mdbox'])
         self.assertEqual({'qa/Maildir/cur/1.host:2,S': 'first message',
                           'qa/Maildir/.Sent/cur/2.host:2,S': 'second message',
                           'qa/Maildir/.Archive/cur/1.host:2,S': 'first message',
@@ -523,13 +581,12 @@ class UnpackTests(TemporaryFolder):
             self.refused(('./thief/Maildir', tarfile.SYMTYPE, target))
 
     def test_second_name_for_a_file_outside_the_folder_is_refused(self):
-        for target in ('../other.example/user/Maildir/cur/1', self.other + '/user/Maildir/cur/1', '.',
-                       'qa/Maildir/dovecot-uidlist'):
+        for target in ('../other.example/user/Maildir/cur/1', self.other + '/user/Maildir/cur/1', '.'):
             self.refused(('./thief/Maildir/cur/1', tarfile.LNKTYPE, target))
 
     def test_second_name_whose_file_is_not_there_is_left_out_and_counted(self):
-        self.assertEqual((1, 0, 1), self.restore(('./qa/Maildir/cur/1', tarfile.REGTYPE, 'message'),
-                                                 ('./qa/Maildir/cur/2', tarfile.LNKTYPE, 'qa/absent')))
+        self.assertEqual((1, 0, 0, 1), self.restore(('./qa/Maildir/cur/1', tarfile.REGTYPE, 'message'),
+                                                    ('./qa/Maildir/cur/2', tarfile.LNKTYPE, 'qa/absent')))
         self.assertEqual({'qa/Maildir/cur/1': 'message'}, self.files_below(self.folder))
 
     def test_nothing_is_written_through_a_link_that_leads_out(self):
@@ -547,65 +604,222 @@ class UnpackTests(TemporaryFolder):
         self.refused(('./qa/Maildir/new/2', tarfile.REGTYPE, 'new'), ('./qa/Maildir/cur', tarfile.REGTYPE, 'x'))
         self.refused(('./qa/Maildir/cur/1', tarfile.DIRTYPE, None))
 
-    DOVECOT = ('dovecot-uidlist', 'dovecot.index', 'dovecot.index.log', 'dovecot.index.cache', 'dovecot-keywords',
-               'dovecot-uidvalidity', 'maildirsize')
+    # What Dovecot makes again and reads in the account that owns every website's mail.
+    REBUILT = ('dovecot.index', 'dovecot.index.log', 'dovecot.index.log.2', 'dovecot.index.cache',
+               'dovecot.list.index', 'dovecot.list.index.log', 'dovecot.mailbox.log', 'dovecot-uidlist.lock',
+               '.temp.host.1234.0123456789abcdef')
+    # What a mailbox folder gets only when it has none.
+    OWN = ('dovecot-uidlist', 'dovecot-keywords', 'dovecot-uidvalidity', 'maildirsize')
+
+    def test_files_are_told_apart_by_name(self):
+        for name in self.REBUILT + ('.dovecot.svbin', 'managesieve.svbin', '.dovecot.lda-dupes',
+                                    'dovecot.map.index', 'dovecot.index.cache.lock', 'maildirsize.lock'):
+            self.assertEqual(mailArchive.REBUILT, mailArchive.dovecot_file(name), name)
+        for name in self.OWN + ('dovecot-uidvalidity.5f3a1c2b', 'dovecot-acl'):
+            self.assertEqual(mailArchive.OWN, mailArchive.dovecot_file(name), name)
+        # Mail, the customer's filters and settings.
+        for name in ('1700.M1P2.host:2,S', 'managesieve.sieve', '.dovecot.sieve', 'dovecot.sieve', 'subscriptions',
+                     'vacation.sieve', 'notes.lock', 'x.temp.y', 'm.1'):
+            self.assertIsNone(mailArchive.dovecot_file(name), name)
 
     def mailbox_archive(self):
-        return ([('./qa/Maildir/%s' % name, tarfile.REGTYPE, 'old ' + name) for name in self.DOVECOT]
-                + [('./qa/Maildir/.Sent/%s' % name, tarfile.REGTYPE, 'old ' + name) for name in self.DOVECOT[:2]]
+        return ([('./qa/Maildir/%s' % name, tarfile.REGTYPE, 'old ' + name) for name in self.REBUILT + self.OWN]
+                + [('./qa/Maildir/.Sent/%s' % name, tarfile.REGTYPE, 'old ' + name)
+                   for name in ('dovecot-uidlist', 'dovecot.index')]
                 + [('./qa/Maildir/cur/1', tarfile.REGTYPE, 'message'),
                    ('./qa/Maildir/.Sent/cur/2', tarfile.REGTYPE, 'sent'),
                    ('./qa/Maildir/subscriptions', tarfile.REGTYPE, 'Sent\n'),
+                   ('./qa/sieve/managesieve.sieve', tarfile.REGTYPE, 'keep;'),
+                   ('./qa/sieve/managesieve.svbin', tarfile.REGTYPE, 'compiled'),
+                   ('./qa/.dovecot.svbin', tarfile.REGTYPE, 'compiled'),
                    ('./qa/.dovecot.sieve', tarfile.SYMTYPE, 'sieve/managesieve.sieve')])
 
-    def test_dovecot_s_own_files_are_left_alone_in_a_mailbox_that_has_them(self):
+    def test_indexes_and_compiled_filters_are_never_restored_and_the_filter_itself_is(self):
+        written, rebuilt, kept, unlinked = self.restore(*self.mailbox_archive())
+        # Even into mailbox folders that have none of them.
+        self.assertEqual((len(self.OWN) + 1 + 4, len(self.REBUILT) + 1 + 2, 0, 0), (written, rebuilt, kept, unlinked))
+        restored = self.files_below(self.folder)
+        self.assertEqual(sorted(['qa/Maildir/%s' % name for name in self.OWN]
+                                + ['qa/Maildir/.Sent/dovecot-uidlist', 'qa/Maildir/cur/1', 'qa/Maildir/.Sent/cur/2',
+                                   'qa/Maildir/subscriptions', 'qa/sieve/managesieve.sieve']), sorted(restored))
+        self.assertEqual('keep;', restored['qa/sieve/managesieve.sieve'])
+        self.assertEqual('sieve/managesieve.sieve', os.readlink(os.path.join(self.folder, 'qa/.dovecot.sieve')))
+        self.assertEqual('old dovecot-uidlist', restored['qa/Maildir/dovecot-uidlist'])
+        self.assertIn('%d index, lock and compiled filter files left out (Dovecot makes them again)' % rebuilt,
+                      mailArchive.restored_words(self.counts))
+
+    def test_uid_list_keywords_and_quota_count_are_left_alone_in_a_mailbox_that_has_them(self):
         self.tree(self.folder, {'qa/Maildir/dovecot-uidlist': 'current uidlist', 'qa/Maildir/cur/9': 'newer',
                                 'qa/Maildir/dovecot.index.log': 'current log'})
-        written, kept, unlinked = self.restore(*self.mailbox_archive())
-        # INBOX keeps its own; the Sent folder had none and gets the saved ones.
-        self.assertEqual((5, len(self.DOVECOT), 0), (written, kept, unlinked))
+        written, rebuilt, kept, unlinked = self.restore(*self.mailbox_archive())
+        # INBOX keeps its own; the Sent folder had none and gets the saved UID list.
+        self.assertEqual((1 + 4, len(self.REBUILT) + 1 + 2, len(self.OWN), 0), (written, rebuilt, kept, unlinked))
         restored = self.files_below(self.folder)
         self.assertEqual('current uidlist', restored['qa/Maildir/dovecot-uidlist'])
         self.assertEqual('current log', restored['qa/Maildir/dovecot.index.log'])
-        for name in ('dovecot.index', 'dovecot.index.cache', 'dovecot-keywords', 'dovecot-uidvalidity',
-                     'maildirsize'):
+        for name in ('dovecot-keywords', 'dovecot-uidvalidity', 'maildirsize', 'dovecot.index'):
             self.assertNotIn('qa/Maildir/' + name, restored)
         self.assertEqual('old dovecot-uidlist', restored['qa/Maildir/.Sent/dovecot-uidlist'])
-        self.assertEqual('old dovecot.index', restored['qa/Maildir/.Sent/dovecot.index'])
         self.assertEqual(('message', 'newer', 'sent', 'Sent\n'),
                          (restored['qa/Maildir/cur/1'], restored['qa/Maildir/cur/9'],
                           restored['qa/Maildir/.Sent/cur/2'], restored['qa/Maildir/subscriptions']))
-        self.assertIn('%d index files of Dovecot left as they are' % len(self.DOVECOT),
-                      mailArchive.restored_words(written, kept, unlinked))
+        self.assertIn('%d files of Dovecot left as they are on the server' % len(self.OWN),
+                      mailArchive.restored_words(self.counts))
 
-    def test_mailbox_that_has_none_gets_the_saved_ones(self):
-        written, kept, unlinked = self.restore(*self.mailbox_archive())
-        self.assertEqual((len(self.DOVECOT) + 5, 0, 0), (written, kept, unlinked))
-        self.assertEqual('old dovecot-uidlist', content(os.path.join(self.folder, 'qa/Maildir/dovecot-uidlist')))
-
-    def test_restore_does_not_fail_over_an_index_file(self):
-        # A folder in the place of an index file, and an index file that cannot be put in place.
+    def test_restore_does_not_fail_over_one_of_dovecot_s_files(self):
+        # A folder in the place of one, and one that cannot be put in place.
+        os.makedirs(os.path.join(self.folder, 'box/Maildir/dovecot-keywords'))
         os.makedirs(os.path.join(self.folder, 'box/Maildir/dovecot.index.cache'))
         rename = os.rename
 
-        def no_index(source, target):
-            if os.path.basename(target) == 'dovecot.index':
+        def no_uidlist(source, target):
+            if os.path.basename(target) == 'dovecot-uidlist':
                 raise OSError(errno.EEXIST, 'recreated by Dovecot')
             return rename(source, target)
 
-        with mock.patch('os.rename', side_effect=no_index):
-            written, kept, unlinked = self.restore(
+        with mock.patch('os.rename', side_effect=no_uidlist):
+            written, rebuilt, kept, unlinked = self.restore(
+                ('./box/Maildir/dovecot-keywords', tarfile.REGTYPE, 'old'),
                 ('./box/Maildir/dovecot.index.cache', tarfile.REGTYPE, 'old'),
-                ('./qa/Maildir/dovecot.index', tarfile.REGTYPE, 'old'),
-                ('./qa/Maildir/dovecot-keywords', tarfile.SYMTYPE, 'dovecot.index'),
+                ('./qa/Maildir/dovecot-uidlist', tarfile.REGTYPE, 'old'),
+                ('./qa/Maildir/maildirsize', tarfile.SYMTYPE, 'dovecot-uidlist'),
                 ('./qa/Maildir/cur/1', tarfile.REGTYPE, 'message'))
-        self.assertEqual((1, 3, 0), (written, kept, unlinked))
+        self.assertEqual((1, 1, 3, 0), (written, rebuilt, kept, unlinked))
         self.assertEqual({'qa/Maildir/cur/1': 'message'}, self.files_below(self.folder))
         self.assertEqual(['cur'], os.listdir(os.path.join(self.folder, 'qa/Maildir')))
 
+    def test_lock_that_was_a_second_name_when_the_backup_ran_does_not_spoil_the_archive(self):
+        # Dovecot makes a lock by giving a temporary file a second name; tar can catch that moment.
+        written, rebuilt, kept, unlinked = self.restore(
+            ('./qa/Maildir/.temp.host.1234.abcdef', tarfile.REGTYPE, '1 V1700000000 N2\n'),
+            ('./qa/Maildir/dovecot-uidlist.lock', tarfile.LNKTYPE, './qa/Maildir/.temp.host.1234.abcdef'),
+            ('./qa/Maildir/copy-of-the-list', tarfile.LNKTYPE, './qa/Maildir/dovecot-uidlist'),
+            ('./qa/Maildir/cur/1', tarfile.REGTYPE, 'message'))
+        self.assertEqual((1, 3, 0, 0), (written, rebuilt, kept, unlinked))
+        self.assertEqual({'qa/Maildir/cur/1': 'message'}, self.files_below(self.folder))
+        # A mail folder may be called `temp.x`; only files are taken for temporary files.
+        self.assertEqual((1, 0, 0, 0), self.restore(('./qa/Maildir/.temp.x', tarfile.DIRTYPE, None),
+                                                    ('./qa/Maildir/.temp.x/cur/2', tarfile.REGTYPE, 'message')))
+
+    MDBOX = [('./imported', tarfile.DIRTYPE, None),
+             ('./imported/Mdbox/storage/m.1', tarfile.REGTYPE, 'older storage'),
+             ('./imported/Mdbox/storage/dovecot.map.index', tarfile.REGTYPE, 'older map'),
+             ('./imported/Mdbox/mailboxes/INBOX/dbox-Mails/dovecot.index', tarfile.REGTYPE, 'older index'),
+             ('./imported/sieve/filter.sieve', tarfile.REGTYPE, 'keep;'),
+             ('./qa/Maildir/cur/1', tarfile.REGTYPE, 'message')]
+
+    def test_mailbox_that_holds_mail_in_mdbox_files_is_not_restored_and_the_others_are(self):
+        live = {'imported/Mdbox/storage/m.1': 'storage with newer mail',
+                'imported/Mdbox/storage/dovecot.map.index': 'newer map',
+                'imported/Mdbox/mailboxes/INBOX/dbox-Mails/dovecot.index': 'newer index'}
+        self.tree(self.folder, live)
+        self.assertTrue(mailArchive.holds_mdbox(os.path.join(self.folder, 'imported')))
+        self.assertEqual((1, 0, 0, 0), self.restore(*self.MDBOX))
+        self.assertEqual(['imported'], self.counts['mdbox'])
+        self.assertEqual(dict(live, **{'qa/Maildir/cur/1': 'message'}), self.files_below(self.folder))
+        words = mailArchive.mdbox_words(self.counts['mdbox'])
+        self.assertIn('Not restored: imported.', words)
+
+    def test_mdbox_mailbox_is_restored_into_an_empty_folder_without_its_indexes(self):
+        os.makedirs(os.path.join(self.folder, 'imported', 'Mdbox', 'storage'))
+        self.assertFalse(mailArchive.holds_mdbox(os.path.join(self.folder, 'imported')))
+        self.assertFalse(mailArchive.holds_mdbox(os.path.join(self.folder, 'absent')))
+        self.assertEqual((3, 2, 0, 0), self.restore(*self.MDBOX))
+        self.assertEqual([], self.counts['mdbox'])
+        self.assertEqual({'imported/Mdbox/storage/m.1': 'older storage', 'imported/sieve/filter.sieve': 'keep;',
+                          'qa/Maildir/cur/1': 'message'}, self.files_below(self.folder))
+
+    def long_name_record(self, kind, size):
+        heading = tarfile.TarInfo('././@LongLink' if kind != tarfile.XHDTYPE else './PaxHeaders/x')
+        heading.type = kind
+        heading.size = size
+        return heading.tobuf(tarfile.GNU_FORMAT)
+
+    def test_record_of_names_larger_than_any_name_is_refused_before_it_is_read(self):
+        class Counted(io.BytesIO):
+            taken = 0
+
+            def read(self, size=-1):
+                data = super().read(size)
+                Counted.taken += len(data)
+                return data
+
+        for kind in (tarfile.GNUTYPE_LONGNAME, tarfile.GNUTYPE_LONGLINK, tarfile.XHDTYPE, tarfile.XGLTYPE):
+            # The record claims 40 GB; the stream behind it would go on for ever.
+            stream = Counted(self.long_name_record(kind, 40 << 30) + b'\0' * (4 << 20))
+            Counted.taken = 0
+            before = self.files_below(self.base)
+            with self.assertRaises(mailArchive.Refused) as refusal:
+                mailArchive.Unpacker(self.folder, ROOMY).check(stream)
+            self.assertIn('no name is that long', str(refusal.exception))
+            self.assertLess(Counted.taken, 1 << 20)
+            self.assertEqual(before, self.files_below(self.base))
+            with self.assertRaises(mailArchive.Refused):
+                mailArchive.Unpacker(self.folder, ROOMY).write(
+                    io.BytesIO(self.long_name_record(kind, 40 << 30)), '1:1:' + '0' * 64)
+
+    def test_long_names_of_real_length_are_read(self):
+        name = './qa/Maildir/.' + 'Folder.' * 20 + 'End/cur/' + 'm' * 150
+        for style in (tarfile.PAX_FORMAT, tarfile.GNU_FORMAT):
+            stream = io.BytesIO()
+            with tarfile.open(fileobj=stream, mode='w', format=style) as archive:
+                entry = tarfile.TarInfo(name)
+                entry.size = 7
+                archive.addfile(entry, io.BytesIO(b'message'))
+            plan = mailArchive.Unpacker(self.folder, ROOMY).check(io.BytesIO(stream.getvalue()))
+            mailArchive.Unpacker(self.folder, ROOMY).write(io.BytesIO(stream.getvalue()), plan)
+            self.assertEqual({name[2:]: 'message'}, self.files_below(self.folder))
+            shutil.rmtree(self.folder)
+
+    def test_folders_already_checked_are_not_remembered_without_end(self):
+        members = [('./box%d/Maildir/cur/1' % number, tarfile.REGTYPE, 'message') for number in range(40)]
+        with mock.patch.object(mailArchive, 'MOST_REMEMBERED', 5):
+            plan_reader = mailArchive.Unpacker(self.folder, ROOMY)
+            plan = plan_reader.check(archive_of(*members))
+            writer = mailArchive.Unpacker(self.folder, ROOMY)
+            counts = writer.write(archive_of(*members), plan)
+        self.assertEqual(40, counts['written'])
+        for unpacker in (plan_reader, writer):
+            self.assertLessEqual(len(unpacker.inside), 5)
+            self.assertLessEqual(len(unpacker.keeps), 5)
+        self.assertEqual(40, len(self.files_below(self.folder)))
+
+    def test_reading_end_limits_its_memory_and_says_when_an_archive_needs_more(self):
+        limits = []
+        with mock.patch('os.geteuid', return_value=5000), \
+                mock.patch.object(mailArchive.resource, 'setrlimit', side_effect=lambda *how: limits.append(how)), \
+                mock.patch.object(mailArchive, 'Unpacker', side_effect=MemoryError()), \
+                mock.patch('os.umask'), mock.patch('sys.stdout', io.StringIO()) as printed:
+            status = mailArchive.main(['unpack', '--folder', self.folder, '--check'])
+        self.assertEqual(mailArchive.STOPPED, status)
+        self.assertEqual([(mailArchive.resource.RLIMIT_AS, (mailArchive.MOST_MEMORY, mailArchive.MOST_MEMORY))],
+                         limits)
+        self.assertIn('needs more memory than a restore may use', printed.getvalue())
+
+    def test_reading_end_tells_an_archive_it_cannot_read_from_one_it_refuses(self):
+        def run(data):
+            with mock.patch('os.geteuid', return_value=5000), mock.patch('os.umask'), \
+                    mock.patch.object(mailArchive.resource, 'setrlimit'), \
+                    mock.patch.object(mailArchive, 'allowance', return_value=ROOMY), \
+                    mock.patch('sys.stdin', SimpleNamespace(buffer=io.BytesIO(data))), \
+                    mock.patch('sys.stdout', io.StringIO()) as printed:
+                return mailArchive.main(['unpack', '--folder', self.folder, '--check']), printed.getvalue()
+
+        status, said = run(b'')
+        self.assertEqual(mailArchive.UNREADABLE, status)
+        self.assertIn('The archive could not be read', said)
+        whole = archive_of(('./qa/Maildir/cur/1', tarfile.REGTYPE, 'message' * 400)).getvalue()
+        self.assertEqual(mailArchive.UNREADABLE, run(whole[:1024])[0])
+        status, said = run(archive_of(('../x', tarfile.REGTYPE, 'evil')).getvalue())
+        self.assertEqual(mailArchive.STOPPED, status)
+        self.assertIn('leaves the mail folder', said)
+        status, said = run(whole)
+        self.assertEqual(0, status)
+        self.assertRegex(said.strip(), r'^1:\d+:[0-9a-f]{64}$')
+
     def test_names_with_the_job_s_marker_words_are_ordinary_names(self):
-        self.assertEqual((2, 0, 0), self.restore(('./qa/Maildir/.Completed/cur/1', tarfile.REGTYPE, 'message'),
-                                                 ('./qa/Maildir/.[5009]/cur/2', tarfile.REGTYPE, 'message')))
+        self.assertEqual((2, 0, 0, 0), self.restore(('./qa/Maildir/.Completed/cur/1', tarfile.REGTYPE, 'message'),
+                                                    ('./qa/Maildir/.[5009]/cur/2', tarfile.REGTYPE, 'message')))
         message = self.refused(('./qa/Maildir/.Completed/../../../Completed', tarfile.REGTYPE, 'evil'))
         status = 'Restoring email..\n%s Nothing was written. [IncJobs.restoreEmail][5009]\n' % mailArchive.last_part(
             message)
@@ -616,7 +830,7 @@ class UnpackTests(TemporaryFolder):
             self.skipTest('needs root')
         for how in (['--check'], ['--expect', '1:1:' + '0' * 64]):
             with mock.patch('sys.stdout', io.StringIO()) as printed:
-                self.assertEqual(1, mailArchive.main(['unpack', '--folder', self.folder] + how))
+                self.assertEqual(mailArchive.STOPPED, mailArchive.main(['unpack', '--folder', self.folder] + how))
             self.assertIn('not by root', printed.getvalue())
         self.assertFalse(os.path.exists(self.folder))
 
@@ -707,9 +921,18 @@ class RepositoryTests(TemporaryFolder):
         return mailArchive.back_up('example.com', accounts.get('site', self.site_account), store or self.store(),
                                    mail_root=self.mail_root, mail_account=accounts.get('mail', self.mail_account))
 
-    def restore(self, snapshot, mail_root=None, store=None):
+    def restore(self, snapshot, mail_root=None, store=None, wait=5):
         return mailArchive.restore('example.com', self.site_account, store or self.store(), snapshot,
-                                   mail_root=mail_root or self.mail_root, mail_account=self.mail_account)
+                                   mail_root=mail_root or self.mail_root, mail_account=self.mail_account,
+                                   lock=os.path.join(self.base, 'restore.lock'), wait=wait)
+
+    def save_archive(self, *members):
+        """A snapshot whose mail archive is one made by hand, as the website's account can make one."""
+        saving = subprocess.Popen(self.store().save('vmail-example.com.tar'), stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                  **mailArchive.process_options(self.site_account, self.environment))
+        output = saving.communicate(archive_of(*members).getvalue())[0].decode()
+        return mailArchive.extract_snapshot_id(output)
 
     def mailboxes(self):
         folder = os.path.join(self.mail_root, 'example.com')
@@ -860,6 +1083,72 @@ class RepositoryTests(TemporaryFolder):
         self.assertIn('not restored through a link', detail)
 
     @unittest.skipUnless(shutil.which('restic'), 'needs restic')
+    def test_archive_the_restore_refuses_is_reported_with_the_restore_s_reason(self):
+        self.restic('init')
+        self.mailboxes()
+        before = self.files_below(self.mail_root)
+        # Enough content that restic is still writing when the reading end stops.
+        snapshot = self.save_archive(('./qa/Maildir/cur/1.host:2,S', tarfile.REGTYPE, 'overwritten'),
+                                     ('../other.example/user/Maildir/cur/evil', tarfile.REGTYPE, 'evil'),
+                                     ('./qa/Maildir/cur/filler', tarfile.REGTYPE, 'x' * (8 << 20)))
+        outcome, detail = self.restore(snapshot)
+        self.assertEqual(mailArchive.FAILED, outcome)
+        self.assertIn('a name that leaves the mail folder', detail)
+        self.assertIn('Nothing was written', detail)
+        self.assertNotIn('No mail archive could be read', detail)
+        self.assertNotIn('roken pipe', detail)
+        self.assertEqual(before, self.files_below(self.mail_root))
+
+    @unittest.skipUnless(shutil.which('restic'), 'needs restic')
+    def test_mdbox_mailbox_in_use_is_left_alone_and_the_job_is_told(self):
+        self.restic('init')
+        self.mailboxes()
+        folder = os.path.join(self.mail_root, 'example.com')
+        self.tree(folder, {'imported/Mdbox/storage/m.1': 'storage at backup time',
+                           'imported/Mdbox/storage/dovecot.map.index': 'map at backup time'})
+        self.give(folder, self.mail_account)
+        outcome, snapshot = self.back_up()
+        self.assertEqual(mailArchive.SAVED, outcome, snapshot)
+        self.tree(folder, {'imported/Mdbox/storage/m.1': 'storage with newer mail'})
+        os.remove(os.path.join(folder, 'qa/Maildir/new/2.host'))
+        self.give(folder, self.mail_account)
+
+        outcome, detail = self.restore(snapshot)
+        self.assertEqual(mailArchive.FAILED, outcome)
+        self.assertIn('Only part of the mail was restored: 5 mail files written', detail)
+        self.assertIn('Not restored: imported.', detail)
+        self.assertIn('Restore them into an empty mailbox folder, or ask support.', detail)
+        self.assertEqual('storage with newer mail', content(os.path.join(folder, 'imported/Mdbox/storage/m.1')))
+        self.assertEqual('second message\n', content(os.path.join(folder, 'qa/Maildir/new/2.host')))
+
+    def test_one_restore_of_mail_runs_at_a_time(self):
+        lock = os.path.join(self.base, 'restore.lock')
+        first = mailArchive.restore_turn(lock, 0)
+        self.assertIsNotNone(first)
+        self.assertEqual(0o600, stat.S_IMODE(os.stat(lock).st_mode))
+        try:
+            self.assertIsNone(mailArchive.restore_turn(lock, 0))
+            with mock.patch.object(mailArchive, 'run_joined') as joined:
+                outcome, detail = self.restore('1a2b3c4d', wait=0.3)
+            joined.assert_not_called()
+            self.assertEqual(mailArchive.FAILED, outcome)
+            self.assertIn('Another restore of mail is running on this server', detail)
+            self.assertIn('Nothing was written', detail)
+        finally:
+            os.close(first)
+        # The turn is free again, and a restore that ends gives it back.
+        with mock.patch.object(mailArchive, 'run_joined', return_value=(0, '', mailArchive.STOPPED, 'no\n')):
+            self.assertEqual(mailArchive.FAILED, self.restore('1a2b3c4d', wait=0)[0])
+        second = mailArchive.restore_turn(lock, 0)
+        self.assertIsNotNone(second)
+        os.close(second)
+        os.symlink(os.path.join(self.base, 'elsewhere'), os.path.join(self.base, 'link.lock'))
+        with self.assertRaises(OSError):
+            mailArchive.restore_turn(os.path.join(self.base, 'link.lock'), 0)
+        self.assertFalse(os.path.exists(os.path.join(self.base, 'elsewhere')))
+        self.assertEqual('/run/cyberpanel-mail-restore.lock', mailArchive.RESTORE_LOCK)
+
+    @unittest.skipUnless(shutil.which('restic'), 'needs restic')
     def test_snapshot_without_a_mail_archive_is_not_restored(self):
         self.restic('init')
         plain = os.path.join(self.site, 'plain')
@@ -892,13 +1181,31 @@ class RepositoryTests(TemporaryFolder):
         store = mailArchive.Rustic(repository)
 
         files = self.mailboxes()
+        # A lock of Dovecot's, caught while it is the second name of its temporary file,
+        # and a mail folder whose name ends the way a lock's does.
+        folder = os.path.join(self.mail_root, 'example.com')
+        self.tree(folder, {'qa/Maildir/.temp.host.99.abcdef': '1 V1 N2\n', 'qa/Maildir/.notes.lock/cur/4': 'kept\n'})
+        os.link(os.path.join(folder, 'qa/Maildir/.temp.host.99.abcdef'),
+                os.path.join(folder, 'qa/Maildir/dovecot-uidlist.lock'))
+        self.tree(folder, {'qa/Maildir/.Sent/dovecot.index.log.lock': '', 'qa/Maildir/maildirsize.lock': ''})
+        for directory, _, _ in os.walk(folder):
+            os.chmod(directory, 0o700)
+        self.give(folder, self.mail_account)
+        files['qa/Maildir/.notes.lock/cur/4'] = 'kept\n'
+
         outcome, snapshot = self.back_up(store)
         self.assertEqual(mailArchive.SAVED, outcome, snapshot)
         self.assertEqual(['vmail-example.com.tar'], os.listdir(os.path.join(repository, snapshot)))
+        with tarfile.open(os.path.join(repository, snapshot, 'vmail-example.com.tar')) as archive:
+            names = archive.getnames()
+        self.assertFalse([name for name in names if name.endswith('.lock') and '/.notes.lock' not in name], names)
+        self.assertIn('./qa/Maildir/.notes.lock/cur/4', names)
+        self.assertIn('./qa/Maildir/cur/1.host:2,S', names)
         if self.site_account:
             self.assertEqual(self.site_account, self.owner(os.path.join(repository, snapshot)))
         outcome, said = self.restore(snapshot, self.elsewhere(), store)
-        self.assertEqual((mailArchive.RESTORED, '5 mail files written'), (outcome, said))
+        self.assertEqual((mailArchive.RESTORED, '6 mail files written, 1 index, lock and compiled filter files '
+                          'left out (Dovecot makes them again)'), (outcome, said))
         self.assertEqual(files, self.files_below(os.path.join(self.base, 'restored', 'example.com')))
 
         # A partial archive is forgotten there too.
