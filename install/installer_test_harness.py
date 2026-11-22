@@ -17,6 +17,7 @@ import ast
 from pathlib import Path
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -112,7 +113,12 @@ dig() { if [ "$QA_DNS" = 1 ]; then printf '%s\n' '192.0.2.1'; fi; }
 cyberpanel() {
   note "cyberpanel $*"
   if [ "$1" = createWebsite ]; then printf '%s\n' "$QA_CREATE_OUTPUT"; fi
-  if [ "$1" = hostNameSSL ]; then printf '%s\n' "$QA_TLS_OUTPUT"; fi
+  if [ "$1" = hostNameSSL ]; then
+    note "result-during-the-certificate-request=$Hostname_SSL_Result"
+    # QA_TLS_SIGNAL: the script is sent this signal while the request runs.
+    if [ -n "$QA_TLS_SIGNAL" ]; then kill -s "$QA_TLS_SIGNAL" "$$"; fi
+    printf '%s\n' "$QA_TLS_OUTPUT"
+  fi
   return 0
 }
 phase() {
@@ -178,6 +184,14 @@ for directive in sys.argv[3:]:
 '''
 
 DEFAULT_PYTHON_STEPS = 'step:php step:database step:ftp step:dns step:email step:panel finish'
+
+
+def default_signals():
+    """The script is started the way a terminal starts it. A test run that was
+    itself started in the background has interrupts ignored, and a shell
+    cannot react to a signal it was started to ignore."""
+    for number in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
+        signal.signal(number, signal.SIG_DFL)
 
 
 def parse_as_python_36(source, interpreter=None):
@@ -267,6 +281,18 @@ class Installer:
 
     def run(self, *arguments, **options):
         """Run the installer with these arguments; returns the finished process."""
+        stdin = options.pop('stdin', '')
+        process = self.start(*arguments, **options)
+        try:
+            output, errors = process.communicate(stdin, timeout=120)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.communicate()
+            raise
+        return subprocess.CompletedProcess(process.args, process.returncode, output, errors)
+
+    def start(self, *arguments, **options):
+        """Start the installer with these arguments; returns the running process."""
         environment = {
             'PATH': str(self.root / 'bin'),
             'HOME': str(self.root / 'home'),
@@ -284,6 +310,7 @@ class Installer:
             'QA_DNS': str(int(options.pop('dns', False))),
             'QA_CREATE_OUTPUT': options.pop('create_output', CLI_OK),
             'QA_TLS_OUTPUT': options.pop('tls_output', CLI_OK),
+            'QA_TLS_SIGNAL': options.pop('tls_signal', ''),
             'QA_FAIL_AT': options.pop('fail_at', ''),
             'QA_PYTHON_STEPS': options.pop('python_steps', DEFAULT_PYTHON_STEPS),
             'QA_ROOT': str(self.root),
@@ -295,17 +322,16 @@ class Installer:
             'QA_PASSWORD_CHECK_EXIT': str(options.pop('password_check_exit', 0)),
         }
         environment.update(options.pop('environment', {}))
-        stdin = options.pop('stdin', '')
         # With trace=True every command that runs is written to the error output.
         shell = [shutil.which('bash')] + (['-x'] if options.pop('trace', False) else [])
         if options:
             raise TypeError('Unknown options: %s' % sorted(options))
         script = self.root / 'harness.sh'
         script.write_text(self.harness())
-        return subprocess.run(
-            shell + [str(script)] + list(arguments), input=stdin,
+        return subprocess.Popen(
+            shell + [str(script)] + list(arguments), stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
-            env=environment, cwd=str(self.root / 'home'), timeout=120)
+            env=environment, cwd=str(self.root / 'home'), preexec_fn=default_signals)
 
     def events(self):
         """The event lines without time and run name, in order."""
