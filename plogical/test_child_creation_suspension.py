@@ -49,7 +49,8 @@ class ChildCreationSuspensionTests(unittest.TestCase):
         self.assertIn(websiteSuspension.START, self.config.read_text())
         # Tested before and after the change; creation restarts the server itself.
         command = [str(self.root / 'bin' / 'lshttpd'), '-t']
-        self.assertEqual(check.call_args_list, [call(command, None), call(command, check.return_value)])
+        self.assertEqual(check.call_args_list,
+                         [call(command), call(command, check.return_value, {self.domain: True})])
         restart.assert_not_called()
 
     def test_regeneration_preserves_independent_child_suspension(self):

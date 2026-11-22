@@ -198,6 +198,8 @@ class VhostUpdate:
 
     `check()` returns what the web server's configuration test reports, and
     `check(before)` raises when it reports an error that `before` lacks.
+    `check(before, changed)` also names the websites whose files were edited:
+    True for one that was suspended, False for one that was restored.
     """
     def __init__(self, server_root, check, reload):
         self.root = Path(server_root).resolve()
@@ -208,6 +210,7 @@ class VhostUpdate:
 
     def apply(self, changes):
         staged = []
+        changed = {}
         for domain, suspended in changes:
             validate_domain(domain)
             path = self.root / 'conf' / 'vhosts' / domain / 'vhost.conf'
@@ -218,6 +221,7 @@ class VhostUpdate:
             updated = render_suspension(original.decode('utf-8'), suspended).encode('utf-8')
             if updated != original:
                 staged.append((path, original, updated, metadata))
+                changed[domain] = bool(suspended)
         if staged and self.before is None:
             # What the test reports now is what the server already runs with.
             self.before = self.check()
@@ -225,7 +229,7 @@ class VhostUpdate:
             self.originals.append((path, original, metadata))
             atomic_write(path, updated, metadata)
         if staged:
-            self.check(self.before)
+            self.check(self.before, changed)
             self.reload()
 
     def rollback(self):
@@ -261,10 +265,50 @@ def _checked(command):
         raise RuntimeError('Web server configuration activation failed: ' + output[-2000:])
 
 
-_LINE_NUMBER = re.compile(r'(/[^\s:]+):[0-9]+(?=\s|$)')
+_VHOST_FILE = re.compile(r'/conf/vhosts/([^/\s]+)/')
+# After a path: `:25` (also behind a closing quote) or `(25)`.
+_FILE_LINE = r'''[^\s:,;()\[\]'"]*['"]?)(?::[0-9]+(?![0-9])|\([0-9]+\))'''
+_LINE_WORD = re.compile(r'\b(line)[ :#]*[0-9]+', re.I)
 
 
-def config_errors_added(before, after):
+def _website(line, classifier):
+    """The one website an error line is about, or None.
+
+    The upgrader's rule reads the name from the virtual host in the message's
+    context, `[config:server:vhosts:vhost:NAME...]`, or from the website file
+    that a parser message ends with. A message that has neither in that form
+    is still about one website when the only website directory it names,
+    `/conf/vhosts/NAME/`, is that website's. A fatal message and a disabled
+    module are never one website's.
+    """
+    scope = classifier.site_scope(line)
+    if scope:
+        return scope[len('website '):] if scope.startswith('website ') else None
+    if '[ERROR]' not in line or '[FATAL]' in line or classifier.ABI_DIAGNOSTIC in line:
+        return None
+    names = set(_VHOST_FILE.findall(line))
+    return names.pop() if len(names) == 1 else None
+
+
+def _comparable(line, classifier, changed):
+    """An error line without what differs between two runs over the same fault.
+
+    Time and process ID differ in every run. Suspension also moves the lines
+    of the files it edits, so a line number is dropped where it belongs to one
+    of those files and nowhere else: after a path in that website's directory,
+    and after the word "line" in a message about that website.
+    """
+    line = classifier._STAMP.sub(r'\1 ', line)
+    website = _website(line, classifier)
+    for domain in changed:
+        directory = '/conf/vhosts/%s/' % domain
+        if website == domain or directory in line:
+            line = re.sub('(' + re.escape(directory) + _FILE_LINE, r'\1', line)
+            line = _LINE_WORD.sub(r'\1', line)
+    return line
+
+
+def config_errors_added(before, after, changed=None):
     """The errors a change brought into the web server's configuration test.
 
     `before` and `after` are the (exit status, output) of the test on either
@@ -274,38 +318,48 @@ def config_errors_added(before, after):
     running, so a test that must be clean would refuse every change on such a
     server. Only what the change added counts: an error line that was not
     there before, or an exit status that became an error status without one.
+
+    `changed` names the websites whose files the change edited, with False for
+    a website that was restored. Restoring puts back the configuration the
+    website had before it was suspended. Its rewrite rules were commented out
+    meanwhile, so an error in them was not reported and comes back with them.
+    That error is the website's own, not the change's: an added error line
+    about a restored website does not count. One about any other website, or
+    about none, still does.
     """
     from plogical import olsStockClassifier
+    changed = changed or {}
+    restored = set(domain for domain, suspended in changed.items() if not suspended)
 
     def errors(output):
         # The upgrader's rule for an error line, with no website excused.
         return olsStockClassifier.blocking_errors(output, {})
 
-    def comparable(line):
-        # Time and process ID differ in every run, and suspension moves the
-        # lines of the file it edits.
-        return _LINE_NUMBER.sub(r'\1', olsStockClassifier._STAMP.sub(r'\1 ', line))
-
-    known = collections.Counter(comparable(line) for line in errors(before[1]))
+    known = collections.Counter(_comparable(line, olsStockClassifier, changed) for line in errors(before[1]))
     added = []
     for line in errors(after[1]):
-        key = comparable(line)
+        key = _comparable(line, olsStockClassifier, changed)
         if known[key]:
             known[key] -= 1
         else:
             added.append(line)
-    if not added and after[0] not in (0, 1) and after[0] != before[0]:
-        added.append('The configuration test ended with status %s; before the change it ended with %s. %s'
-                     % (after[0], before[0], after[1].strip()[-1500:]))
-    return added
+    refused = [line for line in added if _website(line, olsStockClassifier) not in restored]
+    # A restored website's own error accounts for status 2. Any other status
+    # than 0 or 1 has to be the one from before the change.
+    explained = after[0] in (0, 1) or after[0] == before[0] or (after[0] == 2 and added)
+    if not refused and not explained:
+        refused.append('The configuration test ended with status %s; before the change it ended with %s. %s'
+                       % (after[0], before[0], after[1].strip()[-1500:]))
+    return refused
 
 
-def config_check(command, before=None):
+def config_check(command, before=None, changed=None):
     """Run the web server's configuration test and return (exit status, output).
 
     Given the result from before a change, raise when the change added an
-    error. Without it, raise only when the test gave no result, which leaves
-    nothing to compare a change with.
+    error; config_errors_added describes `changed`. Without it, raise only
+    when the test gave no result, which leaves nothing to compare a change
+    with.
     """
     try:
         state = _run(command)
@@ -316,7 +370,7 @@ def config_check(command, before=None):
             raise RuntimeError('The web server configuration test gave no result (exit status %s): %s'
                                % (state[0], state[1][-2000:]))
         return state
-    added = config_errors_added(before, state)
+    added = config_errors_added(before, state, changed)
     if added:
         raise RuntimeError('Web server configuration activation failed: ' + '\n'.join(added)[:2000])
     return state
@@ -336,7 +390,7 @@ def server_update(server_root, activate=True):
     def reload():
         if activate:
             _checked([str(root / 'bin' / 'lswsctrl'), 'restart'])
-    return VhostUpdate(root, lambda before=None: config_check([str(binary), '-t'], before), reload)
+    return VhostUpdate(root, lambda *state: config_check([str(binary), '-t'], *state), reload)
 
 
 def change_suspension(user_id, domain, action):
