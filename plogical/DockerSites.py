@@ -238,7 +238,9 @@ def compose_file(config):
     JSON is valid Compose YAML. Written this way a value from the creation page
     stays the one value it is, whatever quotes, line breaks or other characters
     it holds, and Docker Compose does not take a dollar sign in it for one of
-    its own variables.
+    its own variables. A character beyond the basic plane, an emoji in a
+    password, is written as the one eight digit escape YAML has for it: the
+    pair of escapes JSON would write is not read by every Docker Compose.
     """
     def escape(value):
         if isinstance(value, dict):
@@ -247,7 +249,14 @@ def compose_file(config):
             return [escape(item) for item in value]
         return value.replace('$', '$$') if isinstance(value, str) else value
 
-    return json.dumps(escape(config), indent=2)
+    def one_escape(match):
+        if match.group(1) is None:
+            return match.group(0)
+        return '\\U%08X' % (0x10000 + ((int(match.group(1), 16) - 0xD800) << 10) + int(match.group(2), 16) - 0xDC00)
+
+    # An escaped backslash is passed over as a whole, so only real escapes are rewritten.
+    return re.sub(r'\\\\|\\u(d[89ab][0-9a-f]{2})\\u(d[c-f][0-9a-f]{2})', one_escape,
+                  json.dumps(escape(config), indent=2), flags=re.I)
 
 
 def environment_list(values):
