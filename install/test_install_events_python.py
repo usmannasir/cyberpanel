@@ -208,6 +208,10 @@ class InstallerEntryPointTests(unittest.TestCase):
                             self.run_main('--postfix', email, '--powerdns', dns, '--ftp', ftp)
                         events = self.events()
                         chosen = {'ftp': ftp, 'dns': dns, 'email': email}
+                        # Sieve comes with the mail server and not without it.
+                        self.assertEqual(email == 'ON', 'sieve' in self.work)
+                        self.assertEqual(email == 'ON',
+                                         'Installing Sieve for email filtering..,55' in self.work)
                         for name, choice in chosen.items():
                             self.assertEqual(choice == 'ON', name in self.work)
                             self.assertEqual(choice == 'ON', name + ' running' in events)
