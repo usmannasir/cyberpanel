@@ -54,7 +54,7 @@ from cyberpanel_version import (
 from plogical.backupIntegrity import safe_extract, backup_command_error
 from plogical.backupMetadata import backup_includes_mail_domain
 from plogical.backupExcludes import rsync_exclude_arguments
-from managePHP.phpConfig import normalized_php_selection
+from managePHP.phpConfig import stored_php_selection
 from plogical.backupMetadataBuilder import (
     build_dns_records_xml,
     build_email_accounts_xml,
@@ -804,7 +804,7 @@ class backupUtilities:
             # DNS may still point at the source during a remote migration.
             # Mail autodiscover also issues SSL, so configure it after restoring
             # the archived mail child domain and its certificate instead.
-            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, normalized_php_selection(phpSelection), externalApp, 0, 1, 0,
+            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, stored_php_selection(phpSelection), externalApp, 0, 1, 0,
                                                    siteUser.userName, 'Default', 0, None,
                                                    mail_domain, configureMail=False)
 
@@ -994,7 +994,7 @@ class backupUtilities:
                     savedState = childDomain.findtext('state')
                     independentState = None if savedState is None else normalize_child_state(savedState)
 
-                    retValues = virtualHostUtilities.createDomain(masterDomain, domain, normalized_php_selection(phpSelection), path, 0, 0, 0,
+                    retValues = virtualHostUtilities.createDomain(masterDomain, domain, stored_php_selection(phpSelection), path, 0, 0, 0,
                                                                   'admin', 0, independentState=independentState)
 
                     if retValues[0] == 1:
@@ -1042,7 +1042,7 @@ class backupUtilities:
                                                 logging.CyberCPLogFileWriter.writeToFile(
                                                     f'It seems child domain {domain} is using apache conf and {childConfPathinBKUPApache} also exists in backup file')
 
-                                            virtualHostUtilities.switchServer(domain, normalized_php_selection(phpSelection), virtualHostUtilities.apache, tempStatusPath)
+                                            virtualHostUtilities.switchServer(domain, stored_php_selection(phpSelection), virtualHostUtilities.apache, tempStatusPath)
 
                                             finalConfPathApache = ApacheVhost.configBasePath + domain + '.conf'
 
@@ -1319,7 +1319,7 @@ class backupUtilities:
                                 logging.CyberCPLogFileWriter.writeToFile(
                                     f'It seems main site {masterDomain} is using apache conf.')
 
-                            virtualHostUtilities.switchServer(masterDomain, normalized_php_selection(phpSelectionGlobalMainSite), virtualHostUtilities.apache,
+                            virtualHostUtilities.switchServer(masterDomain, stored_php_selection(phpSelectionGlobalMainSite), virtualHostUtilities.apache,
                                                               tempStatusPath)
 
                             finalConfPathApache = ApacheVhost.configBasePath + masterDomain + '.conf'
@@ -2143,7 +2143,7 @@ class backupUtilities:
                         except ChildDomains.DoesNotExist:
                             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                       'Creating %s,20' % (child['domain']))
-                            result = virtualHostUtilities.createDomain(self.website.domain, child['domain'], normalized_php_selection(child['php']), child['path'], 1, 0, 0,
+                            result = virtualHostUtilities.createDomain(self.website.domain, child['domain'], stored_php_selection(child['php']), child['path'], 1, 0, 0,
                                                               self.website.admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)),
                                                               independentState=independentState)
                             if result[0] != 1:
@@ -2361,7 +2361,7 @@ class backupUtilities:
                         except ChildDomains.DoesNotExist:
                             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                       'Creating %s,20' % (child['domain']))
-                            result = virtualHostUtilities.createDomain(self.website.domain, child['domain'], normalized_php_selection(child['php']), child['path'], 1, 0, 0,
+                            result = virtualHostUtilities.createDomain(self.website.domain, child['domain'], stored_php_selection(child['php']), child['path'], 1, 0, 0,
                                                               self.website.admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)),
                                                               independentState=independentState)
                             if result[0] != 1:

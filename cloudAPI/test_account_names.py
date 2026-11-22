@@ -6,6 +6,7 @@ from unittest import mock
 
 from cloudAPI.test_wordpress_cloud_entitlements import load_cloud, Response
 from plogical.panelUserNames import NAME_RULE, name_from, new_name_refusal
+from managePHP.phpConfig import normalized_php_selection
 
 
 class AccountNameTests(unittest.TestCase):
@@ -13,7 +14,8 @@ class AccountNameTests(unittest.TestCase):
         self.ns, self.services, self.admin, unused = load_cloud()
         self.ns['hashPassword'] = mock.Mock()
         self.ns['ACL'] = mock.Mock()
-        self.ns.update(name_from=name_from, new_name_refusal=new_name_refusal)
+        self.ns.update(name_from=name_from, new_name_refusal=new_name_refusal,
+                       normalized_php_selection=normalized_php_selection)
         self.users = self.services['Administrator']
         self.existing = {}
         self.users.objects.filter.side_effect = lambda userName: SimpleNamespace(
@@ -37,6 +39,21 @@ class AccountNameTests(unittest.TestCase):
             self.assertEqual(name, self.created_name())
             self.assertEqual(name, self.data['websiteOwner'])
             self.manager.submitWebsiteCreation.assert_called_with(7, self.data)
+
+    def test_an_older_spelling_of_the_php_version_is_passed_on_in_the_panels_form(self):
+        for spelling, selection in (('PHP 74', 'PHP 7.4'), ('php 8.1', 'PHP 8.1'), ('8.3', 'PHP 8.3')):
+            self.data = {'UserAccountName': 'JohnSmith', 'websiteOwner': 'JohnSmith', 'UserPassword': 'inert',
+                         'FullName': 'Full Name', 'adminEmail': 'owner@example.test', 'domainName': 'owned.example',
+                         'apacheBackend': 0, 'phpSelection': spelling}
+            self.ns['CloudManager'](self.data, self.admin).submitWebsiteCreation()
+            self.assertEqual(selection, self.manager.submitWebsiteCreation.call_args[0][1]['phpSelection'])
+
+    def test_a_php_version_without_such_a_form_is_left_for_the_website_creation_to_refuse(self):
+        self.data = {'UserAccountName': 'JohnSmith', 'websiteOwner': 'JohnSmith', 'UserPassword': 'inert',
+                     'FullName': 'Full Name', 'adminEmail': 'owner@example.test', 'domainName': 'owned.example',
+                     'apacheBackend': 0, 'phpSelection': 'PHP seven'}
+        self.ns['CloudManager'](self.data, self.admin).submitWebsiteCreation()
+        self.assertEqual('PHP seven', self.manager.submitWebsiteCreation.call_args[0][1]['phpSelection'])
 
     def test_other_characters_are_dropped_for_the_account_and_for_the_owner(self):
         for sent, expected in (("O'Brien", 'OBrien'), ('Anne-Marie(Jr.)', 'Anne-MarieJr.'), ('"Mc&Sons"', 'McSons'),

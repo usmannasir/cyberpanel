@@ -6,7 +6,7 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest import mock
 
-from managePHP.phpConfig import normalized_php_selection, php_selection_digits
+from managePHP.phpConfig import normalized_php_selection, php_selection_digits, stored_php_selection
 from managePHP.test_php_selection import OLDER_SPELLINGS
 from plogical.test_php_restart_marker import load_methods
 
@@ -32,7 +32,7 @@ class CommandLineTests(unittest.TestCase):
         websites.objects.get.side_effect = LookupError('no such user')
         namespace = dict(virtualHostUtilities=self.worker, vhost=self.vhost, Websites=websites, logger=mock.Mock(),
                          stack=lambda: [[None, None, None, 'test']], time=mock.Mock(), re=__import__('re'),
-                         normalized_php_selection=normalized_php_selection)
+                         normalized_php_selection=normalized_php_selection, stored_php_selection=stored_php_selection)
         self.create_site, self.create_child, self.change = load_methods(
             'cli/cyberPanel.py', 'cyberPanel', ['createWebsite', 'createDomain', 'changePHP'], namespace)
         self.cli = mock.Mock()
@@ -83,7 +83,7 @@ class BackupRestoreTests(unittest.TestCase):
         namespace = {'self': instance, 'ChildDomains': children, 'logging': mock.MagicMock(),
                      'childDomains': [{'domain': 'child.test', 'path': '/home/parent.test/child', 'php': php}],
                      'virtualHostUtilities': worker, 'randint': lambda *args: 1234,
-                     'normalized_php_selection': normalized_php_selection}
+                     'normalized_php_selection': normalized_php_selection, 'stored_php_selection': stored_php_selection}
         exec(compile(ast.Module(body=[loop], type_ignores=[]), method_name, 'exec'), namespace)
         return worker
 
@@ -94,11 +94,14 @@ class BackupRestoreTests(unittest.TestCase):
                     worker = self.restore_children(method, spelling)
                     self.assertEqual(selection, worker.createDomain.call_args[0][2])
 
-    def test_a_backup_that_names_no_version_creates_nothing(self):
+    def test_a_backup_that_names_no_version_leaves_the_refusal_to_the_worker(self):
+        # The value goes on as it is; the worker refuses it for this child
+        # (plogical.test_php_selection_workers) and the restore handles that
+        # refusal as it handles any other.
         for method in ('SubmitCloudBackupRestore', 'SubmitS3BackupRestore'):
             with self.subTest(method=method):
-                with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
-                    self.restore_children(method, 'PHP seven')
+                worker = self.restore_children(method, 'PHP seven')
+                self.assertEqual('PHP seven', worker.createDomain.call_args[0][2])
 
     def test_every_restore_and_sync_call_passes_the_version_through_the_normal_form(self):
         # The other callers hand a stored version to the same three workers.
@@ -118,7 +121,7 @@ class BackupRestoreTests(unittest.TestCase):
                 for call in calls:
                     version = call.args[1] if call.func.attr == 'switchServer' else call.args[2]
                     self.assertIsInstance(version, ast.Call, ast.dump(call))
-                    self.assertEqual('normalized_php_selection', version.func.id)
+                    self.assertEqual('stored_php_selection', version.func.id)
 
 
 class MetadataRestoreTests(unittest.TestCase):
@@ -133,7 +136,7 @@ class MetadataRestoreTests(unittest.TestCase):
         worker = mock.MagicMock()
         worker.createDomain.return_value = (1, 'None')
         namespace = {'os': os, 'ElementTree': ElementTree, 'logging': mock.MagicMock(), 'Websites': mock.MagicMock(),
-                     'virtualHostUtilities': worker, 'normalized_php_selection': normalized_php_selection}
+                     'virtualHostUtilities': worker, 'normalized_php_selection': normalized_php_selection, 'stored_php_selection': stored_php_selection}
         exec(compile(ast.Module(body=[method], type_ignores=[]), 'restoreMeta', 'exec'), namespace)
         with tempfile.TemporaryDirectory(prefix='php-spelling-test-') as temp:
             meta = Path(temp) / 'meta.xml'
@@ -149,10 +152,9 @@ class MetadataRestoreTests(unittest.TestCase):
                 self.assertEqual(1, result)
                 self.assertEqual(selection, worker.createDomain.call_args[0][2])
 
-    def test_a_description_that_names_no_version_restores_nothing(self):
+    def test_a_description_that_names_no_version_leaves_the_refusal_to_the_worker(self):
         result, worker = self.restore('PHP seven')
-        self.assertEqual(0, result)
-        worker.createDomain.assert_not_called()
+        self.assertEqual('PHP seven', worker.createDomain.call_args[0][2])
 
 
 class EnterpriseRecordTests(unittest.TestCase):
@@ -167,7 +169,7 @@ class EnterpriseRecordTests(unittest.TestCase):
             ProcessUtilities=process, vhostConfs=vhostConfs, logging=mock.Mock(), PHPManager=mock.Mock(),
             vhost=NS(redisConf='/redis'), os=NS(path=NS(exists=lambda path: True)),
             pwd=NS(getpwnam=lambda user: account), grp=NS(getgrnam=lambda user: account),
-            php_selection_digits=php_selection_digits, normalized_php_selection=normalized_php_selection)
+            php_selection_digits=php_selection_digits, normalized_php_selection=normalized_php_selection, stored_php_selection=stored_php_selection)
         site, child = load_methods('plogical/vhost.py', 'vhost', ['perHostVirtualConf', 'perHostDomainConf'],
                                    namespace)
         results = (site('/vhost.conf', 'owner@example.test', 'siteuser', stored, 'example.test', 0),

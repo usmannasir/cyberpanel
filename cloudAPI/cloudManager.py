@@ -26,6 +26,7 @@ from serverLogs.views import getLogsFromFile
 from serverStatus.views import topProcessesStatus, killProcess, switchTOLSWSStatus
 from plogical import hashPassword
 from plogical.panelUserNames import name_from, new_name_refusal
+from managePHP.phpConfig import normalized_php_selection
 from loginSystem.models import ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.securityUtils import (
@@ -144,6 +145,14 @@ class CloudManager:
                     admin.save()
             except BaseException as msg:
                 logging.writeToFile(str(msg))
+
+            # Earlier releases took older spellings of a PHP version here
+            # ('PHP 74', 'php 7.4'); the website is created with the panel's own.
+            try:
+                self.data['phpSelection'] = normalized_php_selection(self.data['phpSelection'])
+            except (KeyError, ValueError):
+                # Left as it is: the website creation refuses it with its reason.
+                pass
 
             wm = WebsiteManager()
             return wm.submitWebsiteCreation(self.admin.pk, self.data)
