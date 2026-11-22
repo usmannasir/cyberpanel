@@ -205,6 +205,44 @@ def n8n_password_problem(password):
     return None
 
 
+def n8n_container_remarks(attrs):
+    """
+    What an administrator should know about an n8n container that an earlier
+    version of the panel started, read from the container's inspection data.
+    """
+    remarks = []
+    config = attrs.get('Config') or {}
+
+    for binding in ((attrs.get('HostConfig') or {}).get('PortBindings') or {}).get('5678/tcp') or []:
+        if binding.get('HostIp') not in ('127.0.0.1', '::1'):
+            remarks.append('port %s is published on every address of the server and can be reached past the '
+                           'website and the firewall' % binding.get('HostPort'))
+
+    if 'N8N_ENCRYPTION_KEY=auto' in (config.get('Env') or []):
+        remarks.append('stored credentials are encrypted with the key every older site shares')
+
+    if config.get('User') in ('root', '0', '0:0'):
+        remarks.append('runs as root and keeps its settings inside the container, where they are lost when '
+                       'the container is created again')
+
+    return remarks
+
+
+def n8n_owner_missing(port, timeout=10):
+    """True when the n8n instance on this loopback port still offers its owner account to the first visitor,
+    False when it has an owner, None when it does not answer."""
+    import requests
+
+    session = requests.Session()
+    session.trust_env = False
+
+    try:
+        answer = session.get('http://127.0.0.1:%s/rest/settings' % int(port), timeout=timeout).json()
+        return answer['data']['userManagement']['showSetupOnFirstLoad'] is True
+    except BaseException:
+        return None
+
+
 class DockerDeploymentError(Exception):
     def __init__(self, message, error_code=None, recovery_possible=True):
         self.message = message
@@ -1715,6 +1753,37 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
         raise DockerDeploymentError('n8n did not become ready to create its administrator account.')
 
+    @staticmethod
+    def CheckN8NSites():
+        """
+        Report the n8n sites that were deployed the way earlier versions did it.
+
+        Nothing is changed. A site is listed with what is open about it: an
+        instance without an owner account, a port published on every address,
+        the shared encryption key, a container that runs as root.
+        """
+        from websiteFunctions.models import DockerSites
+
+        report = []
+        client = docker.from_env()
+
+        for site in DockerSites.objects.filter(SiteType=Docker_Sites.N8N):
+            remarks = []
+
+            if n8n_owner_missing(site.port) is True:
+                remarks.append('HAS NO OWNER ACCOUNT: whoever opens it first becomes its owner')
+
+            # The application container only: the database container beside it is not n8n.
+            for container in site_containers(client, site.SiteName, site.SiteName.replace(' ', '-')):
+                for remark in n8n_container_remarks(container.attrs):
+                    if remark not in remarks:
+                        remarks.append(remark)
+
+            for remark in remarks:
+                report.append('%s (%s): %s' % (site.admin.domain, site.SiteName, remark))
+
+        return report
+
     def n8n_encryption_key(self):
         """
         The key a new n8n site encrypts its stored credentials with.
@@ -1891,6 +1960,11 @@ def Main():
             Docker_Sites.SetupAppVhost(args.domain, args.port)
         elif args.function == 'RemoveAppVhost':
             Docker_Sites.RemoveAppVhost(args.domain)
+        elif args.function == 'CheckN8NSites':
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+            django.setup()
+            report = Docker_Sites.CheckN8NSites()
+            print('\n'.join(report) if report else 'No n8n site needs attention.')
         elif args.function == 'DeployWPDocker':
             # Takes
             # ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,
