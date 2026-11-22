@@ -12,6 +12,15 @@ from plogical import scannerFileAccess as files
 from plogical.scannerFileAccess import Refused, SiteFiles, clean_relative_path
 
 
+# Names a file can have and a shell would act on if they ever reached it unquoted.
+ODD_NAMES = (
+    '\' " $ ` \\ ; & | < > * ? ( ) { } [ ] ! # ~.php',
+    '$(touch secaimark1).php', '`touch secaimark2`.php', 'a.php"; touch secaimark3; ".php',
+    "a.php'; touch secaimark4; '.php", 'a.php & touch secaimark5 &.php', 'a;touch secaimark6;.php',
+    '-rf.php', '--help.php', '$HOME.php', '*.php', 'a:b,c=d+e@f%g^h.php', 'caf\u00e9 \u0645\u06cc\u200c\u062e.php',
+)
+
+
 class LocalRunner(object):
     """Runs each command with a shell, as the root helper does, and keeps what was asked."""
 
@@ -96,11 +105,15 @@ class PathTests(unittest.TestCase):
         self.assertEqual('wp-content/my file (1).php', clean_relative_path('wp-content/my file (1).php'))
         self.assertEqual('wp-content/uploads/café.txt', clean_relative_path('wp-content/uploads/café.txt'))
 
-    def test_names_a_shell_would_act_on_are_refused(self):
-        for path in ('a/../b', '..', 'a//b', './a', 'a/./b', 'a"b.php', "a'b.php", 'a`id`.php',
-                     '$(id).php', 'a;b.php', 'a|b.php', 'a&b.php', 'a<b.php', 'a>b.php',
-                     'a\\b.php', 'a\nb.php', 'a\x00b.php', 'a*b.php', 'a?b.php', 'a\tb.php',
-                     'x' * 256 + '.php', 'a/' * 600 + 'b.php', None, 7, b'a.php'):
+    def test_any_character_of_a_file_name_is_accepted_except_control_characters(self):
+        for name in ODD_NAMES + ('a b', ' ', '-rf', '--help', 'ünï', '\u200c', '\U0001f600', 'x' * 255, 'é' * 127):
+            self.assertEqual(name, clean_relative_path(name), name)
+            self.assertEqual('wp-content/' + name, clean_relative_path('/wp-content/' + name + '/'), name)
+
+    def test_names_that_are_no_usable_text_are_refused(self):
+        for path in ('a/../b', '..', 'a//b', './a', 'a/./b', 'a/..', '../a',
+                     'a\nb.php', 'a\x00b.php', 'a\tb.php', 'a\rb.php', 'a\x1b[0mb.php', 'a\x7fb.php', 'a\x85b.php',
+                     '\udcff.php', 'x' * 256, 'é' * 128, 'a/' * 600 + 'b.php', None, 7, b'a.php'):
             with self.assertRaises(Refused):
                 clean_relative_path(path)
 
@@ -114,19 +127,43 @@ class AccountTests(unittest.TestCase):
             self.assertEqual('no_site_user', caught.exception.code)
 
     def test_the_site_directory_must_be_a_plain_absolute_path(self):
-        for root in ('public_html', '/home/example.com/../other', '/home/example.com/$(id)',
-                     '/home/example.com/public_html/', '/home/a b;c'):
+        for root in ('public_html', '/home/example.com/../other', '/home/example.com/a\nb',
+                     '/home/example.com/public_html/', '/home/example.com//public_html', None):
             with self.assertRaises(Refused):
                 SiteFiles('example', '/home/example.com', root)
 
 
 class ReadTests(SiteTree):
 
-    def test_a_request_with_shell_characters_runs_no_command(self):
-        marker = os.path.join(self.base, 'marker')
-        for path in ('$(touch %s).php' % marker, '`touch %s`.php' % marker,
-                     'a.php"; touch %s; "' % marker, "a.php'; touch %s; '" % marker,
-                     'a.php & touch %s' % marker, 'a.php\ntouch %s' % marker):
+    def test_a_name_is_only_ever_a_name(self):
+        # Each of these is the name of a real file; none of them is run, expanded or taken for an option.
+        folder = os.path.join(self.root, 'odd')
+        for number, name in enumerate(ODD_NAMES):
+            write(os.path.join(folder, name), b'<?php // %d\n' % number)
+            write(os.path.join(folder, name + ' dir', 'in.php'), b'<?php // in %d\n' % number)
+        listed = dict((item['name'], item['type']) for item in self.site.list_directory('odd'))
+        self.assertEqual(sorted(ODD_NAMES + tuple(name + ' dir' for name in ODD_NAMES)), sorted(listed))
+        self.assertEqual(0, self.site.left_out)
+        for number, name in enumerate(ODD_NAMES):
+            self.assertEqual('file', listed[name])
+            self.assertEqual(b'<?php // %d\n' % number, self.site.read_file('odd/' + name)['data'], name)
+            self.assertEqual(b'<?php // in %d\n' % number, self.site.read_file('odd/%s dir/in.php' % name)['data'])
+            self.assertEqual(['in.php'], [item['name'] for item in self.site.list_directory('odd/%s dir' % name)])
+            backup = self.site.backup_file('odd/' + name)
+            self.assertEqual(b'<?php // %d\n' % number, self.read(backup['backup_path']), name)
+            self.site.replace_file('odd/' + name, b'<?php // clean\n')
+            self.assertEqual(b'<?php // clean\n', self.read(folder, name), name)
+            self.site.rename_file('odd/' + name, 'odd/%s.quarantined.1730000000' % name)
+            self.assertEqual(b'<?php // clean\n', self.read(folder, name + '.quarantined.1730000000'), name)
+            self.site.rename_file('odd/%s dir/in.php' % name, 'odd/%s dir/%s' % (name, name))
+            self.site.delete_file('odd/%s dir/%s' % (name, name))
+            self.assertEqual([], os.listdir(os.path.join(folder, name + ' dir')), name)
+        self.assertEqual([], [name for name in os.listdir(os.getcwd()) if name.startswith('secaimark')])
+        self.assertEqual([], [name for name in os.listdir(self.root) if name.startswith('secaimark')])
+        self.assertEqual([], [name for name in os.listdir(folder) if name.startswith('secaimark')])
+
+    def test_a_name_with_a_control_character_is_refused_before_any_command(self):
+        for path in ('a.php\ntouch secaimark', 'a\tb.php', 'a\x00b.php', 'a\rb.php', 'a/../b.php', '../a.php'):
             self.refused('path_not_allowed', self.site.read_file, path)
             self.refused('path_not_allowed', self.site.list_directory, path)
             self.refused('path_not_allowed', self.site.replace_file, path, b'x')
@@ -134,12 +171,8 @@ class ReadTests(SiteTree):
             self.refused('path_not_allowed', self.site.delete_file, path)
             self.refused('path_not_allowed', self.site.backup_file, path)
         self.assertEqual([], self.runner.commands)
-        self.assertFalse(os.path.exists(marker))
 
     def test_listing_shows_folders_and_scannable_files_but_no_links(self):
-        # A name may hold anything but a slash: one that looks like more entries adds none.
-        write(os.path.join(self.root, 'odd\nd 0 755 forged.php'), b'')
-        write(os.path.join(self.root, "it's $(odd).php"), b'')
         items = dict((item['name'], item) for item in self.site.list_directory('.'))
         self.assertEqual(['index.php', 'readme.txt', 'wp-config.php', 'wp-content'], sorted(items))
         self.assertEqual({'name': 'wp-content', 'type': 'directory', 'size': 0, 'permissions': 'rwx'},
@@ -148,6 +181,19 @@ class ReadTests(SiteTree):
                          items['readme.txt'])
         nested = [item['name'] for item in self.site.list_directory('wp-content')]
         self.assertEqual(['my file (1).php', 'plugins'], sorted(nested))
+        self.assertEqual(0, self.site.left_out)
+
+    def test_listing_counts_the_entries_it_cannot_name(self):
+        # A name may hold anything but a slash: one that looks like more entries adds none.
+        write(os.path.join(self.root, 'wp-content', 'odd\nd 0 755 forged.php'), b'')
+        write(os.path.join(self.root, 'wp-content', 'tab\there.php'), b'')
+        os.mkdir(os.path.join(self.root.encode(), b'wp-content', b'not-text-\xff'))
+        write(os.path.join(self.root, 'wp-content', "it's $(odd).php"), b'')
+        nested = [item['name'] for item in self.site.list_directory('wp-content')]
+        self.assertEqual(["it's $(odd).php", 'my file (1).php', 'plugins'], sorted(nested))
+        self.assertEqual(3, self.site.left_out)
+        self.site.list_directory('wp-content/plugins')
+        self.assertEqual(0, self.site.left_out)
 
     def test_listing_something_that_is_no_folder_is_refused(self):
         self.refused('not_found', self.site.list_directory, 'index.php')

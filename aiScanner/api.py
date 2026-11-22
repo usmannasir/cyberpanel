@@ -347,7 +347,8 @@ def list_files(request):
 
         # The folder is listed as the website user and only inside the site
         try:
-            items = site_files(file_token).list_directory(path)
+            files = site_files(file_token)
+            items = files.list_directory(path)
         except Refused as refusal:
             if refusal.code == 'path_not_allowed':
                 logging.writeToFile(f'[API] Path not allowed for scan {scan_id}')
@@ -355,6 +356,11 @@ def list_files(request):
             if refusal.code == 'no_site_user':
                 return JsonResponse({'error': 'Website not found'}, status=404)
             return JsonResponse({'error': 'Directory access failed'}, status=403)
+
+        if files.left_out:
+            logging.writeToFile(
+                f'[API] Listing for scan {scan_id} left out {files.left_out} entries: '
+                'their names hold control characters or are not text')
 
         return JsonResponse({
             'path': path,

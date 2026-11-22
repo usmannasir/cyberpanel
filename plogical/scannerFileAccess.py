@@ -27,9 +27,6 @@ from plogical.securityUtils import is_safe_system_user
 READ_LIMIT = 10 * 1024 * 1024
 MAX_PATH_LENGTH = 1024
 MAX_NAME_BYTES = 255
-# Besides letters, digits and combining marks of any script, a name may hold
-# these characters. None of them can end a quoted word or start a substitution.
-PATH_PUNCTUATION = frozenset(' ._-+@~,=()[]{}%#!')
 READABLE_EXTENSIONS = ('.php', '.js', '.html', '.htm', '.css', '.txt', '.md', '.json', '.xml',
                        '.sql', '.log', '.conf', '.ini', '.yml', '.yaml')
 SKIPPED_NAMES = ('__pycache__', 'node_modules')
@@ -50,10 +47,11 @@ class Refused(Exception):
 def clean_relative_path(requested):
     """Return a request's path as clean relative components; '' is the site directory itself.
 
+    A name may hold any character a file name can, except control characters:
+    whoever plants a file chooses its name, and the scanner has to reach it.
     Refused: anything that is not text, a parent or empty component, a name
-    longer than a file system allows, and every character outside letters,
-    digits, combining marks and PATH_PUNCTUATION. That leaves out control
-    characters, quotes, backslash, `$`, backtick and the shell's separators.
+    longer than a file system allows, and control characters (a line break
+    and a tab among them). Every name reaches a command as one quoted word.
     """
     if not isinstance(requested, str):
         raise Refused('path_not_allowed')
@@ -66,9 +64,9 @@ def clean_relative_path(requested):
     for part in parts:
         if part in ('', '.', '..'):
             raise Refused('path_not_allowed')
-        for char in part:
-            if char not in PATH_PUNCTUATION and unicodedata.category(char)[0] not in 'LNM':
-                raise Refused('path_not_allowed')
+        # Cc: control characters, NUL included. Cs: half a character, which is no text.
+        if any(unicodedata.category(char) in ('Cc', 'Cs') for char in part):
+            raise Refused('path_not_allowed')
         if len(part.encode('utf-8')) > MAX_NAME_BYTES:
             raise Refused('path_not_allowed')
     return '/'.join(parts)
@@ -148,6 +146,7 @@ class SiteFiles(object):
         self.home = home
         self.root = root
         self.runner = runner or run_as_site_user
+        self.left_out = 0
         self.temp_writer = temp_writer or write_private_temp_file
 
     # -- commands ---------------------------------------------------------
@@ -266,7 +265,10 @@ class SiteFiles(object):
     # -- what the API offers ------------------------------------------------
 
     def list_directory(self, requested):
-        """Folders and scannable files of one directory. Links are not listed."""
+        """Folders and scannable files of one directory. Links are not listed.
+
+        self.left_out says afterwards how many entries could not be listed for their names.
+        """
         path = self._resolve(requested, directory=True)[2]
         # find's exit status says nothing here: it is also non-zero when the
         # folder the command was started in cannot be returned to.
@@ -274,19 +276,23 @@ class SiteFiles(object):
         output = self._run(
             'find', path + '/.', '-mindepth', '1', '-maxdepth', '1', '-printf', '%y %s %m %f/')[1]
         items = []
-        for entry in output.decode('utf-8', errors='replace').split('/'):
-            fields = entry.split(' ', 3)
-            if len(fields) != 4 or fields[0] not in ('d', 'f'):
-                continue
-            kind, size, mode, name = fields
-            if name.startswith('.') or name in SKIPPED_NAMES:
+        self.left_out = 0
+        for entry in output.split(b'/'):
+            fields = entry.split(b' ', 3)
+            if len(fields) != 4 or fields[0] not in (b'd', b'f'):
                 continue
             try:
+                name = fields[3].decode('utf-8')
                 if clean_relative_path(name) != name:
-                    continue
-                size, mode = int(size), int(mode, 8)
+                    raise Refused('path_not_allowed')
+                size, mode = int(fields[1]), int(fields[2], 8)
             except (Refused, ValueError):
+                # A name that is no text or holds a control character cannot be asked for.
+                self.left_out += 1
                 continue
+            if name.startswith('.') or name in SKIPPED_NAMES:
+                continue
+            kind = fields[0].decode('ascii')
             item = {'name': name, 'permissions': stat.filemode(mode)[1:4]}
             if kind == 'd':
                 item['type'] = 'directory'
