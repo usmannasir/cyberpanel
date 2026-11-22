@@ -7,6 +7,8 @@ from managePHP.phpConfig import php_selection_digits
 
 WORDPRESS_VERSION = re.compile(r'^\d+\.\d+(?:\.\d+)?$')
 WORDPRESS_ITEM_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,199}')
+WORDPRESS_RELEASES_URL = 'https://api.wordpress.org/core/version-check/1.7/'
+WORDPRESS_TABLE_PREFIX = re.compile(r'[A-Za-z0-9_]{1,64}')
 
 
 def select_wordpress_version(offers):
@@ -18,6 +20,20 @@ def select_wordpress_version(offers):
         if WORDPRESS_VERSION.fullmatch(version):
             return version
     raise ValueError('The WordPress API did not return a valid release.')
+
+
+def current_wordpress_version(fetch):
+    """Ask WordPress.org which release is current ('7.0.2').
+
+    fetch is requests.get. An answer without a valid release raises
+    ValueError; a failed request raises what fetch raises.
+    """
+    response = fetch(WORDPRESS_RELEASES_URL, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    if not isinstance(data, dict):
+        raise ValueError('Invalid WordPress API response.')
+    return select_wordpress_version(data.get('offers', []))
 
 
 def wordpress_php_change_required(current_binary, required_binary):
@@ -54,6 +70,37 @@ def directory_allows_install(command_succeeded, output, maximum_entries=3):
     if not command_succeeded or not isinstance(output, str):
         return False
     return len(output) <= maximum_entries
+
+
+def build_directory_listing_command(path):
+    """Print the name of every entry directly inside a directory, one per line."""
+    return 'find %s -mindepth 1 -maxdepth 1 -printf %s' % (shlex.quote(path), shlex.quote('%f\\n'))
+
+
+def directory_entry_names(command_succeeded, output):
+    """The names a listing printed, or None when the directory could not be read."""
+    if not command_succeeded or not isinstance(output, str):
+        return None
+    return set(line for line in output.split('\n') if line)
+
+
+def entries_added_since(before, after):
+    """The names a job added to a directory: there now, not there when it started.
+
+    Both are sets from directory_entry_names. Without a reading from before
+    the job, or of the directory as it is now, nothing counts as added, so
+    nothing is ever removed on a guess.
+    """
+    if before is None or after is None:
+        return []
+    return sorted(name for name in after - before if name not in ('.', '..') and '/' not in name)
+
+
+def build_entry_removal_command(directory, name):
+    """Remove one entry of a directory; its name is never read as an option or as a path."""
+    if not isinstance(name, str) or not name or name in ('.', '..') or '/' in name or '\x00' in name:
+        raise ValueError('Invalid directory entry.')
+    return 'rm -rf -- %s' % shlex.quote(os.path.join(directory, name))
 
 
 def build_wordpress_core_install_command(version, destination, php_binary):
@@ -142,3 +189,35 @@ def wordpress_config_set_command(php_binary, path, key, value):
     return ('%s -d error_reporting=0 -d memory_limit=350M -d max_execution_time=400 /usr/bin/wp '
             'config set %s %s --skip-plugins --skip-themes --path=%s') % (
         shlex.quote(php_binary), key, shlex.quote(value), shlex.quote(path))
+
+
+def wordpress_cli_command(php_binary, path, *arguments):
+    """A WP-CLI command for one site that loads none of its plugins and themes.
+
+    Run it as the site's own user. Every word is quoted, so a value read
+    from a backup or from a site's files stays one argument.
+    """
+    words = [php_binary, '-d', 'error_reporting=0', '-d', 'memory_limit=350M', '-d', 'max_execution_time=400',
+             '/usr/bin/wp']
+    words.extend(arguments)
+    words.extend(['--skip-plugins', '--skip-themes', '--path=' + path])
+    return ' '.join(shlex.quote(str(word)) for word in words)
+
+
+def wordpress_table_prefix_command(php_binary, path, prefix):
+    """The WP-CLI command that sets the table prefix in a site's wp-config.php."""
+    if not isinstance(prefix, str) or WORDPRESS_TABLE_PREFIX.fullmatch(prefix) is None:
+        raise ValueError('Invalid WordPress table prefix.')
+    return wordpress_cli_command(php_binary, path, 'config', 'set', 'table_prefix', prefix, '--type=variable')
+
+
+def single_line_value(output):
+    """One value printed by a command: its only line. Anything else raises ValueError.
+
+    A value is written back into a site's configuration, so output that
+    carries a warning or an error beside it is refused instead of stored.
+    """
+    text = str(output if output is not None else '').rstrip('\n')
+    if not text or '\n' in text or '\r' in text:
+        raise ValueError('The command did not print a single value.')
+    return text

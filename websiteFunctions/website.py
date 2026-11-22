@@ -2315,6 +2315,9 @@ Require valid-user
             extraArgs['package'] = data['package']
             extraArgs['home'] = data['home']
             extraArgs['apacheBackend'] = normalize_apache_backend(data.get('apacheBackend', 0))
+            # Set by a restore: the worker then refuses a website that already
+            # exists instead of installing into it.
+            extraArgs['newWebsiteOnly'] = 1 if data.get('newWebsiteOnly') else 0
             try:
                 extraArgs['path'] = data['path']
                 if extraArgs['path'] == '':
