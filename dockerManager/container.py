@@ -1481,15 +1481,16 @@ class ContainerManager(multi.Thread):
                     data_ret = {'commandStatus': 0, 'error_message': f'Invalid command syntax: {str(e)}'}
                     return HttpResponse(json.dumps(data_ret))
                 
-                # Execute command with security restrictions
-                # Note: Some commands may need privileged access, but we validate commands first
+                # The command runs with the privileges the container itself has and
+                # no more. With the privileged flag it would get every capability
+                # of the server, which no command offered here needs.
                 exec_result = container.exec_run(
                     command_parts,
                     stdout=True,
                     stderr=True,
                     stdin=False,
                     tty=False,
-                    privileged=True,   # Allow privileged mode since commands are whitelisted
+                    privileged=False,
                     user='',           # Use container's default user (often root, but commands are validated)
                     detach=False,
                     demux=False,
