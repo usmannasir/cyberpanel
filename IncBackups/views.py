@@ -22,6 +22,7 @@ from websiteFunctions.models import Websites
 from .IncBackupProvider import IncBackupProvider
 from .IncBackupPath import IncBackupPath
 from .IncBackupsControl import IncJobs
+from .jobStatus import job_end, DONE, FAILED
 from .models import IncJob, BackupJob, JobSites, JobSnapshots
 
 
@@ -374,7 +375,12 @@ def get_backup_status(request):
 
         if result:
 
-            if result.find("Completed") > -1:
+            # The file holds program messages and the names of files and mail
+            # folders: how the job ended is read from its failure mark and its
+            # last line, never from a word found somewhere in it.
+            ended = job_end(result)
+
+            if ended == DONE:
 
                 ### Removing Files
 
@@ -384,7 +390,7 @@ def get_backup_status(request):
                     {'backupStatus': 1, 'error_message': "None", "status": result, "abort": 1})
                 return HttpResponse(final_json)
 
-            elif result.find("[5009]") > -1:
+            elif ended == FAILED:
                 ## removing status file, so that backup can re-run
                 try:
                     os.remove(status)

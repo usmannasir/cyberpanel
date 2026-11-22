@@ -10,6 +10,7 @@ import django
 django.setup()
 from plogical.getSystemInformation import SystemInformation
 from IncBackups.IncBackupsControl import IncJobs
+from IncBackups.jobStatus import job_end, DONE, FAILED
 from IncBackups.models import BackupJob
 from random import randint
 import argparse
@@ -137,7 +138,12 @@ Automatic backup failed for %s on %s.
                             if os.path.exists(tempPath):
                                 result = open(tempPath, 'r').read()
 
-                                if result.find("Completed") > -1:
+                                # A failure mark anywhere ends the job as failed; it is
+                                # done only when its last line says so. Words inside the
+                                # messages of the programs it ran decide nothing.
+                                ended = job_end(result)
+
+                                if ended == DONE:
 
                                     ### Removing Files
 
@@ -145,7 +151,7 @@ Automatic backup failed for %s on %s.
 
                                     logging.statusWriter(IncScheduler.logPath, 'Backed up %s.' % (web.website), 1)
                                     break
-                                elif result.find("[5009]") > -1:
+                                elif ended == FAILED:
                                     ## removing status file, so that backup can re-runn
                                     try:
                                         os.remove(tempPath)
