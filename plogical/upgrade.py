@@ -6329,7 +6329,9 @@ pm.max_spare_servers = 3
                 os.chmod(secret_path, 0o600)
 
             from plogical.terminalService import configure_terminal_service
-            configure_terminal_service()
+            terminal_outcome, terminal_note = configure_terminal_service()
+            if terminal_note:
+                Upgrade.stdOut(terminal_note)
         except Exception as error:
             Upgrade.stdOut(
                 "Warning: Web Terminal authentication could not be configured: %s" % error,
