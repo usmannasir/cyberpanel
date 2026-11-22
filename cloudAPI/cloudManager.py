@@ -25,6 +25,7 @@ from s3Backups.s3Backups import S3Backups
 from serverLogs.views import getLogsFromFile
 from serverStatus.views import topProcessesStatus, killProcess, switchTOLSWSStatus
 from plogical import hashPassword
+from plogical.panelUserNames import name_from, new_name_refusal
 from loginSystem.models import ACL
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.securityUtils import (
@@ -88,6 +89,17 @@ class CloudManager:
             try:
 
                 UserAccountName = self.data['UserAccountName']
+                if not Administrator.objects.filter(userName=UserAccountName).exists():
+                    # The platform sends the customer's own name without its spaces.
+                    # A new account is named by what the rule for user names allows
+                    # of it, and the website is given to that account.
+                    accountName = name_from(UserAccountName)
+                    refusal = new_name_refusal(accountName)
+                    if refusal is not None:
+                        return self.ajaxPre(0, refusal)
+                    if self.data.get('websiteOwner') == UserAccountName:
+                        self.data['websiteOwner'] = accountName
+                    UserAccountName = accountName
                 UserPassword = self.data['UserPassword']
                 FullName = self.data['FullName']
                 token = hashPassword.generateToken(UserAccountName, UserPassword)
