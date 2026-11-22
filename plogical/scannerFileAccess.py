@@ -2,18 +2,30 @@
 
 The panel's web process cannot enter a website's home, and nothing the scanner
 does needs more than the website's own account may do. Every listing, read,
-backup, replacement, rename and deletion is therefore one fixed command run as
-that account, with each word quoted, and never a command run as root.
+backup, replacement, rename and deletion is therefore a command run as that
+account, and never a command run as root.
 
-A path from a request is accepted in one place only, SiteFiles._resolve():
-it must be made of plain names, and after every link on the way has been
-resolved (as the website's user) it must still lie inside the site directory.
-The commands that then open a file refuse to follow a link in its last name.
+Each of them is one command that does its own checking. The shell enters the
+website's home, the site directory and the folder the request names, each
+time following every link to the real place, and says where it then is. Only
+when that folder lies inside the site directory does it go on, and it works
+on the one name in the folder it stands in, never through a link in that
+name. Check and use cannot come apart, because the shell does not leave the
+folder it checked. The panel reads the three places from the output and
+takes nothing from a command whose folder is not inside the site.
+
+The text of a command is fixed. What a request names goes in front of it as
+quoted words, and the text only ever uses them inside double quotes.
+
+What a command did is read from what it printed, not only from how it says
+it ended: a file that is not there prints no description of itself, a backup
+prints its folder and its size only once it is complete.
 """
 import getpass
 import hashlib
 import io
 import os
+import re
 import secrets
 import shlex
 import stat
@@ -21,11 +33,15 @@ import subprocess
 import time
 import unicodedata
 
+from plogical import commandStatus
 from plogical.securityUtils import is_safe_system_user
 
 
 READ_LIMIT = 10 * 1024 * 1024
-MAX_PATH_LENGTH = 1024
+# The helper takes a command of 1023 bytes, and the shortest command with the
+# shortest home leaves fewer than this for the path. Each command is measured
+# exactly before it is sent.
+MAX_PATH_LENGTH = 640
 MAX_NAME_BYTES = 255
 READABLE_EXTENSIONS = ('.php', '.js', '.html', '.htm', '.css', '.txt', '.md', '.json', '.xml',
                        '.sql', '.log', '.conf', '.ini', '.yml', '.yaml')
@@ -33,6 +49,88 @@ SKIPPED_NAMES = ('__pycache__', 'node_modules')
 # Files that decide how the whole site runs: the scanner never changes them.
 PROTECTED_NAMES = frozenset(('wp-config.php', '.htaccess', '.user.ini', 'php.ini'))
 BACKUP_DIRECTORY = '.ai-scanner-backups'
+
+# How every command begins: error output is dropped, and g enters a folder
+# for real and keeps its true path in p (the "/" added and taken away again
+# keeps a name that ends in a line break whole).
+START = (
+    'exec 2>/dev/null\n'
+    'g(){ cd -P -- "$1"&&p=$(pwd -P&&echo /)&&p=${p%??};}\n')
+
+# H is the website's home, R the site directory and D the folder of the
+# request inside it. The three real paths are printed. Status 8: one of them
+# cannot be entered. Status 9: the folder is not inside the site directory,
+# or the site directory not inside the home.
+ENTER = START + (
+    'i(){ case "$1/" in "$2"/*);;*)exit 9;;esac;}\n'
+    'g "$H"&&h=$p&&g "$R"&&r=$p&&g "$D"&&d=$p||exit 8\n'
+    'printf "%s\\0" "$h" "$r" "$d"\n'
+    'i "$r" "$h";i "$d" "$r"\n')
+
+LIST = ENTER + 'find . -mindepth 1 -maxdepth 1 -printf "%y %s %m %f/"\n'
+
+# N is the one name worked on, as ./NAME. Its mode, size and modification
+# time are printed; anything but a plain file ends the command (status 5),
+# and so does a name that is not there (status 4).
+FILE = ENTER + (
+    's=$(stat -c "%f %s %Y" -- "$N")||exit 4\n'
+    'echo "$s"\n'
+    'set -- $s\n'
+    'case $1 in 8???);;*)exit 5;;esac\n')
+
+# L is the largest size read.
+READ = FILE + (
+    '[ "$2" -le "$L" ]||exit 7\n'
+    'exec dd iflag=nofollow,nonblock,count_bytes bs=64k count=$((L+1)) if="$N"\n')
+
+# Backups go to HOME/.ai-scanner-backups/T/. The two folders are made one by
+# one and entered for real, so neither can be a link to another place, and
+# are kept private. The folder is printed when it is ready.
+BACKUP_FOLDER = START + (
+    'g "$H"||exit 8\n'
+    'b=$p/' + BACKUP_DIRECTORY + '\n'
+    'mkdir -m 700 "$b"\n'
+    'g "$b"&&[ "$p" = "$b" ]&&{ mkdir -m 700 "$T";g "./$T";}&&[ "$p" = "$b/$T" ]&&chmod 700 . ..&&echo "$p"\n')
+
+# The copy is NAME.X.bak in that folder, which must be where it is asked for
+# and no link (status 3 otherwise). The copy is complete when it has the size
+# of the file; the folder is printed first, and the size once the copy is
+# complete. A copy that is not complete is removed (status 5).
+BACKUP = FILE + (
+    'dd iflag=nofollow,nonblock bs=64k if="$N"|(b=$h/' + BACKUP_DIRECTORY + '/$T\n'
+    'g "$b"&&[ "$p" = "$b" ]&&echo "$p"||exit 3\n'
+    'k=$N.$X.bak\n'
+    'dd conv=excl bs=64k of="$k"\n'
+    '[ "$(stat -c %s -- "$k")" = "$2" ]||{ rm -f -- "$k";exit 5;}\n'
+    'echo "$2")\n')
+
+# Z is the size of the backup just made, or empty when none was asked for: a
+# file that no longer has that size is left alone (status 2).
+UNCHANGED = '[ -z "$Z" ]||[ "$2" = "$Z" ]||exit 2\n'
+
+# S is the file with the new content. What the file then holds is printed.
+REPLACE = FILE + '[ "$2" -le "$L" ]||exit 7\n' + UNCHANGED + (
+    'dd oflag=nofollow conv=nocreat bs=64k if="$S" of="$N"||exit 6\n'
+    'exec dd iflag=nofollow,nonblock,count_bytes bs=64k count=$((L+1)) if="$N"\n')
+
+# M is the new name, in the same folder. "E" is printed when it is taken; the
+# mode of the file under its new name is printed once the old name is gone.
+RENAME = FILE + UNCHANGED + (
+    '[ -e "$M" ]||[ -L "$M" ]&&{ echo E;exit 6;}\n'
+    'mv -n -T -- "$N" "$M"\n'
+    '[ -e "$N" ]||[ -L "$N" ]&&exit 6\n'
+    'stat -c %f -- "$M"\n')
+
+# The digest of what is removed is printed, and "gone" once the name is free.
+DELETE = FILE + UNCHANGED + (
+    'dd iflag=nofollow,nonblock bs=64k if="$N"|sha256sum\n'
+    'rm -f -- "$N"\n'
+    '[ -e "$N" ]||[ -L "$N" ]&&exit 6\n'
+    'echo gone\n')
+
+
+# What a deletion prints after the file's description.
+DELETED = re.compile(br'([0-9a-f]{64})  -\ngone\n\Z')
 
 
 class Refused(Exception):
@@ -70,10 +168,6 @@ def clean_relative_path(requested):
         if len(part.encode('utf-8')) > MAX_NAME_BYTES:
             raise Refused('path_not_allowed')
     return '/'.join(parts)
-
-
-def is_protected_name(path):
-    return os.path.basename(path).lower() in PROTECTED_NAMES
 
 
 def has_readable_extension(path):
@@ -151,116 +245,127 @@ class SiteFiles(object):
 
     # -- commands ---------------------------------------------------------
 
-    def _run(self, *words):
-        """One command for the website's user: fixed words, each quoted, nothing else."""
-        command = ' '.join(shlex.quote(word) for word in words) + ' 2>/dev/null'
+    def _command(self, script, **words):
+        """The words an operation works on, each quoted, in front of the operation's fixed text."""
+        words['H'] = self.home
+        return ' '.join('%s=%s' % (name, shlex.quote(words[name])) for name in sorted(words)) + '\n' + script
+
+    def _output(self, script, **words):
+        """Run one command as the website's user; return (it ended with status 0, what it printed)."""
+        command = self._command(script, **words)
+        # The helper drops a longer request; it is refused here, the same for every caller.
+        if not commandStatus.request_fits(self.user, command):
+            raise Refused('path_too_long')
         try:
             succeeded, output = self.runner(command, self.user)
         except Exception:
             return False, b''
         return bool(succeeded), output if isinstance(output, bytes) else b''
 
-    def _resolve(self, requested, keep_last=False, directory=False):
-        """Accept one path from a request, or refuse it.
+    def _run(self, script, directory, **words):
+        """Run one operation in one folder of the site.
 
-        Returns the resolved home, the resolved site directory and the
-        resolved path. With keep_last the last name is taken as it is: it
-        names the entry to change or create, not what a link there points to.
-        With directory the path must be a folder.
+        Returns whether the command ended with status 0, the real home, and
+        what the operation printed after it had entered the folder. Refused
+        when the folder cannot be entered or does not lie inside the site.
         """
-        relative = clean_relative_path(requested)
-        if keep_last:
-            if not relative:
-                raise Refused('path_not_allowed')
-            parent, name = os.path.split(relative)
+        if self.root == self.home:
+            root = '.'
+        elif self.root.startswith(self.home + '/'):
+            root = './' + self.root[len(self.home) + 1:]
         else:
-            parent, name = relative, ''
-        target = os.path.join(self.root, parent) if parent else self.root
-        if keep_last or directory:
-            target += '/.'
-        succeeded, output = self._run('realpath', '-e', '--', self.home, self.root, target)
-        if not succeeded:
+            root = self.root
+        succeeded, output = self._output(script, R=root, D='./' + directory if directory else '.', **words)
+        fields = output.split(b'\0', 3)
+        if len(fields) != 4:
             raise Refused('not_found')
         try:
-            lines = output.decode('utf-8').split('\n')
+            real_home, real_root, real_directory = [field.decode('utf-8') for field in fields[:3]]
         except UnicodeDecodeError:
             raise Refused('path_not_allowed')
-        if len(lines) != 4 or lines[3] != '' or not all(line.startswith('/') for line in lines[:3]):
+        if not all(path.startswith('/') for path in (real_home, real_root, real_directory)):
             raise Refused('path_not_allowed')
-        real_home, real_root, resolved = lines[:3]
-        if real_home == '/' or not _inside(real_home, real_root) or not _inside(real_root, resolved):
+        if real_home == '/' or not _inside(real_home, real_root) or not _inside(real_root, real_directory):
             raise Refused('path_not_allowed')
-        if name:
-            resolved = os.path.join(resolved, name)
-        return real_home, real_root, resolved
+        return succeeded, real_home, fields[3]
 
-    def _status(self, path):
-        """Mode, size and modification time of the entry itself; None when there is none."""
-        succeeded, output = self._run('stat', '-c', '%f %s %Y', '--', path)
-        if not succeeded:
-            return None
-        try:
-            mode, size, modified = output.decode('ascii').split()
-            return int(mode, 16), int(size), int(modified)
-        except (UnicodeDecodeError, ValueError):
-            raise Refused('failed')
-
-    def _regular_file(self, path, limit=READ_LIMIT):
-        status = self._status(path)
-        if status is None:
+    @staticmethod
+    def _described(printed):
+        """Mode, size and modification time of the file an operation found, and what it printed after them."""
+        line, found, rest = printed.partition(b'\n')
+        if not found:
             raise Refused('not_found')
+        try:
+            mode, size, modified = line.decode('ascii').split(' ')
+            status = int(mode, 16), int(size), int(modified)
+        except ValueError:
+            raise Refused('failed')
         if stat.S_ISLNK(status[0]):
             raise Refused('path_not_allowed')
         if not stat.S_ISREG(status[0]):
             raise Refused('not_a_file')
-        if limit is not None and status[1] > limit:
-            raise Refused('too_large')
-        return status
+        return status, rest
 
-    def _content(self, path, limit=READ_LIMIT):
-        succeeded, output = self._run(
-            'dd', 'iflag=nofollow,nonblock,count_bytes', 'status=none', 'bs=65536',
-            'count=%d' % (limit + 1), 'if=' + path)
-        if not succeeded:
-            raise Refused('failed')
-        if len(output) > limit:
-            raise Refused('too_large')
-        return output
+    @staticmethod
+    def _target(requested):
+        """The folder and the name a request means, both relative to the site directory."""
+        relative = clean_relative_path(requested)
+        if not relative:
+            raise Refused('path_not_allowed')
+        return os.path.split(relative)
 
     def _changeable(self, requested, protected=PROTECTED_NAMES):
-        """The file a request wants changed: a plain file of a kind the scanner reads."""
-        real_home, real_root, path = self._resolve(requested, keep_last=True)
-        if os.path.basename(path).lower() in protected:
+        """The file a request wants changed: one of a kind the scanner reads, and not a protected one."""
+        directory, name = self._target(requested)
+        if name.lower() in protected:
             raise Refused('protected_file')
-        if not has_readable_extension(path):
+        if not has_readable_extension(name):
             raise Refused('type_not_allowed')
-        status = self._regular_file(path)
-        return real_home, path, status
+        return directory, name
 
-    def _backup(self, real_home, path):
-        """Copy one file into the website's private backup folder, outside every served directory."""
-        base = os.path.join(real_home, BACKUP_DIRECTORY)
-        directory = os.path.join(base, time.strftime('%Y-%m-%d'))
-        # The folder must be exactly where it is asked for, not behind a link:
-        # checked before anything is created in it, and again once it exists.
-        succeeded, output = self._run('realpath', '-e', '--', base)
-        if succeeded and output != (base + '\n').encode('utf-8'):
-            raise Refused('backup_dir_failed')
-        if not self._run('mkdir', '-p', '--', directory)[0]:
-            raise Refused('backup_dir_failed')
-        succeeded, output = self._run('realpath', '-e', '--', directory)
-        if not succeeded or output != (directory + '\n').encode('utf-8'):
-            raise Refused('backup_dir_failed')
-        if not self._run('chmod', '700', '--', base, directory)[0]:
-            raise Refused('backup_dir_failed')
-        backup_path = os.path.join(directory, '%s.%d.%s.bak' % (
-            os.path.basename(path), int(time.time()), secrets.token_hex(6)))
-        copied = self._run('dd', 'iflag=nofollow,nonblock', 'oflag=nofollow', 'conv=excl',
-                           'status=none', 'bs=65536', 'if=' + path, 'of=' + backup_path)[0]
-        status = self._status(backup_path) if copied else None
-        if status is None or not stat.S_ISREG(status[0]):
+    def _read(self, directory, name):
+        succeeded, real_home, printed = self._run(READ, directory, N='./' + name, L=str(READ_LIMIT))
+        status, content = self._described(printed)
+        if status[1] > READ_LIMIT or len(content) > READ_LIMIT:
+            raise Refused('too_large')
+        # A read that was cut short is no content.
+        if not succeeded or len(content) < status[1]:
+            raise Refused('failed')
+        return status, content
+
+    def _backup(self, directory, name):
+        """Copy one file into the website's private backup folder, outside every served directory.
+
+        Returns the path of the copy and its size, which is the size of the file.
+        """
+        date = time.strftime('%Y-%m-%d')
+        stamp = '%d.%s' % (int(time.time()), secrets.token_hex(6))
+        for attempt in (1, 2):
+            succeeded, real_home, printed = self._run(BACKUP, directory, N='./' + name, T=date, X=stamp)
+            status, printed = self._described(printed)
+            folder = '%s/%s/%s' % (real_home, BACKUP_DIRECTORY, date)
+            ready = (folder + '\n').encode('utf-8')
+            if printed.startswith(ready):
+                break
+            # The day's folder is not there yet, or not what it has to be: make it once, then copy again.
+            if attempt == 2 or self._output(BACKUP_FOLDER, T=date)[1] != ready:
+                raise Refused('backup_dir_failed')
+        if not succeeded or printed[len(ready):] != b'%d\n' % status[1]:
             raise Refused('backup_failed')
-        return backup_path, status[1]
+        return '%s/%s.%s.bak' % (folder, name, stamp), status[1]
+
+    def _change(self, script, directory, backup_path, backup_size, **words):
+        """Run a command that changes a file; a refusal carries the path of the backup made before."""
+        try:
+            succeeded, real_home, printed = self._run(
+                script, directory, Z='' if backup_size is None else str(backup_size), **words)
+            status, printed = self._described(printed)
+            if backup_size is not None and status[1] != backup_size:
+                raise Refused('changed')
+        except Refused as refusal:
+            refusal.details.setdefault('backup_path', backup_path)
+            raise
+        return succeeded, status, printed
 
     # -- what the API offers ------------------------------------------------
 
@@ -269,12 +374,10 @@ class SiteFiles(object):
 
         self.left_out says afterwards how many entries could not be listed for their names.
         """
-        path = self._resolve(requested, directory=True)[2]
-        # find's exit status says nothing here: it is also non-zero when the
-        # folder the command was started in cannot be returned to.
+        succeeded, real_home, output = self._run(LIST, clean_relative_path(requested))
+        if not succeeded:
+            raise Refused('failed')
         # A name cannot hold a slash, so one ends each entry.
-        output = self._run(
-            'find', path + '/.', '-mindepth', '1', '-maxdepth', '1', '-printf', '%y %s %m %f/')[1]
         items = []
         self.left_out = 0
         for entry in output.split(b'/'):
@@ -306,76 +409,76 @@ class SiteFiles(object):
         return items
 
     def read_file(self, requested):
-        """Content of one file of a kind the scanner reads, wherever inside the site it really lies."""
-        if not has_readable_extension(clean_relative_path(requested)):
+        """Content of one file of a kind the scanner reads. A link is not followed."""
+        directory, name = self._target(requested)
+        if not has_readable_extension(name):
             raise Refused('type_not_allowed')
-        path = self._resolve(requested)[2]
-        if not has_readable_extension(path):
-            raise Refused('type_not_allowed')
-        status = self._regular_file(path)
-        data = self._content(path)
+        status, data = self._read(directory, name)
         md5, sha256 = text_digests(data)
         return {'data': data, 'size': status[1], 'modified': status[2], 'md5': md5, 'sha256': sha256}
 
     def backup_file(self, requested):
-        real_home, path, status = self._changeable(requested, protected=frozenset())
-        backup_path, size = self._backup(real_home, path)
+        directory, name = self._changeable(requested, protected=frozenset())
+        backup_path, size = self._backup(directory, name)
         return {'backup_path': backup_path, 'size': size}
 
     def replace_file(self, requested, content, backup=True, verify_sha256=None):
         """Give an existing file new content; its owner and mode stay what they were."""
         if not isinstance(content, bytes) or len(content) > READ_LIMIT:
             raise Refused('too_large')
-        real_home, path, status = self._changeable(requested)
+        directory, name = self._changeable(requested)
         if verify_sha256:
-            actual = text_digests(self._content(path))[1]
+            actual = text_digests(self._read(directory, name)[1])[1]
             if actual != verify_sha256:
                 raise Refused('hash_mismatch', actual=actual)
-        backup_path = self._backup(real_home, path)[0] if backup else None
+        backup_path, backup_size = self._backup(directory, name) if backup else (None, None)
         try:
             source = self.temp_writer(content)
         except Exception:
             raise Refused('write_failed', backup_path=backup_path)
         try:
-            written = self._run('dd', 'oflag=nofollow', 'conv=nocreat', 'status=none', 'bs=65536',
-                                'if=' + source, 'of=' + path)[0]
+            succeeded, status, stored = self._change(
+                REPLACE, directory, backup_path, backup_size, N='./' + name, S=source, L=str(READ_LIMIT))
         finally:
             try:
                 os.remove(source)
             except OSError:
                 pass
-        try:
-            stored = self._content(path) if written else None
-        except Refused:
-            stored = None
-        if stored != content:
+        if status[1] > READ_LIMIT:
+            raise Refused('too_large', backup_path=backup_path)
+        if not succeeded or stored != content:
             raise Refused('replace_failed', backup_path=backup_path)
         md5, sha256 = text_digests(stored)
         return {'backup_path': backup_path, 'bytes_written': len(content), 'md5': md5, 'sha256': sha256}
 
     def rename_file(self, old_requested, new_requested, backup=True):
-        """Give a file a new name that nothing else has yet."""
-        clean_relative_path(new_requested)
-        real_home, old_path, status = self._changeable(old_requested)
-        new_path = self._resolve(new_requested, keep_last=True)[2]
-        if is_protected_name(new_path):
+        """Give a file a new name in its own folder, one that nothing else has yet."""
+        new_directory, new_name = self._target(new_requested)
+        directory, name = self._changeable(old_requested)
+        if new_name.lower() in PROTECTED_NAMES:
             raise Refused('protected_file')
-        if self._status(new_path) is not None:
-            raise Refused('exists')
-        backup_path = self._backup(real_home, old_path)[0] if backup else None
-        self._run('mv', '-n', '-T', '--', old_path, new_path)
-        moved = self._status(new_path)
-        if moved is None or not stat.S_ISREG(moved[0]) or self._status(old_path) is not None:
+        if new_directory != directory:
+            raise Refused('other_directory')
+        backup_path, backup_size = self._backup(directory, name) if backup else (None, None)
+        succeeded, status, printed = self._change(
+            RENAME, directory, backup_path, backup_size, N='./' + name, M='./' + new_name)
+        if printed == b'E\n':
+            raise Refused('exists', backup_path=backup_path)
+        try:
+            moved = stat.S_ISREG(int(printed.decode('ascii').strip() or 'x', 16))
+        except ValueError:
+            moved = False
+        if not succeeded or not moved:
             raise Refused('rename_failed', backup_path=backup_path)
         return {'backup_path': backup_path}
 
     def delete_file(self, requested):
         """Remove one file after a copy of it has been kept."""
-        real_home, path, status = self._changeable(
-            requested, protected=PROTECTED_NAMES | frozenset(('index.php',)))
-        sha256 = text_digests(self._content(path))[1]
-        backup_path = self._backup(real_home, path)[0]
-        self._run('rm', '-f', '--', path)
-        if self._status(path) is not None:
+        directory, name = self._changeable(requested, protected=PROTECTED_NAMES | frozenset(('index.php',)))
+        backup_path, backup_size = self._backup(directory, name)
+        succeeded, status, printed = self._change(DELETE, directory, backup_path, backup_size, N='./' + name)
+        removed = DELETED.match(printed)
+        if not succeeded or removed is None:
             raise Refused('delete_failed', backup_path=backup_path)
-        return {'backup_path': backup_path, 'size': status[1], 'modified': status[2], 'sha256': sha256}
+        return {'backup_path': backup_path, 'size': status[1], 'modified': status[2],
+                'sha256': removed.group(1).decode('ascii')}

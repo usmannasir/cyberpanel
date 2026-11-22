@@ -24,13 +24,14 @@ class LocalHelper(object):
 
     def __init__(self):
         self.calls = []
+        self.honest = True
 
     def run(self, command, user=None):
         self.calls.append((command, user))
         process = subprocess.Popen(['sh', '-c', command], stdin=subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         output = process.communicate()[0]
-        return process.returncode == 0, output
+        return (process.returncode == 0) if self.honest else True, output
 
     def outputExecutioner(self, command, user=None, shell=None, dir=None, retRequired=None):
         succeeded, output = self.run(command, user)
@@ -217,6 +218,38 @@ class ScannerFileApiTests(SimpleTestCase):
             'old_path': 'wp-content/plugins/demo.php', 'new_path': 'wp-content/plugins/demo.php.quarantined.1730000000'})
         self.assertEqual((200, True), (status, renamed['success']))
         self.assertEqual(['demo.php.quarantined.1730000000'], os.listdir(os.path.join(self.root, 'wp-content', 'plugins')))
+
+    def test_renaming_into_another_folder_is_refused(self):
+        for new_path in ('wp-content/readme.txt', 'wp-content/plugins/readme.txt.quarantined.1', 'missing/readme.txt'):
+            status, reply = self.post(api.scanner_rename_file, {'old_path': 'readme.txt', 'new_path': new_path})
+            self.assertEqual((403, False, 'RENAME_OTHER_FOLDER'), (status, reply['success'], reply['error_code']))
+        self.assertEqual([], self.helper.calls)
+        self.assertEqual(b'read me\n', self.read(self.root, 'readme.txt'))
+
+    def test_a_helper_that_calls_every_command_a_success_does_not_decide_the_answer(self):
+        self.helper.honest = False
+        for view, payload in (
+                (api.scanner_backup_file, {'file_path': 'missing.php', 'scan_id': SCAN_ID}),
+                (api.scanner_replace_file, {'file_path': 'missing.php', 'content': 'x'}),
+                (api.scanner_rename_file, {'old_path': 'missing.php', 'new_path': 'missing.php.quarantined.1'}),
+                (api.scanner_delete_file, {'file_path': 'missing.php', 'confirm_deletion': True}),
+        ):
+            status, reply = self.post(view, payload)
+            self.assertEqual((404, False, 'FILE_NOT_FOUND'), (status, reply['success'], reply['error_code']))
+        self.assertEqual(404, self.get(api.scanner_get_file, file_path='missing.php')[0])
+        self.assertEqual(404, self.get(api.get_file_content, path='missing.php')[0])
+        self.assertFalse(os.path.exists(os.path.join(self.root, 'missing.php')))
+        status, backup = self.post(api.scanner_backup_file, {'file_path': 'readme.txt', 'scan_id': SCAN_ID})
+        self.assertEqual((200, b'read me\n'), (status, self.read(backup['backup_path'])))
+        status, renamed = self.post(api.scanner_rename_file, {
+            'old_path': 'readme.txt', 'new_path': 'readme.txt.quarantined.1730000000'})
+        self.assertEqual((200, True), (status, renamed['success']))
+        self.assertEqual(b'read me\n', self.read(self.root, 'readme.txt.quarantined.1730000000'))
+        status, deleted = self.post(api.scanner_delete_file, {
+            'file_path': 'wp-content/plugins/demo.php', 'confirm_deletion': True})
+        self.assertEqual((200, hashlib.sha256(b'<?php // demo\n').hexdigest()),
+                         (status, deleted['file_info']['hash']))
+        self.assertFalse(os.path.exists(os.path.join(self.root, 'wp-content', 'plugins', 'demo.php')))
 
     def test_a_website_without_a_system_user_gets_no_file_access(self):
         self.auth = api.AuthWrapper('secai.test', self.root, 'api_key', external_app='', source_obj=SimpleNamespace())

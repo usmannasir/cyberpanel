@@ -156,6 +156,9 @@ def site_files(auth):
 # What a refused file request is answered with: HTTP status, message, error code.
 REFUSALS = {
     'path_not_allowed': (403, 'Path not allowed', 'PATH_NOT_ALLOWED'),
+    'path_too_long': (400, 'Path too long', 'PATH_TOO_LONG'),
+    'other_directory': (403, 'A file can only be renamed inside its own folder', 'RENAME_OTHER_FOLDER'),
+    'changed': (409, 'File changed while it was being backed up', 'FILE_CHANGED'),
     'not_found': (404, 'File not found', 'FILE_NOT_FOUND'),
     'not_a_file': (404, 'File not found', 'FILE_NOT_FOUND'),
     'type_not_allowed': (403, 'File type not allowed', 'FILE_TYPE_NOT_ALLOWED'),
@@ -1025,6 +1028,8 @@ def scanner_rename_file(request):
             "new_path": "wp-content/uploads/malicious.php.quarantined.1730000000",
             "backup_before_rename": true
         }
+
+    The new name must be in the folder the file is in.
 
     Response:
         {
