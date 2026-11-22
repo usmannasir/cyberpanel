@@ -680,32 +680,39 @@ def log_file_operation(scan_id, operation, file_path, success, error_message=Non
         logging.writeToFile(f'[API] Failed to log operation: {str(e)}')
 
 
+# Requests to one endpoint for one scan are counted over this long.
+RATE_LIMIT_WINDOW = timedelta(hours=1)
+
+
 def check_rate_limit(scan_id, endpoint, max_requests):
     """
-    Check if rate limit is exceeded for a scan/endpoint combination
-    Returns (is_allowed, current_count)
+    Count one request to an endpoint for a scan, unless the limit of the
+    current time window is reached.
+    Returns (is_allowed, current_count); a failure to count is not allowed.
     """
     try:
         from .models import ScannerAPIRateLimit
 
+        now = timezone.now()
         rate_limit, created = ScannerAPIRateLimit.objects.get_or_create(
             scan_id=scan_id,
             endpoint=endpoint,
             defaults={'request_count': 0}
         )
+        counters = ScannerAPIRateLimit.objects.filter(pk=rate_limit.pk)
 
-        if rate_limit.request_count >= max_requests:
-            logging.writeToFile(f'[API] Rate limit exceeded for scan {scan_id} on endpoint {endpoint}: {rate_limit.request_count}/{max_requests}')
-            return False, rate_limit.request_count
+        # last_request_at holds the start of the window: a window that is over starts again.
+        counters.filter(last_request_at__lt=now - RATE_LIMIT_WINDOW).update(request_count=0, last_request_at=now)
 
-        rate_limit.request_count += 1
-        rate_limit.save()
+        # Counted in the database, so requests that arrive together cannot pass the limit.
+        if counters.filter(request_count__lt=max_requests).update(request_count=F('request_count') + 1) != 1:
+            logging.writeToFile(f'[API] Rate limit exceeded for scan {scan_id} on endpoint {endpoint}')
+            return False, max_requests
 
-        return True, rate_limit.request_count
-    except Exception as e:
-        logging.writeToFile(f'[API] Rate limit check error: {str(e)}')
-        # On error, allow the request
         return True, 0
+    except Exception as e:
+        logging.writeToFile(f'[API] Rate limit check error: {type(e).__name__}')
+        return False, 0
 
 
 # =============================================================================
@@ -758,7 +765,7 @@ def rate_limited(file_token, scan_id, endpoint, token_limit, key_limit, what):
     is_allowed, count = check_rate_limit(scan_id, endpoint, limit)
     if is_allowed:
         return None
-    return JsonResponse({'success': False, 'error': f'Rate limit exceeded (max {limit} {what} per scan)'}, status=429)
+    return JsonResponse({'success': False, 'error': f'Rate limit exceeded (max {limit} {what} per scan and hour)'}, status=429)
 
 
 @csrf_exempt
