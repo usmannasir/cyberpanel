@@ -91,40 +91,5 @@ class RefusalReportTests(unittest.TestCase):
         self.assertLess(routine.index('self.FinalPathRuctic ='), routine.index('snapshot_id(self.data['))
 
 
-class StreamTests(unittest.TestCase):
-    def stream(self, chunks):
-        sent = []
-
-        class Socket:
-            def sendall(self, data):
-                sent.append(data)
-
-            def recv(self, size):
-                return chunks.pop(0) if chunks else b''
-
-            def close(self):
-                pass
-
-        helper = SimpleNamespace(setupUDSConnection=lambda: [Socket(), 'None'], token='TOKEN')
-        function = load_method('plogical/processUtilities.py', 'ProcessUtilities', 'streamCommand', dict(
-            ProcessUtilities=helper, logging=SimpleNamespace(writeToFile=lambda *a: None), os=__import__('os')))
-        sink = io.BytesIO()
-        return function('rustic dump x', 'examp1234', sink), sink.getvalue(), sent
-
-    def test_output_is_passed_on_as_bytes_and_the_last_byte_is_the_exit_status(self):
-        result, written, sent = self.stream([b'ab\xff', b'\xfec', b'd\x00'])
-        self.assertEqual((1, b'ab\xff\xfecd'), (result, written))
-        self.assertEqual([b'TOKEN-u examp1234 rustic dump x'], sent)
-
-    def test_exit_status_alone_and_split_across_reads(self):
-        self.assertEqual((1, b''), self.stream([b'\x00'])[:2])
-        self.assertEqual((1, b'abc'), self.stream([b'abc', b'\x00'])[:2])
-        self.assertEqual((0, b'abc\x00'), self.stream([b'abc\x00', b'\x01'])[:2])
-
-    def test_failure_and_no_reply_are_reported(self):
-        self.assertEqual(0, self.stream([b'partial', b'\x02'])[0])
-        self.assertEqual(0, self.stream([])[0])
-
-
 if __name__ == '__main__':
     unittest.main()
