@@ -21,6 +21,7 @@ import shlex
 import time
 from dockerManager.models import Containers
 from dockerManager.portBindings import build_port_bindings, publish_all_for_saved_bindings
+from dockerManager.names import valid_container_name, valid_image_name, valid_image_tag, exposed_ports
 from math import ceil
 import docker
 import docker.utils
@@ -92,7 +93,13 @@ class ContainerManager(multi.Thread):
         adminNames = ACLManager.loadAllUsers(userID)
         tag = request.GET.get('tag')
         image = request.GET.get('image')
-        tag = tag.split(" (")[0]
+
+        ## Both come from the address of the page and are written into the page.
+        if tag is not None:
+            tag = tag.split(" (")[0]
+
+        if not valid_image_name(image) or not valid_image_tag(tag):
+            return redirect(reverse('containerImage'))
 
         if "/" in image:
             name = image.split("/")[0] + "." + image.split("/")[1]
@@ -119,14 +126,7 @@ class ContainerManager(multi.Thread):
                 else:
                     envList[item] = ""
 
-        portConfig = {};
-        if 'ExposedPorts' in inspectImage['Config']:
-            for item in inspectImage['Config']['ExposedPorts']:
-                portDef = item.split('/')
-                portConfig[portDef[0]] = portDef[1]
-
-        if image is None or image is '' or tag is None or tag is '':
-            return redirect(reverse('containerImage'))
+        portConfig = exposed_ports(inspectImage['Config'])
 
         Data = {"ownerList": adminNames, "image": image, "name": name, "tag": tag, "portConfig": portConfig,
                 "envList": envList}
@@ -138,6 +138,10 @@ class ContainerManager(multi.Thread):
     def loadContainerHome(self, request=None, userID=None, data=None):
         try:
             name = self.name
+
+            ## The name comes from the address of the page and is written into the page.
+            if not valid_container_name(name):
+                return HttpResponse("Container not found")
 
             # Check if user is admin or has container access
             currentACL = ACLManager.loadedACL(userID)

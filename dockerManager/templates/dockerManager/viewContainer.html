@@ -1,5 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
+{% load docker_values %}
 {% block title %}{{ name }} - {% trans "Container Management" %}{% endblock %}
 {% block content %}
 
@@ -596,7 +597,7 @@
                 <i class="fab fa-docker" style="color: var(--accent-color, #5b5fcf); font-size: 2.5rem;"></i>
             </div>
             <div class="container-title-section">
-                <h1 class="container-name" ng-init="cName='{{ name }}';status='{{ status }}'">
+                <h1 class="container-name" ng-init="cName='{{ name|ngstring }}';status='{{ status|ngstring }}'">
                     {{ name }}
                     <span class="status-badge status-{{ status }}" ng-class="'status-' + status">
                         <span class="status-dot"></span>
@@ -685,7 +686,7 @@
                 {% endif %}
                 <div class="info-item">
                     <div class="info-label">{% trans "Restart Policy" %}</div>
-                    <div class="info-value" ng-init="rPolicy='{{ restartPolicy }}'" ng-bind="rPolicy"></div>
+                    <div class="info-value" ng-init="rPolicy='{{ restartPolicy|ngstring }}'" ng-bind="rPolicy"></div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">{% trans "Start on Boot" %}</div>
@@ -767,14 +768,14 @@
     </div>
 
     <!-- Container Logs -->
-    <div class="terminal-card" ng-init="loadLogs('{{ name }}')">
+    <div class="terminal-card" ng-init="loadLogs('{{ name|ngstring }}')">
         <div class="terminal-header">
             <h3 class="terminal-title">
                 <i class="fas fa-file-alt"></i>
                 {% trans "Container Logs" %}
             </h3>
             <div class="terminal-controls">
-                <button class="terminal-btn" ng-click="loadLogs('{{ name }}')">
+                <button class="terminal-btn" ng-click="loadLogs('{{ name|ngstring }}')">
                     <i class="fas fa-sync"></i> {% trans "Refresh" %}
                 </button>
                 <button class="terminal-btn" onclick="document.querySelector('.terminal-content').scrollTop = 0">
@@ -898,7 +899,7 @@
                         <!-- Environment Variables -->
                         <span ng-init="envList = {}"></span>
                         {% for env, value in envList.items %}
-                            <span ng-init="envList[{{ forloop.counter0 }}] = {'name':'{{ env }}', 'value':'{{ value }}'}"></span>
+                            <span ng-init="envList[{{ forloop.counter0 }}] = {'name':'{{ env|ngstring }}', 'value':'{{ value|ngstring }}'}"></span>
                         {% endfor %}
 
                             <div ng-repeat="env in envList track by $index">
@@ -980,7 +981,7 @@
                         <!-- Volume Mappings -->
                         <span ng-init="volList = {}; volListNumber = 1"></span>
                         {% for key, value in volList.items %}
-                            <span ng-init="volList[{{ forloop.counter0 }}] = {'dest':'{{ value.bind }}', 'src':'{{ key }}'}"></span>
+                            <span ng-init="volList[{{ forloop.counter0 }}] = {'dest':'{{ value.bind|ngstring }}', 'src':'{{ key|ngstring }}'}"></span>
                             <span ng-init="volListNumber = {{ forloop.counter0 }} + 1"></span>
                         {% endfor %}
 

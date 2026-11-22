@@ -1,5 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
+{% load docker_values %}
 {% block title %}{% trans "Create Container" %} - {{ image }}:{{ tag }}{% endblock %}
 {% block content %}
 
@@ -710,7 +711,7 @@
                             </div>
                         </div>
                     </label>
-                    <input type="text" class="form-control" ng-model="name" ng-init="name='{{ name }}'" 
+                    <input type="text" class="form-control" ng-model="name" ng-init="name='{{ name|ngstring }}'" 
                            placeholder="{% trans 'e.g., my-nginx-server' %}" name="containerName" required>
                 </div>
 
@@ -747,12 +748,12 @@
 
                 <div class="form-row">
                     <label class="form-label">{% trans "Image" %}</label>
-                    <input type="text" class="form-control" ng-model="image" ng-init="image='{{ image }}'" disabled>
+                    <input type="text" class="form-control" ng-model="image" ng-init="image='{{ image|ngstring }}'" disabled>
                 </div>
 
                 <div class="form-row">
                     <label class="form-label">{% trans "Tag" %}</label>
-                    <input type="text" class="form-control" ng-model="tag" ng-init="tag='{{ tag }}'" disabled>
+                    <input type="text" class="form-control" ng-model="tag" ng-init="tag='{{ tag|ngstring }}'" disabled>
                 </div>
             </div>
 
@@ -793,7 +794,7 @@
                                placeholder="{% trans 'e.g., 8080' %}" name="port_{{ port }}" required>
                     </div>
                 </div>
-                <span ng-init="iport[{{ port }}]={{ port }}; portType['{{ port }}']='{{ protocol }}'"></span>
+                <span ng-init="iport[{{ port }}]={{ port }}; portType['{{ port|ngstring }}']='{{ protocol|ngstring }}'"></span>
                 {% endfor %}
             </div>
             {% endif %}
@@ -892,7 +893,7 @@
 
                         <span ng-init="envList = {}"></span>
                         {% for env, value in envList.items %}
-                            <span ng-init="envList[{{ forloop.counter0 }}] = {'name':'{{ env }}', 'value':'{{ value }}'}"></span>
+                            <span ng-init="envList[{{ forloop.counter0 }}] = {'name':'{{ env|ngstring }}', 'value':'{{ value|ngstring }}'}"></span>
                         {% endfor %}
 
                         <div ng-repeat="env in envList track by $index" class="dynamic-item">
