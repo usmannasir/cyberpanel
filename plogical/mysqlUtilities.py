@@ -633,9 +633,11 @@ password=%s
                     logging.CyberCPLogFileWriter.writeToFile('Database import failed for %s.' % databaseName)
                     return 0
 
-                if passwordCheck == None:
+                from plogical.databaseAccounts import NO_DATABASE_USER
+                if passwordCheck == None and registered != NO_DATABASE_USER:
                     # An archive of the old format holds the password hash of
-                    # the database's one user, which is the registered user.
+                    # the database's one user, which is the registered user. A
+                    # database without a user has no password to restore.
                     if registered is None or mysqlUtilities.changePassword(registered, dbPassword, 1) != 1:
                         logging.CyberCPLogFileWriter.writeToFile(
                             'The password of the user of %s was not restored.' % databaseName)
@@ -674,14 +676,54 @@ password=%s
             connection.close()
 
     @staticmethod
+    def databaseExists(dbName):
+        connection, cursor = mysqlUtilities.setupConnection()
+        if connection == 0:
+            raise RuntimeError('Cannot check the SQL namespace.')
+        try:
+            cursor.execute('SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = %s', (dbName,))
+            return bool(cursor.fetchall())
+        finally:
+            connection.close()
+
+    @staticmethod
+    def createEmptyDatabase(dbName, progress=None):
+        """Create a database and no account for it; 1 when it was created."""
+        record = progress or (lambda stage: None)
+        connection, cursor = mysqlUtilities.setupConnection()
+        if connection == 0:
+            return 0
+        try:
+            record('creating_database')
+            cursor.execute('CREATE DATABASE %s' % mysqlUtilities.quoteIdentifier(dbName))
+            record('database_created')
+            return 1
+        except BaseException:
+            logging.CyberCPLogFileWriter.writeToFile('SQL creation failed for %s [createEmptyDatabase]' % dbName)
+            return 0
+        finally:
+            connection.close()
+
+    @staticmethod
+    def createDatabaseWithoutUser(dbName, website):
+        from plogical.databaseProvisioning import create_without_user
+        return create_without_user(dbName, website, mysqlUtilities, Databases)
+
+    @staticmethod
     def prepareDatabaseForRestore(dbName, dbUsername, website):
+        from plogical.databaseAccounts import NO_DATABASE_USER
         existing = Databases.objects.filter(dbName=dbName).first()
         if existing is None:
+            if dbUsername == NO_DATABASE_USER:
+                # The backup recorded this database without a user: it gets none here either.
+                return mysqlUtilities.createDatabaseWithoutUser(dbName, website)
             # The password of the restored user is set from the backup right
             # after; until then nobody knows the one the account starts with.
             return mysqlUtilities.createDatabaseAndRegister(dbName, dbUsername, randomPassword.generate_pass(32),
                                                             website)
-        if existing.website_id != website.pk or existing.dbUser != dbUsername:
+        # A database without a user, in the backup or here, keeps the registration it has here.
+        if existing.website_id != website.pk or (
+                existing.dbUser != dbUsername and NO_DATABASE_USER not in (existing.dbUser, dbUsername)):
             return 0, 'Database registration belongs to another website or user; existing data was preserved.'
         connection, cursor = mysqlUtilities.setupConnection()
         if connection == 0:
@@ -1299,6 +1341,39 @@ password=%s
                 connection.close()
 
     @staticmethod
+    def backupUserOf(database):
+        """(user, password hash) a backup records for a registered database.
+
+        A database that is registered without a user, under an account of the
+        server, or whose user has no account is recorded with the mark of a
+        database without a user and an empty password: it is backed up all
+        the same.
+        """
+        from plogical import databaseAccounts
+        without = (databaseAccounts.NO_DATABASE_USER, '')
+
+        def accountsOf(name):
+            return [account for account in DBUsers.objects.filter(user=name) if account.user == name]
+
+        try:
+            user = database.dbUser
+            accounts = [] if databaseAccounts.has_no_usable_user(user) else accountsOf(user)
+            if len(accounts) != 1:
+                # None, or one at each of several hosts: ask the server which user holds the grant.
+                found = mysqlUtilities.fetchuser(database.dbName)
+                if not isinstance(found, str) or databaseAccounts.has_no_usable_user(found):
+                    return without
+                user = found
+                accounts = accountsOf(user)
+            if not accounts:
+                return without
+            return user, str(accounts[0].password)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'The user of database %s could not be read for a backup: %s' % (database.dbName, str(msg)))
+            return without
+
+    @staticmethod
     def fetchuser(databaseName):
         try:
             connection, cursor = mysqlUtilities.setupConnection()
@@ -1316,8 +1391,12 @@ password=%s
             if database.dbUser in users:
                 return database.dbUser
 
+            # A granted account becomes the registered user only when it can be a
+            # database user of this website: not an account of the server or of a
+            # panel user, and not the user of another website's database.
+            from plogical import databaseAccounts
             for user in users:
-                if user.find('_') > -1:
+                if user.find('_') > -1 and databaseAccounts.may_register_user(user, database.website_id):
                     database.dbUser = user
                     database.save()
                     message = 'Detected databaser user is %s for database %s.' % (user, databaseName)

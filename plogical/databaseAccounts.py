@@ -116,6 +116,30 @@ def may_be_database_user(name):
     return account_refusal(name) is None
 
 
+def may_register_user(name, website_id):
+    """True when a database of this website may be registered with a user of this name.
+
+    The name must be one a customer's database user may have, and no database
+    of another website may be registered with it, in any case.
+    """
+    from databases.models import Databases, DatabasesUsers
+    if not may_be_database_user(name):
+        return False
+    lowered = name.lower()
+    for database in Databases.objects.filter(dbUser__iexact=name):
+        if database.dbUser.lower() == lowered and database.website_id != website_id:
+            return False
+    for additional in DatabasesUsers.objects.filter(username__iexact=name).select_related('owner'):
+        if additional.username.lower() == lowered and additional.owner.website_id != website_id:
+            return False
+    return True
+
+
+def has_no_usable_user(name):
+    """True for the mark of a database without a user and for a registration under an account of the server."""
+    return name == NO_DATABASE_USER or is_reserved(name)
+
+
 def backed_up_accounts(accounts, registered_user):
     """Of the (user, host) accounts granted a database, those a backup records for it.
 

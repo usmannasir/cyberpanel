@@ -90,25 +90,9 @@ class IncJobs(multi.Thread):
             databasesXML = Element('Databases')
 
             for items in databases:
-                try:
-                    dbuser = DBUsers.objects.get(user=items.dbUser)
-                    userToTry = items.dbUser
-                except:
-                    dbusers = DBUsers.objects.all().filter(user=items.dbUser)
-                    userToTry = items.dbUser
-                    for it in dbusers:
-                        dbuser = it
-                        break
-
-                    userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
-
-                    try:
-                        dbuser = DBUsers.objects.get(user=userToTry)
-                    except:
-                        dbusers = DBUsers.objects.all().filter(user=userToTry)
-                        for it in dbusers:
-                            dbuser = it
-                            break
+                # A database without a usable account of its own is listed as
+                # well, without a user, and the job goes on.
+                userToTry, storedPassword = mysqlUtilities.mysqlUtilities.backupUserOf(items)
 
                 databaseXML = Element('database')
 
@@ -117,7 +101,7 @@ class IncJobs(multi.Thread):
                 child = SubElement(databaseXML, 'dbUser')
                 child.text = userToTry
                 child = SubElement(databaseXML, 'password')
-                child.text = dbuser.password
+                child.text = storedPassword
 
                 databasesXML.append(databaseXML)
 

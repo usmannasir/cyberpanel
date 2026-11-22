@@ -1943,43 +1943,11 @@ class backupUtilities:
             import json
 
             for items in self.website.databases_set.all():
-                try:
-                    dbuser = DBUsers.objects.get(user=items.dbUser)
-                    userToTry = items.dbUser
-                except:
-                    try:
-                        dbusers = DBUsers.objects.all().filter(user=items.dbUser)
-                        userToTry = items.dbUser
-                        for it in dbusers:
-                            dbuser = it
-                            break
+                # A database without a usable account of its own is backed up
+                # as well; it is recorded without a user.
+                userToTry, storedPassword = mysqlUtilities.mysqlUtilities.backupUserOf(items)
 
-                        userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
-
-                        if userToTry == 0 or userToTry == 1:
-                            continue
-
-                        try:
-                            dbuser = DBUsers.objects.get(user=userToTry)
-                        except:
-                            try:
-                                dbusers = DBUsers.objects.all().filter(user=userToTry)
-                                for it in dbusers:
-                                    dbuser = it
-                                    break
-
-                            except BaseException as msg:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
-                                        self.website.domain, items.dbName, str(msg)))
-                                continue
-                    except BaseException as msg:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
-                                self.website.domain, items.dbName, str(msg)))
-                        continue
-
-                databases.append({'databaseName': str(items.dbName), 'databaseUser': str(userToTry), 'password': str(dbuser.password)})
+                databases.append({'databaseName': str(items.dbName), 'databaseUser': userToTry, 'password': storedPassword})
                 self.CheckIfSleepNeeded()
                 ### Fail the backup if a dump fails instead of silently producing an
                 ### SQL-less archive: createDatabaseBackup returns 0 (or (0, msg)) on
