@@ -11,7 +11,8 @@ import os
 
 
 from django.core.wsgi import get_wsgi_application
+from CyberCP.requestBodyDrain import reading_bodies_to_the_end
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
-application = get_wsgi_application()
+application = reading_bodies_to_the_end(get_wsgi_application())
