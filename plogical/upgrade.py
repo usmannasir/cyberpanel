@@ -2129,6 +2129,44 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             Upgrade.stdOut('WARNING: AI Scanner backups of earlier releases were not looked for: ' + str(error), 0)
 
     @staticmethod
+    def reportN8NSites():
+        """Name the n8n Docker sites that still run the way earlier releases set them up.
+
+        Nothing is changed on any site: the administrator is told which sites
+        to look at. The check belongs to the new source and runs as a command
+        of its own with a time limit, so that nothing about Docker can hold
+        the upgrade up. A server without such a site, or without Docker, gets
+        no line at all, and a failure never stops the upgrade.
+        """
+        command = ['/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/plogical/DockerSites.py', 'CheckN8NSites']
+        try:
+            check = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                     stdin=subprocess.DEVNULL, universal_newlines=True, cwd='/usr/local/CyberCP')
+            try:
+                output = check.communicate(timeout=120)[0]
+            except subprocess.TimeoutExpired:
+                check.kill()
+                check.communicate()
+                Upgrade.stdOut('WARNING: The n8n sites were not checked: the check did not end within two minutes. '
+                               'To run it by hand: ' + ' '.join(command), 0)
+                return
+
+            # Only the lines of the report; anything else the command prints is not for the administrator.
+            lines = [line.strip() for line in (output or '').splitlines() if line.strip().startswith('n8n site ')]
+
+            for line in lines:
+                Upgrade.stdOut('NOTICE: ' + line, 0)
+
+            if lines:
+                Upgrade.stdOut('NOTICE: The upgrade changed nothing on these n8n sites. To see this list again, '
+                               'run: ' + ' '.join(command), 0)
+        except Exception as error:
+            try:
+                Upgrade.stdOut('WARNING: The n8n sites were not checked: ' + str(error), 0)
+            except Exception:
+                pass
+
+    @staticmethod
     def setupConnection(db=None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
@@ -5870,6 +5908,7 @@ pm.max_spare_servers = 3
         Upgrade.rotateInvalidAPITokens()
 
         Upgrade.repairDatabaseGrants()
+        Upgrade.reportN8NSites()
 
         Upgrade.relocateScannerBackups()
 
