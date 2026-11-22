@@ -83,6 +83,117 @@ log_function_end() {
     fi
 }
 
+# Installation status events
+#
+# A program that follows an installation (the install page on cyberpanel.net)
+# reads this file instead of guessing from the terminal output. One line is
+# appended per change:
+#
+#   <unix seconds> <run id> <step> <state> [<code>]
+#
+# A run starts with "install started <version>" and ends with "install complete"
+# or "install failed <reason>". "panel ready" is added once the panel answers on
+# its port. The steps, in order:
+#
+#   preflight repositories system_update python_env download_panel web_server
+#   php database ftp dns email panel finishing hostname_ssl ready
+#
+# Their states are running, done, skipped, warning and failed. The Python
+# installer closes "web_server" and adds the lines from "php" to "panel" to
+# the same file (install/install_events.py). Only printf and tools that every
+# minimal system has are used here: nothing else exists when the first lines
+# are written.
+Install_Events_File="/var/log/cyberpanel/install_events.log"
+Install_Run_Active="No"
+Install_Run_ID=""
+Install_Fail_Code=""
+
+Install_Event() {
+# Install_Event <step> <state> [<code>]
+[[ -n "$Install_Run_ID" ]] || return 0
+{ printf '%s %s %s %s%s\n' "$(date +%s)" "$Install_Run_ID" "$1" "$2" "${3:+ $3}" >> "$Install_Events_File"; } 2>/dev/null
+return 0
+}
+
+Install_Open_Step() {
+# Prints the step of this run that is running, if there is one.
+[[ -n "$Install_Run_ID" ]] || return 0
+awk -v run="$Install_Run_ID" '
+  $2 == run && $4 == "running" { open = $3; next }
+  $2 == run && $3 == open { open = "" }
+  END { if (open != "") print open }
+' "$Install_Events_File" 2>/dev/null
+}
+
+Install_Step() {
+# Install_Step <step>: the step that was running is done, this one starts.
+local open
+open=$(Install_Open_Step)
+if [[ -n "$open" ]]; then
+  Install_Event "$open" done
+fi
+Install_Event "$1" running
+}
+
+Install_Run_Start() {
+# Install_Run_Start <version>: names this run and writes its first lines.
+local run_id
+run_id=$( { tr -d '-' < /proc/sys/kernel/random/uuid; } 2>/dev/null )
+if [[ ! "$run_id" =~ ^[0-9a-f]{32}$ ]]; then
+  run_id=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+fi
+Install_Run_Active="Yes"
+if [[ "$run_id" =~ ^[0-9a-f]{32}$ ]]; then
+  { ( umask 077; : >> "$Install_Events_File" ) && chmod 600 "$Install_Events_File"; } 2>/dev/null
+  Install_Run_ID="$run_id"
+  # install.py writes its steps under the same name.
+  export CP_INSTALL_RUN_ID="$run_id"
+fi
+Install_Event install started "$1"
+Install_Event preflight running
+}
+
+Install_Default_Reason() {
+# The reason recorded when a step fails without naming one.
+case "$1" in
+  repositories|system_update) echo "package_manager" ;;
+  python_env) echo "python_env" ;;
+  download_panel) echo "download_failed" ;;
+  web_server|php|database|ftp|dns|email|panel|finishing|hostname_ssl|ready) echo "panel_setup" ;;
+  *) echo "internal" ;;
+esac
+}
+
+Fail_Install() {
+# Fail_Install [<reason> [<exit status>]]
+# Stops the installation as failed. Without a reason, the step that was
+# running decides it (Install_Default_Reason).
+Install_Fail_Code="${1:-}"
+exit "${2:-1}"
+}
+
+Install_On_Exit() {
+# Runs whenever the script ends. A run that was started and did not reach
+# "install complete" is recorded as failed and never ends with status 0,
+# whatever the line that ended it looked like.
+local status=$? step reason
+if [[ "$Install_Run_Active" != "Yes" ]]; then
+  return
+fi
+Install_Run_Active="No"
+step=$(Install_Open_Step)
+reason="${Install_Fail_Code:-$(Install_Default_Reason "$step")}"
+if [[ -n "$step" ]]; then
+  Install_Event "$step" failed "$reason"
+fi
+Install_Event install failed "$reason"
+if [[ "$status" -eq 0 ]]; then
+  status=1
+fi
+exit "$status"
+}
+trap Install_On_Exit EXIT
+
 # Initialize logging
 log_info "CyberPanel installation started"
 log_info "Log file: $LOG_FILE"
@@ -108,7 +219,9 @@ log_info "Debug log file: $DEBUG_LOG_FILE"
 #Pre_Install_Setup_Repository() ---> setup/install repositories for CentOS and openEuler system.
 #go to Pre_Install_Setup_CN_Repository() if server is within China.
 #Pre_Install_Setup_Git_URL() --->  form up github URL , use Gitee for servers within China.
-#Pre_Install_Required_Components() --->  install required softwares and git clone it
+#Pre_Install_Required_Components() --->  update the system and install required softwares
+#Pre_Install_Python_Environment() --->  create the virtual environment the installer runs in
+#Pre_Install_Get_Panel_Source() --->  git clone the panel
 #Pre_Install_System_Tweak() ---> set up SWAP and apply some system tweak depends on providers
 #Main_Installation() --->  change some code within python files for CN servers and start to install
 #Post_Install_Addon_Memcached() ---> Install Memcached extension and process
@@ -169,6 +282,7 @@ if parse_panel_version "$Temp_Value"; then
   Branch_Name="v${Panel_Version}.${Panel_Build}"
   echo -e  "\nBranch name fetched...$Branch_Name"
   log_info "Branch name fetched: $Branch_Name"
+  Install_Run_Start "${Panel_Version}.${Panel_Build}"
 else
   echo -e "\nUnable to fetch Branch name..."
   echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
@@ -1494,7 +1608,9 @@ else
   locale-gen "en_US.UTF-8"
   update-locale LC_ALL="en_US.UTF-8"
 fi
+}
 
+Pre_Install_Python_Environment() {
 Debug_Log2 "Installing required virtual environment,3"
 
 export LC_CTYPE=en_US.UTF-8
@@ -1562,7 +1678,9 @@ Debug_Log2 "Installing requirments..,3"
 
 Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
   Check_Return "requirments" "no_exit"
+}
 
+Pre_Install_Get_Panel_Source() {
 rm -rf cyberpanel
 echo -e "\nFetching files from ${Git_Clone_URL}...\n"
 
@@ -2211,9 +2329,43 @@ if [[ ! -f /usr/bin/cyberpanel_utility ]]; then
 fi
 }
 
+Panel_Answers() {
+# Panel_Answers [<attempts>]: true once the panel answers on its port with
+# anything but an error (a working panel answers 200 with its sign-in page).
+# The attempts are two seconds apart.
+local attempt
+for (( attempt = 0; attempt < ${1:-90}; attempt++ )); do
+  if curl --silent --fail --insecure --max-time 5 --output /dev/null https://127.0.0.1:8090/ ; then
+    return 0
+  fi
+  sleep 2
+done
+return 1
+}
+
+Install_Run_Finish() {
+# The last step: the installation is complete once the panel answers.
+local open
+Install_Step ready
+if ! Panel_Answers; then
+  echo -e "\nCyberPanel was installed, but the panel does not answer on port 8090."
+  echo -e "Check it with: systemctl status lscpd\n"
+  log_error "The panel does not answer on port 8090"
+  Fail_Install panel_setup
+fi
+Install_Event panel ready
+open=$(Install_Open_Step)
+if [[ -n "$open" ]]; then
+  Install_Event "$open" done
+fi
+Install_Event install complete
+Install_Run_Active="No"
+}
+
 Post_Install_Display_Final_Info() {
 log_function_start "Post_Install_Display_Final_Info"
 log_info "Preparing final installation information"
+Install_Run_Finish
 Elapsed_Time="$((Time_Count / 3600)) hrs $(((SECONDS / 60) % 60)) min $((Time_Count % 60)) sec"
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
@@ -2752,6 +2904,8 @@ if [[ "$Server_Country" = "CN" ]] ; then
 Post_Install_CN_Replacement
 fi
 
+Install_Step hostname_ssl
+
 # If valid hostname is set that resolves externally we can issue an ssl. This will create the hostname as a website so we can issue the SSL and do our first login without SSL warnings or exceptions needed.
 Setup_Hostname_SSL || return 1
 
@@ -2810,16 +2964,32 @@ Validate_Remote_MySQL || exit 1
 
 Time_Count="0"
 
+Install_Step repositories
+
 Pre_Install_Setup_Repository
 
 Pre_Install_Setup_Git_URL
 
+Install_Step system_update
+
 Pre_Install_Required_Components
+
+Install_Step python_env
+
+Pre_Install_Python_Environment
+
+Install_Step download_panel
+
+Pre_Install_Get_Panel_Source
 
 Pre_Install_System_Tweak
 
+Install_Step web_server
+
 Main_Installation
-#Python install in here
+#Python install in here. It closes web_server and writes the steps up to panel.
+
+Install_Step finishing
 
 if [[ "$Memcached" = "On" ]] ; then
   Post_Install_Addon_Memcached
