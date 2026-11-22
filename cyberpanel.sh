@@ -201,14 +201,13 @@ if [[ "$panel_complete" = "Yes" && "${Hostname_SSL_Result:-}" = "certificate_fai
   reason="hostname_ssl"
   echo -e "\nCyberPanel is installed, but a certificate for the hostname of this server could not be issued."
   echo "Visit: https://$Server_IP:8090"
-  echo "Panel username: admin"
-  echo "Panel password: stored in /etc/cyberpanel/adminPass"
+  Panel_Account_Lines
   echo -e "The certificate can be issued later in the panel under SSL > Hostname SSL.\n"
   Install_Event hostname_ssl warning "$reason"
 elif [[ -n "$step" ]]; then
   Install_Event "$step" failed "$reason"
 fi
-if [[ "$panel_complete" = "Yes" ]] && Panel_Answers 15; then
+if [[ "$panel_complete" = "Yes" ]] && Panel_Answers 30; then
   Install_Event panel ready
 fi
 Install_Event install failed "$reason"
@@ -2491,17 +2490,30 @@ fi
 }
 
 Panel_Answers() {
-# Panel_Answers [<attempts>]: true once the panel answers on its port with
+# Panel_Answers [<seconds>]: true once the panel answers on its port with
 # anything but an error (a working panel answers 200 with its sign-in page).
-# The attempts are two seconds apart.
-local attempt
-for (( attempt = 0; attempt < ${1:-90}; attempt++ )); do
-  if curl --silent --fail --insecure --max-time 5 --output /dev/null https://127.0.0.1:8090/ ; then
+# It is asked again every two seconds until <seconds> (180) have passed. One
+# request may take 15 seconds, which the first page of a small server can
+# need, and no more than the time that is left. The request is to this
+# server itself, so a proxy named in the environment is not used.
+local limit=${1:-180} started=$SECONDS left
+while :; do
+  left=$(( limit - (SECONDS - started) ))
+  if (( left <= 0 )); then
+    return 1
+  fi
+  if curl --silent --fail --insecure --noproxy '*' --max-time $(( left < 15 ? left : 15 )) --output /dev/null https://127.0.0.1:8090/ ; then
     return 0
   fi
   sleep 2
 done
-return 1
+}
+
+Panel_Account_Lines() {
+# Who signs in to the panel and where the password is. The password itself is
+# not printed.
+echo "Panel username: admin"
+echo "Panel password: stored in /etc/cyberpanel/adminPass"
 }
 
 Install_Run_Finish() {
@@ -2517,9 +2529,12 @@ if ! Admin_Password_Is_Set; then
   log_error "The panel's administrator does not have the password of this installation"
   Fail_Install panel_setup
 fi
+echo -e "\nWaiting for the panel to answer on port 8090 (3 minutes at most)..."
 if ! Panel_Answers; then
-  echo -e "\nCyberPanel was installed, but the panel does not answer on port 8090."
-  echo -e "Check it with: systemctl status lscpd\n"
+  echo -e "\nCyberPanel was installed, but the panel did not answer on port 8090 within 3 minutes."
+  echo "Check it with: systemctl status lscpd"
+  Panel_Account_Lines
+  echo ""
   log_error "The panel does not answer on port 8090"
   Fail_Install panel_setup
 fi
