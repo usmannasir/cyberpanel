@@ -122,6 +122,30 @@ def next_site_port(site_ports, web_server_config=''):
     return str(highest + 1)
 
 
+def compose_file(config):
+    """
+    Render a Docker Compose file from a dictionary.
+
+    JSON is valid Compose YAML. Written this way a value from the creation page
+    stays the one value it is, whatever quotes, line breaks or other characters
+    it holds, and Docker Compose does not take a dollar sign in it for one of
+    its own variables.
+    """
+    def escape(value):
+        if isinstance(value, dict):
+            return {key: escape(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [escape(item) for item in value]
+        return value.replace('$', '$$') if isinstance(value, str) else value
+
+    return json.dumps(escape(config), indent=2)
+
+
+def environment_list(values):
+    """A Compose environment section, one "NAME=value" entry per variable."""
+    return ['%s=%s' % (name, value) for name, value in values.items()]
+
+
 ## Registry of the one-click applications offered on the Docker Site creation page.
 ##
 ## siteType   -> value stored in DockerSites.SiteType so the panel can tell apps apart
@@ -663,16 +687,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             },
         }}
 
-        # JSON is valid Compose YAML. Preserve quotes/newlines and prevent Compose
-        # from interpreting dollar signs in the administrator's password.
-        def escape(value):
-            if isinstance(value, dict):
-                return {key: escape(item) for key, item in value.items()}
-            if isinstance(value, list):
-                return [escape(item) for item in value]
-            return value.replace('$', '$$') if isinstance(value, str) else value
-
-        return json.dumps(escape(config), indent=2)
+        return compose_file(config)
 
     def create_site_directory(self, data_owner=None):
         """
@@ -1799,85 +1814,39 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             }
         }
 
-        return f'''version: '3.8'
+        name = self.data['ServiceName']
+        directory = '/home/docker/' + self.data['finalURL']
 
-volumes:
-  db_storage:
-    driver: local
-  n8n_storage:
-    driver: local
-
-services:
-  '{self.data['ServiceName']}-db':
-    image: {postgres_config['image']}
-    user: {postgres_config['user']}
-    restart: always
-    healthcheck:
-      test: {postgres_config['healthcheck']['test']}
-      interval: {postgres_config['healthcheck']['interval']}
-      timeout: {postgres_config['healthcheck']['timeout']}
-      retries: {postgres_config['healthcheck']['retries']}
-      start_period: {postgres_config['healthcheck']['start_period']}
-    environment:
-      - POSTGRES_USER={postgres_config['environment']['POSTGRES_USER']}
-      - POSTGRES_PASSWORD={postgres_config['environment']['POSTGRES_PASSWORD']}
-      - POSTGRES_DB={postgres_config['environment']['POSTGRES_DB']}
-    volumes:
-      - "/home/docker/{self.data['finalURL']}/db:/var/lib/postgresql/data"
-    networks:
-      - n8n-network
-    deploy:
-      resources:
-        limits:
-          cpus: '{self.data["CPUsMySQL"]}'
-          memory: {self.data["MemoryMySQL"]}M
-
-  '{self.data['ServiceName']}':
-    image: {n8n_config['image']}
-    restart: always
-    healthcheck:
-      test: {n8n_config['healthcheck']['test']}
-      interval: {n8n_config['healthcheck']['interval']}
-      timeout: {n8n_config['healthcheck']['timeout']}
-      retries: {n8n_config['healthcheck']['retries']}
-    environment:
-      - DB_TYPE={n8n_config['environment']['DB_TYPE']}
-      - DB_POSTGRESDB_HOST={n8n_config['environment']['DB_POSTGRESDB_HOST']}
-      - DB_POSTGRESDB_PORT={n8n_config['environment']['DB_POSTGRESDB_PORT']}
-      - DB_POSTGRESDB_DATABASE={n8n_config['environment']['DB_POSTGRESDB_DATABASE']}
-      - DB_POSTGRESDB_USER={n8n_config['environment']['DB_POSTGRESDB_USER']}
-      - DB_POSTGRESDB_PASSWORD={n8n_config['environment']['DB_POSTGRESDB_PASSWORD']}
-      - DB_POSTGRESDB_SCHEMA={n8n_config['environment']['DB_POSTGRESDB_SCHEMA']}
-      - N8N_HOST={n8n_config['environment']['N8N_HOST']}
-      - N8N_PORT={n8n_config['environment']['N8N_PORT']}
-      - NODE_ENV={n8n_config['environment']['NODE_ENV']}
-      - N8N_EDITOR_BASE_URL={n8n_config['environment']['N8N_EDITOR_BASE_URL']}
-      - WEBHOOK_URL={n8n_config['environment']['WEBHOOK_URL']}
-      - WEBHOOK_TUNNEL_URL={n8n_config['environment']['WEBHOOK_TUNNEL_URL']}
-      - N8N_PUSH_BACKEND={n8n_config['environment']['N8N_PUSH_BACKEND']}
-      - GENERIC_TIMEZONE={n8n_config['environment']['GENERIC_TIMEZONE']}
-      - N8N_ENCRYPTION_KEY={n8n_config['environment']['N8N_ENCRYPTION_KEY']}
-      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS={n8n_config['environment']['N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS']}
-      - N8N_PROTOCOL={n8n_config['environment']['N8N_PROTOCOL']}
-      - N8N_SECURE_COOKIE={n8n_config['environment']['N8N_SECURE_COOKIE']}
-    ports:
-      - "127.0.0.1:{self.data['port']}:5678"
-    depends_on:
-      - {self.data['ServiceName']}-db
-    volumes:
-      - "/home/docker/{self.data['finalURL']}/data:/home/node/.n8n"
-    networks:
-      - n8n-network
-    deploy:
-      resources:
-        limits:
-          cpus: '{self.data["CPUsSite"]}'
-          memory: {self.data["MemorySite"]}M
-
-networks:
-  n8n-network:
-    driver: bridge
-    name: {self.data['ServiceName']}_network'''
+        return compose_file({
+            'version': '3.8',
+            'volumes': {'db_storage': {'driver': 'local'}, 'n8n_storage': {'driver': 'local'}},
+            'services': {
+                name + '-db': {
+                    'image': postgres_config['image'],
+                    'user': postgres_config['user'],
+                    'restart': 'always',
+                    'healthcheck': postgres_config['healthcheck'],
+                    'environment': environment_list(postgres_config['environment']),
+                    'volumes': [directory + '/db:/var/lib/postgresql/data'],
+                    'networks': ['n8n-network'],
+                    'deploy': {'resources': {'limits': {
+                        'cpus': str(self.data['CPUsMySQL']), 'memory': str(self.data['MemoryMySQL']) + 'M'}}},
+                },
+                name: {
+                    'image': n8n_config['image'],
+                    'restart': 'always',
+                    'healthcheck': n8n_config['healthcheck'],
+                    'environment': environment_list(n8n_config['environment']),
+                    'ports': ['127.0.0.1:%s:5678' % self.data['port']],
+                    'depends_on': [name + '-db'],
+                    'volumes': [directory + '/data:/home/node/.n8n'],
+                    'networks': ['n8n-network'],
+                    'deploy': {'resources': {'limits': {
+                        'cpus': str(self.data['CPUsSite']), 'memory': str(self.data['MemorySite']) + 'M'}}},
+                },
+            },
+            'networks': {'n8n-network': {'driver': 'bridge', 'name': name + '_network'}},
+        })
 
     def generate_hermes_compose_config(self):
         """
@@ -1893,8 +1862,6 @@ networks:
         hermes_config = {
             'image': 'nousresearch/hermes-agent:latest',
             'healthcheck': {
-                ## Rendered as a YAML block sequence below, the probe carries both quote
-                ## styles and would break a flow sequence.
                 'test': ["CMD-SHELL",
                          "python3 -c \"import socket; socket.create_connection(('127.0.0.1', 9119), 5).close()\""],
                 'interval': '20s',
@@ -1913,45 +1880,26 @@ networks:
             }
         }
 
-        return f'''version: '3.8'
+        name = self.data['ServiceName']
 
-services:
-  '{self.data['ServiceName']}':
-    image: {hermes_config['image']}
-    restart: always
-    command: gateway run
-    healthcheck:
-      test:
-        - {hermes_config['healthcheck']['test'][0]}
-        - {hermes_config['healthcheck']['test'][1]}
-      interval: {hermes_config['healthcheck']['interval']}
-      timeout: {hermes_config['healthcheck']['timeout']}
-      retries: {hermes_config['healthcheck']['retries']}
-      start_period: {hermes_config['healthcheck']['start_period']}
-    environment:
-      - HERMES_DASHBOARD={hermes_config['environment']['HERMES_DASHBOARD']}
-      - HERMES_DASHBOARD_HOST={hermes_config['environment']['HERMES_DASHBOARD_HOST']}
-      - HERMES_DASHBOARD_PORT={hermes_config['environment']['HERMES_DASHBOARD_PORT']}
-      - HERMES_DASHBOARD_PUBLIC_URL={hermes_config['environment']['HERMES_DASHBOARD_PUBLIC_URL']}
-      - HERMES_DASHBOARD_BASIC_AUTH_USERNAME={hermes_config['environment']['HERMES_DASHBOARD_BASIC_AUTH_USERNAME']}
-      - HERMES_DASHBOARD_BASIC_AUTH_PASSWORD={hermes_config['environment']['HERMES_DASHBOARD_BASIC_AUTH_PASSWORD']}
-      - HERMES_DASHBOARD_BASIC_AUTH_SECRET={hermes_config['environment']['HERMES_DASHBOARD_BASIC_AUTH_SECRET']}
-    ports:
-      - "127.0.0.1:{self.data['port']}:9119"
-    volumes:
-      - "/home/docker/{self.data['finalURL']}/data:/opt/data"
-    networks:
-      - hermes-network
-    deploy:
-      resources:
-        limits:
-          cpus: '{self.data["CPUsSite"]}'
-          memory: {self.data["MemorySite"]}M
-
-networks:
-  hermes-network:
-    driver: bridge
-    name: {self.data['ServiceName']}_network'''
+        return compose_file({
+            'version': '3.8',
+            'services': {
+                name: {
+                    'image': hermes_config['image'],
+                    'restart': 'always',
+                    'command': 'gateway run',
+                    'healthcheck': hermes_config['healthcheck'],
+                    'environment': environment_list(hermes_config['environment']),
+                    'ports': ['127.0.0.1:%s:9119' % self.data['port']],
+                    'volumes': ['/home/docker/' + self.data['finalURL'] + '/data:/opt/data'],
+                    'networks': ['hermes-network'],
+                    'deploy': {'resources': {'limits': {
+                        'cpus': str(self.data['CPUsSite']), 'memory': str(self.data['MemorySite']) + 'M'}}},
+                },
+            },
+            'networks': {'hermes-network': {'driver': 'bridge', 'name': name + '_network'}},
+        })
 
 def Main():
     try:

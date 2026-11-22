@@ -7815,6 +7815,15 @@ StrictHostKeyChecking no
 
             AppMeta = DOCKER_APPS[App]
 
+            ## The user name becomes part of the application's own configuration.
+
+            if not isinstance(WPusername, str) or \
+                    re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.@-]{0,59}', WPusername) is None:
+                final_dic = {'status': 0, 'error_message': 'Invalid admin username: use up to 60 letters, digits '
+                                                           'and the characters _ . @ - and start with a letter or digit.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             ## Apps without their own database container ignore the MySQL resources entirely.
 
             if AppMeta['requiresDB'] and int(MYsqlRam) < 256:
