@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import signal
 import stat
 import subprocess
 import sys
@@ -14,10 +15,15 @@ import unittest
 from unittest.mock import Mock, patch
 
 from install.installer_test_harness import (
-    CLI_FAILED, ROOT, Installer, parse_as_python_36, script_parts, stand_in_interpreter, with_stand_ins,
+    CLI_FAILED, ROOT, STUBBED_PHASES, Installer, parse_as_python_36, script_parts, stand_in_interpreter,
+    with_stand_ins,
 )
 
 SECRET = 'Tr0ub4dor&3 -e \\n $HOME `id` "quoted"'
+# What is done to the panel's service: held when install.py has returned, and
+# enabled and started once the panel has confirmed the admin password.
+HELD = ['systemctl disable lscpd', 'systemctl stop lscpd']
+COMPLETING = HELD + ['password-check', 'systemctl enable lscpd', 'systemctl restart lscpd']
 AS_ROOT = unittest.skipUnless(os.geteuid() == 0, 'a file owned by root is needed')
 
 
@@ -475,11 +481,14 @@ class PasswordOutcomeTests(unittest.TestCase):
     def probes(self, machine):
         return [call for call in machine.recorded(machine.calls) if '127.0.0.1:8090' in call]
 
-    def assert_panel_stopped(self, machine, result):
-        # Left running, it would let anyone in: see Stop_Panel_Without_Password.
-        self.assertIn('systemctl stop lscpd', machine.recorded(machine.calls))
-        self.assertIn('The panel has been stopped', result.stdout)
-        self.assertIn("adminPass 'a new password'", result.stdout)
+    def assert_panel_held(self, machine, result, checked):
+        # Left running or enabled, it would let anyone in: see Hold_Panel. Held
+        # when install.py had returned, and again by the end of the run.
+        self.assertEqual(HELD + (['password-check'] if checked else []) + HELD, machine.panel_service_calls())
+        self.assertIn('The panel is stopped and is not started when the server boots', result.stdout)
+        self.assertIn("starts the panel and makes it start at boot: adminPass 'a new password'", result.stdout)
+        # Said once, where the reason is known.
+        self.assertNotIn('will not start by itself', result.stdout)
 
     def test_tree_that_can_read_a_file_gets_the_file(self):
         machine = Installer(self)
@@ -491,7 +500,7 @@ class PasswordOutcomeTests(unittest.TestCase):
                           str(machine.stored_password)], call)
         self.assertEqual('Typed-Secret-99\n', machine.stored_password.read_text())
         self.assertEqual(0o600, stat.S_IMODE(machine.stored_password.stat().st_mode))
-        self.assertNotIn('systemctl stop lscpd', machine.recorded(machine.calls))
+        self.assertEqual(COMPLETING, machine.panel_service_calls())
 
     def test_older_tree_gets_the_password_and_the_run_completes(self):
         machine = Installer(self)
@@ -526,34 +535,233 @@ class PasswordOutcomeTests(unittest.TestCase):
                 self.assertEqual([], self.probes(machine))
                 self.assertIn('The admin password could not be set in the panel', result.stdout)
                 self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
-                self.assert_panel_stopped(machine, result)
+                self.assert_panel_held(machine, result, checked=False)
 
     def test_administrator_without_the_given_password_fails_the_run(self):
         machine = Installer(self)
-        result = machine.run('-v', 'ols', password_check_exit=1)
+        result = machine.run('-v', 'ols', dns=True, password_check_exit=1)
         self.assertEqual(1, result.returncode, result.stdout + result.stderr)
         events = machine.events()
-        self.assertEqual(['ready running', 'ready failed panel_setup', 'install failed panel_setup'], events[-3:])
+        # Found right after the password was set: the hostname step is not reached.
+        self.assertEqual(['finishing failed panel_setup', 'install failed panel_setup'], events[-2:])
         self.assertNotIn('install complete', events)
         self.assertNotIn('panel ready', events)
         self.assertEqual([], self.probes(machine))
+        self.assertEqual([], [call for call in machine.recorded(machine.calls) if call.startswith('cyberpanel ')])
         self.assertIn('its administrator does not have the password of this installation', result.stdout)
         self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
-        self.assert_panel_stopped(machine, result)
+        self.assertNotIn('Visit: https://', result.stdout)
+        self.assert_panel_held(machine, result, checked=True)
 
-    def test_failed_certificate_is_no_working_panel_without_the_given_password(self):
+    def test_failed_certificate_with_a_confirmed_password_leaves_the_panel_running(self):
         machine = Installer(self)
         machine.path('/usr/local/lsws/lsphp83/bin').mkdir(parents=True)
         runtime = machine.path('/usr/local/lsws/lsphp83/bin/lsphp')
         runtime.write_text('#!/bin/sh\n')
         runtime.chmod(0o755)
-        result = machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED, password_check_exit=1)
+        result = machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED)
         self.assertEqual(1, result.returncode)
-        events = machine.events()
-        self.assertEqual(['hostname_ssl failed panel_setup', 'install failed panel_setup'], events[-2:])
-        self.assertNotIn('panel ready', events)
+        self.assertEqual(['hostname_ssl warning hostname_ssl', 'panel ready', 'install failed hostname_ssl'],
+                         machine.events()[-3:])
+        self.assertEqual(COMPLETING, machine.panel_service_calls())
+        self.assertIn('Visit: https://', result.stdout)
+        self.assertNotIn('The panel is stopped', result.stdout)
+
+    def test_run_that_reaches_its_end_without_a_confirmed_password_fails_and_holds_the_panel(self):
+        # Cannot happen as the script is; the guards are tried by taking the
+        # confirmation out of it.
+        machine = Installer(self)
+        harness = machine.harness()
+        confirmation = '  Panel_Password_Confirmed="Yes"\n'
+        # Once in the real function and once in what the harness runs of it.
+        self.assertEqual(2, harness.count(confirmation))
+        with patch.object(machine, 'harness', return_value=harness.replace(confirmation, '  :\n')):
+            result = machine.run('-v', 'ols')
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(['ready running', 'ready failed panel_setup', 'install failed panel_setup'],
+                         machine.events()[-3:])
         self.assertEqual([], self.probes(machine))
-        self.assertNotIn('Visit: https://', result.stdout)
+        # Start_Panel did nothing, and the end of the run held the panel again.
+        self.assertEqual(HELD + ['password-check'] + HELD, machine.panel_service_calls())
+        self.assertEqual(1, result.stdout.count('The panel is stopped and will not start by itself: the installation '
+                                                "ended before the panel's administrator had a confirmed password."))
+        self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+
+
+class PanelHoldTests(unittest.TestCase):
+    """The panel's service is enabled and started only for a confirmed password.
+
+    From the call of install.py on, a run that fails or is interrupted before
+    the confirmation leaves the service disabled and stopped. A run that fails
+    before install.py was called does nothing to the service: the server may
+    have a panel of its own.
+    """
+
+    AFTER_THE_INSTALLER = ('Post_Install_Required_Components', 'Post_Install_PHP_Session_Setup',
+                           'Post_Install_PHP_TimezoneDB', 'Post_Install_Regenerate_Cert',
+                           'Post_Install_Regenerate_Webadmin_Console_Passwd', 'Post_Install_Setup_Watchdog',
+                           'Post_Install_Setup_Utility')
+    BEFORE_THE_INSTALLER = ('Pre_Install_Setup_Repository', 'Pre_Install_Required_Components',
+                            'Pre_Install_Python_Environment', 'Pre_Install_Get_Panel_Source',
+                            'Pre_Install_System_Tweak')
+
+    def assert_held_without_a_start(self, machine, holds):
+        # Held when install.py had returned, if it did, and by the end of the run.
+        self.assertEqual(HELD * holds, machine.panel_service_calls())
+        self.assertEqual([], [call for call in machine.recorded(machine.calls) if '127.0.0.1:8090' in call])
+        self.assertNotIn('install complete', machine.events())
+
+    def test_every_phase_is_covered(self):
+        phases = [name for name in STUBBED_PHASES if name.startswith('Post_Install')]
+        self.assertEqual(sorted(self.AFTER_THE_INSTALLER + ('Post_Install_Addon_Memcached', 'Post_Install_Addon_Redis',
+                                                            'Post_Install_Start_Web_Terminal')), sorted(phases))
+        self.assertEqual(sorted(self.BEFORE_THE_INSTALLER),
+                         sorted(name for name in STUBBED_PHASES if name.startswith('Pre_Install')))
+
+    def test_failure_after_the_installer_and_before_the_confirmation_holds_the_panel(self):
+        for phase in self.AFTER_THE_INSTALLER + ('Post_Install_Addon_Memcached', 'Post_Install_Addon_Redis'):
+            with self.subTest(phase=phase):
+                machine = Installer(self)
+                result = machine.run('-v', 'ols', '-a', fail_at=phase)
+                self.assertNotEqual(0, result.returncode)
+                self.assertEqual('install failed panel_setup', machine.events()[-1])
+                self.assert_held_without_a_start(machine, holds=2)
+                self.assertEqual(1, result.stdout.count('The panel is stopped and will not start by itself'))
+
+    def test_failure_inside_the_installer_holds_the_panel(self):
+        for options in ({'python_steps': 'step:php step:database exit:1'}, {'fail_at': 'No_Completion_Marker'}):
+            with self.subTest(options=options):
+                machine = Installer(self)
+                result = machine.run('-v', 'ols', **options)
+                self.assertEqual(1, result.returncode)
+                self.assertEqual(HELD, machine.panel_service_calls())
+                self.assertEqual(1, result.stdout.count('The panel is stopped and will not start by itself'))
+
+    def test_signal_after_the_installer_and_before_the_confirmation_holds_the_panel(self):
+        for phase in ('Main_Installation',) + self.AFTER_THE_INSTALLER + ('Post_Install_Tweak',):
+            for name in ('TERM', 'INT', 'HUP'):
+                with self.subTest(phase=phase, signal=name):
+                    machine = Installer(self)
+                    result = machine.run('-v', 'ols', signal_at=phase, signal=name)
+                    self.assertEqual(-getattr(signal, 'SIG' + name), result.returncode)
+                    self.assertEqual('install failed interrupted', machine.events()[-1])
+                    self.assert_held_without_a_start(machine, holds=1 if phase == 'Main_Installation' else 2)
+                    # A run that was interrupted says nothing more.
+                    self.assertNotIn('The panel is stopped', result.stdout)
+
+    def test_failure_before_the_installer_does_not_touch_the_panel_of_the_server(self):
+        cases = [{'fail_at': phase} for phase in self.BEFORE_THE_INSTALLER]
+        cases += [{'uid': 1000}, {'ip': ''}, {'version': '<html>busy</html>'},
+                  {'signal_at': 'Pre_Install_Required_Components'},
+                  {'signal_at': 'Pre_Install_System_Tweak', 'signal': 'INT'}]
+        for options in cases:
+            with self.subTest(options=options):
+                machine = Installer(self)
+                result = machine.run('-v', 'ols', **options)
+                self.assertNotEqual(0, result.returncode)
+                self.assertEqual([], machine.panel_service_calls())
+                self.assertNotIn('The panel is stopped', result.stdout)
+
+    def test_server_that_has_a_panel_keeps_its_service(self):
+        machine = Installer(self)
+        machine.path('/usr/local/CyberCP').mkdir(parents=True)
+        result = machine.run('-v', 'ols')
+        self.assertEqual(1, result.returncode)
+        self.assertEqual('install failed already_installed', machine.events()[-1])
+        self.assertEqual([], [call for call in machine.recorded(machine.calls) if call.startswith('systemctl')])
+        self.assertNotIn('The panel is stopped', result.stdout)
+
+    def test_completing_run_starts_the_panel_only_after_the_confirmation(self):
+        for tree in ('new', 'old'):
+            with self.subTest(tree=tree):
+                machine = Installer(self)
+                result = machine.run('-v', 'ols', tree=tree)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertEqual(COMPLETING, machine.panel_service_calls())
+                self.assertNotIn('The panel is stopped', result.stdout)
+
+    def test_only_two_places_enable_or_start_the_panel(self):
+        functions, top_level = script_parts()
+        source = functions + top_level
+        starts = [line.strip() for line in source.splitlines()
+                  if re.search(r'systemctl\s+(enable|start|restart|reenable|unmask)\b.*\blscpd\b', line)]
+        self.assertEqual(['systemctl enable lscpd >/dev/null 2>&1', 'systemctl restart lscpd >/dev/null 2>&1',
+                          'systemctl enable lscpd >/dev/null 2>&1', 'systemctl restart lscpd'], starts)
+        start_panel = function('Start_Panel')
+        self.assertIn('if [[ "$Panel_Password_Confirmed" != "Yes" ]]; then\n  return 1\nfi\nsystemctl enable lscpd',
+                      start_panel)
+        self.assertEqual(1, source.count('\nPanel_Installing="Yes"\nMain_Installation\n'))
+        self.assertEqual(1, source.count('Panel_Password_Confirmed="Yes"'))
+        # systemd 219 (CentOS 7) has no "disable --now".
+        self.assertEqual(['systemctl disable lscpd >/dev/null 2>&1', 'systemctl stop lscpd >/dev/null 2>&1'],
+                         [line for line in function('Hold_Panel').splitlines() if line.startswith('systemctl')])
+
+
+class AdminPassCommandTests(unittest.TestCase):
+    """/usr/bin/adminPass as the installer writes it, run by sh with stand-ins."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        tweak = function('Post_Install_Tweak')
+        opening = "cat > /usr/bin/adminPass <<'ADMINPASS'\n"
+        self.assertEqual(1, tweak.count(opening))
+        body = tweak[tweak.index(opening) + len(opening):tweak.index('\nADMINPASS\n') + 1]
+        self.stored = self.root / 'adminPass'
+        self.python = self.root / 'python'
+        self.python.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$0.arguments"\nexit "$QA_STATUS"\n')
+        self.python.chmod(0o755)
+        tools = self.root / 'tools'
+        tools.mkdir()
+        (tools / 'systemctl').write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$QA_SERVICE_CALLS"\n')
+        (tools / 'systemctl').chmod(0o755)
+        self.command = self.root / 'adminPass-command'
+        self.command.write_text(with_stand_ins(body, (
+            ('/usr/local/CyberPanel/bin/python', self.python),
+            ('/usr/local/CyberCP/plogical/adminPass.py', 'adminPass.py'),
+            ('/etc/cyberpanel/adminPass', self.stored))), encoding='utf-8')
+        self.assertNotIn('/usr/local/', self.command.read_text(encoding='utf-8'))
+        self.assertNotIn('/etc/', self.command.read_text(encoding='utf-8'))
+        self.service_calls = self.root / 'service-calls'
+
+    def run_command(self, *arguments, status=0, shell='sh'):
+        result = subprocess.run([shell, str(self.command)] + list(arguments), stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, encoding='utf-8', timeout=20,
+                                env={'PATH': '%s:%s' % (self.root / 'tools', os.environ['PATH']),
+                                     'QA_STATUS': str(status), 'QA_SERVICE_CALLS': str(self.service_calls)})
+        calls = self.service_calls.read_text().splitlines() if self.service_calls.exists() else []
+        return result, calls
+
+    def test_password_the_panel_took_is_stored_and_the_panel_started(self):
+        for shell in ('sh', 'bash'):
+            for password in ('New-Secret-1234', SECRET, '-e'):
+                with self.subTest(shell=shell, password=password):
+                    for leftover in (self.stored, self.service_calls):
+                        if leftover.exists():
+                            leftover.unlink()
+                    result, calls = self.run_command(password, shell=shell)
+                    self.assertEqual((0, '', ''), (result.returncode, result.stdout, result.stderr))
+                    self.assertEqual(['adminPass.py', '--password', password],
+                                     (self.root / 'python.arguments').read_text().splitlines())
+                    self.assertEqual(password + '\n', self.stored.read_text())
+                    self.assertEqual(0o600, stat.S_IMODE(self.stored.stat().st_mode))
+                    self.assertEqual(['enable lscpd', 'restart lscpd'], calls)
+
+    def test_password_the_panel_did_not_take_changes_nothing(self):
+        self.stored.write_text('the-password-before\n')
+        for status in (1, 2, 3):
+            with self.subTest(status=status):
+                result, calls = self.run_command('New-Secret-1234', status=status)
+                self.assertEqual(1, result.returncode)
+                self.assertEqual('The password was not set, and the panel was left as it was.\n', result.stdout)
+                self.assertEqual('the-password-before\n', self.stored.read_text())
+                self.assertEqual([], calls)
+
+    def test_command_is_written_whole_and_for_root_only(self):
+        tweak = function('Post_Install_Tweak')
+        self.assertIn("\nADMINPASS\nchmod 700 /usr/bin/adminPass\n", tweak)
+        self.assertNotIn('>> /usr/bin/adminPass', tweak)
 
 
 class AdminPassScriptTests(unittest.TestCase):

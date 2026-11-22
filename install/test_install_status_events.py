@@ -362,7 +362,8 @@ class FailedRunTests(unittest.TestCase):
         machine.run('-v', 'ols', active_service='apache2')
         self.assertEqual(['systemctl stop apache2', 'systemctl disable apache2', 'systemctl mask apache2'],
                          [call for call in machine.recorded(machine.calls)
-                          if call.startswith('systemctl') and 'is-active' not in call])
+                          if call.startswith('systemctl') and 'is-active' not in call
+                          and not call.endswith(' lscpd')])
 
     def test_answer_that_cannot_be_used(self):
         # Install, OpenLiteSpeed, full service, local MySQL, then the version question.
@@ -568,8 +569,9 @@ class HostnameCertificateTests(unittest.TestCase):
                          machine.events()[-2:])
 
     def test_signal_during_the_certificate_request_is_an_interrupted_run_and_nothing_else(self):
-        # No notice about a certificate (the request had not failed), the panel
-        # is not asked for the password and gets no request.
+        # No notice about a certificate (the request had not failed), and after
+        # the signal the panel is neither asked for the password nor sent a
+        # request, nor is its service touched: its password was confirmed.
         machine = self.machine()
         result = machine.run('-v', 'ols', dns=True, tls_signal='TERM')
         self.assertEqual(-signal.SIGTERM, result.returncode)
@@ -578,7 +580,10 @@ class HostnameCertificateTests(unittest.TestCase):
         self.assertNotIn('Visit: https://', result.stdout)
         self.assertNotIn('could not be issued', result.stdout)
         calls = machine.recorded(machine.calls)
-        self.assertEqual([], [call for call in calls if '127.0.0.1:8090' in call or call == 'password-check'])
+        after = calls[calls.index('result-during-the-certificate-request=failed'):]
+        self.assertEqual([], [call for call in after if '127.0.0.1:8090' in call or call == 'password-check'
+                              or call.endswith(' lscpd')])
+        self.assertEqual(1, calls.count('password-check'))
 
     def test_certificate_counts_as_failed_only_once_its_request_has_failed(self):
         machine = self.machine()

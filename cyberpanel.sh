@@ -111,6 +111,15 @@ Install_Fail_Code=""
 # has the steps of the Python installer) and is asked first; this is what is
 # known when that file cannot be used.
 Install_Current_Step=""
+# "Yes" from the moment the panel is being installed. From then on the panel's
+# service (lscpd) on this server is this run's to stop; before that a run that
+# fails must not touch the service of a panel that is already there.
+Panel_Installing="No"
+# "Yes" once the panel's administrator was found to have the password of this
+# installation. Only then is the panel's service enabled and started.
+Panel_Password_Confirmed="No"
+# "Yes" once the person installing was told why the panel is not running.
+Panel_Held_Told="No"
 
 Install_Event() {
 # Install_Event <step> <state> [<code>]
@@ -201,9 +210,17 @@ if [[ "$Install_Run_Active" != "Yes" ]]; then
   return
 fi
 Install_Run_Active="No"
+if [[ "$Panel_Installing" = "Yes" && "$Panel_Password_Confirmed" != "Yes" ]]; then
+  # However the run ended: a panel whose administrator is not confirmed is
+  # not left running and does not come up at the next boot.
+  Hold_Panel
+  if [[ "$Panel_Held_Told" != "Yes" ]]; then
+    echo -e "\nThe panel is stopped and will not start by itself: the installation ended before the panel's administrator had a confirmed password.\n"
+  fi
+fi
 step=$(Install_Running_Step)
 reason="${Install_Fail_Code:-$(Install_Default_Reason "$step")}"
-if [[ "$step" = "hostname_ssl" ]] && Admin_Password_Is_Set; then
+if [[ "$step" = "hostname_ssl" && "$Panel_Password_Confirmed" = "Yes" ]]; then
   # The panel was complete before this step, whatever became of the step,
   # and its administrator has the password of this installation.
   panel_complete="Yes"
@@ -236,11 +253,15 @@ Install_On_Signal() {
 # Install_On_Signal <signal>: the run is ended from outside, by Ctrl-C, a
 # closed terminal or a kill. Whatever step it was in, it is recorded as
 # interrupted; nothing is said about a certificate and the panel is not
-# asked. The script then ends by the same signal, so that whoever started it
+# asked. A panel whose administrator is not confirmed is held, as at any other
+# end. The script then ends by the same signal, so that whoever started it
 # sees the signal and not a status of the script's own.
 local step
 if [[ "$Install_Run_Active" = "Yes" ]]; then
   Install_Run_Active="No"
+  if [[ "$Panel_Installing" = "Yes" && "$Panel_Password_Confirmed" != "Yes" ]]; then
+    Hold_Panel
+  fi
   step=$(Install_Running_Step)
   if [[ -n "$step" ]]; then
     Install_Event "$step" failed interrupted
@@ -2625,10 +2646,10 @@ if [[ "${Hostname_SSL_Result:-}" = "skipped" ]]; then
   Install_Event hostname_ssl skipped
 fi
 Install_Step ready
-if ! Admin_Password_Is_Set; then
-  echo -e "\nCyberPanel was installed, but its administrator does not have the password of this installation."
-  Stop_Panel_Without_Password
-  log_error "The panel's administrator does not have the password of this installation"
+if [[ "$Panel_Password_Confirmed" != "Yes" ]]; then
+  # Post_Install_Tweak confirms the password or ends the run. This is the
+  # guard for a change that would let a run come here without it.
+  log_error "The run reached its end without a confirmed admin password"
   Fail_Install panel_setup
 fi
 echo -e "\nWaiting for the panel to answer on port 8090 (3 minutes at most)..."
@@ -3120,13 +3141,35 @@ VERIFY
 )
 }
 
-Stop_Panel_Without_Password() {
-# A panel that has no administrator creates "admin" with a well-known password
-# on the first request it gets, and anyone can send that request. A panel whose
-# password is not the one of this installation is therefore not left running.
+Hold_Panel() {
+# The panel is not running and is not started when the server boots. A panel
+# that has no administrator creates "admin" with a well-known password on the
+# first request it gets, and anyone can send that request; so the panel's
+# service is enabled and started only by Start_Panel, for a confirmed
+# password. Two commands: the "--now" of disable is newer than the systemd of
+# CentOS 7.
+systemctl disable lscpd >/dev/null 2>&1
 systemctl stop lscpd >/dev/null 2>&1
-echo "The panel has been stopped, because it could be signed in to with a password that is not yours."
-echo -e "Once the cause is removed, set a password and start the panel with: adminPass 'a new password'\n"
+return 0
+}
+
+Start_Panel() {
+# Starts the panel and makes it start when the server boots. Nothing is done
+# for a panel whose administrator does not have a confirmed password.
+if [[ "$Panel_Password_Confirmed" != "Yes" ]]; then
+  return 1
+fi
+systemctl enable lscpd >/dev/null 2>&1
+systemctl restart lscpd >/dev/null 2>&1
+return 0
+}
+
+Panel_Held_Notice() {
+# Said where the run ends because of the admin password. The panel has been
+# held since install.py returned, and Install_On_Exit holds it again.
+echo "The panel is stopped and is not started when the server boots, because it could be signed in to with a password that is not yours."
+echo -e "Once the cause is removed, this sets a password, starts the panel and makes it start at boot: adminPass 'a new password'\n"
+Panel_Held_Told="Yes"
 }
 
 Post_Install_Tweak() {
@@ -3156,15 +3199,32 @@ curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/d
 chmod 700 /etc/profile.d/cyberpanel.sh
 mkdir -p /etc/opendkim
 
-echo '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"' > /usr/bin/adminPass
-echo "systemctl restart lscpd" >> /usr/bin/adminPass
-echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
+# The command that sets a new admin password later. Only a password the panel
+# took is stored, and only then is the panel started and made to start at boot.
+cat > /usr/bin/adminPass <<'ADMINPASS'
+if /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"; then
+  ( umask 077; printf '%s\n' "$*" > /etc/cyberpanel/adminPass )
+  systemctl enable lscpd >/dev/null 2>&1
+  systemctl restart lscpd
+else
+  echo "The password was not set, and the panel was left as it was."
+  exit 1
+fi
+ADMINPASS
 chmod 700 /usr/bin/adminPass
 
 if ! Set_Admin_Password; then
   echo -e "\nThe admin password could not be set in the panel, so the installation is not complete."
-  Stop_Panel_Without_Password
+  Panel_Held_Notice
   log_error "The admin password could not be set in the panel"
+  Fail_Install panel_setup
+fi
+if Admin_Password_Is_Set; then
+  Panel_Password_Confirmed="Yes"
+else
+  echo -e "\nCyberPanel was installed, but its administrator does not have the password of this installation."
+  Panel_Held_Notice
+  log_error "The panel's administrator does not have the password of this installation"
   Fail_Install panel_setup
 fi
 
@@ -3239,7 +3299,7 @@ else
   sed -i 's|Include /usr/local/lsws/conf/rules.conf||g' /usr/local/lsws/conf/modsec.conf
 fi
 
-systemctl restart lscpd >/dev/null 2>&1
+Start_Panel
 /usr/local/lsws/bin/lswsctrl stop >/dev/null 2>&1
 systemctl stop lsws >/dev/null 2>&1
 systemctl start lsws >/dev/null 2>&1
@@ -3350,8 +3410,12 @@ Pre_Install_System_Tweak
 
 Install_Step web_server
 
+Panel_Installing="Yes"
 Main_Installation
 #Python install in here. It closes web_server and writes the steps up to panel.
+
+# install.py enabled the panel's service, and an older one may have started it.
+Hold_Panel
 
 Install_Step finishing
 
