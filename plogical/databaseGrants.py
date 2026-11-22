@@ -113,3 +113,19 @@ def holder(user, host):
         return '%s', (user,)
     return '%s@%s', (user, host)
 
+
+def revoke_database(cursor, quote, name, user, host):
+    """Take this account's grant on exactly this database away, in every form it is stored in.
+
+    `quote` puts a name between backticks (mysqlUtilities.quoteIdentifier).
+    The account itself and its grants on other databases stay.
+    """
+    forms = stored_names(name)
+    cursor.execute('SELECT Db, Grant_priv FROM mysql.db WHERE User = %%s AND Host = %%s AND Db IN (%s)'
+                   % ', '.join(['%s'] * len(forms)), (user, host) + forms)
+    account, values = holder(user, host)
+    for row in cursor.fetchall():
+        stored = quote(text(row[0]))
+        cursor.execute('REVOKE ALL PRIVILEGES ON %s.* FROM %s' % (stored, account), values)
+        if text(row[1]) == 'Y':
+            cursor.execute('REVOKE GRANT OPTION ON %s.* FROM %s' % (stored, account), values)

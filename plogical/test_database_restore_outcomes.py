@@ -30,12 +30,16 @@ class DatabaseRestoreOutcomeTests(unittest.TestCase):
         with mock.patch.object(module.Databases.objects, 'filter') as rows, mock.patch.object(mysqlUtilities, 'createDatabaseAndRegister', return_value=(0, 'failed')) as create:
             rows.return_value.first.return_value = None
             self.assertEqual((0, 'failed'), mysqlUtilities.prepareDatabaseForRestore('fixture_db', 'fixture_user', website))
-        create.assert_called_once_with('fixture_db', 'fixture_user', 'cyberpanel', website)
+        (name, user, password, site), = [call[0] for call in create.call_args_list]
+        self.assertEqual(('fixture_db', 'fixture_user', website), (name, user, site))
+        # The account starts with a password nobody knows, never a fixed one.
+        self.assertRegex(password, r'^[A-Za-z0-9]{32}$')
+        self.assertNotEqual('cyberpanel', password)
 
     def test_existing_account_without_database_grant_is_preserved(self):
         connection, cursor = mock.Mock(), mock.Mock()
         cursor.fetchall.side_effect = [[('fixture_user',)], [('different_db',)]]
-        with mock.patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)), mock.patch.object(mysqlUtilities, 'changePassword') as password:
+        with mock.patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)), mock.patch.object(mysqlUtilities, 'isRegisteredAccount', return_value=True), mock.patch.object(mysqlUtilities, 'changePassword') as password:
             self.assertEqual(0, mysqlUtilities.restoreDatabaseUser('fixture_db', 'fixture_user', 'hash', 'localhost'))
         password.assert_not_called()
         connection.close.assert_called_once()

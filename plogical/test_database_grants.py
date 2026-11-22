@@ -192,7 +192,8 @@ class PanelStatementTests(unittest.TestCase):
 
     def test_deleting_a_database_drops_accounts_stored_under_either_form(self):
         cursor = Cursor({'SELECT User, Host': [('shop_user', 'localhost'), ('shop_user', '127.0.0.1')]})
-        self.assertEqual(1, self.run_with(cursor, mysqlUtilities.deleteDatabase, 'shop_db', 'shop_user'))
+        with mock.patch.object(mysqlUtilities, 'accountsOfDatabaseAlone', return_value=set(['shop_user'])):
+            self.assertEqual(1, self.run_with(cursor, mysqlUtilities.deleteDatabase, 'shop_db', 'shop_user'))
         self.assertEqual([('DROP DATABASE IF EXISTS `shop_db`', None),
                           ('SELECT User, Host FROM mysql.db WHERE Db IN (%s, %s)', ('shop_db', 'shop\\_db')),
                           ('DROP USER IF EXISTS %s@%s', ('shop_user', 'localhost')),
@@ -201,6 +202,7 @@ class PanelStatementTests(unittest.TestCase):
     def restore_user(self, held):
         cursor = Cursor({'SELECT User FROM mysql.user': [('shop_user',)], 'SELECT Db': [(value,) for value in held]})
         with mock.patch.object(mysqlUtilities, 'changePassword', return_value=1) as password, \
+                mock.patch.object(mysqlUtilities, 'isRegisteredAccount', return_value=True), \
                 mock.patch.object(mysqlUtilities, 'createDatabase') as create:
             result = self.run_with(cursor, mysqlUtilities.restoreDatabaseUser, 'shop_db', 'shop_user', 'hash', 'localhost')
         create.assert_not_called()

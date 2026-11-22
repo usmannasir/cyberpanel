@@ -815,7 +815,9 @@ class backupUtilities:
                     dbUser = databaseUsers[0].find('dbUser').text
                 else:
                     dbUser = database.find('dbUser').text
-                result = mysqlUtilities.mysqlUtilities.createDatabaseAndRegister(dbName, dbUser, 'cyberpanel', website)
+                # The user's password comes from the backup when the dump is
+                # restored; until then nobody knows the one the account has.
+                result = mysqlUtilities.mysqlUtilities.createDatabaseAndRegister(dbName, dbUser, generate_pass(32), website)
                 if result[0] != 1:
                     raise RuntimeError(result[1])
 

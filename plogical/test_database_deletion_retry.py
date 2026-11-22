@@ -24,6 +24,8 @@ def database_helper(connection, cursor):
     exec(compile(ast.Module(body=[cls], type_ignores=[]), str(HERE / 'mysqlUtilities.py'), 'exec'), scope)
     helper = scope['mysqlUtilities']
     helper.setupConnection = lambda: (connection, cursor)
+    # Which accounts belong to the database alone is the panel's knowledge, tested with the account scope.
+    helper.accountsOfDatabaseAlone = lambda dbname, dbuser: set([dbuser])
     helper.test_scope = scope
     return helper
 
