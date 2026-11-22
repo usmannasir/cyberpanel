@@ -490,7 +490,12 @@ class vhost:
         return 1
 
     @staticmethod
-    def deleteVirtualHostConfigurations(virtualHostName):
+    def deleteVirtualHostConfigurations(virtualHostName, keep=()):
+        # keep names what a website's creation found already there and only
+        # used: 'dns' (the zone of this name with all its records), 'mail'
+        # (the mail folder) and 'ssl' (the certificate work folder). A
+        # creation that is undone leaves those as it found them; the deletion
+        # of a website passes nothing and removes them all.
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
 
@@ -559,7 +564,7 @@ class vhost:
 
                     # A real DNS deletion error must retain website/database
                     # metadata for retry, rather than reporting false success.
-                    if DNS.deleteDNSZone(virtualHostName) != 1:
+                    if 'dns' not in keep and DNS.deleteDNSZone(virtualHostName) != 1:
                         raise RuntimeError('Failed to remove the website DNS zone; website and database metadata retained.')
 
                     for items in databases:
@@ -576,8 +581,9 @@ class vhost:
 
                 ## Delete mail accounts
 
-                command = "rm -rf /home/vmail/" + virtualHostName
-                subprocess.call(shlex.split(command))
+                if 'mail' not in keep:
+                    command = "rm -rf /home/vmail/" + virtualHostName
+                    subprocess.call(shlex.split(command))
 
                 ##
 
@@ -604,7 +610,7 @@ class vhost:
 
                 ### Delete Acme folder
 
-                if os.path.exists('/root/.acme.sh/%s' % (virtualHostName)):
+                if 'ssl' not in keep and os.path.exists('/root/.acme.sh/%s' % (virtualHostName)):
                     shutil.rmtree('/root/.acme.sh/%s' % (virtualHostName))
 
             except BaseException as msg:
@@ -658,7 +664,7 @@ class vhost:
 
                     # A real DNS deletion error must retain website/database
                     # metadata for retry, rather than reporting false success.
-                    if DNS.deleteDNSZone(virtualHostName) != 1:
+                    if 'dns' not in keep and DNS.deleteDNSZone(virtualHostName) != 1:
                         raise RuntimeError('Failed to remove the website DNS zone; website and database metadata retained.')
 
                     for items in databases:
@@ -674,8 +680,9 @@ class vhost:
 
                 ## Delete mail accounts
 
-                command = "rm -rf /home/vmail/" + virtualHostName
-                subprocess.call(shlex.split(command))
+                if 'mail' not in keep:
+                    command = "rm -rf /home/vmail/" + virtualHostName
+                    subprocess.call(shlex.split(command))
 
                 ##
 

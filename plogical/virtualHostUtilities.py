@@ -677,6 +677,11 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(error) + ' [404]')
             return 0, str(error)
 
+        # What a failure below must not take away. Until this creation has
+        # seen what was there before it, that is everything it could reuse.
+        from plogical.websiteDeletion import REUSABLE, found_before_creation
+        keep = REUSABLE
+
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -752,6 +757,13 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
 
                 ##### Zone creation
+
+                # A zone, mail folder or certificate work folder of this name
+                # that is already here is used, not made: undoing this
+                # creation leaves it.
+                keep = found_before_creation(DNS.zoneExists(virtualHostName),
+                                             os.path.exists('/home/vmail/' + virtualHostName),
+                                             os.path.exists('/root/.acme.sh/' + virtualHostName))
 
                 DNS.dnsTemplate(virtualHostName, admin)
 
@@ -917,7 +929,7 @@ class virtualHostUtilities:
 
         except BaseException as msg:
             if ACLManager.FindIfChild() == 0:
-                vhost.deleteVirtualHostConfigurations(virtualHostName)
+                vhost.deleteVirtualHostConfigurations(virtualHostName, keep)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + " [404]")
             return 0, str(msg)
@@ -2251,6 +2263,8 @@ def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--virtualHostName', help='Domain name!')
+    parser.add_argument('--keep', help='What the undone creation of a website did not make itself: dns,mail,ssl',
+                        default='')
     parser.add_argument('--administratorEmail', help='Administration Email!')
     parser.add_argument('--phpVersion', help='PHP Version')
     parser.add_argument("--virtualHostUser", help="Virtual Host Directory Owner and Group!")
@@ -2357,8 +2371,9 @@ def main():
         admin = Administrator.objects.get(userName=args.websiteOwner)
         virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', args.virtualHostName, admin)
     elif args.function == "deleteVirtualHostConfigurations":
-        from plogical.websiteDeletion import RESULT_PREFIX
-        completed = vhost.deleteVirtualHostConfigurations(args.virtualHostName) == 1
+        from plogical.websiteDeletion import RESULT_PREFIX, kept_by_creation
+        completed = vhost.deleteVirtualHostConfigurations(
+            args.virtualHostName, kept_by_creation(args.keep)) == 1
         print(RESULT_PREFIX + json.dumps({'completed': completed}))
         raise SystemExit(0 if completed else 1)
     elif args.function == "createDomain":

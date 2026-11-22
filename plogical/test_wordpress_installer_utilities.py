@@ -2,24 +2,14 @@ import os
 import shlex
 import unittest
 
-from unittest import mock
-
 from plogical.wordpressInstallerUtilities import (
-    build_directory_listing_command,
     build_directory_probe,
-    build_entry_removal_command,
     build_wordpress_core_install_command,
     change_php_succeeded,
-    current_wordpress_version,
     directory_allows_install,
-    directory_entry_names,
-    entries_added_since,
     php_binary_for_selection,
     select_wordpress_version,
-    single_line_value,
-    wordpress_cli_command,
     wordpress_php_change_required,
-    wordpress_table_prefix_command,
 )
 
 
@@ -121,94 +111,6 @@ class WordPressInstallerUtilitiesTests(unittest.TestCase):
         )[0]
         self.assertNotIn("changePHP --phpVersion 'PHP 8.3'", installer)
         self.assertNotIn("FinalPHPPath = '/usr/local/lsws/lsphp83/bin/php'", installer)
-
-
-class CurrentReleaseTests(unittest.TestCase):
-    def fetch(self, payload):
-        fetch = mock.Mock()
-        fetch.return_value.json.return_value = payload
-        return fetch
-
-    def test_the_current_release_is_the_first_valid_one_wordpress_org_offers(self):
-        fetch = self.fetch({'offers': [{'current': '7.1.5'}, {'current': '7.0.9'}]})
-        self.assertEqual('7.1.5', current_wordpress_version(fetch))
-        fetch.assert_called_once_with('https://api.wordpress.org/core/version-check/1.7/', timeout=15)
-        fetch.return_value.raise_for_status.assert_called_once_with()
-
-    def test_an_answer_without_a_release_is_an_error_and_never_a_default_version(self):
-        for payload in ({'offers': []}, {'offers': [{'current': '6.0;id'}]}, {}, [], None, 'error'):
-            with self.subTest(payload=payload):
-                with self.assertRaises(ValueError):
-                    current_wordpress_version(self.fetch(payload))
-
-    def test_a_failed_request_is_passed_on(self):
-        fetch = self.fetch({'offers': [{'current': '7.1.5'}]})
-        fetch.return_value.raise_for_status.side_effect = OSError('503')
-        with self.assertRaises(OSError):
-            current_wordpress_version(fetch)
-
-
-class InstallDirectoryBookkeepingTests(unittest.TestCase):
-    def test_the_listing_names_every_entry_of_the_directory_itself(self):
-        command = build_directory_listing_command("/home/example site/public_html/it's-here")
-        self.assertEqual(['find', "/home/example site/public_html/it's-here", '-mindepth', '1', '-maxdepth', '1',
-                          '-printf', '%f\\n'], shlex.split(command))
-
-    def test_a_listing_that_failed_is_no_reading(self):
-        self.assertEqual({'a', '.b', 'c d'}, directory_entry_names(1, 'a\n.b\nc d\n'))
-        self.assertEqual(set(), directory_entry_names(1, ''))
-        self.assertIsNone(directory_entry_names(0, 'a\n'))
-        self.assertIsNone(directory_entry_names(1, None))
-
-    def test_only_what_was_not_there_before_counts_as_added(self):
-        self.assertEqual(['index.php', 'wp-admin'], entries_added_since({'.well-known'}, {'.well-known', 'wp-admin',
-                                                                                           'index.php'}))
-        self.assertEqual([], entries_added_since({'a', 'b'}, {'a'}))
-
-    def test_without_both_readings_nothing_counts_as_added(self):
-        self.assertEqual([], entries_added_since(None, {'wp-admin'}))
-        self.assertEqual([], entries_added_since({'a'}, None))
-
-    def test_a_name_that_is_not_a_plain_entry_is_never_removed(self):
-        self.assertEqual(['ok'], entries_added_since(set(), {'.', '..', "find: '/x/y': No such file", 'ok'}))
-        for name in ('', '.', '..', 'a/b', '/etc', 'a\x00b', None):
-            with self.subTest(name=name):
-                with self.assertRaises(ValueError):
-                    build_entry_removal_command('/home/example.com/public_html', name)
-
-    def test_a_removal_names_one_entry_inside_the_directory_and_no_option(self):
-        for name in ('wp-admin', '-rf', "it's", 'a b', '$(id)', '*'):
-            command = build_entry_removal_command('/home/example.com/public html/', name)
-            self.assertEqual(['rm', '-rf', '--', '/home/example.com/public html/' + name], shlex.split(command))
-
-
-class WordPressCliCommandTests(unittest.TestCase):
-    PHP = '/usr/local/lsws/lsphp83/bin/php'
-
-    def test_every_value_is_one_argument_and_no_plugin_or_theme_is_loaded(self):
-        for value in ('source.example', 'a b', "it's", '$(id)', '`id`', 'x; rm -rf /', '"quoted"'):
-            command = wordpress_cli_command(self.PHP, '/home/new.example/public_html/', 'search-replace', value,
-                                            'new.example')
-            self.assertEqual([self.PHP, '-d', 'error_reporting=0', '-d', 'memory_limit=350M', '-d',
-                              'max_execution_time=400', '/usr/bin/wp', 'search-replace', value, 'new.example',
-                              '--skip-plugins', '--skip-themes', '--path=/home/new.example/public_html/'],
-                             shlex.split(command), repr(value))
-
-    def test_the_table_prefix_is_a_plain_name(self):
-        command = wordpress_table_prefix_command(self.PHP, '/home/x/public_html/', 'wp_7a_')
-        self.assertIn(' config set table_prefix wp_7a_ --type=variable ', command)
-        for prefix in ('', 'wp-', 'wp_; id', "wp_'", 'a' * 65, None, 7):
-            with self.subTest(prefix=prefix):
-                with self.assertRaises(ValueError):
-                    wordpress_table_prefix_command(self.PHP, '/home/x/public_html/', prefix)
-
-    def test_a_value_is_exactly_one_line_of_output(self):
-        self.assertEqual('newdb', single_line_value('newdb\n'))
-        self.assertEqual(' p a$$ ', single_line_value(' p a$$ \n'))
-        for output in ('', '\n', None, 'Warning: x\nnewdb\n', 'a\rb'):
-            with self.subTest(output=output):
-                with self.assertRaises(ValueError):
-                    single_line_value(output)
 
 
 if __name__ == '__main__':

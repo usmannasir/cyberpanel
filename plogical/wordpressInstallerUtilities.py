@@ -221,3 +221,29 @@ def single_line_value(output):
     if not text or '\n' in text or '\r' in text:
         raise ValueError('The command did not print a single value.')
     return text
+
+
+def brief_output(output, limit=300):
+    """What a command printed, as one line of at most `limit` characters for a status message.
+
+    The end is kept: that is where a command says why it stopped.
+    """
+    text = ' '.join(str(output if output is not None else '').split())
+    if len(text) > limit:
+        text = '... ' + text[-limit:]
+    return text
+
+
+def worker_failure_reason(status):
+    """The reason in the last status of a worker that failed: one line, without the end marker.
+
+    A status file ends with a line break and its marker. Put into another
+    status as it is, the reason would end up on a line of its own and the
+    last line, the one that is shown, would hold the marker alone.
+    """
+    return brief_output(str(status or '').replace('[404]', ' ')).rstrip('. ') or 'no reason was given'
+
+
+def out_of_quota(output):
+    """Whether a command stopped because the account's disk quota is used up."""
+    return 'Disk quota exceeded' in str(output or '')
