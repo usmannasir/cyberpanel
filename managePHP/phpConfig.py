@@ -33,6 +33,34 @@ def fpm_service_for_selection(selection, rpm_family):
     return 'php%s.%s-fpm' % (major, minor)
 
 
+# A package the PHP extension pages list: LiteSpeed PHP (lsphp83-apcu), Remi
+# (php83-php-fpm) and Debian or Ubuntu (php8.3-curl) packages, with the
+# architecture suffix yum prints (lsphp83-apcu.x86_64), and the two Apache
+# packages `apt list` shows beside them.
+PHP_PACKAGE = re.compile(
+    r'(?:(?:lsphp[0-9]{2,3}|php[0-9]{2,3}|php[0-9]\.[0-9]{1,2})(?:[.-][A-Za-z0-9][A-Za-z0-9.+_-]*)?'
+    r'|libapache2-mod-php[0-9]\.[0-9]{1,2}|libphp[0-9]\.[0-9]{1,2}-embed)')
+
+
+def is_php_package(name):
+    """True for one PHP package name; the package managers are given nothing else."""
+    return isinstance(name, str) and len(name) <= 128 and PHP_PACKAGE.fullmatch(name) is not None
+
+
+def php_package_prefix(selection, apache, rpm_family):
+    """Return the start of the package names of a PHP selection, built from its digits.
+
+    lsphp83 for LiteSpeed PHP; for the Apache backend php83 (Remi) or php8.3
+    (Debian, Ubuntu).
+    """
+    major, minor = php_selection_digits(selection)
+    if not apache:
+        return 'lsphp%s%s' % (major, minor)
+    if rpm_family:
+        return 'php%s%s' % (major, minor)
+    return 'php%s.%s' % (major, minor)
+
+
 FPM_POOL_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,63}')
 
 
