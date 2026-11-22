@@ -121,8 +121,9 @@ class PythonEventWriterTests(unittest.TestCase):
         self.assertIsInstance(parse_as_python_36('value = "%s" % 1\n'), ast.Module)
         with self.assertRaises(SyntaxError):
             parse_as_python_36('value = (\n')
-        if sys.version_info >= (3, 8):
-            # Where the parser has the switch, newer syntax is refused as well.
+        if sys.version_info >= (3, 10):
+            # Where the parser enforces the switch, newer syntax is refused as well. Python 3.8 and
+            # 3.9 take the switch but still accept these two forms (seen on AlmaLinux 9, Python 3.9).
             for newer in ('if (count := 1):\n    pass\n', 'def call(first, /):\n    pass\n'):
                 with self.subTest(newer=newer):
                     with self.assertRaises(SyntaxError):
