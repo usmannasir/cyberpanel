@@ -5,6 +5,7 @@ from loginSystem.views import loadLoginPage
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from .access import scanner_view
 from .aiScannerManager import AIScannerManager
+from .platform_auth import platform_page_url
 import json
 
 
@@ -319,10 +320,14 @@ def getPlatformMonitorUrl(request, scan_id):
                 return JsonResponse({'success': False, 'error': 'Invalid response from platform'})
             
             if response.status_code == 200 and data.get('success'):
-                logging.writeToFile(f"[AI Scanner] Got monitor URL: {data.get('monitor_url')}")
+                # The browser opens this address: it must be a page of the platform itself.
+                monitor_url = platform_page_url(data.get('monitor_url'))
+                if monitor_url is None:
+                    logging.writeToFile(f"[AI Scanner] The platform returned no usable monitor address for scan {scan_id}")
+                    return JsonResponse({'success': False, 'error': 'Invalid response from platform'})
                 return JsonResponse({
                     'success': True,
-                    'monitor_url': data.get('monitor_url'),
+                    'monitor_url': monitor_url,
                     'platform_scan_id': data.get('platform_scan_id')
                 })
             else:
