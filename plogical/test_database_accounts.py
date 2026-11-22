@@ -84,6 +84,75 @@ class NameTests(unittest.TestCase):
             self.assertFalse(accounts.is_system_account('doadmin'))
 
 
+class RefusalTests(unittest.TestCase):
+    def refusal(self, name, panel_user=False):
+        with mock.patch.object(accounts, 'administrative_account', return_value='root'), \
+                mock.patch.object(accounts, 'named_like_panel_user', return_value=panel_user) as lookup:
+            answer = accounts.account_refusal(name)
+        self.lookup = lookup
+        return answer
+
+    def test_plain_name_is_accepted(self):
+        self.assertIsNone(self.refusal('exam_user'))
+        self.lookup.assert_called_once_with('exam_user')
+
+    def test_reserved_name_is_refused_before_any_lookup(self):
+        for name in ('root', 'ROOT', 'mysql', 'cyberpanel', 'public', 'rdsadmin'):
+            self.assertIn('reserved', self.refusal(name), name)
+            self.lookup.assert_not_called()
+
+    def test_name_that_is_not_an_identifier_is_refused(self):
+        for name in ('cp-pma-7', 'mariadb.sys', "x'y", 'a b', '', None, 7, 'x' * 65, '-'):
+            self.assertIn('letters, numbers and underscores', self.refusal(name), repr(name))
+            self.lookup.assert_not_called()
+
+    def test_name_of_a_panel_user_is_refused(self):
+        self.assertIn('panel user', self.refusal('reseller1', panel_user=True))
+
+    def test_panel_user_lookup_ignores_case_in_both_tables(self):
+        seen = []
+
+        def exists(model, field, name):
+            seen.append((model, field, name))
+            return model == 'records' and name == 'Reseller1'
+
+        fake = SimpleNamespace(Administrator='users', GlobalUserDB='records')
+        with mock.patch.object(accounts, '_exists_ignoring_case', side_effect=exists), \
+                mock.patch.dict('sys.modules', {'loginSystem.models': fake, 'databases.models': fake}):
+            self.assertTrue(accounts.named_like_panel_user('Reseller1'))
+            self.assertFalse(accounts.named_like_panel_user('other'))
+        self.assertIn(('users', 'userName', 'Reseller1'), seen)
+        self.assertIn(('records', 'username', 'Reseller1'), seen)
+
+    def test_lookup_compares_lower_case_on_both_sides(self):
+        model = mock.Mock()
+        filtered = model.objects.annotate.return_value.filter
+        filtered.return_value.exists.return_value = True
+        self.assertTrue(accounts._exists_ignoring_case(model, 'userName', 'ReSeller1'))
+        filtered.assert_called_once_with(lowered_name='reseller1')
+        annotation = model.objects.annotate.call_args[1]['lowered_name']
+        self.assertEqual('Lower', type(annotation).__name__)
+
+
+class RegistrationTests(unittest.TestCase):
+    def databases(self, rows):
+        model = mock.Mock()
+        model.objects.filter.return_value = rows
+        return model
+
+    def test_only_the_exact_name_is_registered(self):
+        # The panel's table compares without regard to case and returns the variant.
+        variant = SimpleNamespace(dbUser='Exam_User', dbName='exam_one')
+        exact = SimpleNamespace(dbUser='exam_user', dbName='exam_two')
+        model = self.databases([variant, exact])
+        with mock.patch.dict('sys.modules', {'databases.models': SimpleNamespace(Databases=model)}):
+            self.assertEqual([exact], accounts.registered_databases('exam_user'))
+            self.assertEqual([variant], accounts.registered_databases('Exam_User'))
+            self.assertEqual([], accounts.registered_databases('EXAM_USER'))
+            for value in ('', None, 7, ['exam_user']):
+                self.assertEqual([], accounts.registered_databases(value))
+
+
 class ServerAccountTests(unittest.TestCase):
     def test_hosts_are_those_of_the_exact_user_name(self):
         cursor = Cursor(hosts={'exam_user': ['localhost', '127.0.0.1', '203.0.113.5'], 'Exam_User': ['localhost']})
@@ -182,6 +251,83 @@ class EarlierAccountTests(unittest.TestCase):
                       'something unexpected'):
             self.assertIn('privileges', self.refusal(lines=[self.USAGE, self.OWN, extra]), extra)
         self.assertIn('privileges', self.refusal(lines=[]))
+
+
+class RemoteAccessTests(unittest.TestCase):
+    def setUp(self):
+        self.cursor = Cursor()
+        self.connection = mock.Mock()
+        self.utilities = mock.Mock()
+        self.utilities.LOCALHOST = 'localhost'
+        self.utilities.setupConnection.return_value = (self.connection, self.cursor)
+        self.utilities.createDatabase.return_value = 1
+        self.utilities.changePassword.return_value = 1
+        self.passwords = {'localhost': '*HASH', '127.0.0.1': '*HASH'}
+
+    def open(self, host='203.0.113.5', previous=None):
+        return accounts.open_remote_access(self.utilities, self.passwords, 'exam_shop', 'exam_user', host, previous)
+
+    def test_new_remote_account_starts_with_a_random_password_and_gets_the_users_own(self):
+        self.assertEqual((1, None), self.open())
+        (database, user, temporary, create, host), unused = self.utilities.createDatabase.call_args
+        self.assertEqual(('exam_shop', 'exam_user', 0, '203.0.113.5'), (database, user, create, host))
+        self.assertNotEqual('cyberpanel', temporary)
+        self.assertEqual(32, len(temporary))
+        self.open()
+        self.assertNotEqual(temporary, self.utilities.createDatabase.call_args[0][2])
+        self.utilities.changePassword.assert_called_with('exam_user', '*HASH', 1, '203.0.113.5')
+        self.assertEqual([], self.cursor.ran('DROP'))
+
+    def test_account_is_removed_again_when_it_cannot_get_the_users_password(self):
+        self.utilities.changePassword.return_value = 0
+        self.assertEqual(0, self.open()[0])
+        self.assertEqual([('DROP USER IF EXISTS %s@%s', ('exam_user', '203.0.113.5'))], self.cursor.ran('DROP'))
+        self.connection.close.assert_called_once_with()
+
+    def test_account_left_half_made_is_removed(self):
+        self.utilities.createDatabase.return_value = 0
+        self.assertEqual(0, self.open()[0])
+        self.utilities.changePassword.assert_not_called()
+        self.assertEqual([('DROP USER IF EXISTS %s@%s', ('exam_user', '203.0.113.5'))], self.cursor.ran('DROP'))
+
+    def test_nothing_is_created_without_a_local_account_to_copy_from(self):
+        for passwords in ({}, {'203.0.113.9': '*HASH'}, {'localhost': ''}, {'localhost': None}):
+            self.passwords = passwords
+            self.assertEqual(0, self.open()[0])
+        self.utilities.createDatabase.assert_not_called()
+        self.utilities.changePassword.assert_not_called()
+        self.utilities.setupConnection.assert_not_called()
+
+    def test_existing_account_is_neither_created_nor_removed(self):
+        self.passwords['203.0.113.5'] = '*OLD'
+        self.utilities.changePassword.return_value = 0
+        self.assertEqual(0, self.open()[0])
+        self.utilities.createDatabase.assert_not_called()
+        self.assertEqual([], self.cursor.ran('DROP'))
+        self.passwords = {'localhost': '*HASH', 'db.example.com': '*OLD'}
+        self.assertEqual(0, self.open(host='DB.Example.com')[0])
+        self.utilities.createDatabase.assert_not_called()
+        self.assertEqual([], self.cursor.ran('DROP'))
+
+    def test_account_of_the_previous_remote_host_is_removed(self):
+        self.passwords['198.51.100.7'] = '*HASH'
+        self.assertEqual((1, None), self.open(previous='198.51.100.7'))
+        self.assertEqual([('DROP USER IF EXISTS %s@%s', ('exam_user', '198.51.100.7'))], self.cursor.ran('DROP'))
+
+    def test_local_accounts_and_the_same_host_are_never_removed(self):
+        for previous in ('localhost', '127.0.0.1', 'LOCALHOST', '203.0.113.5', None, '', '198.51.100.99'):
+            self.assertEqual((1, None), self.open(previous=previous))
+        self.assertEqual([], self.cursor.ran('DROP'))
+        self.utilities.LOCALHOST = '192.0.2.10'
+        self.passwords = {'192.0.2.10': '*HASH'}
+        self.assertEqual((1, None), self.open(previous='192.0.2.10'))
+        self.assertEqual([], self.cursor.ran('DROP'))
+
+    def test_going_back_to_local_access_removes_the_remote_account(self):
+        self.passwords['203.0.113.5'] = '*HASH'
+        self.assertEqual((1, None), self.open(host='localhost', previous='203.0.113.5'))
+        self.utilities.createDatabase.assert_not_called()
+        self.assertEqual([('DROP USER IF EXISTS %s@%s', ('exam_user', '203.0.113.5'))], self.cursor.ran('DROP'))
 
 
 if __name__ == '__main__':

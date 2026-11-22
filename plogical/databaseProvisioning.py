@@ -8,6 +8,7 @@ import stat
 import time
 from contextlib import ExitStack
 
+from plogical import databaseAccounts
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 from plogical.securityUtils import _open_private_directory, _owner_ids, is_safe_sql_identifier
 
@@ -103,8 +104,14 @@ class ProvisioningJournal:
 def create_and_register(database, username, password, website, utilities, database_model,
                         directory=JOURNAL_DIRECTORY, owner_user='cyberpanel'):
     """Never adopt or drop an existing SQL namespace after a partial failure."""
-    stage = 'opening_journal'
+    stage = 'checking_reserved_names'
     try:
+        # A customer's database user never carries the name of an account of
+        # the server or of a panel user.
+        refusal = databaseAccounts.account_refusal(username)
+        if refusal is not None:
+            raise ProvisioningError(refusal)
+        stage = 'opening_journal'
         with ProvisioningJournal(database, username, website.domain, directory, owner_user) as journal:
             stage = 'checking_panel_namespace'
             if (database_model.objects.filter(dbName=database).exists()

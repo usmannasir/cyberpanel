@@ -103,6 +103,8 @@ class MySQLLoopbackUserTests(unittest.TestCase):
     def test_password_change_updates_loopback_account(self):
         connection = FakeConnection()
         cursor = FakeCursor()
+        # The accounts the server has for this user.
+        cursor.fetchall = lambda: [('site_user', 'localhost'), ('site_user', '127.0.0.1')]
         with patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)):
             self.assertEqual(1, mysqlUtilities.changePassword('site_user', 'new-hash', encrypt=1))
 
@@ -120,6 +122,7 @@ class MySQLLoopbackUserTests(unittest.TestCase):
     def test_cleartext_password_change_is_bound(self):
         connection = FakeConnection()
         cursor = FakeCursor()
+        cursor.fetchall = lambda: [('site_user', 'localhost'), ('site_user', '127.0.0.1')]
         password = "new $pass;'word"
         with patch.object(mysqlUtilities, 'setupConnection', return_value=(connection, cursor)):
             self.assertEqual(
