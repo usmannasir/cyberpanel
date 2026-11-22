@@ -128,6 +128,24 @@ class AdvancedSaveWorkerTests(unittest.TestCase):
                 self.assertEqual('1,None\n', worker.save_advanced(path, worker.stage(b'memory_limit = 64M\n')))
                 self.assertEqual(b'memory_limit = 64M\n', worker.files[path])
 
+    def test_line_ends_are_written_as_lf(self):
+        # Earlier versions read the staged text with universal newlines, so a
+        # php.ini sent by an API client with CRLF (or CR) line ends was
+        # written with LF. The bytes are otherwise written as they are.
+        staged = b'[PHP]\r\nmemory_limit = 64M\r\n; caf\xc3\xa9 \xff\r\ndisplay_errors = Off\rshort_open_tag = On\n\r\n'
+        expected = b'[PHP]\nmemory_limit = 64M\n; caf\xc3\xa9 \xff\ndisplay_errors = Off\nshort_open_tag = On\n\n'
+        worker = Worker(self)
+        worker.services.process.normalExecutioner.return_value = 1
+        self.assertEqual('1,None\n', worker.save_advanced(FPM_INI, worker.stage(staged)))
+        self.assertEqual(expected, worker.files[FPM_INI])
+
+    def test_text_with_lf_line_ends_is_written_unchanged(self):
+        staged = b'[PHP]\nmemory_limit = 64M\n\n; no line end at the end'
+        worker = Worker(self)
+        worker.services.process.normalExecutioner.return_value = 1
+        self.assertEqual('1,None\n', worker.save_advanced(LSPHP_INI, worker.stage(staged)))
+        self.assertEqual(staged, worker.files[LSPHP_INI])
+
     def test_other_destinations_are_refused_before_anything_happens(self):
         for path in ('/etc/shadow', '/etc/cron.d/x', '/etc/php/8.3/fpm/php.ini/../../../../cron.d/x',
                      '/etc/php/8.3/fpm/pool.d/www.conf', '/usr/local/lsws/conf/httpd_config.conf',
