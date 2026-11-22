@@ -12,6 +12,7 @@ import time
 import unittest
 from unittest import mock
 
+from plogical import fileSystemSecurity
 from plogical import scannerFileAccess as files
 from plogical.scannerFileAccess import Refused, SiteFiles, clean_relative_path
 
@@ -111,6 +112,66 @@ class SiteTree(unittest.TestCase):
         for directory, unused, names in os.walk(os.path.join(self.home, files.BACKUP_DIRECTORY)):
             found.extend(os.path.join(directory, name) for name in names)
         return found
+
+
+class TempFileTests(unittest.TestCase):
+    """New content waits in the panel's shared temporary folder under a name only the panel knows."""
+
+    def setUp(self):
+        self.folder = os.path.realpath(tempfile.mkdtemp(prefix='secai'))
+        self.addCleanup(shutil.rmtree, self.folder, True)
+        os.chmod(self.folder, 0o711)
+        patcher = mock.patch.object(fileSystemSecurity, 'SHARED_TEMP_DIRECTORY', self.folder)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_the_content_is_written_to_a_new_file_the_website_user_can_read(self):
+        path = files.write_private_temp_file(b'<?php // new\n\xff')
+        self.assertEqual([os.path.basename(path)], os.listdir(self.folder))
+        self.assertRegex(os.path.basename(path), r'\A[0-9a-f]{32}\Z')
+        self.assertEqual(0o644, stat.S_IMODE(os.stat(path).st_mode))
+        with open(path, 'rb') as handle:
+            self.assertEqual(b'<?php // new\n\xff', handle.read())
+
+    def test_a_file_that_could_not_be_written_is_not_left_behind(self):
+        real_fdopen = os.fdopen
+
+        class Full(object):
+            """A file on a disk that takes no more data."""
+
+            def __init__(self, handle):
+                self.handle = handle
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *unused):
+                self.handle.close()
+
+            def write(self, content):
+                self.handle.write(content[:3])
+                raise OSError(28, 'No space left on device')
+
+        with mock.patch.object(fileSystemSecurity.os, 'fdopen', lambda *a, **k: Full(real_fdopen(*a, **k))):
+            with self.assertRaises(OSError):
+                files.write_private_temp_file(b'<?php // new\n')
+            self.assertEqual([], os.listdir(self.folder))
+            with mock.patch.object(fileSystemSecurity.os, 'chmod', side_effect=OSError(1, 'Operation not permitted')):
+                with self.assertRaises(OSError):
+                    fileSystemSecurity.write_shared_temp_file(b'x', discard_on_failure=True)
+            self.assertEqual([], os.listdir(self.folder))
+
+    def test_replacing_reports_a_failed_write_and_leaves_no_file(self):
+        home = os.path.join(self.folder, 'home')
+        write(os.path.join(home, 'public_html', 'readme.txt'), b'read me\n')
+        site = SiteFiles('secaiuser', home, os.path.join(home, 'public_html'), runner=LocalRunner())
+        with mock.patch.object(fileSystemSecurity.os, 'fdopen', side_effect=OSError(28, 'No space left on device')):
+            with self.assertRaises(Refused) as caught:
+                site.replace_file('readme.txt', b'new\n', backup=False)
+        self.assertEqual('write_failed', caught.exception.code)
+        self.assertEqual(['home'], os.listdir(self.folder))
+        with open(os.path.join(home, 'public_html', 'readme.txt'), 'rb') as handle:
+            self.assertEqual(b'read me\n', handle.read())
 
 
 class PathTests(unittest.TestCase):

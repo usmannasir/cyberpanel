@@ -215,7 +215,8 @@ def write_private_temp_file(content):
     if not ready:
         from plogical.acl import ACLManager
         ACLManager.CreateSecureDir()
-    return write_shared_temp_file(content)
+    # Nobody else knows the name: a file that could not be written completely is removed there.
+    return write_shared_temp_file(content, discard_on_failure=True)
 
 
 def _inside(base, path):
