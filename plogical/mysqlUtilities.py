@@ -713,31 +713,79 @@ password=%s
             return False
 
     @staticmethod
+    def mayBecomeAdditionalUser(dbName, dbUser):
+        """True when a restore may make this account for the database although it is not registered for it yet."""
+        try:
+            from plogical import databaseAccounts
+            return (Databases.objects.filter(dbName=dbName).exists()
+                    and databaseAccounts.may_be_database_user(dbUser)
+                    and not databaseAccounts.registered_as_database_user(dbUser))
+        except BaseException:
+            return False
+
+    @staticmethod
+    def registerAdditionalUser(dbName, dbUser):
+        """Record a further user of a database; from then on the account is known as the database's own."""
+        try:
+            from databases.models import DatabasesUsers
+            DatabasesUsers.objects.create(owner=Databases.objects.get(dbName=dbName), username=dbUser)
+            return True
+        except BaseException:
+            return False
+
+    @staticmethod
     def restoreDatabaseUser(dbName, dbUser, password, dbHost):
-        # A backup lists every account that had a grant on the database when it
-        # was made. Only the accounts registered for this database are restored;
-        # any other account is left exactly as it is on this server.
+        """Restore one account a backup lists for a database; 1 when done or rightly left out, 0 when it failed.
+
+        A backup lists the accounts that had a grant on the database when it
+        was made. The accounts registered for the database are restored. A
+        further listed account is restored only when this server has no
+        account of that name at any host and the name may be a customer's
+        database user; it is then recorded as a user of the database. Any
+        other account is left exactly as it is on this server.
+        """
+        from plogical import databaseAccounts
+        note = logging.CyberCPLogFileWriter.writeToFile
         if not isinstance(dbUser, str) or not isinstance(dbHost, str) \
                 or not mysqlUtilities.ACCOUNT_HOST.fullmatch(dbHost):
-            logging.CyberCPLogFileWriter.writeToFile(
-                'A database account of %s was not restored: its host is not valid.' % dbName)
-            return 0
-        if not mysqlUtilities.isRegisteredAccount(dbName, dbUser):
-            logging.CyberCPLogFileWriter.writeToFile(
-                'The account %s listed in the backup of %s is not a registered user of that database and was '
-                'left as it is.' % (dbUser, dbName))
+            # A role has no host, and a host that is not an address, a name or
+            # a pattern is nothing an account can be made at.
+            note('An entry in the backup of %s was not restored: it does not name an account at a valid host.'
+                 % dbName)
             return 1
-        # Reuse an existing account only when it already has this database grant.
+        # An account of the server, or the account a panel user signs in to
+        # phpMyAdmin with, is never made or changed from a backup.
+        if databaseAccounts.is_reserved(dbUser):
+            note('The account %s listed in the backup of %s is not an account of a database and was not '
+                 'restored.' % (dbUser, dbName))
+            return 1
+        leftAsItIs = ('The account %s listed in the backup of %s is not a registered user of that database and '
+                      'was left as it is.' % (dbUser, dbName))
+        registered = mysqlUtilities.isRegisteredAccount(dbName, dbUser)
+        if not registered and not mysqlUtilities.mayBecomeAdditionalUser(dbName, dbUser):
+            note(leftAsItIs)
+            return 1
         connection, cursor = mysqlUtilities.setupConnection()
         if connection == 0:
             return 0
         try:
-            cursor.execute('SELECT User FROM mysql.user WHERE User = %s AND Host = %s', (dbUser, dbHost))
-            exists = bool(cursor.fetchall())
-            if exists and not databaseGrants.account_is_granted(cursor, dbName, dbUser, dbHost):
-                return 0
+            if registered:
+                # Reuse an existing account only when it already has this database grant.
+                cursor.execute('SELECT User FROM mysql.user WHERE User = %s AND Host = %s', (dbUser, dbHost))
+                exists = bool(cursor.fetchall())
+                if exists and not databaseGrants.account_is_granted(cursor, dbName, dbUser, dbHost):
+                    return 0
+            else:
+                # An account that exists here under this name, at any host, is somebody's already.
+                exists = False
+                if databaseAccounts.account_hosts(cursor, dbUser):
+                    note(leftAsItIs)
+                    return 1
         finally:
             connection.close()
+        if not registered and not mysqlUtilities.registerAdditionalUser(dbName, dbUser):
+            note(leftAsItIs)
+            return 1
         # A new account starts with a password nobody knows; the one from the
         # backup is set in the next step.
         if not exists and mysqlUtilities.createDatabase(dbName, dbUser, randomPassword.generate_pass(32), 0,
