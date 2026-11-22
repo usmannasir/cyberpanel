@@ -52,7 +52,7 @@ class PasswordFileReaderTests(unittest.TestCase):
         if path is not None:
             environment['CP_ADMIN_PASSWORD_FILE'] = str(path)
         return subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              universal_newlines=True, env=environment, timeout=20)
+                              encoding='utf-8', env=environment, timeout=20)
 
     def assert_refused(self, path, saying, *secrets):
         result = self.read(path)
@@ -154,7 +154,7 @@ class RootOnlyTestsAreMarkedTests(unittest.TestCase):
     a refusal would pass without having tested what it names."""
 
     def test_every_reader_test_that_makes_a_password_file_is_skipped_without_root(self):
-        tree = ast.parse(Path(__file__).read_text())
+        tree = ast.parse(Path(__file__).read_text(encoding='utf-8'))
         checked = []
         for cls in tree.body:
             if not isinstance(cls, ast.ClassDef) or cls.name not in ('PasswordFileReaderTests', 'InstallationTests'):
@@ -177,7 +177,7 @@ class MaskedArgumentTests(unittest.TestCase):
         script = function('Mask_Arguments') + ('Mask_Arguments "$@"\n'
                                                'for argument in "${Logged_Arguments[@]}"; do printf "%s\\n" "$argument"; done\n')
         result = subprocess.run(['bash', '-c', script, 'bash'] + list(arguments), stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, universal_newlines=True, timeout=20)
+                                stderr=subprocess.PIPE, encoding='utf-8', timeout=20)
         self.assertEqual('', result.stderr)
         return result.stdout.splitlines()
 
@@ -303,7 +303,7 @@ class PanelAccountTests(unittest.TestCase):
         self.assertNotIn('/etc/', source)
         self.assertNotIn('/usr/local/', source)
         result = subprocess.run(['bash', '-c', 'umask %s\n%s\nSet_Admin_Password' % (umask, source)],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=20,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', timeout=20,
                                 env={'PATH': os.environ['PATH'], 'Admin_Pass': password,
                                      'QA_STORED': str(self.stored), 'QA_STATUS': str(status)})
         self.assertEqual(('', ''), (result.stdout, result.stderr))
@@ -348,7 +348,7 @@ class PanelAccountTests(unittest.TestCase):
         self.assertEqual('600', mode_when_read)
 
     def test_the_password_is_part_of_one_command_only_and_only_for_an_older_tree(self):
-        source = (ROOT / 'cyberpanel.sh').read_text()
+        source = (ROOT / 'cyberpanel.sh').read_text(encoding='utf-8')
         carrying = [line.strip() for line in source.splitlines()
                     if 'Admin_Pass' in line and re.match(r'\s*(/|python|cyberpanel |curl|wget)', line)]
         self.assertEqual(['/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py '
@@ -358,7 +358,8 @@ class PanelAccountTests(unittest.TestCase):
         self.assertLess(fallback.index('\nelse\n'), fallback.index('--password "$Admin_Pass"'))
 
 
-LEGACY_HASH = 'import hashlib\nprint(hashlib.sha256(b"salt" + %r.encode()).hexdigest() + ":salt")\n'
+# The password is written in ASCII, so that it can be part of a command line in any locale.
+LEGACY_HASH = 'import hashlib\nprint(hashlib.sha256(b"salt" + %a.encode("utf-8")).hexdigest() + ":salt")\n'
 
 
 class AdminPasswordCheckTests(unittest.TestCase):
@@ -379,7 +380,8 @@ class AdminPasswordCheckTests(unittest.TestCase):
         (self.tree / 'django/__init__.py').write_text('def setup():\n    pass\n')
         (self.tree / 'CyberCP/settings.py').write_text('')
         (self.tree / 'bcrypt.py').write_text('')
-        (self.tree / 'plogical/hashPassword.py').write_text((ROOT / 'plogical/hashPassword.py').read_text())
+        (self.tree / 'plogical/hashPassword.py').write_text(
+            (ROOT / 'plogical/hashPassword.py').read_text(encoding='utf-8'), encoding='utf-8')
         (self.tree / 'loginSystem/models.py').write_text(
             'import json\nimport os\n\n\n'
             'class Row:\n    def __init__(self, password):\n        self.password = password\n\n\n'
@@ -394,7 +396,7 @@ class AdminPasswordCheckTests(unittest.TestCase):
 
     def stored_hash(self, password):
         return subprocess.run([sys.executable, '-c', LEGACY_HASH % password], stdout=subprocess.PIPE,
-                              universal_newlines=True, check=True).stdout.strip()
+                              encoding='utf-8', check=True).stdout.strip()
 
     def check(self, administrators, stored='absent'):
         self.administrators.write_text(json.dumps(administrators))
@@ -412,7 +414,7 @@ class AdminPasswordCheckTests(unittest.TestCase):
         self.assertNotIn('/etc/', source)
         self.assertNotIn('/usr/local/', source)
         result = subprocess.run(['bash', '-c', source + '\nAdmin_Password_Is_Set'], stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, universal_newlines=True, timeout=60,
+                                stderr=subprocess.PIPE, encoding='utf-8', timeout=60,
                                 env={'PATH': os.environ['PATH'], 'QA_ADMINISTRATORS': str(self.administrators)})
         self.assertEqual('', result.stdout)
         return result
@@ -543,7 +545,7 @@ class PasswordOutcomeTests(unittest.TestCase):
 
 class AdminPassScriptTests(unittest.TestCase):
     def setUp(self):
-        self.tree = parse_as_python_36((ROOT / 'plogical/adminPass.py').read_text())
+        self.tree = parse_as_python_36((ROOT / 'plogical/adminPass.py').read_text(encoding='utf-8'))
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.directory = directory.name
