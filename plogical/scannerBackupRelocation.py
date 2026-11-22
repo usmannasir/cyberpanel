@@ -49,7 +49,7 @@ MOVE = (
     'while [ -e "$b/from-$3-$n" ]||[ -L "$b/from-$3-$n" ];do n=$((n+1));done\n'
     'mv -n -T -- "$o" "$b/from-$3-$n"||exit 7\n'
     '[ -e "$o" ]||[ -L "$o" ]&&exit 7\n'
-    'echo "$b/from-$3-$n"\n')
+    'printf "%s\\n" "$b/from-$3-$n"\n')
 
 REASONS = {
     5: 'it is a link',

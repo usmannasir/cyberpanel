@@ -90,7 +90,7 @@ BACKUP_FOLDER = START + (
     'g "$H"||exit 8\n'
     'b=$p/' + BACKUP_DIRECTORY + '\n'
     'mkdir -m 700 "$b"\n'
-    'g "$b"&&[ "$p" = "$b" ]&&{ mkdir -m 700 "$T";g "./$T";}&&[ "$p" = "$b/$T" ]&&chmod 700 . ..&&echo "$p"\n')
+    'g "$b"&&[ "$p" = "$b" ]&&{ mkdir -m 700 "$T";g "./$T";}&&[ "$p" = "$b/$T" ]&&chmod 700 . ..&&printf "%s\\n" "$p"\n')
 
 # The copy is NAME.X.bak in that folder, which must be where it is asked for
 # and no link (status 3 otherwise). The copy is complete when it has the size
@@ -98,7 +98,7 @@ BACKUP_FOLDER = START + (
 # complete. A copy that is not complete is removed (status 5).
 BACKUP = FILE + (
     'dd iflag=nofollow,nonblock bs=64k if="$N"|(b=$h/' + BACKUP_DIRECTORY + '/$T\n'
-    'g "$b"&&[ "$p" = "$b" ]&&echo "$p"||exit 3\n'
+    'g "$b"&&[ "$p" = "$b" ]&&printf "%s\\n" "$p"||exit 3\n'
     'k=$N.$X.bak\n'
     'dd conv=excl bs=64k of="$k"\n'
     '[ "$(stat -c %s -- "$k")" = "$2" ]||{ rm -f -- "$k";exit 5;}\n'
