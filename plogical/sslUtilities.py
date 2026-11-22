@@ -892,8 +892,9 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
 
     `newWebsite` is set while a website is being created. Certificate files
     under its name can then only be left over from a deleted website of that
-    name, so a self-signed one among them is no reason to refuse: the new
-    website would have been given exactly that.
+    name. A self-signed certificate among them is replaced when no public one
+    can be issued: whoever had the earlier website may hold its key, and the
+    new website would have been given a fresh one anyway.
     """
     try:
         # Adding an alias changes the certificate names; renewing the parent's
@@ -1005,7 +1006,9 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
             pathToStoreSSLPrivKey = "/etc/letsencrypt/live/%s/privkey.pem" % (domain)
             pathToStoreSSLFullChain = "/etc/letsencrypt/live/%s/fullchain.pem" % (domain)
 
-            # Failed issuance must never overwrite existing certificate material.
+            # Failed issuance must never overwrite existing certificate material. The
+            # one exception is a self-signed certificate left under the name of a
+            # website that is being created.
             certificate_present = os.path.exists(pathToStoreSSLFullChain) or os.path.lexists(pathToStoreSSLFullChain)
             key_present = os.path.exists(pathToStoreSSLPrivKey) or os.path.lexists(pathToStoreSSLPrivKey)
             if certificate_present or key_present:
@@ -1013,40 +1016,46 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None, isHostname=
                 from datetime import datetime, timezone
                 metadata = {'outcome': 'existing_certificate',
                             'certificate_validity': 'unknown', 'retained_existing': True}
-                self_signed = False
+                replace_leftover = False
                 if not certificate_present or not key_present:
                     return [0, 'New SSL issuance failed. Existing certificate material is incomplete and has been preserved.', metadata]
                 try:
                     with open(pathToStoreSSLFullChain, 'rb') as certificate:
                         x509 = OpenSSL.crypto.load_certificate(
                             OpenSSL.crypto.FILETYPE_PEM, certificate.read())
-                    starts = datetime.strptime(x509.get_notBefore().decode('ascii'), '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
-                    expires = datetime.strptime(x509.get_notAfter().decode('ascii'), '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
-                    now = datetime.now(timezone.utc)
-                    validity = 'expired' if now >= expires else ('not_yet_valid' if now < starts else 'valid')
-                    metadata['certificate_validity'] = validity
-                    if validity != 'valid':
-                        return [0, 'New SSL issuance failed. The existing certificate is %s and has been preserved.' % validity, metadata]
-                    if sslUtilities.isStagingCertificate(x509):
-                        return [0, 'New SSL issuance failed. The existing staging certificate has been preserved and is not trusted.', metadata]
-                    if x509.get_issuer().get_components() == x509.get_subject().get_components():
-                        if not newWebsite:
+                    self_signed = x509.get_issuer().get_components() == x509.get_subject().get_components()
+                    if newWebsite and self_signed:
+                        replace_leftover = True
+                    else:
+                        starts = datetime.strptime(x509.get_notBefore().decode('ascii'), '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
+                        expires = datetime.strptime(x509.get_notAfter().decode('ascii'), '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
+                        now = datetime.now(timezone.utc)
+                        validity = 'expired' if now >= expires else ('not_yet_valid' if now < starts else 'valid')
+                        metadata['certificate_validity'] = validity
+                        if validity != 'valid':
+                            return [0, 'New SSL issuance failed. The existing certificate is %s and has been preserved.' % validity, metadata]
+                        if sslUtilities.isStagingCertificate(x509):
+                            return [0, 'New SSL issuance failed. The existing staging certificate has been preserved and is not trusted.', metadata]
+                        if self_signed:
                             return [0, 'New SSL issuance failed. The existing self-signed certificate has been preserved.', metadata]
-                        self_signed = True
                 except Exception as error:
                     logging.CyberCPLogFileWriter.writeToFile(
                         'Could not validate existing certificate for %s: %s' % (domain, error))
                     return [0, 'New SSL issuance failed. The existing certificate could not be validated and has been preserved.', metadata]
 
-                if sslUtilities.installSSLForDomain(domain) != 1:
-                    return [0, 'New SSL issuance failed and the existing certificate could not be installed. Existing certificate files have been preserved.', metadata]
-                if self_signed:
-                    logging.CyberCPLogFileWriter.writeToFile(
-                        "Self signed SSL left by an earlier website installed for " + domain + ".")
-                    return [2, "Public SSL issuance failed. A self-signed certificate was installed.", {"outcome": "self_signed", "certificate_validity": "valid"}]
-                warning = 'New SSL issuance failed. The existing date-valid certificate remains installed; its names and public TLS response should be checked.'
-                logging.CyberCPLogFileWriter.writeToFile('%s: %s' % (domain, warning))
-                return [2, warning, metadata]
+                if not replace_leftover:
+                    if sslUtilities.installSSLForDomain(domain) != 1:
+                        return [0, 'New SSL issuance failed and the existing certificate could not be installed. Existing certificate files have been preserved.', metadata]
+                    warning = 'New SSL issuance failed. The existing date-valid certificate remains installed; its names and public TLS response should be checked.'
+                    logging.CyberCPLogFileWriter.writeToFile('%s: %s' % (domain, warning))
+                    return [2, warning, metadata]
+
+                # The files go first, so that the new key and certificate are
+                # files of their own and nothing is written through a link.
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Replacing the self-signed certificate an earlier website left for ' + domain + '.')
+                os.remove(pathToStoreSSLPrivKey)
+                os.remove(pathToStoreSSLFullChain)
 
             os.makedirs(os.path.dirname(pathToStoreSSLPrivKey), exist_ok=True)
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain

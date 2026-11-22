@@ -14,7 +14,10 @@ import os
 import re
 import shlex
 import stat
+import sys
 import tempfile
+import threading
+import time
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -29,7 +32,7 @@ from cryptography.x509.oid import NameOID
 
 import plogical.httpsListenerMapping as subject
 from plogical.domainAliasUtilities import ensure_http_vhost_mapping
-from plogical.httpListenerMapping import rewrite_config
+from plogical.httpListenerMapping import config_lock, rewrite_config, update_http_listener_mappings
 from plogical.httpsListenerMapping import (
     ChangeRefused, certificate_files, certificate_serves, classify_listener_vhosts, ensure_https_listeners,
     ensure_vhost_certificate, holds_original, https_listener_vhosts, install_vhost_certificate,
@@ -466,7 +469,9 @@ class Server(object):
         return repair_https_listeners(apply or write_like_the_upgrade, self.notes.append, self.root, self.certificates)
 
     def files(self):
-        return {str(path): path.read_bytes() for path in Path(self.root).rglob('*') if path.is_file()}
+        """Every file of the configuration tree apart from the locks that order rewrites."""
+        return {str(path): path.read_bytes() for path in Path(self.root).rglob('*')
+                if path.is_file() and not path.name.endswith('.lock')}
 
     def assert_served(self, case, *websites):
         """Both listeners map exactly these websites and each has one vhssl block for its own certificate."""
@@ -745,18 +750,97 @@ class UpgradeRepairTests(ServerTestCase):
         self.server.listener('SSL', '*:443', 'a.test', map_line('a.test'), *both)
         self.server.listener('SSL IPv6', '[ANY]:443', 'b.test', map_line('b.test'), *both)
 
-    def test_each_block_is_a_change_of_its_own_and_the_maps_follow(self):
+    def recorder(self, refuse=lambda changes: False):
+        """An `apply` that notes the files of every change and refuses those the predicate picks."""
+        seen = []
+
+        def apply(changes):
+            seen.append([os.path.relpath(path, os.path.join(self.server.root, 'conf')) for path in changes])
+            if refuse(changes):
+                raise ChangeRefused('fixture refusal')
+            write_like_the_upgrade(changes)
+
+        return apply, seen
+
+    def many(self, count):
+        """`count` websites that are on the IPv4 listener only and have no vhssl block."""
+        websites = ['s%d.test' % number for number in range(1, count + 1)]
+        for website in websites:
+            self.server.add(website)
+        self.server.listener('SSL', '*:443', websites[0], *[map_line(website) for website in websites])
+        self.server.listener('SSL IPv6', '[ANY]:443', websites[0], '')
+        return websites
+
+    def test_blocks_and_maps_are_one_change(self):
         self.one_family_each()
         before = self.server.files()
         changes = []
         completed, blocks = self.server.repair(changes.append)
         self.assertEqual(self.server.files(), before)
         self.assertEqual([list(change) for change in changes],
-                         [[self.server.vhost('a.test')], [self.server.vhost('b.test')], [self.server.main]])
+                         [[self.server.vhost('a.test'), self.server.vhost('b.test'), self.server.main]])
         self.assertEqual((completed, blocks), ([('SSL', 'b.test'), ('SSL IPv6', 'a.test')], ['a.test', 'b.test']))
         self.assertEqual(changes[0][self.server.vhost('a.test')],
                          (VHOST_CONFIG, VHOST_CONFIG + self.server.vhssl('a.test')))
-        self.assertTrue(all(holds_original(change) for change in changes))
+        self.assertTrue(holds_original(changes[0]))
+
+    def test_hundreds_of_websites_are_still_one_change(self):
+        websites = self.many(150)
+        apply, seen = self.recorder()
+        completed, blocks = self.server.repair(apply)
+        self.assertEqual(len(seen), 1)
+        self.assertEqual(len(seen[0]), 151)
+        self.assertEqual(blocks, websites)
+        self.assertEqual(completed, [('SSL IPv6', website) for website in websites])
+        self.assertEqual(self.server.notes, [])
+
+    def test_one_bad_website_is_found_and_the_rest_goes_in_as_one_change_again(self):
+        websites = self.many(6)
+        bad = os.path.join('vhosts', 's2.test', 'vhost.conf')
+        apply, seen = self.recorder(lambda changes: self.server.vhost('s2.test') in changes)
+        completed, blocks = self.server.repair(apply)
+        block = lambda number: os.path.join('vhosts', 's%d.test' % number, 'vhost.conf')
+        self.assertEqual(seen, [
+            [block(number) for number in range(1, 7)] + ['httpd_config.conf'],    # everything: refused
+            [block(number) for number in range(1, 7)],                            # all blocks: refused
+            [block(1)], [bad], [block(3)],                                        # one at a time: s2 refused
+            [block(4), block(5), block(6)],                                       # the rest as one
+            ['httpd_config.conf'],
+        ])
+        self.assertEqual(blocks, [website for website in websites if website != 's2.test'])
+        self.assertEqual(sorted(vhost for _, vhost in completed), sorted(blocks))
+        self.assertEqual(Path(self.server.vhost('s2.test')).read_text(), VHOST_CONFIG)
+        self.assertEqual(len(self.server.notes), 2)
+        self.assertIn('The repair as one change was refused', self.server.notes[0])
+        self.assertEqual(self.server.notes[1], 's2.test was left without its own certificate block: fixture refusal')
+
+    def test_fault_that_refuses_every_change_is_not_retried_for_every_website(self):
+        self.many(40)
+        before = self.server.files()
+        apply, seen = self.recorder(lambda changes: True)
+        with self.assertRaisesRegex(ChangeRefused, 'stopped after 3 website changes in a row were refused; '
+                                                   '37 more website\\(s\\) and the listener maps were not tried'):
+            self.server.repair(apply)
+        self.assertEqual([len(change) for change in seen], [41, 40, 1, 1, 1])
+        self.assertEqual(self.server.files(), before)
+        self.assertEqual(len(self.server.notes), 4)
+
+    def test_refused_maps_cost_three_changes_whatever_the_number_of_websites(self):
+        websites = self.many(40)
+        apply, seen = self.recorder(lambda changes: self.server.main in changes)
+        with self.assertRaisesRegex(ChangeRefused, 'fixture refusal'):
+            self.server.repair(apply)
+        self.assertEqual([len(change) for change in seen], [41, 40, 1])
+        for website in websites:
+            self.assertEqual(Path(self.server.vhost(website)).read_text().count('vhssl'), 1)
+
+    def test_three_bad_websites_apart_from_each_other_do_not_end_the_repair(self):
+        websites = self.many(9)
+        bad = {self.server.vhost('s%d.test' % number) for number in (1, 4, 7)}
+        apply, seen = self.recorder(lambda changes: bool(bad.intersection(changes)))
+        completed, blocks = self.server.repair(apply)
+        self.assertEqual(blocks, ['s2.test', 's3.test', 's5.test', 's6.test', 's8.test', 's9.test'])
+        self.assertEqual(sorted(vhost for _, vhost in completed), blocks)
 
     def test_repair_serves_every_website_on_both_families_and_is_final(self):
         self.one_family_each()
@@ -779,7 +863,7 @@ class UpgradeRepairTests(ServerTestCase):
         self.assertEqual((completed, blocks), ([('SSL', 'b.test')], ['b.test']))
         self.assertEqual(Path(self.server.vhost('a.test')).read_text(), VHOST_CONFIG)
         self.assertEqual(mapped(self.server.config(), 'SSL IPv6'), [('b.test', 'b.test'), ('c.test', 'c.test')])
-        self.assertEqual(self.server.notes, ['a.test was left without its own certificate block: fixture refusal'])
+        self.assertEqual(self.server.notes[1:], ['a.test was left without its own certificate block: fixture refusal'])
 
     def test_website_under_a_linked_directory_is_left_out_and_the_rest_repaired(self):
         self.one_family_each()
@@ -812,7 +896,7 @@ class UpgradeRepairTests(ServerTestCase):
 
         with self.assertRaisesRegex(RuntimeError, 'unavailable after configuration reload'):
             self.server.repair(apply)
-        self.assertEqual(seen, [[self.server.vhost('a.test')]])
+        self.assertEqual(seen, [[self.server.vhost('a.test'), self.server.vhost('b.test'), self.server.main]])
 
     def test_refused_map_change_is_passed_on_after_the_blocks_were_given(self):
         self.one_family_each()
@@ -998,7 +1082,8 @@ class UpgradeStepTests(ServerTestCase):
 
     def test_repair_goes_through_the_validated_configuration_change(self):
         self.step()
-        self.assertEqual(self.apply.call_count, 3)
+        self.assertEqual(self.apply.call_count, 1)
+        self.assertEqual(self.running.call_count, 1)
         self.server.assert_served(self, 'a.test', 'b.test')
         self.assertIn('2 mapping(s) completed, 2 website(s) given their own certificate block', self.message())
         self.assertIn('\n  SSL: b.test', self.message())
@@ -1079,26 +1164,43 @@ class LeftoverCertificateTests(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
-        self.live = directory.name
+        self.live = os.path.join(directory.name, 'live')
+        self.elsewhere = os.path.join(directory.name, 'elsewhere.pem')
+        os.mkdir(self.live)
         self.install = mock.Mock(return_value=1)
-        self.openssl = mock.Mock(return_value=0)
+        self.openssl = mock.Mock(side_effect=self.self_sign)
         panel = SimpleNamespace(obtainSSLForADomain=mock.Mock(return_value=0), installSSLForDomain=self.install,
                                 isStagingCertificate=lambda certificate: False)
 
-        def here(path):
-            return path.replace('/etc/letsencrypt/live', self.live)
-
-        def under_live(check):
-            return lambda path: path.startswith('/etc/letsencrypt/live') and check(here(path))
+        def under_live(action):
+            return lambda path: path.startswith('/etc/letsencrypt/live') and action(self.here(path))
 
         files = SimpleNamespace(
             path=SimpleNamespace(exists=under_live(os.path.exists), lexists=under_live(os.path.lexists),
                                  dirname=os.path.dirname),
-            makedirs=lambda path, exist_ok=False: os.makedirs(here(path), exist_ok=exist_ok))
-        namespace = {'os': files, 'open': lambda path, *mode: open(here(path), *mode), 'shlex': shlex,
+            makedirs=lambda path, exist_ok=False: os.makedirs(self.here(path), exist_ok=exist_ok),
+            remove=lambda path: os.remove(self.here(path)))
+        namespace = {'os': files, 'open': lambda path, *mode: open(self.here(path), *mode), 'shlex': shlex,
                      'subprocess': SimpleNamespace(call=self.openssl), 'sslUtilities': panel,
                      'logging': mock.MagicMock()}
         self.issue = compiled(function('sslUtilities.py', 'issueSSLForDomain'), namespace)
+
+    def here(self, path):
+        return path.replace('/etc/letsencrypt/live', self.live)
+
+    def self_sign(self, command):
+        """Stand in for `openssl req -x509`: a new key and a certificate that names itself as issuer."""
+        key = ec.generate_private_key(ec.SECP256R1(), default_backend())
+        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'a.test')])
+        now = datetime.now(timezone.utc)
+        pem = (x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(key.public_key())
+               .serial_number(x509.random_serial_number()).not_valid_before(now - timedelta(days=1))
+               .not_valid_after(now + timedelta(days=3650)).sign(key, hashes.SHA256(), default_backend())
+               .public_bytes(serialization.Encoding.PEM))
+        Path(self.here(command[command.index('-keyout') + 1])).write_bytes(key.private_bytes(
+            serialization.Encoding.PEM, serialization.PrivateFormat.TraditionalOpenSSL, serialization.NoEncryption()))
+        Path(self.here(command[command.index('-out') + 1])).write_bytes(pem)
+        return 0
 
     def leave(self, pem):
         os.makedirs(os.path.join(self.live, 'a.test'), exist_ok=True)
@@ -1112,24 +1214,38 @@ class LeftoverCertificateTests(unittest.TestCase):
     def create(self):
         return self.issue('a.test', 'owner@example.test', '/home/a.test/public_html', newWebsite=True)
 
+    FIRST_CREATION = [2, 'Public SSL issuance failed. A self-signed certificate was installed.',
+                      {'outcome': 'self_signed', 'certificate_validity': 'valid'}]
+
     def test_first_creation_gets_a_self_signed_certificate(self):
-        result = self.create()
-        self.assertEqual(result[:2], [2, 'Public SSL issuance failed. A self-signed certificate was installed.'])
-        self.assertEqual(result[2]['outcome'], 'self_signed')
+        self.assertEqual(self.create(), self.FIRST_CREATION)
         self.assertEqual(self.openssl.call_count, 1)
         self.install.assert_called_once_with('a.test')
 
-    def test_creation_over_a_self_signed_leftover_gets_the_same_answer_and_keeps_the_files(self):
-        first = self.create()
-        self.openssl.reset_mock()
-        self.install.reset_mock()
-        before = self.leave(certificate('a.test', ends=3650))
-        self.assertEqual(self.create(), first)
-        self.assertEqual(self.left(), before)
-        self.openssl.assert_not_called()
-        self.install.assert_called_once_with('a.test')
+    def test_creation_over_a_self_signed_leftover_gets_a_new_key_and_certificate(self):
+        for ends in (3650, -30):
+            with self.subTest(ends=ends):
+                self.setUp()
+                before = self.leave(certificate('a.test', starts=-400, ends=ends))
+                self.assertEqual(self.create(), self.FIRST_CREATION)
+                after = self.left()
+                self.assertNotEqual(after['privkey.pem'], before['privkey.pem'])
+                self.assertNotEqual(after['fullchain.pem'], before['fullchain.pem'])
+                self.assertNotIn(KEY_PEM.splitlines()[1], after['privkey.pem'])
+                self.assertEqual(self.openssl.call_count, 1)
+                self.install.assert_called_once_with('a.test')
 
-    def test_creation_over_a_real_leftover_installs_it_and_never_replaces_it(self):
+    def test_replacing_a_leftover_does_not_write_through_a_link(self):
+        self.leave(certificate('a.test', ends=3650))
+        Path(self.elsewhere).write_bytes(KEY_PEM)
+        key = Path(self.live, 'a.test', 'privkey.pem')
+        key.unlink()
+        os.symlink(self.elsewhere, str(key))
+        self.assertEqual(self.create(), self.FIRST_CREATION)
+        self.assertFalse(key.is_symlink())
+        self.assertEqual(Path(self.elsewhere).read_bytes(), KEY_PEM)
+
+    def test_creation_over_a_leftover_from_a_certificate_authority_installs_and_keeps_it(self):
         before = self.leave(certificate('a.test', issuer='Fixture CA'))
         result = self.create()
         self.assertEqual(result[0], 2)
@@ -1139,23 +1255,27 @@ class LeftoverCertificateTests(unittest.TestCase):
         self.openssl.assert_not_called()
         self.install.assert_called_once_with('a.test')
 
-    def test_creation_over_an_expired_leftover_is_refused_and_keeps_the_files(self):
-        for issuer in (None, 'Fixture CA'):
-            with self.subTest(issuer=issuer):
-                self.setUp()
-                before = self.leave(certificate('a.test', starts=-400, ends=-30, issuer=issuer))
-                result = self.create()
-                self.assertEqual(result[0], 0)
-                self.assertIn('expired and has been preserved', result[1])
-                self.assertEqual(self.left(), before)
-                self.openssl.assert_not_called()
-                self.install.assert_not_called()
+    def test_creation_over_an_expired_leftover_from_a_certificate_authority_is_refused_and_keeps_it(self):
+        before = self.leave(certificate('a.test', starts=-400, ends=-30, issuer='Fixture CA'))
+        result = self.create()
+        self.assertEqual(result[0], 0)
+        self.assertIn('expired and has been preserved', result[1])
+        self.assertEqual(self.left(), before)
+        self.openssl.assert_not_called()
+        self.install.assert_not_called()
 
-    def test_creation_fails_when_the_leftover_cannot_be_installed(self):
+    def test_creation_over_files_that_cannot_be_read_as_a_certificate_keeps_them(self):
+        before = self.leave(b'fixture\n')
+        result = self.create()
+        self.assertEqual(result[0], 0)
+        self.assertIn('could not be validated and has been preserved', result[1])
+        self.assertEqual(self.left(), before)
+        self.openssl.assert_not_called()
+
+    def test_creation_fails_when_the_new_certificate_cannot_be_installed(self):
         self.leave(certificate('a.test', ends=3650))
         self.install.return_value = 0
         self.assertEqual(self.create()[0], 0)
-        self.openssl.assert_not_called()
 
     def test_issue_ssl_on_an_existing_website_still_reports_the_self_signed_certificate(self):
         before = self.leave(certificate('a.test', ends=3650))
@@ -1185,6 +1305,136 @@ class LeftoverCertificateTests(unittest.TestCase):
         self.assertEqual(flagged['_createDomain'], [True])
         self.assertEqual(sorted(name for name, flags in flagged.items() if any(flags)),
                          ['_createDomain', 'createVirtualHost'])
+
+
+class RewriteLockTests(unittest.TestCase):
+    """Rewrites of one configuration file follow each other; none is lost and none waits for ever."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.path = os.path.join(directory.name, 'httpd_config.conf')
+        Path(self.path).write_text(server())
+
+    def test_concurrent_rewrites_all_take_effect(self):
+        started = threading.Barrier(8)
+
+        def add(number):
+            def transform(text):
+                time.sleep(0.02)    # long enough for every other thread to read the same text without the lock
+                return text + '# change %d\n' % number
+            started.wait()
+            rewrite_config(self.path, transform)
+
+        threads = [threading.Thread(target=add, args=(number,)) for number in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        text = Path(self.path).read_text()
+        self.assertEqual(sorted(line for line in text.splitlines() if line.startswith('# change ')),
+                         ['# change %d' % number for number in range(8)])
+        self.assertTrue(text.startswith(server()))
+
+    def test_concurrent_website_maps_are_all_kept(self):
+        websites = ['w%d.test' % number for number in range(6)]
+        threads = [threading.Thread(target=update_http_listener_mappings, args=(self.path, website))
+                   for website in websites]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(sorted(vhost for vhost, _ in mapped(Path(self.path).read_text(), 'Default')),
+                         ['Example'] + websites)
+
+    def test_wait_for_the_lock_is_bounded_and_the_file_is_left_alone(self):
+        before = Path(self.path).read_bytes()
+        with config_lock(self.path):
+            began = time.monotonic()
+            with self.assertRaisesRegex(TimeoutError, 'is being changed by another operation; gave up after 0.3 seconds'):
+                rewrite_config(self.path, lambda text: text + '# never written\n', wait=0.3)
+            self.assertLess(time.monotonic() - began, 5)
+        self.assertEqual(Path(self.path).read_bytes(), before)
+        self.assertTrue(rewrite_config(self.path, lambda text: text + '# written\n', wait=0.3))
+
+    def test_lock_is_released_when_the_transform_fails(self):
+        with self.assertRaises(RuntimeError):
+            rewrite_config(self.path, mock.Mock(side_effect=RuntimeError('fixture')))
+        self.assertTrue(rewrite_config(self.path, lambda text: text + '# written\n', wait=0.3))
+
+    def test_lock_stays_beside_the_file_and_nothing_else_does(self):
+        rewrite_config(self.path, lambda text: text + '# written\n')
+        self.assertEqual(sorted(os.listdir(os.path.dirname(self.path))),
+                         ['.httpd_config.conf.lock', 'httpd_config.conf'])
+
+    def test_failed_replacement_keeps_the_file_and_leaves_no_temporary_file(self):
+        before = Path(self.path).read_bytes()
+        os.chmod(self.path, 0o640)
+        with mock.patch('plogical.httpListenerMapping.os.replace', side_effect=OSError('fixture')):
+            with self.assertRaises(OSError):
+                update_http_listener_mappings(self.path, 'new.test')
+        self.assertEqual(Path(self.path).read_bytes(), before)
+        self.assertEqual(sorted(os.listdir(os.path.dirname(self.path))),
+                         ['.httpd_config.conf.lock', 'httpd_config.conf'])
+        update_http_listener_mappings(self.path, 'new.test')
+        self.assertEqual(stat.S_IMODE(os.stat(self.path).st_mode), 0o640)
+        self.assertEqual(Path(self.path).read_text().count('new.test new.test'), 2)
+
+    def test_certificate_install_that_cannot_get_the_lock_fails_with_the_reason(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        machine = Server(directory.name)
+        machine.add('a.test')
+        before = machine.files()
+        with config_lock(machine.main), mock.patch('plogical.httpListenerMapping.LOCK_WAIT', 0.2):
+            with self.assertRaisesRegex(TimeoutError, 'httpd_config.conf is being changed by another operation'):
+                machine.install('a.test')
+        self.assertEqual(machine.files()[machine.main], before[machine.main])
+        machine.install('a.test')
+        machine.assert_served(self, 'a.test')
+
+
+class CloudUpgradeTests(unittest.TestCase):
+    """The upgrade the platform starts through the cloud API."""
+
+    def setUp(self):
+        tree = ast.parse(Path(__file__).with_name('CyberPanelUpgrade.py').read_text())
+        tree.body = [node for node in tree.body if isinstance(node, ast.ClassDef)]
+        namespace = {'os': SimpleNamespace(path=SimpleNamespace(lexists=lambda path: False))}
+        exec(compile(tree, 'CyberPanelUpgrade.py', 'exec'), namespace)
+        self.cloud = namespace['UpgradeCyberPanel'].__new__(namespace['UpgradeCyberPanel'])
+        self.cloud.branch = 'v3.0.14'
+        self.cloud.PostStatus = mock.Mock()
+        self.upgrade = mock.Mock()
+        self.upgrade.downloadAndUpgrade.return_value = (1, None)
+        upgrade_module = SimpleNamespace(Upgrade=self.upgrade)
+        firewall = SimpleNamespace(CSF_UPGRADE_MESSAGE='fixture')
+        modules = mock.patch.dict(sys.modules, {'plogical.upgrade': upgrade_module,
+                                                'cyberpanel_firewall_migration': firewall})
+        modules.start()
+        self.addCleanup(modules.stop)
+
+    def statuses(self):
+        return [call[0][0] for call in self.cloud.PostStatus.call_args_list]
+
+    def test_upgrade_runs_to_the_end(self):
+        self.assertNotEqual(self.cloud.UpgardeNow(), 0)
+        self.upgrade.reconcileHTTPSListenerMaps.assert_called_once_with()
+        self.upgrade.upgradeVersion.assert_called_once_with()
+        self.assertTrue(self.statuses()[-1].endswith('[200]'))
+
+    def test_failed_openlitespeed_recovery_is_posted_as_the_failure_of_the_upgrade(self):
+        for step in ('sensitiveFileProtectionMigration', 'reconcileHTTPSListenerMaps'):
+            with self.subTest(step=step):
+                self.setUp()
+                getattr(self.upgrade, step).side_effect = RuntimeError(
+                    'OpenLiteSpeed configuration migration failed: OpenLiteSpeed is unavailable after configuration reload')
+                self.assertEqual(self.cloud.UpgardeNow(), 0)
+                self.assertEqual(self.statuses()[-1], 'OpenLiteSpeed configuration migration failed, error OpenLiteSpeed '
+                                 'configuration migration failed: OpenLiteSpeed is unavailable after configuration '
+                                 'reload. [404]')
+                self.upgrade.fixPermissions.assert_not_called()
+                self.upgrade.upgradeVersion.assert_not_called()
 
 
 

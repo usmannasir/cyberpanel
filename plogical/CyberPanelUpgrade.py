@@ -84,8 +84,22 @@ class UpgradeCyberPanel:
         Upgrade.enableServices()
         Upgrade.someDirectories()
         Upgrade.GeneralMigrations()
-        Upgrade.sensitiveFileProtectionMigration()
-        Upgrade.reconcileHTTPSListenerMaps()
+
+        # Each of these two steps handles its own errors and lets one thing
+        # out: an OpenLiteSpeed configuration change the server could not be
+        # brought back from. That ends the upgrade here and is reported like
+        # every other failure of it.
+        #
+        # This script and the Upgrade class it imported belong to the release
+        # that was installed when the upgrade began. A step that a release
+        # adds to this list therefore first runs on the upgrade after the one
+        # that installs it.
+        try:
+            Upgrade.sensitiveFileProtectionMigration()
+            Upgrade.reconcileHTTPSListenerMaps()
+        except Exception as error:
+            self.PostStatus('OpenLiteSpeed configuration migration failed, error %s. [404]' % (error))
+            return 0
 
         ## Upgrade version
 

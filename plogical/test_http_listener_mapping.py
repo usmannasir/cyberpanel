@@ -57,7 +57,8 @@ class HTTPListenerTests(unittest.TestCase):
                 with self.assertRaises(OSError):
                     update_http_listener_mappings(str(path), 'new.test')
             self.assertEqual(path.read_text(), CONFIG)
-            self.assertEqual(list(Path(tmp).iterdir()), [path])
+            # Only the lock that orders rewrites of the file stays beside it.
+            self.assertEqual(sorted(Path(tmp).iterdir()), [path.with_name('.httpd_config.conf.lock'), path])
             update_http_listener_mappings(str(path), 'new.test')
             self.assertEqual(path.stat().st_mode & 0o777, 0o640)
             self.assertEqual(path.read_text().count('new.test new.test'), 3)
