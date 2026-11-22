@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import MagicMock, patch
 
+from IncBackups import mailArchive
 from plogical.backupV2Repository import (
     own_mailbox,
     restore_command,
@@ -39,10 +40,15 @@ class RestoreTargetTests(unittest.TestCase):
                 ('/home/example.com/public_html/wp-content', ('files', '/home/example.com/public_html/wp-content')),
                 ('/home/example.com/public_html/My Photos', ('files', '/home/example.com/public_html/My Photos')),
                 ('/home/backup/example.com/config.json', ('files', '/home/backup/example.com/config.json')),
+                # Mail as it is stored now: one archive, named after the website.
+                ('vmail-example.com.tar', ('mailarchive', 'vmail-example.com.tar')),
+                # Mail as earlier versions stored it. It is recognised so that
+                # the restore can say why it is not done.
                 ('/home/vmail/example.com', ('mail', '/home/vmail/example.com')),
                 ('/home/vmail/example.com/info/Maildir', ('mail', '/home/vmail/example.com/info/Maildir')),
                 ('exam_wp.sql', ('database', 'exam_wp'))):
             self.assertEqual(expected, restore_target(path, DOMAIN), path)
+        self.assertEqual('vmail-example.com.tar', mailArchive.archive_name(DOMAIN))
 
     def test_paths_outside_the_site_are_refused(self):
         for path in ('/home/other.com', '/home/example.com.evil', '/home/example.comx/public_html',
@@ -52,6 +58,9 @@ class RestoreTargetTests(unittest.TestCase):
                      'home/example.com', '/etc', '/', '/home', '/home/backup/example.com',
                      '/home/backup/other.com/config.json', '/home/backup/example.com/other.json',
                      '/home/example.com/x\n/etc', '/home/example.com/x\ty', '/home/example.com/\x00',
+                     'vmail-other.com.tar', 'vmail-example.com.evil.tar', '/vmail-example.com.tar',
+                     'vmail-example.com.tar/x', 'vmail-example.com.tar/../x', './vmail-example.com.tar',
+                     'vmail-.tar', 'vmail-example.com.tar\n',
                      '', None, 7, ['/home/example.com']):
             with self.assertRaises(ValueError, msg=repr(path)):
                 restore_target(path, DOMAIN)
@@ -120,9 +129,18 @@ class RestoreRoutineTests(unittest.TestCase):
         }
         self.statuses = []
 
+    def function(self, name):
+        """A method of the class as a plain function."""
+        method = self.methods[name]
+        method.decorator_list = []
+        namespace = {}
+        exec(compile(ast.Module(body=[method], type_ignores=[]), 'Backupsv2.py', 'exec'), namespace)
+        return namespace[name]
+
     def routine(self, name, data):
         status = type('CPBackupsV2', (), {'FAILED': 0, 'RUNNING': 3, 'COMPLETED': 1,
-                                          'FetchCurrentTimeStamp': staticmethod(lambda: '0')})
+                                          'FetchCurrentTimeStamp': staticmethod(lambda: '0'),
+                                          'StatusText': staticmethod(self.function('StatusText'))})
         namespace = dict(os=SimpleNamespace(path=SimpleNamespace(exists=lambda path: True)), json=json,
                          time=MagicMock(), logging=MagicMock(), ProcessUtilities=self.root,
                          mysqlUtilities=SimpleNamespace(mysqlUtilities=self.mysql,
@@ -165,17 +183,108 @@ class RestoreRoutineTests(unittest.TestCase):
         self.assertEqual(restore_command('/home/example.com/incrementalbackups', SNAPSHOT,
                                          '/home/example.com/public_html'), command)
 
-    def test_only_the_sites_own_mail_directory_is_restored_with_privilege(self):
-        self.root.outputExecutioner.side_effect = ['10\n', '5000\n', (1, 'restored')]
-        self.routine('InitiateRestore', dict(snapshotid=SNAPSHOT, path='/home/vmail/example.com/info'))
-        command, user = self.root.outputExecutioner.call_args_list[-1][0][:2]
-        self.assertIsNone(user)
-        self.assertTrue(command.endswith(restore_command('/home/example.com/incrementalbackups', SNAPSHOT,
-                                                         '/home/vmail/example.com/info')))
+    def restores(self):
+        """The commands that restore something, apart from the questions about disk space and the working folder."""
+        return [command for command in self.commands()
+                if 'rustic' in command or 'rclone' in command or mailArchive.PROGRAM in command]
+
+    def test_mail_archive_is_restored_by_the_helper_under_the_two_accounts(self):
+        self.root.outputExecutioner.side_effect = [
+            '10\n', '5000\n',
+            '[mail-archive] restored 4 mail files written, 32 index files of Dovecot left as they are on the server\n']
+        self.assertEqual(1, self.routine('InitiateRestore', dict(snapshotid=SNAPSHOT, path='vmail-example.com.tar')))
+
+        call = self.root.outputExecutioner.call_args_list[-1]
+        # The helper is started with privilege, to start the two ends and for nothing else.
+        self.assertEqual(1, len(call[0]))
+        self.assertEqual({}, call[1])
+        command = call[0][0]
+        self.assertEqual(mailArchive.helper_command('restore', DOMAIN, 'examp1234',
+                                                    '/home/example.com/incrementalbackups', program='rustic',
+                                                    snapshot=SNAPSHOT), command)
+        self.assertEqual([command], self.restores())
+        words = shlex.split(command)
+        self.assertEqual([mailArchive.PYTHON, mailArchive.PROGRAM, 'restore'], words[:3])
+        options = dict(zip(words[3::2], words[4::2]))
+        # rustic reads the repository as the website's account, with that
+        # account's own storage settings; the mail account writes the mail.
+        self.assertEqual({'--domain': DOMAIN, '--account': 'examp1234', '--program': 'rustic',
+                          '--repository': '/home/example.com/incrementalbackups', '--snapshot': SNAPSHOT}, options)
+        self.assertEqual('vmail', mailArchive.MAIL_ACCOUNT)
+        self.assertNotIn('RCLONE_CONFIG', command)
+        # What is unpacked is named by the website, not by the request.
+        self.assertNotIn('vmail-example.com.tar', command)
+
+        self.assertEqual(('Mail restored: 4 mail files written; 32 index files of Dovecot left as they are on the '
+                          'server..,90', 3), self.statuses[-2])
+        self.assertEqual(('Completed', 1), self.statuses[-1])
+
+    def test_mail_archive_that_is_not_restored_fails_the_restore(self):
+        for said in ('[mail-archive] failed No mail archive could be read from snapshot [200], x. '
+                     'Nothing was written.\n', 'Traceback (most recent call last):\n', '', None):
+            self.root.reset_mock()
+            self.statuses = []
+            self.root.outputExecutioner.side_effect = ['10\n', '5000\n', said]
+            self.assertEqual(0, self.routine('InitiateRestore',
+                                             dict(snapshotid=SNAPSHOT, path='vmail-example.com.tar')), said)
+            message, state = self.statuses[-1]
+            self.assertEqual(0, state)
+            self.assertNotEqual('Completed', message)
+            # Nothing a program printed can pass for the marks or the percentage of a status line.
+            self.assertNotIn('[', message)
+            self.assertNotIn(',', message)
+
+    def test_mail_stored_as_a_folder_tree_is_refused_and_nothing_is_run_for_it(self):
+        # Such a tree could only be written back by rustic running with
+        # privilege on storage settings the website's account controls.
+        for path in ('/home/vmail/example.com', '/home/vmail/example.com/info',
+                     '/home/vmail/example.com/info/Maildir/cur'):
+            self.root.reset_mock()
+            self.statuses = []
+            self.root.outputExecutioner.side_effect = ['10\n', '5000\n', (1, 'restored')]
+            self.assertEqual(0, self.routine('InitiateRestore', dict(snapshotid=SNAPSHOT, path=path)), path)
+            # Only the two questions about disk space were asked; nothing was restored, as any account.
+            self.assertEqual(2, self.root.outputExecutioner.call_count, path)
+            self.assertEqual([], self.restores(), path)
+            message, state = self.statuses[-1]
+            self.assertEqual(0, state)
+            self.assertIn('does not restore mail in that form', message)
+            self.assertIn('Take a new backup', message)
+
+    def test_nothing_but_the_sites_own_mail_archive_reaches_the_privileged_helper(self):
+        # Another website's archive, or a path made to look like this one's, selects nothing at all.
+        for path in ('vmail-other.com.tar', 'vmail-example.com.evil.tar', '/vmail-example.com.tar',
+                     'vmail-example.com.tar/../vmail-other.com.tar', '/home/vmail/other.com',
+                     '/home/vmail/example.com/../other.com', '/home/vmail'):
+            self.root.reset_mock()
+            self.assertEqual(0, self.routine('InitiateRestore', dict(snapshotid=SNAPSHOT, path=path)), path)
+            self.assertEqual([], self.commands(), path)
+
+        # A directory merely named like the mail store, inside the site, is site
+        # data: it is restored by rustic as the website's own account.
         self.root.reset_mock()
         self.root.outputExecutioner.side_effect = ['10\n', '5000\n', (1, 'restored')]
-        self.routine('InitiateRestore', dict(snapshotid=SNAPSHOT, path='/home/example.com/home/vmail'))
-        self.assertEqual('examp1234', self.root.outputExecutioner.call_args_list[-1][0][1])
+        self.assertEqual(1, self.routine('InitiateRestore', dict(snapshotid=SNAPSHOT,
+                                                                path='/home/example.com/home/vmail')))
+        command, user = self.root.outputExecutioner.call_args_list[-1][0][:2]
+        self.assertEqual('examp1234', user)
+        self.assertEqual(restore_command('/home/example.com/incrementalbackups', SNAPSHOT,
+                                         '/home/example.com/home/vmail'), command)
+
+    def test_no_restore_runs_rustic_with_privilege(self):
+        # Every command that names rustic is given to the website's account,
+        # whatever is restored; the routine sets no storage settings for it.
+        for path, answer in (('/home/example.com/public_html', (1, 'restored')),
+                             ('vmail-example.com.tar', '[mail-archive] restored 1 mail files written\n'),
+                             ('/home/vmail/example.com/info', (1, 'restored'))):
+            self.root.reset_mock()
+            self.root.outputExecutioner.side_effect = ['10\n', '5000\n', answer]
+            self.routine('InitiateRestore', dict(snapshotid=SNAPSHOT, path=path))
+            for call in self.root.outputExecutioner.call_args_list + self.root.executioner.call_args_list:
+                command = call[0][0]
+                self.assertNotIn('RCLONE_CONFIG', command, path)
+                if command.startswith('rustic ') or ' rustic -r ' in command:
+                    self.assertEqual('examp1234', call[0][1], path)
 
     def test_database_is_restored_only_when_it_belongs_to_the_website(self):
         self.root.outputExecutioner.side_effect = ['10\n', '5000\n']
