@@ -548,7 +548,8 @@ def createACLFunc(request):
             data = json.loads(request.body)
 
             # Only the permissions the request switches on are granted; one it leaves out is not.
-            config = stored_config(data, data['makeAdmin'])
+            # A value that is neither a yes nor a no refuses the request before anything is stored.
+            config = stored_config(data, 'makeAdmin')
 
             newACL = ACL(name=data['aclName'], adminStatus=config['adminStatus'],
                          config=json.dumps(config))
@@ -642,7 +643,8 @@ def submitACLModifications(request):
             data = json.loads(request.body)
 
             # Only the permissions the request switches on are granted; one it leaves out is not.
-            config = stored_config(data, data['adminStatus'])
+            # A value that is neither a yes nor a no refuses the request before anything is stored.
+            config = stored_config(data, 'adminStatus')
 
             acl = ACL.objects.get(name=data['aclToModify'])
             acl.adminStatus = config['adminStatus']

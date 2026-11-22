@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from plogical.aclPermissions import (
-    ABSENT_FROM_OLDER_ACLS, PERMISSIONS, effective_config, granted, stored_config, stored_permission)
+    ABSENT_FROM_OLDER_ACLS, PERMISSIONS, effective_config, stored_config, stored_permission, switched_on)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -118,24 +118,51 @@ class PermissionListTests(unittest.TestCase):
         self.assertEqual(self.built_in_roles('plogical/acl.py', 'ACLManager'), roles)
 
 
+# Every way a request may say yes or no, and values that are neither.
+YES = (True, 1, '1', 'true', 'True', 'TRUE')
+NO = (False, 0, '0', 'false', 'False', 'FALSE')
+NEITHER = (None, 2, -1, 1.0, 0.0, '', ' 1', 'yes', 'no', 'on', 'off', 'null', '2', [], [1], [True], {}, {'a': 1})
+
+
 class StoredConfigurationTests(unittest.TestCase):
-    def test_only_true_or_one_grants(self):
-        for value in (True, 1):
-            self.assertTrue(granted(value), repr(value))
-        for value in (None, False, 0, 2, -1, 1.0, '1', 'true', 'on', 'false', [1], {'a': 1}):
-            self.assertFalse(granted(value), repr(value))
+    def test_each_way_of_saying_yes_or_no_is_understood(self):
+        for value in YES:
+            self.assertIs(True, switched_on('listUsers', value), repr(value))
+            self.assertEqual(1, stored_config({'adminStatus': value, 'listUsers': value}, 'adminStatus')['listUsers'])
+            self.assertEqual(1, stored_config({'adminStatus': value}, 'adminStatus')['adminStatus'], repr(value))
+            self.assertEqual(1, stored_config({'makeAdmin': value}, 'makeAdmin')['adminStatus'], repr(value))
+        for value in NO:
+            self.assertIs(False, switched_on('listUsers', value), repr(value))
+            self.assertEqual(0, stored_config({'adminStatus': value, 'listUsers': value}, 'adminStatus')['listUsers'])
+            self.assertEqual(0, stored_config({'adminStatus': value}, 'adminStatus')['adminStatus'], repr(value))
+            self.assertEqual(0, stored_config({'makeAdmin': value}, 'makeAdmin')['adminStatus'], repr(value))
+
+    def test_any_other_value_is_refused_by_the_name_of_its_key(self):
+        for value in NEITHER:
+            for name in PERMISSIONS:
+                with self.assertRaisesRegex(ValueError, '"%s"' % name, msg=repr(value)):
+                    stored_config({'adminStatus': False, name: value}, 'adminStatus')
+            for key in ('adminStatus', 'makeAdmin'):
+                with self.assertRaisesRegex(ValueError, '"%s"' % key, msg=repr(value)):
+                    stored_config(dict({name: True for name in PERMISSIONS}, **{key: value}), key)
+
+    def test_request_has_to_say_whether_the_acl_is_an_admin_acl(self):
+        for key in ('adminStatus', 'makeAdmin'):
+            for submitted in ({}, {'listUsers': True}, [], None, 'adminStatus'):
+                with self.assertRaisesRegex(ValueError, 'does not carry "%s"' % key, msg=repr(submitted)):
+                    stored_config(submitted, key)
 
     def test_absent_permission_is_stored_as_not_granted(self):
-        config = stored_config({'listUsers': True}, False)
+        config = stored_config({'adminStatus': False, 'listUsers': True}, 'adminStatus')
         self.assertEqual(['adminStatus'] + list(PERMISSIONS), list(config))
         self.assertEqual(['listUsers'], [name for name in PERMISSIONS if config[name]])
         self.assertEqual(0, config['adminStatus'])
-        self.assertEqual({'adminStatus': 0}, {k: v for k, v in stored_config({}, None).items() if k == 'adminStatus' or v})
+        self.assertEqual({0}, set(stored_config({'makeAdmin': False}, 'makeAdmin').values()))
 
-    def test_other_values_and_other_keys_are_not_stored(self):
-        submitted = {name: 'true' for name in PERMISSIONS}
-        submitted.update(listDatabases=1, createEmail=True, admin=1, aclName='support', anything=True)
-        config = stored_config(submitted, 1)
+    def test_other_keys_are_not_stored(self):
+        submitted = dict(makeAdmin='1', listDatabases=1, createEmail=True, deleteEmail='false',
+                         admin=1, aclName='support', anything=True, scheDuleBackups=True)
+        config = stored_config(submitted, 'makeAdmin')
         self.assertEqual({'adminStatus', 'listDatabases', 'createEmail'}, {k for k, v in config.items() if v})
         self.assertEqual({'adminStatus'} | set(PERMISSIONS), set(config))
         self.assertTrue(all(type(value) is int for value in config.values()))
@@ -152,9 +179,10 @@ class StoredConfigurationTests(unittest.TestCase):
         self.assertNotIn('aiScannerAccess', older)
 
     def test_new_acl_carries_the_scanner_switch_either_way(self):
-        self.assertEqual(1, stored_config({'aiScannerAccess': True}, False)['aiScannerAccess'])
-        self.assertEqual(0, stored_config({'aiScannerAccess': False}, False)['aiScannerAccess'])
-        self.assertEqual(0, stored_config({}, False)['aiScannerAccess'])
+        for value, stored in ((True, 1), (False, 0)):
+            self.assertEqual(stored, stored_config({'makeAdmin': False, 'aiScannerAccess': value},
+                                                   'makeAdmin')['aiScannerAccess'])
+        self.assertEqual(0, stored_config({'makeAdmin': False}, 'makeAdmin')['aiScannerAccess'])
 
 
 class Answer(object):
@@ -225,6 +253,41 @@ class ACLViewTests(unittest.TestCase):
             self.assertEqual(1, acl.adminStatus)
             self.assertEqual({1}, set(json.loads(acl.config).values()))
 
+    def test_request_with_a_value_that_is_neither_yes_nor_no_fails_and_stores_nothing(self):
+        before = json.dumps({'adminStatus': 1, 'listUsers': 1})
+        self.stored.config, self.stored.adminStatus = before, 1
+        members = [SimpleNamespace(type=1, save=mock.Mock())]
+        self.stored.administrator_set = SimpleNamespace(all=lambda: members)
+        full = {name: True for name in PERMISSIONS}
+        for value in NEITHER:
+            for key, view, request in (
+                    ('makeAdmin', 'createACLFunc', dict(full, aclName='ops', makeAdmin=value)),
+                    ('listUsers', 'createACLFunc', dict(full, aclName='ops', makeAdmin=True, listUsers=value)),
+                    ('adminStatus', 'submitACLModifications', dict(full, aclToModify='admin', adminStatus=value)),
+                    ('listUsers', 'submitACLModifications',
+                     dict(full, aclToModify='admin', adminStatus=True, listUsers=value))):
+                answer = self.call(view, request)
+                self.assertEqual(0, answer['status'], (view, key, value))
+                self.assertIn('"%s"' % key, answer['errorMessage'], (view, value))
+                self.assertEqual(answer['errorMessage'], answer['error_message'])
+        for view, key in (('createACLFunc', 'makeAdmin'), ('submitACLModifications', 'adminStatus')):
+            answer = self.call(view, dict(full, aclName='ops', aclToModify='admin'))
+            self.assertEqual((0, 'The request does not carry "%s".' % key), (answer['status'], answer['errorMessage']))
+        self.assertEqual([], self.saved)
+        self.assertEqual((before, 1), (self.stored.config, self.stored.adminStatus))
+        self.assertEqual(1, members[0].type)
+        members[0].save.assert_not_called()
+        self.names['phpmyadminAccess'].retire.assert_not_called()
+
+    def test_admin_acl_sent_in_words_stays_an_admin_acl(self):
+        members = [SimpleNamespace(type=1, save=mock.Mock())]
+        self.stored.administrator_set = SimpleNamespace(all=lambda: members)
+        request = dict({name: '1' for name in PERMISSIONS}, aclToModify='admin', adminStatus='1')
+        self.assertEqual({'status': 1}, self.call('submitACLModifications', request))
+        self.assertEqual(1, self.stored.adminStatus)
+        self.assertEqual({1}, set(json.loads(self.stored.config).values()))
+        self.assertEqual(1, members[0].type)
+
     def test_only_an_administrator_creates_or_changes_an_acl(self):
         self.manager.loadedACL.return_value = {'admin': 0}
         request = dict({name: True for name in PERMISSIONS}, aclName='ops', makeAdmin=True,
@@ -263,12 +326,12 @@ class ACLViewTests(unittest.TestCase):
         self.assertEqual(sorted(HIDDEN_ON_OLD_CREATE_PAGE + ('listUsers', 'aiScannerAccess')),
                          sorted(name for name in PERMISSIONS if acl[name] == 1))
 
-        admin.acl.config = json.dumps(stored_config({'listUsers': True}, False))
+        admin.acl.config = json.dumps(stored_config({'adminStatus': False, 'listUsers': True}, 'adminStatus'))
         acl = loadedACL(7)
         self.assertEqual(['listUsers'], [name for name in PERMISSIONS if acl[name] == 1])
         self.assertEqual(set(PERMISSIONS), set(acl) - {'admin', 'firstName', 'lastName', 'serverIPAddress', 'adminName'})
 
-        admin.acl.config = json.dumps(stored_config({}, True))
+        admin.acl.config = json.dumps(stored_config({'adminStatus': True}, 'adminStatus'))
         self.assertEqual(1, loadedACL(7)['admin'])
 
 

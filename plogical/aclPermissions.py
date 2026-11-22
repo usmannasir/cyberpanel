@@ -73,21 +73,39 @@ PERMISSIONS = (
 ABSENT_FROM_OLDER_ACLS = {'aiScannerAccess': 1}
 
 
-def granted(value):
-    """Whether a submitted value switches something on: only true or 1 does."""
-    return value is True or (type(value) is int and value == 1)
+# The ways a request may say yes or no. Words are accepted in any case.
+SWITCH_WORDS = {'1': True, 'true': True, '0': False, 'false': False}
 
 
-def stored_config(submitted, admin):
+def switched_on(name, value):
+    """Whether a submitted value says yes for the permission or admin status called name.
+
+    Yes is true, 1, "1" or "true"; no is false, 0, "0" or "false". Any other value is
+    refused, naming the key: a value that is not understood is never taken for a no,
+    because a no takes access away from every user of the ACL.
+    """
+    if value is True or value is False:
+        return value
+    if type(value) is int and value in (0, 1):
+        return value == 1
+    if isinstance(value, str) and value.lower() in SWITCH_WORDS:
+        return SWITCH_WORDS[value.lower()]
+    raise ValueError('The value sent for "%s" is not understood. Send true or false.' % name)
+
+
+def stored_config(submitted, admin_key):
     """The configuration to store with an ACL, built from what a form submitted.
 
-    Every permission is written out. One that the request does not carry, or carries as
-    anything other than true or 1, is stored as not granted. Nothing else the request
-    carries is stored.
+    admin_key is the name under which the request says whether this is an admin ACL;
+    the request has to carry it. Every permission is written out, and one that the
+    request does not carry is stored as not granted. A value that is not a yes or a no
+    refuses the whole request. Nothing else the request carries is stored.
     """
-    config = {'adminStatus': 1 if granted(admin) else 0}
+    if not isinstance(submitted, dict) or admin_key not in submitted:
+        raise ValueError('The request does not carry "%s".' % admin_key)
+    config = {'adminStatus': 1 if switched_on(admin_key, submitted[admin_key]) else 0}
     for name in PERMISSIONS:
-        config[name] = 1 if granted(submitted.get(name)) else 0
+        config[name] = 1 if name in submitted and switched_on(name, submitted[name]) else 0
     return config
 
 
