@@ -483,6 +483,7 @@ class AdminPasswordCheckTests(unittest.TestCase):
 
     The tree has the panel's real plogical/hashPassword.py, the same file in
     3.0.12 and now; Django, the administrator table and bcrypt are stand-ins.
+    QA_DATABASE_FAILURES is the number of questions the table does not answer.
     """
 
     def setUp(self):
@@ -494,47 +495,75 @@ class AdminPasswordCheckTests(unittest.TestCase):
             (self.tree / package).mkdir(parents=True)
             (self.tree / package / '__init__.py').write_text('')
         (self.tree / 'django/__init__.py').write_text('def setup():\n    pass\n')
+        (self.tree / 'django/db.py').write_text(
+            'import os\n\n\n'
+            'class Connection:\n    def close(self):\n'
+            '        with open(os.environ["QA_RECORD"], "a") as record:\n'
+            '            record.write("closed\\n")\n\n\n'
+            'connection = Connection()\n')
         (self.tree / 'CyberCP/settings.py').write_text('')
         (self.tree / 'bcrypt.py').write_text('')
         (self.tree / 'plogical/hashPassword.py').write_text(
             (ROOT / 'plogical/hashPassword.py').read_text(encoding='utf-8'), encoding='utf-8')
         (self.tree / 'loginSystem/models.py').write_text(
             'import json\nimport os\n\n\n'
+            'class OperationalError(Exception):\n    pass\n\n\n'
             'class Row:\n    def __init__(self, password):\n        self.password = password\n\n\n'
             'class Rows(list):\n    def first(self):\n        return self[0] if self else None\n\n\n'
             'class Manager:\n    def filter(self, userName):\n'
+            '        with open(os.environ["QA_RECORD"], "a") as record:\n'
+            '            record.write("asked\\n")\n'
+            '        with open(os.environ["QA_RECORD"]) as record:\n'
+            '            asked = record.read().count("asked")\n'
+            '        if asked <= int(os.environ["QA_DATABASE_FAILURES"]):\n'
+            '            raise OperationalError("(2002, \\"Can\'t connect to local server\\nthrough socket\\")")\n'
             '        with open(os.environ["QA_ADMINISTRATORS"]) as source:\n'
             '            stored = json.load(source)\n'
             '        return Rows([Row(stored[userName])] if userName in stored else [])\n\n\n'
             'class Administrator:\n    objects = Manager()\n')
         self.stored = self.root / 'adminPass'
         self.administrators = self.root / 'administrators.json'
+        self.record = self.root / 'record'
 
     def stored_hash(self, password):
         return subprocess.run([sys.executable, '-c', LEGACY_HASH % password], stdout=subprocess.PIPE,
                               encoding='utf-8', check=True).stdout.strip()
 
-    def check(self, administrators, stored='absent'):
+    def check(self, administrators, stored='absent', database_failures=0):
         self.administrators.write_text(json.dumps(administrators))
         if stored != 'absent':
             self.stored.write_text(stored, encoding='utf-8')
         elif self.stored.exists():
             self.stored.unlink()
+        if self.record.exists():
+            self.record.unlink()
         source = function('Admin_Password_Is_Set')
         self.assertNotIn('Admin_Pass"', source)
+        # Asked five times, three seconds apart; the tests do not wait that long.
+        self.assertEqual(1, source.count('for attempt in range(5):'))
+        self.assertEqual(1, source.count('        time.sleep(3)\n'))
+        source = source.replace('        time.sleep(3)\n', '        time.sleep(0.01)\n')
         # The interpreter is a file of the temporary directory: these tests are
         # also run by the panel's own interpreter, whose path the script names.
         source = with_stand_ins(source, (
-            ('/usr/local/CyberCP/bin/python', stand_in_interpreter(self.root / 'panel-python')),
+            ('/usr/local/CyberPanel/bin/python', stand_in_interpreter(self.root / 'installer-python')),
             ('/usr/local/CyberCP', self.tree),
             ('/etc/cyberpanel/adminPass', self.stored)))
         self.assertNotIn('/etc/', source)
         self.assertNotIn('/usr/local/', source)
         result = subprocess.run(['bash', '-c', source + '\nAdmin_Password_Is_Set'], stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, encoding='utf-8', timeout=60,
-                                env={'PATH': os.environ['PATH'], 'QA_ADMINISTRATORS': str(self.administrators)})
+                                env={'PATH': os.environ['PATH'], 'QA_ADMINISTRATORS': str(self.administrators),
+                                     'QA_RECORD': str(self.record), 'QA_DATABASE_FAILURES': str(database_failures)})
         self.assertEqual('', result.stdout)
         return result
+
+    def recorded(self):
+        return self.record.read_text().split() if self.record.exists() else []
+
+    def assert_could_not_run(self, result, reason):
+        self.assertEqual(12, result.returncode)
+        self.assertEqual('The check could not run: %s\n' % reason, result.stderr)
 
     def test_check_runs_when_the_tests_are_run_by_the_panels_interpreter(self):
         # On a server that has a panel the tests are run by its interpreter,
@@ -546,38 +575,69 @@ class AdminPasswordCheckTests(unittest.TestCase):
         with patch.object(sys, 'executable', str(interpreter)):
             result = self.check({'admin': self.stored_hash(SECRET)}, SECRET + '\n')
             self.assertEqual((0, ''), (result.returncode, result.stderr))
-            self.assertNotEqual(0, self.check({'admin': self.stored_hash('1234567')}, SECRET + '\n').returncode)
+            self.assertEqual(11, self.check({'admin': self.stored_hash('1234567')}, SECRET + '\n').returncode)
+
+    def test_check_is_run_by_the_interpreter_that_ran_adminpass(self):
+        source = function('Admin_Password_Is_Set')
+        self.assertIn("( cd /usr/local/CyberCP && /usr/local/CyberPanel/bin/python - <<'VERIFY'\n", source)
+        self.assertNotIn('/usr/local/CyberCP/bin/python', source)
+        self.assertIn('/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py',
+                      function('Set_Admin_Password'))
 
     def test_administrator_with_the_stored_password(self):
-        for password in (SECRET, 'p\u00e4ssw\u00f6rd-1234', '1234567'):
+        for password in (SECRET, 'p\u00e4ssw\u00f6rd-1234', '1234567', '-starts-with-a-dash'):
             for ending in ('\n', '', '\r\n'):
                 with self.subTest(password=password, ending=ending):
                     result = self.check({'admin': self.stored_hash(password)}, password + ending)
                     self.assertEqual((0, ''), (result.returncode, result.stderr))
+                    self.assertEqual(['asked'], self.recorded())
 
     def test_administrator_with_another_password(self):
         # What a panel has that created its administrator itself on a first request.
         result = self.check({'admin': self.stored_hash('1234567')}, SECRET + '\n')
-        self.assertEqual((1, ''), (result.returncode, result.stderr))
+        self.assertEqual((11, ''), (result.returncode, result.stderr))
 
     def test_no_administrator(self):
         result = self.check({}, SECRET + '\n')
-        self.assertEqual((1, ''), (result.returncode, result.stderr))
+        self.assertEqual((10, ''), (result.returncode, result.stderr))
         result = self.check({'someone': self.stored_hash(SECRET)}, SECRET + '\n')
-        self.assertEqual(1, result.returncode)
+        self.assertEqual((10, ''), (result.returncode, result.stderr))
 
-    def test_nothing_stored_is_no_password(self):
+    def test_nothing_stored_is_a_check_that_could_not_run(self):
         result = self.check({'admin': self.stored_hash('')}, '')
-        self.assertEqual(1, result.returncode)
+        self.assert_could_not_run(result, 'ValueError: no password is stored in %s' % self.stored)
         result = self.check({'admin': self.stored_hash(SECRET)})
-        self.assertNotEqual(0, result.returncode)
-        self.assertIn('adminPass', result.stderr)
+        self.assertEqual(12, result.returncode)
+        self.assertEqual(1, len(result.stderr.splitlines()))
+        self.assertTrue(result.stderr.startswith('The check could not run: FileNotFoundError: '), result.stderr)
+        self.assertEqual([], self.recorded())
 
-    def test_check_that_cannot_run_is_a_failed_check(self):
-        (self.tree / 'loginSystem/models.py').write_text('raise RuntimeError("fixture: no database")\n')
+    def test_tree_that_cannot_be_set_up_is_a_check_that_could_not_run(self):
+        (self.tree / 'loginSystem/models.py').write_text('raise RuntimeError("fixture: no\\nsettings")\n')
         result = self.check({'admin': self.stored_hash(SECRET)}, SECRET + '\n')
-        self.assertNotEqual(0, result.returncode)
-        self.assertIn('fixture: no database', result.stderr)
+        self.assert_could_not_run(result, 'RuntimeError: fixture: no settings')
+        (self.tree / 'loginSystem/models.py').unlink()
+        result = self.check({'admin': self.stored_hash(SECRET)}, SECRET + '\n')
+        self.assertEqual(12, result.returncode)
+        self.assertRegex(result.stderr, r"^The check could not run: (ModuleNotFoundError|ImportError): [^\n]+\n$")
+
+    def test_database_that_answers_late_is_asked_again(self):
+        for failures in (1, 4):
+            with self.subTest(failures=failures):
+                result = self.check({'admin': self.stored_hash(SECRET)}, SECRET + '\n', database_failures=failures)
+                self.assertEqual((0, ''), (result.returncode, result.stderr))
+                # The connection is closed after every question that failed.
+                self.assertEqual(['asked', 'closed'] * failures + ['asked'], self.recorded())
+        result = self.check({'admin': self.stored_hash('1234567')}, SECRET + '\n', database_failures=2)
+        self.assertEqual((11, ''), (result.returncode, result.stderr))
+        result = self.check({}, SECRET + '\n', database_failures=2)
+        self.assertEqual((10, ''), (result.returncode, result.stderr))
+
+    def test_database_that_does_not_answer_is_a_check_that_could_not_run(self):
+        result = self.check({'admin': self.stored_hash(SECRET)}, SECRET + '\n', database_failures=5)
+        self.assert_could_not_run(
+            result, "OperationalError: (2002, \"Can't connect to local server through socket\")")
+        self.assertEqual(['asked', 'closed'] * 5, self.recorded())
 
     def test_check_is_valid_for_the_panel_interpreter_of_almalinux_8(self):
         source = function('Admin_Password_Is_Set')
@@ -647,21 +707,33 @@ class PasswordOutcomeTests(unittest.TestCase):
                 self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
                 self.assert_panel_held(machine, result, checked=False)
 
+    WRONG = 'CyberPanel was installed, but its administrator does not have the password of this installation.'
+    UNCHECKED = ('CyberPanel was installed, but it could not be checked that its administrator has the password '
+                 'of this installation.')
+
     def test_administrator_without_the_given_password_fails_the_run(self):
-        machine = Installer(self)
-        result = machine.run('-v', 'ols', dns=True, password_check_exit=1)
-        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
-        events = machine.events()
-        # Found right after the password was set: the hostname step is not reached.
-        self.assertEqual(['finishing failed panel_setup', 'install failed panel_setup'], events[-2:])
-        self.assertNotIn('install complete', events)
-        self.assertNotIn('panel ready', events)
-        self.assertEqual([], self.probes(machine))
-        self.assertEqual([], [call for call in machine.recorded(machine.calls) if call.startswith('cyberpanel ')])
-        self.assertIn('its administrator does not have the password of this installation', result.stdout)
-        self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
-        self.assertNotIn('Visit: https://', result.stdout)
-        self.assert_panel_held(machine, result, checked=True)
+        # 10: no administrator, 11: another password. Everything else, also a
+        # status the check does not give itself, is a check that could not run.
+        for status, said, unsaid in ((10, self.WRONG, self.UNCHECKED), (11, self.WRONG, self.UNCHECKED),
+                                     (12, self.UNCHECKED, self.WRONG), (1, self.UNCHECKED, self.WRONG),
+                                     (127, self.UNCHECKED, self.WRONG)):
+            with self.subTest(status=status):
+                machine = Installer(self)
+                result = machine.run('-v', 'ols', dns=True, password_check_exit=status)
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                events = machine.events()
+                # Found right after the password was set: the hostname step is not reached.
+                self.assertEqual(['finishing failed panel_setup', 'install failed panel_setup'], events[-2:])
+                self.assertNotIn('install complete', events)
+                self.assertNotIn('panel ready', events)
+                self.assertEqual([], self.probes(machine))
+                self.assertEqual([], [call for call in machine.recorded(machine.calls)
+                                      if call.startswith('cyberpanel ')])
+                self.assertIn(said, result.stdout)
+                self.assertNotIn(unsaid, result.stdout)
+                self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+                self.assertNotIn('Visit: https://', result.stdout)
+                self.assert_panel_held(machine, result, checked=True)
 
     def test_failed_certificate_with_a_confirmed_password_leaves_the_panel_running(self):
         machine = Installer(self)
@@ -682,10 +754,10 @@ class PasswordOutcomeTests(unittest.TestCase):
         # confirmation out of it.
         machine = Installer(self)
         harness = machine.harness()
-        confirmation = '  Panel_Password_Confirmed="Yes"\n'
+        confirmation = '  0) Panel_Password_Confirmed="Yes" ;;\n'
         # Once in the real function and once in what the harness runs of it.
         self.assertEqual(2, harness.count(confirmation))
-        with patch.object(machine, 'harness', return_value=harness.replace(confirmation, '  :\n')):
+        with patch.object(machine, 'harness', return_value=harness.replace(confirmation, '  0) : ;;\n')):
             result = machine.run('-v', 'ols')
         self.assertEqual(1, result.returncode, result.stdout + result.stderr)
         self.assertEqual(['ready running', 'ready failed panel_setup', 'install failed panel_setup'],

@@ -3138,24 +3138,62 @@ fi
 }
 
 Admin_Password_Is_Set() {
-# True when the panel has an administrator "admin" whose stored password is
-# the first line of /etc/cyberpanel/adminPass. The panel is asked itself, with
-# its interpreter and its own password check, and reads the password from the
-# file. Without an administrator the panel would create "admin" with a
-# well-known password on the first request it gets.
-( cd /usr/local/CyberCP && /usr/local/CyberCP/bin/python - <<'VERIFY'
+# Asks the panel whether its administrator "admin" has the password that is
+# the first line of /etc/cyberpanel/adminPass. The status says what was found:
+#   0   "admin" has that password
+#   10  the panel has no administrator "admin" (it would create one with a
+#       well-known password on the first request it gets)
+#   11  "admin" has another password
+#   12  the check could not run; one line on the error output says why
+# Any other status is a check that could not run as well. The interpreter is
+# the one that has just run the tree's adminPass.py, with the same imports,
+# and the password is read from the file. A database that was restarted a
+# moment ago may not answer the first question: the question is put five
+# times, three seconds apart.
+( cd /usr/local/CyberCP && /usr/local/CyberPanel/bin/python - <<'VERIFY'
 import os
 import sys
-sys.path.append('/usr/local/CyberCP')
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CyberCP.settings')
-import django
-django.setup()
-from loginSystem.models import Administrator
-from plogical import hashPassword
-with open('/etc/cyberpanel/adminPass', encoding='utf-8') as source:
-    password = source.readline().rstrip('\r\n')
-admin = Administrator.objects.filter(userName='admin').first()
-sys.exit(0 if admin is not None and password and hashPassword.check_password(admin.password, password) else 1)
+import time
+
+
+def could_not_run(error):
+    reason = ' '.join(str(error).split())
+    sys.stderr.write('The check could not run: %s: %s\n' % (type(error).__name__, reason))
+    sys.exit(12)
+
+
+try:
+    with open('/etc/cyberpanel/adminPass', encoding='utf-8') as source:
+        password = source.readline().rstrip('\r\n')
+    if not password:
+        raise ValueError('no password is stored in /etc/cyberpanel/adminPass')
+    sys.path.append('/usr/local/CyberCP')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CyberCP.settings')
+    import django
+    django.setup()
+    from django.db import connection
+    from loginSystem.models import Administrator
+    from plogical import hashPassword
+except Exception as error:
+    could_not_run(error)
+
+for attempt in range(5):
+    try:
+        admin = Administrator.objects.filter(userName='admin').first()
+        break
+    except Exception as error:
+        failure = error
+        try:
+            connection.close()
+        except Exception:
+            pass
+        if attempt == 4:
+            could_not_run(failure)
+        time.sleep(3)
+
+if admin is None:
+    sys.exit(10)
+sys.exit(0 if hashPassword.check_password(admin.password, password) else 11)
 VERIFY
 )
 }
@@ -3238,14 +3276,22 @@ if ! Set_Admin_Password; then
   log_error "The admin password could not be set in the panel"
   Fail_Install panel_setup
 fi
-if Admin_Password_Is_Set; then
-  Panel_Password_Confirmed="Yes"
-else
-  echo -e "\nCyberPanel was installed, but its administrator does not have the password of this installation."
-  Panel_Held_Notice
-  log_error "The panel's administrator does not have the password of this installation"
-  Fail_Install panel_setup
-fi
+Admin_Password_Is_Set
+case $? in
+  0) Panel_Password_Confirmed="Yes" ;;
+  10 | 11)
+    echo -e "\nCyberPanel was installed, but its administrator does not have the password of this installation."
+    Panel_Held_Notice
+    log_error "The panel's administrator does not have the password of this installation"
+    Fail_Install panel_setup
+    ;;
+  *)
+    echo -e "\nCyberPanel was installed, but it could not be checked that its administrator has the password of this installation."
+    Panel_Held_Notice
+    log_error "It could not be checked that the panel's administrator has the password of this installation"
+    Fail_Install panel_setup
+    ;;
+esac
 
 Configure_Default_PHP_CLI || return 1
 
