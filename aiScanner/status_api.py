@@ -119,9 +119,12 @@ def receive_status_update(request):
 def get_live_scan_progress(request, scan_id):
     """
     Get current scan progress for real-time UI updates
-    
+
     GET /api/ai-scanner/scan/{scan_id}/live-progress
-    
+
+    Asked by the AI Scanner page of a signed-in user, who must be allowed to
+    use the scanner and to see this scan.
+
     Response:
     {
         "success": true,
@@ -141,34 +144,37 @@ def get_live_scan_progress(request, scan_id):
     }
     """
     try:
-        # Log the request
-        logging.writeToFile(f'[Status API] Live progress request for scan: {scan_id}')
-        
+        from .access import may_see_scan, scanner_allowed
+        from plogical.acl import ACLManager
+
+        try:
+            userID = request.session['userID']
+        except KeyError:
+            return JsonResponse({'success': False, 'error': 'Not authenticated'}, status=401)
+        if not scanner_allowed(ACLManager.loadedACL(userID)):
+            return JsonResponse({'success': False, 'error': 'Access denied'}, status=403)
+
+        # A scan that is not the user's to see is answered like one that does not exist.
+        try:
+            scan_history = ScanHistory.objects.get(scan_id=scan_id)
+        except ScanHistory.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Scan not found'}, status=404)
+        if not may_see_scan(userID, scan_history):
+            return JsonResponse({'success': False, 'error': 'Scan not found'}, status=404)
+
         # Get latest status update
         try:
             status_update = ScanStatusUpdate.objects.get(scan_id=scan_id)
         except ScanStatusUpdate.DoesNotExist:
-            logging.writeToFile(f'[Status API] Status not found for scan {scan_id} - checking if scan exists in history')
-            
-            # Check if scan exists in ScanHistory
-            from .models import ScanHistory
-            try:
-                scan_history = ScanHistory.objects.get(scan_id=scan_id)
-                logging.writeToFile(f'[Status API] Scan {scan_id} exists in history with status: {scan_history.status}')
-                
-                # If scan exists but no status update, it might not have started yet
-                return JsonResponse({
-                    'success': False,
-                    'error': 'No live status available yet',
-                    'scan_exists': True,
-                    'scan_status': scan_history.status
-                }, status=404)
-            except ScanHistory.DoesNotExist:
-                logging.writeToFile(f'[Status API] Scan {scan_id} not found in history either')
-                
-            return JsonResponse({'success': False, 'error': 'Scan not found'}, status=404)
+            # The scan exists but has sent no status yet: it might not have started
+            return JsonResponse({
+                'success': False,
+                'error': 'No live status available yet',
+                'scan_exists': True,
+                'scan_status': scan_history.status
+            }, status=404)
 
-        response_data = {
+        return JsonResponse({
             'success': True,
             'scan_id': scan_id,
             'phase': status_update.phase,
@@ -183,17 +189,8 @@ def get_live_scan_progress(request, scan_id):
             'activity_description': status_update.activity_description,
             'last_updated': status_update.last_updated.isoformat(),
             'is_active': status_update.is_active
-        }
-
-        # Extended logging for frontend polling
-        logging.writeToFile(f'[Status API] 📊 Frontend polling scan {scan_id}')
-        logging.writeToFile(f'[Status API]    Status: {status_update.phase} ({status_update.progress}%) - Active: {status_update.is_active}')
-        logging.writeToFile(f'[Status API]    Progress: {status_update.files_scanned}/{status_update.files_discovered} files, {status_update.threats_found} threats')
-        if status_update.current_file:
-            logging.writeToFile(f'[Status API]    Currently scanning: {status_update.current_file}')
-        
-        return JsonResponse(response_data)
+        })
 
     except Exception as e:
-        logging.writeToFile(f'[Status API] Get progress error: {str(e)}')
+        logging.writeToFile(f'[Status API] Get progress error: {type(e).__name__}')
         return JsonResponse({'success': False, 'error': 'Internal server error'}, status=500)
