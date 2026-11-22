@@ -85,6 +85,7 @@ class UpgradeCyberPanel:
         Upgrade.someDirectories()
         Upgrade.GeneralMigrations()
         Upgrade.sensitiveFileProtectionMigration()
+        Upgrade.reconcileHTTPSListenerMaps()
 
         ## Upgrade version
 

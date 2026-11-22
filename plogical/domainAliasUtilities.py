@@ -93,7 +93,8 @@ def _add_alias_mapping(config, master_domain, alias_domain, secure, create_missi
             suffix = ('  #' + comment.rstrip('\r\n')) if marker else ''
             lines[index] = '  map                     ' + master_domain + ' ' + ', '.join(domains + [alias_domain]) + suffix + ending
         if create_missing and not parent_found:
-            lines.insert(len(lines) - 1, '  map                     %s %s\n' % (master_domain, master_domain))
+            ending = '\r\n' if '\r\n' in block else '\n'
+            lines.insert(len(lines) - 1, '  map                     %s %s%s' % (master_domain, master_domain, ending))
             mapped = True
         return ''.join(lines)
 

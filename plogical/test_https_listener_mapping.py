@@ -8,20 +8,44 @@ directory is read or written and no service is touched.
 """
 import ast
 import difflib
+import functools
+import locale
 import os
 import re
 import stat
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.x509.oid import NameOID
+
+import plogical.httpsListenerMapping as subject
 from plogical.domainAliasUtilities import ensure_http_vhost_mapping
+from plogical.httpListenerMapping import rewrite_config
 from plogical.httpsListenerMapping import (
-    certificate_files, ensure_https_listeners, ensure_vhost_certificate, https_listener_vhosts,
-    install_vhost_certificate, plan_listener_repair, reconcile_https_listener_maps,
+    ChangeRefused, certificate_files, certificate_serves, classify_listener_vhosts, ensure_https_listeners,
+    ensure_vhost_certificate, holds_original, https_listener_vhosts, install_vhost_certificate,
+    reconcile_https_listener_maps, repair_https_listeners,
 )
+
+
+# The panel's log file is outside the temporary directories: every test passes its own report.
+PANEL_LOG = mock.patch.object(subject, '_log', side_effect=AssertionError('the panel log was used'))
+
+
+def setUpModule():
+    PANEL_LOG.start()
+
+
+def tearDownModule():
+    PANEL_LOG.stop()
 
 HERE = Path(__file__).resolve().parent
 INSTALLED_CONFIG = (HERE.parent / 'install/litespeed/conf/httpd_config.conf').read_text()
@@ -321,6 +345,81 @@ class VhostCertificateTests(unittest.TestCase):
         self.assertIsNone(certificate_files(VHOST_CONFIG))
 
 
+class LineEndingTests(unittest.TestCase):
+    """A configuration saved with Windows line endings keeps them, also in what is added."""
+
+    def crlf(self, text):
+        return text.replace('\n', '\r\n')
+
+    def test_listeners_and_block_are_added_in_the_line_endings_of_the_file(self):
+        config = self.crlf(server('a.test'))
+        updated = ensure_https_listeners(config, 'a.test')
+        self.assertTrue(updated.startswith(config))
+        self.assertEqual(updated, config + self.crlf(ipv4('a.test') + ipv6('a.test')))
+        vhost = self.crlf(VHOST_CONFIG)
+        self.assertEqual(ensure_vhost_certificate(vhost, 'a.test'), vhost + self.crlf(VHSSL % {'domain': 'a.test'}))
+
+    def test_reconciliation_reads_and_writes_windows_line_endings(self):
+        config = self.crlf(server('a.test', 'b.test') + (
+            ipv4('a.test', '  map                     a.test a.test # main site\n')
+            + ipv6('b.test', map_line('b.test'), map_line('a.test', 'a.test, alias.test'))))
+        updated, completed = reconcile_https_listener_maps(config, {'a.test', 'b.test'})
+        self.assertEqual(completed, [('SSL', 'a.test'), ('SSL', 'b.test')])
+        self.assertNotIn('\n', updated.replace('\r\n', ''))
+        self.assertIn('  map                     a.test a.test, alias.test  # main site\r\n', updated)
+        self.assertEqual(updated.replace('\r\n', '\n'), reconcile_https_listener_maps(
+            config.replace('\r\n', '\n'), {'a.test', 'b.test'})[0])
+
+
+KEY = ec.generate_private_key(ec.SECP256R1(), default_backend())
+KEY_PEM = KEY.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.TraditionalOpenSSL,
+                            serialization.NoEncryption())
+
+
+def certificate(common_name, alternative=(), starts=-1, ends=30, issuer=None):
+    """A certificate in PEM; it names itself as issuer unless another issuer is given."""
+    def name(value):
+        return x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, value)])
+    now = datetime.now(timezone.utc)
+    builder = (x509.CertificateBuilder().subject_name(name(common_name)).issuer_name(name(issuer or common_name))
+               .public_key(KEY.public_key()).serial_number(x509.random_serial_number())
+               .not_valid_before(now + timedelta(days=starts)).not_valid_after(now + timedelta(days=ends)))
+    if alternative:
+        builder = builder.add_extension(
+            x509.SubjectAlternativeName([x509.DNSName(value) for value in alternative]), critical=False)
+    return builder.sign(KEY, hashes.SHA256(), default_backend()).public_bytes(serialization.Encoding.PEM)
+
+
+class CertificateOnDiskTests(unittest.TestCase):
+    def serves(self, pem, name):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'fullchain.pem')
+            Path(path).write_bytes(pem)
+            return certificate_serves(path, name)
+
+    def test_in_date_certificate_that_names_the_website(self):
+        self.assertTrue(self.serves(certificate('a.test'), 'a.test'))
+        self.assertTrue(self.serves(certificate('A.Test'), 'a.test'))
+        self.assertTrue(self.serves(certificate('other.test', alternative=('x.test', 'a.test')), 'a.test'))
+        self.assertTrue(self.serves(certificate('a.test', issuer='Fixture CA'), 'a.test'))
+        self.assertTrue(self.serves(certificate('a.test') + certificate('Fixture CA'), 'a.test'))
+
+    def test_wildcard_covers_one_label(self):
+        wildcard = certificate('*.example.test')
+        self.assertTrue(self.serves(wildcard, 'shop.example.test'))
+        self.assertFalse(self.serves(wildcard, 'example.test'))
+        self.assertFalse(self.serves(wildcard, 'a.shop.example.test'))
+
+    def test_other_name_or_wrong_time_does_not_serve(self):
+        self.assertFalse(self.serves(certificate('b.test', alternative=('www.b.test',)), 'a.test'))
+        self.assertFalse(self.serves(certificate('a.test', starts=-30, ends=-1), 'a.test'))
+        self.assertFalse(self.serves(certificate('a.test', starts=1, ends=30), 'a.test'))
+
+    def test_unreadable_certificate_raises(self):
+        with self.assertRaises(Exception):
+            self.serves(b'fixture\n', 'a.test')
+
+
 class Server(object):
     """An OpenLiteSpeed configuration tree and a certificate store in a temporary directory."""
 
@@ -332,26 +431,26 @@ class Server(object):
         self.main = os.path.join(self.root, 'conf/httpd_config.conf')
         Path(self.main).write_text(INSTALLED_CONFIG)
         os.chmod(self.main, 0o640)
+        self.notes = []
 
     def vhost(self, website):
         return os.path.join(self.root, 'conf/vhosts', website, 'vhost.conf')
 
-    def add(self, website, certificate=True, config=VHOST_CONFIG):
+    def add(self, website, certificate_pem=None, config=VHOST_CONFIG):
+        """A website; its certificate is in date and names it unless another (or False) is given."""
         os.makedirs(os.path.dirname(self.vhost(website)))
         Path(self.vhost(website)).write_text(config)
         os.chmod(self.vhost(website), 0o600)
-        Path(self.main).write_text(server_text(Path(self.main).read_text(), website))
-        if certificate:
+        Path(self.main).write_text(
+            ensure_http_vhost_mapping(Path(self.main).read_text(), website) + VHOST_DEFINITION % website)
+        if certificate_pem is not False:
             os.makedirs(os.path.join(self.certificates, website))
-            for name in ('privkey.pem', 'fullchain.pem'):
-                Path(self.certificates, website, name).write_text('fixture\n')
-
-    def append(self, text):
-        with open(self.main, 'a') as target:
-            target.write(text)
+            Path(self.certificates, website, 'privkey.pem').write_bytes(KEY_PEM)
+            Path(self.certificates, website, 'fullchain.pem').write_bytes(certificate_pem or certificate(website))
 
     def listener(self, name, address, website, *maps):
-        self.append(listener(name, address, website, *maps).replace('/etc/letsencrypt/live', self.certificates))
+        with open(self.main, 'a') as target:
+            target.write(listener(name, address, website, *maps).replace('/etc/letsencrypt/live', self.certificates))
 
     def config(self):
         return Path(self.main).read_text()
@@ -360,49 +459,56 @@ class Server(object):
         return VHSSL.replace('/etc/letsencrypt/live', self.certificates) % {'domain': website}
 
     def install(self, website):
-        install_vhost_certificate(website, self.root, self.certificates)
+        install_vhost_certificate(website, self.root, self.certificates, self.notes.append)
 
-    def plan(self):
-        return plan_listener_repair(self.root, self.certificates)
+    def repair(self, apply=None):
+        return repair_https_listeners(apply or write_like_the_upgrade, self.notes.append, self.root, self.certificates)
 
     def files(self):
-        return {str(path): path.read_text() for path in Path(self.root).rglob('*') if path.is_file()}
+        return {str(path): path.read_bytes() for path in Path(self.root).rglob('*') if path.is_file()}
+
+    def assert_served(self, case, *websites):
+        """Both listeners map exactly these websites and each has one vhssl block for its own certificate."""
+        for name in ('SSL', 'SSL IPv6'):
+            case.assertEqual(sorted(mapped(self.config(), name)), sorted((site, site) for site in websites))
+        for website in websites:
+            text = Path(self.vhost(website)).read_text()
+            case.assertEqual(text.count('vhssl'), 1)
+            case.assertEqual(certificate_files(text), (os.path.join(self.certificates, website, 'privkey.pem'),
+                                                       os.path.join(self.certificates, website, 'fullchain.pem')))
 
 
-def server_text(config, website):
-    return ensure_http_vhost_mapping(config, website) + VHOST_DEFINITION % website
+def write_like_the_upgrade(changes):
+    """What the upgrade's validated configuration change does with a change it accepts."""
+    for path, (before, after) in changes.items():
+        if Path(path).read_text() != before:
+            raise AssertionError('the change does not start from the text of ' + path)
+        Path(path).write_bytes(after.encode(locale.getpreferredencoding(False)))
 
 
-class InstalledCertificateTests(unittest.TestCase):
+class ServerTestCase(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.server = Server(directory.name)
 
-    def assert_served(self, *websites):
-        config = self.server.config()
-        for name in ('SSL', 'SSL IPv6'):
-            self.assertEqual(sorted(mapped(config, name)), sorted((site, site) for site in websites))
-        for website in websites:
-            self.assertEqual(Path(self.server.vhost(website)).read_text().count('vhssl'), 1)
-            self.assertEqual(certificate_files(Path(self.server.vhost(website)).read_text()),
-                             (os.path.join(self.server.certificates, website, 'privkey.pem'),
-                              os.path.join(self.server.certificates, website, 'fullchain.pem')))
 
+class InstalledCertificateTests(ServerTestCase):
     def test_websites_get_certificates_one_after_another(self):
         for website in ('a.test', 'b.test', 'c.test'):
             self.server.add(website)
         self.server.install('a.test')
-        self.assert_served('a.test')
+        self.server.assert_served(self, 'a.test')
         self.server.install('b.test')
-        self.assert_served('a.test', 'b.test')
+        self.server.assert_served(self, 'a.test', 'b.test')
         self.server.install('c.test')
-        self.assert_served('a.test', 'b.test', 'c.test')
+        self.server.assert_served(self, 'a.test', 'b.test', 'c.test')
         before = self.server.files()
         for website in ('b.test', 'a.test', 'c.test'):
             self.server.install(website)
         self.assertEqual(self.server.files(), before)
         self.assertEqual(self.server.config().count('listener SSL'), 2)
+        self.assertEqual(self.server.notes, [])
 
     def test_first_website_file_holds_exactly_what_the_panel_writes(self):
         self.server.add('a.test')
@@ -416,8 +522,7 @@ class InstalledCertificateTests(unittest.TestCase):
         self.server.install('a.test')
         self.assertEqual(stat.S_IMODE(os.stat(self.server.main).st_mode), 0o640)
         self.assertEqual(stat.S_IMODE(os.stat(self.server.vhost('a.test')).st_mode), 0o600)
-        leftovers = [path.name for path in Path(self.server.root).rglob('.config-*')]
-        self.assertEqual(leftovers, [])
+        self.assertEqual([path.name for path in Path(self.server.root).rglob('.config-*')], [])
 
     def test_second_certificate_completes_a_server_that_has_the_ipv4_listener_only(self):
         # The first website was served with the certificate of the IPv4 listener and has no vhssl block.
@@ -425,17 +530,22 @@ class InstalledCertificateTests(unittest.TestCase):
             self.server.add(website)
         self.server.listener('SSL', '*:443', 'a.test')
         self.server.install('b.test')
-        self.assert_served('a.test', 'b.test')
+        self.server.assert_served(self, 'a.test', 'b.test')
         self.assertIn(os.path.join(self.server.certificates, 'b.test', 'fullchain.pem'),
                       block(self.server.config(), 'SSL IPv6'))
 
-    def test_renewal_completes_websites_that_are_on_one_family_each(self):
+    def test_later_certificate_completes_websites_that_are_on_one_family_each(self):
         for website in ('a.test', 'b.test', 'c.test'):
             self.server.add(website)
         self.server.listener('SSL', '*:443', 'a.test')
         self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
         self.server.install('c.test')
-        self.assert_served('a.test', 'b.test', 'c.test')
+        self.server.assert_served(self, 'a.test', 'b.test', 'c.test')
+
+    def test_website_being_installed_gets_its_block_whatever_its_certificate_is(self):
+        self.server.add('a.test', certificate_pem=b'fixture\n')
+        self.server.install('a.test')
+        self.server.assert_served(self, 'a.test')
 
     def test_website_without_configuration_is_refused_before_anything_is_written(self):
         self.server.add('a.test')
@@ -447,23 +557,186 @@ class InstalledCertificateTests(unittest.TestCase):
     def test_failed_listener_update_leaves_the_main_configuration_as_it_was(self):
         self.server.add('a.test')
         before = self.server.config()
-        with mock.patch('plogical.httpsListenerMapping.ensure_https_listeners', side_effect=RuntimeError('fixture')):
+        with mock.patch.object(subject, 'ensure_https_listeners', side_effect=RuntimeError('fixture')):
             with self.assertRaises(RuntimeError):
                 self.server.install('a.test')
         self.assertEqual(self.server.config(), before)
 
 
-class UpgradePlanTests(unittest.TestCase):
-    def setUp(self):
-        directory = tempfile.TemporaryDirectory()
-        self.addCleanup(directory.cleanup)
-        self.server = Server(directory.name)
+class OtherWebsitesTests(ServerTestCase):
+    """Completing the websites already served is best effort; the installation stands on its own."""
 
-    def apply(self, changes):
-        for path, (current, repaired) in changes.items():
-            self.assertEqual(Path(path).read_text(), current)
-            Path(path).write_text(repaired)
+    def one_family_each(self):
+        for website in ('a.test', 'x.test', 'b.test'):
+            self.server.add(website)
+        self.server.listener('SSL', '*:443', 'a.test', map_line('a.test'), map_line('x.test'))
 
+    def test_website_whose_file_cannot_be_replaced_is_reported_and_the_rest_completed(self):
+        self.one_family_each()
+
+        def refuse(path, transform):
+            if path == self.server.vhost('x.test'):
+                raise PermissionError(1, 'Operation not permitted', path)
+            return rewrite_config(path, transform)
+
+        with mock.patch.object(subject, 'rewrite_config', side_effect=refuse):
+            self.server.install('b.test')
+        self.assertEqual(sorted(mapped(self.server.config(), 'SSL IPv6')), [('a.test', 'a.test'), ('b.test', 'b.test')])
+        self.assertEqual(sorted(mapped(self.server.config(), 'SSL')),
+                         [('a.test', 'a.test'), ('b.test', 'b.test'), ('x.test', 'x.test')])
+        self.assertEqual(Path(self.server.vhost('x.test')).read_text(), VHOST_CONFIG)
+        self.assertEqual(Path(self.server.vhost('a.test')).read_text().count('vhssl'), 1)
+        self.assertEqual(len(self.server.notes), 1)
+        self.assertIn('x.test was left without its own certificate block', self.server.notes[0])
+
+    def test_website_that_cannot_be_examined_is_reported_and_the_rest_completed(self):
+        self.one_family_each()
+        Path(self.server.certificates, 'x.test', 'fullchain.pem').write_bytes(b'fixture\n')
+        self.server.install('b.test')
+        self.assertEqual(sorted(mapped(self.server.config(), 'SSL IPv6')), [('a.test', 'a.test'), ('b.test', 'b.test')])
+        self.assertEqual(Path(self.server.vhost('x.test')).read_text(), VHOST_CONFIG)
+        self.assertEqual(len(self.server.notes), 1)
+        self.assertIn('x.test was not examined', self.server.notes[0])
+
+    def test_failure_of_the_whole_completion_is_reported_not_raised(self):
+        self.one_family_each()
+        for broken in ('classify_listener_vhosts', 'reconcile_https_listener_maps'):
+            with self.subTest(broken=broken):
+                del self.server.notes[:]
+                with mock.patch.object(subject, broken, side_effect=OSError('fixture')):
+                    self.server.install('b.test')
+                self.assertIn(('b.test', 'b.test'), mapped(self.server.config(), 'SSL'))
+                self.assertIn(('b.test', 'b.test'), mapped(self.server.config(), 'SSL IPv6'))
+                self.assertEqual(Path(self.server.vhost('b.test')).read_text().count('vhssl'), 1)
+                self.assertEqual(self.server.notes, ['Other websites were not completed on the HTTPS listeners: fixture'])
+
+    def test_files_are_changed_from_what_they_hold_when_they_are_written(self):
+        # Another operation changes a website's file and the main configuration
+        # after they were examined and before they are written.
+        self.one_family_each()
+        examine = classify_listener_vhosts
+
+        def examine_then_change(*arguments):
+            result = examine(*arguments)
+            with open(self.server.vhost('a.test'), 'a') as target:
+                target.write('# suspended meanwhile\n')
+            self.server.add('new.test')
+            return result
+
+        with mock.patch.object(subject, 'classify_listener_vhosts', side_effect=examine_then_change):
+            self.server.install('b.test')
+        self.assertEqual(Path(self.server.vhost('a.test')).read_text(),
+                         VHOST_CONFIG + '# suspended meanwhile\n' + self.server.vhssl('a.test'))
+        self.assertIn(VHOST_DEFINITION % 'new.test', self.server.config())
+        self.assertIn(('new.test', 'new.test'), mapped(self.server.config(), 'Default'))
+        self.assertIn(('a.test', 'a.test'), mapped(self.server.config(), 'SSL IPv6'))
+
+    def test_expired_or_foreign_certificate_does_not_bring_a_block(self):
+        # These websites have no vhssl block and answer with the listener's certificate.
+        self.server.add('a.test')
+        self.server.add('old.test', certificate_pem=certificate('old.test', starts=-400, ends=-30))
+        self.server.add('wild.test', certificate_pem=certificate('*.example.test'))
+        self.server.add('b.test')
+        self.server.listener('SSL', '*:443', 'a.test', map_line('a.test'), map_line('old.test'),
+                             map_line('wild.test'))
+        self.server.install('b.test')
+        for website in ('old.test', 'wild.test'):
+            self.assertEqual(Path(self.server.vhost(website)).read_text(), VHOST_CONFIG)
+            self.assertNotIn((website, website), mapped(self.server.config(), 'SSL IPv6'))
+        self.assertEqual(sorted(mapped(self.server.config(), 'SSL IPv6')), [('a.test', 'a.test'), ('b.test', 'b.test')])
+        self.assertEqual(self.server.notes, [])
+
+    def test_self_signed_certificate_in_date_brings_a_block(self):
+        self.server.add('a.test', certificate_pem=certificate('a.test', ends=3650))
+        self.server.add('b.test')
+        self.server.listener('SSL', '*:443', 'a.test')
+        self.server.install('b.test')
+        self.server.assert_served(self, 'a.test', 'b.test')
+
+
+class ExactBytesTests(ServerTestCase):
+    """Files with Windows line endings or bytes that are not UTF-8 keep every byte they had."""
+
+    ODD = b'# caf\xe9 \xff\xfe\r\n'
+
+    def make_odd(self, path):
+        data = self.ODD + Path(path).read_bytes().replace(b'\n', b'\r\n')
+        Path(path).write_bytes(data)
+        return data
+
+    def assert_only_added(self, before, after):
+        """Every line of the file is still there, in order and byte for byte, and what came in ends in CRLF."""
+        old, new = before.split(b'\n'), after.split(b'\n')
+        position = 0
+        for line in old:
+            self.assertIn(line, new[position:])
+            position = new.index(line, position) + 1
+        self.assertGreater(len(new), len(old))
+        self.assertNotIn(b'\n', after.replace(b'\r\n', b''))
+
+    def test_installation_keeps_odd_bytes_and_line_endings(self):
+        for website in ('a.test', 'b.test'):
+            self.server.add(website)
+        self.server.listener('SSL', '*:443', 'a.test')
+        before = {path: self.make_odd(path) for path in (
+            self.server.main, self.server.vhost('a.test'), self.server.vhost('b.test'))}
+        self.server.install('b.test')
+        for path, data in before.items():
+            self.assert_only_added(data, Path(path).read_bytes())
+        config = Path(self.server.main).read_bytes().decode('latin-1').replace('\r\n', '\n')
+        for name in ('SSL', 'SSL IPv6'):
+            self.assertEqual(sorted(mapped(config, name)), [('a.test', 'a.test'), ('b.test', 'b.test')])
+        for website in ('a.test', 'b.test'):
+            self.assertEqual(Path(self.server.vhost(website)).read_bytes().count(b'vhssl  {\r\n'), 1)
+        self.assertEqual(self.server.notes, [])
+
+    def test_unchanged_file_is_not_rewritten(self):
+        self.server.add('a.test')
+        self.server.install('a.test')
+        self.make_odd(self.server.vhost('a.test'))
+        identity = os.stat(self.server.vhost('a.test')).st_ino
+        self.server.install('a.test')
+        self.assertEqual(os.stat(self.server.vhost('a.test')).st_ino, identity)
+
+    def test_upgrade_change_is_stated_the_way_the_validated_change_reads_and_writes(self):
+        for website in ('a.test', 'b.test'):
+            self.server.add(website)
+        self.server.listener('SSL', '*:443', 'a.test')
+        self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
+        before = {}
+        for path in (self.server.main, self.server.vhost('a.test'), self.server.vhost('b.test')):
+            before[path] = Path(path).read_bytes().replace(b'\n', b'\r\n')
+            Path(path).write_bytes(before[path])
+        seen = []
+
+        def apply(changes):
+            for path, (text, changed) in changes.items():
+                self.assertEqual(text, Path(path).read_text())
+                self.assertNotIn('\r', text)
+                seen.append(path)
+            write_like_the_upgrade(changes)
+
+        completed, blocks = self.server.repair(apply)
+        self.assertEqual(seen, [self.server.vhost('a.test'), self.server.vhost('b.test'), self.server.main])
+        self.assertEqual((completed, blocks), ([('SSL', 'b.test'), ('SSL IPv6', 'a.test')], ['a.test', 'b.test']))
+        for path, data in before.items():
+            self.assert_only_added(data, Path(path).read_bytes())
+
+    @unittest.skipUnless(locale.getpreferredencoding(False).lower().replace('-', '') == 'utf8', 'needs a UTF-8 locale')
+    def test_upgrade_leaves_out_a_website_whose_file_is_not_text_and_repairs_the_rest(self):
+        for website in ('a.test', 'b.test'):
+            self.server.add(website)
+        self.server.listener('SSL', '*:443', 'a.test')
+        self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
+        odd = self.make_odd(self.server.vhost('a.test'))
+        completed, blocks = self.server.repair()
+        self.assertEqual((completed, blocks), ([('SSL', 'b.test')], ['b.test']))
+        self.assertEqual(Path(self.server.vhost('a.test')).read_bytes(), odd)
+        self.assertEqual(len(self.server.notes), 1)
+        self.assertIn('a.test was left without its own certificate block', self.server.notes[0])
+
+
+class UpgradeRepairTests(ServerTestCase):
     def one_family_each(self):
         for website in ('a.test', 'b.test', 'c.test'):
             self.server.add(website, config=VHOST_CONFIG + (self.server.vhssl(website) if website == 'c.test' else ''))
@@ -471,53 +744,111 @@ class UpgradePlanTests(unittest.TestCase):
         self.server.listener('SSL', '*:443', 'a.test', map_line('a.test'), *both)
         self.server.listener('SSL IPv6', '[ANY]:443', 'b.test', map_line('b.test'), *both)
 
-    def test_plan_names_the_files_and_writes_nothing(self):
+    def test_each_block_is_a_change_of_its_own_and_the_maps_follow(self):
         self.one_family_each()
         before = self.server.files()
-        changes, completed = self.server.plan()
+        changes = []
+        completed, blocks = self.server.repair(changes.append)
         self.assertEqual(self.server.files(), before)
-        self.assertEqual(list(changes), [self.server.vhost('a.test'), self.server.vhost('b.test'), self.server.main])
-        self.assertEqual(completed, [('SSL', 'b.test'), ('SSL IPv6', 'a.test')])
-        for path, (current, repaired) in changes.items():
-            self.assertEqual(current, before[path])
-        self.assertEqual(changes[self.server.vhost('a.test')][1], VHOST_CONFIG + self.server.vhssl('a.test'))
+        self.assertEqual([list(change) for change in changes],
+                         [[self.server.vhost('a.test')], [self.server.vhost('b.test')], [self.server.main]])
+        self.assertEqual((completed, blocks), ([('SSL', 'b.test'), ('SSL IPv6', 'a.test')], ['a.test', 'b.test']))
+        self.assertEqual(changes[0][self.server.vhost('a.test')],
+                         (VHOST_CONFIG, VHOST_CONFIG + self.server.vhssl('a.test')))
+        self.assertTrue(all(holds_original(change) for change in changes))
 
-    def test_applied_plan_serves_every_website_on_both_families_and_is_final(self):
+    def test_repair_serves_every_website_on_both_families_and_is_final(self):
         self.one_family_each()
-        self.apply(self.server.plan()[0])
-        config = self.server.config()
-        self.assertEqual(sorted(mapped(config, 'SSL')), sorted(mapped(config, 'SSL IPv6')))
-        self.assertEqual(sorted(mapped(config, 'SSL')), [(site, site) for site in ('a.test', 'b.test', 'c.test')])
-        for website in ('a.test', 'b.test', 'c.test'):
-            self.assertEqual(Path(self.server.vhost(website)).read_text().count('vhssl'), 1)
-        self.assertEqual(self.server.plan(), ({}, []))
+        self.server.repair()
+        self.server.assert_served(self, 'a.test', 'b.test', 'c.test')
+        after = self.server.files()
+        self.assertEqual(self.server.repair(lambda changes: self.fail('nothing is left to change')), ([], []))
+        self.assertEqual(self.server.files(), after)
+        self.assertEqual(self.server.notes, [])
 
-    def test_website_without_certificate_files_is_left_on_its_one_listener(self):
+    def test_refused_block_leaves_that_website_out_and_repairs_the_rest(self):
+        self.one_family_each()
+
+        def apply(changes):
+            if self.server.vhost('a.test') in changes:
+                raise ChangeRefused('fixture refusal')
+            write_like_the_upgrade(changes)
+
+        completed, blocks = self.server.repair(apply)
+        self.assertEqual((completed, blocks), ([('SSL', 'b.test')], ['b.test']))
+        self.assertEqual(Path(self.server.vhost('a.test')).read_text(), VHOST_CONFIG)
+        self.assertEqual(mapped(self.server.config(), 'SSL IPv6'), [('b.test', 'b.test'), ('c.test', 'c.test')])
+        self.assertEqual(self.server.notes, ['a.test was left without its own certificate block: fixture refusal'])
+
+    def test_website_under_a_linked_directory_is_left_out_and_the_rest_repaired(self):
+        self.one_family_each()
+        directory = os.path.dirname(self.server.vhost('a.test'))
+        os.rename(directory, directory + '.real')
+        os.symlink(directory + '.real', directory)
+        completed, blocks = self.server.repair()
+        self.assertEqual((completed, blocks), ([('SSL', 'b.test')], ['b.test']))
+        self.assertEqual(Path(self.server.vhost('a.test')).read_text(), VHOST_CONFIG)
+        self.assertEqual(len(self.server.notes), 1)
+        self.assertIn('is reached through a symbolic link', self.server.notes[0])
+
+    def test_linked_website_that_has_its_block_is_still_mapped(self):
+        self.server.add('a.test', config=VHOST_CONFIG + self.server.vhssl('a.test'))
+        self.server.add('b.test', config=VHOST_CONFIG + self.server.vhssl('b.test'))
+        directory = os.path.dirname(self.server.vhost('a.test'))
+        os.rename(directory, directory + '.real')
+        os.symlink(directory + '.real', directory)
+        self.server.listener('SSL', '*:443', 'a.test')
+        self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
+        self.assertEqual(self.server.repair(), ([('SSL', 'b.test'), ('SSL IPv6', 'a.test')], []))
+
+    def test_change_that_could_not_be_taken_back_ends_the_repair(self):
+        self.one_family_each()
+        seen = []
+
+        def apply(changes):
+            seen.append(list(changes))
+            raise RuntimeError('OpenLiteSpeed is unavailable after configuration reload')
+
+        with self.assertRaisesRegex(RuntimeError, 'unavailable after configuration reload'):
+            self.server.repair(apply)
+        self.assertEqual(seen, [[self.server.vhost('a.test')]])
+
+    def test_refused_map_change_is_passed_on_after_the_blocks_were_given(self):
+        self.one_family_each()
+
+        def apply(changes):
+            if self.server.main in changes:
+                raise ChangeRefused('fixture refusal')
+            write_like_the_upgrade(changes)
+
+        with self.assertRaisesRegex(ChangeRefused, 'fixture refusal'):
+            self.server.repair(apply)
+        self.assertEqual(Path(self.server.vhost('a.test')).read_text().count('vhssl'), 1)
+        self.assertEqual(mapped(self.server.config(), 'SSL IPv6'), [('b.test', 'b.test'), ('c.test', 'c.test')])
+
+    def test_website_without_a_usable_certificate_is_left_on_its_one_listener(self):
         self.server.add('a.test')
-        self.server.add('plain.test', certificate=False)
-        self.server.add('broken.test', certificate=False, config=VHOST_CONFIG + self.server.vhssl('broken.test'))
+        self.server.add('plain.test', certificate_pem=False)
+        self.server.add('old.test', certificate_pem=certificate('old.test', starts=-400, ends=-30))
+        self.server.add('broken.test', certificate_pem=False, config=VHOST_CONFIG + self.server.vhssl('broken.test'))
         self.server.listener('SSL', '*:443', 'a.test', map_line('a.test'), map_line('plain.test'),
-                             map_line('broken.test'))
+                             map_line('old.test'), map_line('broken.test'))
         self.server.listener('SSL IPv6', '[ANY]:443', 'a.test')
         before = self.server.files()
-        changes, completed = self.server.plan()
-        self.assertEqual(list(changes), [self.server.vhost('a.test')])
-        self.assertEqual(completed, [])
-        self.apply(changes)
+        self.assertEqual(self.server.repair(), ([], ['a.test']))
         self.assertEqual(mapped(self.server.config(), 'SSL IPv6'), [('a.test', 'a.test')])
-        for website in ('plain.test', 'broken.test'):
-            self.assertEqual(Path(self.server.vhost(website)).read_text(), before[self.server.vhost(website)])
+        for website in ('plain.test', 'old.test', 'broken.test'):
+            self.assertEqual(Path(self.server.vhost(website)).read_bytes(), before[self.server.vhost(website)])
+        self.assertEqual(self.server.notes, [])
 
     def test_single_https_website_gets_its_own_certificate_block(self):
         self.server.add('a.test')
         self.server.listener('SSL', '*:443', 'a.test')
-        changes, completed = self.server.plan()
-        self.assertEqual(list(changes), [self.server.vhost('a.test')])
-        self.assertEqual(completed, [])
+        self.assertEqual(self.server.repair(), ([], ['a.test']))
 
     def test_server_without_https_needs_nothing(self):
         self.server.add('a.test')
-        self.assertEqual(self.server.plan(), ({}, []))
+        self.assertEqual(self.server.repair(lambda changes: self.fail('nothing to change')), ([], []))
 
     def test_apache_backend_website_keeps_its_block(self):
         proxy = VHOST_CONFIG + self.server.vhssl('a.test')
@@ -525,40 +856,35 @@ class UpgradePlanTests(unittest.TestCase):
         self.server.add('b.test')
         self.server.listener('SSL', '*:443', 'a.test')
         self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
-        changes, completed = self.server.plan()
-        self.assertNotIn(self.server.vhost('a.test'), changes)
-        self.assertEqual(completed, [('SSL', 'b.test'), ('SSL IPv6', 'a.test')])
+        self.assertEqual(self.server.repair(), ([('SSL', 'b.test'), ('SSL IPv6', 'a.test')], ['b.test']))
+        self.assertEqual(Path(self.server.vhost('a.test')).read_text(), proxy)
 
-    def test_linked_website_configuration_and_unsafe_names_are_skipped(self):
+    def test_unsafe_name_in_a_map_is_ignored(self):
         self.server.add('a.test')
         self.server.add('b.test')
-        real = self.server.vhost('b.test') + '.real'
-        os.rename(self.server.vhost('b.test'), real)
-        os.symlink(real, self.server.vhost('b.test'))
         self.server.listener('SSL', '*:443', 'a.test', map_line('a.test'), map_line('../a.test'))
         self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
-        changes, completed = self.server.plan()
-        self.assertEqual(list(changes), [self.server.vhost('a.test'), self.server.main])
-        self.assertEqual(completed, [('SSL IPv6', 'a.test')])
+        self.assertEqual(self.server.repair(), ([('SSL', 'b.test'), ('SSL IPv6', 'a.test')], ['a.test', 'b.test']))
 
-    def test_custom_listener_is_not_part_of_the_plan(self):
+    def test_custom_listener_is_not_part_of_the_repair(self):
         for website in ('a.test', 'b.test', 'shop.test'):
             self.server.add(website)
         self.server.listener('SSL', '*:443', 'a.test')
         self.server.listener('Shop8443', '*:8443', 'shop.test')
         self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
         custom = block(self.server.config(), 'Shop8443')
-        changes, _ = self.server.plan()
-        self.assertNotIn(self.server.vhost('shop.test'), changes)
-        self.apply(changes)
+        self.server.repair()
         self.assertEqual(block(self.server.config(), 'Shop8443'), custom)
+        self.assertEqual(Path(self.server.vhost('shop.test')).read_text(), VHOST_CONFIG)
         self.assertEqual(sorted(mapped(self.server.config(), 'SSL')), [('a.test', 'a.test'), ('b.test', 'b.test')])
 
 
-def method(filename, class_name, name):
-    tree = ast.parse(Path(__file__).with_name(filename).read_text())
-    owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name)
-    node = next(node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name == name)
+def function(filename, name, class_name=None):
+    """The definition of a function, or of a method when a class is named, without decorators."""
+    body = ast.parse(Path(__file__).with_name(filename).read_text()).body
+    if class_name:
+        body = next(node for node in body if isinstance(node, ast.ClassDef) and node.name == class_name).body
+    node = next(node for node in body if isinstance(node, ast.FunctionDef) and node.name == name)
     node.decorator_list = []
     return node
 
@@ -566,6 +892,25 @@ def method(filename, class_name, name):
 def compiled(node, namespace):
     exec(compile(ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[])), '<panel>', 'exec'), namespace)
     return namespace[node.name]
+
+
+def strings(node):
+    """Every string constant in a piece of syntax tree."""
+    values = []
+    for item in ast.walk(node):
+        kind = type(item).__name__
+        if kind == 'Constant':
+            values.append(item.value)
+        elif kind == 'Str':
+            values.append(item.s)
+    return [value for value in values if isinstance(value, str)]
+
+
+def calls_on(node, owner):
+    """(method name, line) of every call made on the name `owner`."""
+    return [(item.func.attr, item.lineno) for item in ast.walk(node)
+            if isinstance(item, ast.Call) and isinstance(item.func, ast.Attribute)
+            and isinstance(item.func.value, ast.Name) and item.func.value.id == owner]
 
 
 class CertificateInstallEntryTests(unittest.TestCase):
@@ -581,7 +926,7 @@ class CertificateInstallEntryTests(unittest.TestCase):
             'Websites': mock.MagicMock(), 'ChildDomains': mock.MagicMock(), 'ACLManager': mock.MagicMock(),
             'os': os, 'open': mock.mock_open(read_data='<VirtualHost *:443>\n'),
         }
-        installer = compiled(method(filename, 'sslUtilities', 'installSSLForDomain'), namespace)
+        installer = compiled(function(filename, 'installSSLForDomain', 'sslUtilities'), namespace)
         with mock.patch('OpenSSL.crypto.load_certificate'):
             return installer('a.test'), install
 
@@ -607,55 +952,124 @@ class CertificateInstallEntryTests(unittest.TestCase):
 
     def test_no_installer_keeps_listener_writing_of_its_own(self):
         for filename in ('sslUtilities.py', 'sslv2.py'):
-            source = ast.get_source_segment(Path(__file__).with_name(filename).read_text(),
-                                            method(filename, 'sslUtilities', 'installSSLForDomain'))
-            self.assertNotIn('httpd_config.conf', source)
+            constants = strings(function(filename, 'installSSLForDomain', 'sslUtilities'))
+            self.assertEqual([value for value in constants if 'httpd_config' in value or 'listener' in value], [])
 
 
-class UpgradeStepTests(unittest.TestCase):
-    def step(self, installed=True):
-        upgrade = mock.Mock()
-        apply = mock.Mock()
-        namespace = {'os': SimpleNamespace(path=SimpleNamespace(exists=lambda path: installed)),
-                     'Upgrade': upgrade, 'apply_ols_config_changes': apply}
-        return compiled(method('upgrade.py', 'Upgrade', 'reconcileHTTPSListenerMaps'), namespace), upgrade, apply
+class OLSUpgradeFailure(RuntimeError):
+    pass
 
-    def test_planned_changes_go_through_the_validated_configuration_change(self):
-        step, upgrade, apply = self.step()
-        changes = {'/usr/local/lsws/conf/httpd_config.conf': ('before', 'after')}
-        with mock.patch('plogical.httpsListenerMapping.plan_listener_repair',
-                        return_value=(changes, [('SSL', 'b.test')])) as plan:
-            step()
-        plan.assert_called_once_with()
-        apply.assert_called_once_with(changes)
-        message = upgrade.stdOut.call_args[0][0]
-        self.assertIn('1 mapping(s) completed, 1 file(s) updated', message)
-        self.assertIn('SSL: b.test', message)
 
-    def test_refused_change_is_reported_and_does_not_stop_the_upgrade(self):
-        step, upgrade, apply = self.step()
-        apply.side_effect = RuntimeError('OpenLiteSpeed configuration migration failed: fixture')
-        with mock.patch('plogical.httpsListenerMapping.plan_listener_repair', return_value=({'x': ('a', 'b')}, [])):
-            step()
-        message = upgrade.stdOut.call_args[0][0]
-        self.assertTrue(message.startswith('WARNING: HTTPS listener maps were not reconciled'))
-        self.assertIn('fixture', message)
+class UpgradeStepTests(ServerTestCase):
+    """The step of the upgrade script, run against the temporary server."""
+
+    def setUp(self):
+        super(UpgradeStepTests, self).setUp()
+        for website in ('a.test', 'b.test'):
+            self.server.add(website)
+        self.server.listener('SSL', '*:443', 'a.test')
+        self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
+        self.upgrade = mock.Mock()
+        self.apply = mock.Mock(side_effect=write_like_the_upgrade)
+        self.running = mock.Mock(return_value=True)
+        self.installed = True
+        namespace = {'os': SimpleNamespace(path=SimpleNamespace(exists=lambda path: self.installed)),
+                     'Upgrade': self.upgrade, 'apply_ols_config_changes': self.apply,
+                     'ols_service_running': self.running, 'OLSUpgradeFailure': OLSUpgradeFailure}
+        self.step = compiled(function('upgrade.py', 'reconcileHTTPSListenerMaps', 'Upgrade'), namespace)
+        here = mock.patch.object(subject, 'repair_https_listeners', functools.partial(
+            repair_https_listeners, server_root=self.server.root, certificate_root=self.server.certificates))
+        here.start()
+        self.addCleanup(here.stop)
+
+    def message(self):
+        return self.upgrade.stdOut.call_args[0][0]
+
+    def refuse(self, path, leave=None):
+        """The validated change fails for one file; `leave` is what that file holds afterwards."""
+        def apply(changes):
+            if path in changes:
+                if leave is not None:
+                    Path(path).write_text(leave)
+                raise OLSUpgradeFailure('OpenLiteSpeed configuration migration failed: fixture')
+            write_like_the_upgrade(changes)
+        self.apply.side_effect = apply
+
+    def test_repair_goes_through_the_validated_configuration_change(self):
+        self.step()
+        self.assertEqual(self.apply.call_count, 3)
+        self.server.assert_served(self, 'a.test', 'b.test')
+        self.assertIn('2 mapping(s) completed, 2 website(s) given their own certificate block', self.message())
+        self.assertIn('\n  SSL: b.test', self.message())
+        self.assertIn('\n  SSL IPv6: a.test', self.message())
+
+    def test_refused_and_restored_change_of_one_website_does_not_stop_the_others(self):
+        self.refuse(self.server.vhost('a.test'))
+        self.step()
+        self.assertEqual(Path(self.server.vhost('a.test')).read_text(), VHOST_CONFIG)
+        self.assertEqual(mapped(self.server.config(), 'SSL'), [('a.test', 'a.test'), ('b.test', 'b.test')])
+        self.assertEqual(mapped(self.server.config(), 'SSL IPv6'), [('b.test', 'b.test')])
+        self.assertIn('1 mapping(s) completed, 1 website(s) given', self.message())
+        self.assertIn('a.test was left without its own certificate block', self.message())
+
+    def test_refused_and_restored_map_change_is_a_warning(self):
+        self.refuse(self.server.main)
+        self.step()
+        self.assertTrue(self.message().startswith('WARNING: HTTPS listener maps were not reconciled'))
+        self.assertIn('fixture', self.message())
+
+    def test_file_left_changed_by_a_failed_change_stops_the_upgrade(self):
+        for path in (self.server.vhost('a.test'), self.server.main):
+            with self.subTest(path=path):
+                self.refuse(path, leave='half written\n')
+                with self.assertRaisesRegex(OLSUpgradeFailure, 'fixture'):
+                    self.step()
+
+    def test_server_that_did_not_come_back_stops_the_upgrade(self):
+        self.refuse(self.server.vhost('a.test'))
+        self.running.side_effect = [True, False]
+        with self.assertRaisesRegex(OLSUpgradeFailure, 'fixture'):
+            self.step()
+        self.upgrade.stdOut.assert_not_called()
+
+    def test_state_that_cannot_be_established_after_a_failure_stops_the_upgrade(self):
+        self.refuse(self.server.vhost('a.test'))
+        self.running.side_effect = [True, RuntimeError('Cannot determine OpenLiteSpeed service state')]
+        with self.assertRaisesRegex(OLSUpgradeFailure, 'fixture'):
+            self.step()
+
+    def test_stopped_server_that_stays_stopped_counts_as_restored(self):
+        self.running.return_value = False
+        self.refuse(self.server.vhost('a.test'))
+        self.step()
+        self.assertIn('a.test was left without its own certificate block', self.message())
+
+    def test_state_that_cannot_be_established_beforehand_changes_nothing(self):
+        before = self.server.files()
+        self.running.side_effect = RuntimeError('Cannot determine OpenLiteSpeed service state')
+        self.step()
+        self.assertEqual(self.server.files(), before)
+        self.apply.assert_not_called()
+        self.assertTrue(self.message().startswith('WARNING: HTTPS listener maps were not reconciled'))
 
     def test_server_without_openlitespeed_is_skipped(self):
-        step, upgrade, apply = self.step(installed=False)
-        with mock.patch('plogical.httpsListenerMapping.plan_listener_repair') as plan:
-            step()
-        plan.assert_not_called()
-        apply.assert_not_called()
+        self.installed = False
+        self.step()
+        self.apply.assert_not_called()
+        self.upgrade.stdOut.assert_not_called()
 
-    def test_upgrade_runs_the_step(self):
-        calls = [(node.func.attr, node.lineno) for node in ast.walk(method('upgrade.py', 'Upgrade', 'upgrade'))
-                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-                 and isinstance(node.func.value, ast.Name) and node.func.value.id == 'Upgrade']
+    def test_upgrade_runs_the_step_once_the_new_release_is_in_place(self):
+        calls = calls_on(function('upgrade.py', 'upgrade', 'Upgrade'), 'Upgrade')
         lines = dict(calls)
         self.assertEqual([name for name, _ in calls].count('reconcileHTTPSListenerMaps'), 1)
-        # The step is part of the new release, so it can only run once that source is in place.
         self.assertLess(lines['downloadAndUpgrade'], lines['reconcileHTTPSListenerMaps'])
+
+    def test_upgrade_started_from_the_cloud_runs_the_step_too(self):
+        calls = calls_on(function('CyberPanelUpgrade.py', 'UpgardeNow', 'UpgradeCyberPanel'), 'Upgrade')
+        lines = dict(calls)
+        self.assertEqual([name for name, _ in calls].count('reconcileHTTPSListenerMaps'), 1)
+        self.assertLess(lines['downloadAndUpgrade'], lines['reconcileHTTPSListenerMaps'])
+        self.assertLess(lines['sensitiveFileProtectionMigration'], lines['reconcileHTTPSListenerMaps'])
 
 
 if __name__ == '__main__':

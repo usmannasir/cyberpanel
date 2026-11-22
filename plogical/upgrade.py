@@ -196,6 +196,11 @@ def apply_ols_config_changes(changes):
         raise OLSUpgradeFailure('OpenLiteSpeed configuration migration failed: ' + str(error)) from error
 
 
+def ols_service_running():
+    """Whether OpenLiteSpeed is running, established the way the configuration migrations do."""
+    return bool(load_ols_diagnostic_helper('olsServiceControl.py').OLSService().settled_state())
+
+
 def stagger_renewal_cron(data):
     """Move the stock weekly renewal slot, preserving customized schedules."""
     return re.sub(
@@ -4116,24 +4121,44 @@ passdb {
         """Map every website that has a certificate on the IPv4 and the IPv6 HTTPS listener.
 
         A website mapped on one of the two only answers the other address
-        family with another website's certificate. A change OpenLiteSpeed does
-        not accept is taken back and reported; it does not stop the upgrade.
+        family with another website's certificate. A change that was refused
+        and left the files and the service as they were is reported and does
+        not stop the upgrade. One the server could not be brought back from
+        stops it, as for every other OpenLiteSpeed configuration migration.
         """
         if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
             return
 
+        notes = []
         try:
-            from plogical.httpsListenerMapping import plan_listener_repair
-            changes, completed = plan_listener_repair()
-            apply_ols_config_changes(changes)
+            from plogical.httpsListenerMapping import ChangeRefused, holds_original, repair_https_listeners
+
+            def apply(changes):
+                running = ols_service_running()
+                try:
+                    apply_ols_config_changes(changes)
+                except OLSUpgradeFailure as error:
+                    try:
+                        restored = holds_original(changes) and ols_service_running() == running
+                    except Exception:
+                        restored = False
+                    if not restored:
+                        raise
+                    raise ChangeRefused(str(error))
+
+            completed, blocks = repair_https_listeners(apply, notes.append)
             Upgrade.stdOut(
-                'HTTPS listener maps: %s mapping(s) completed, %s file(s) updated%s' % (
-                    len(completed), len(changes),
-                    ''.join('\n  %s: %s' % pair for pair in completed)),
+                'HTTPS listener maps: %s mapping(s) completed, %s website(s) given their own certificate block%s%s' % (
+                    len(completed), len(blocks),
+                    ''.join('\n  %s: %s' % pair for pair in completed),
+                    ''.join('\n  ' + note for note in notes)),
                 0,
             )
+        except OLSUpgradeFailure:
+            raise
         except Exception as msg:
-            Upgrade.stdOut('WARNING: HTTPS listener maps were not reconciled: ' + str(msg), 0)
+            Upgrade.stdOut('WARNING: HTTPS listener maps were not reconciled: ' + str(msg)
+                           + ''.join('\n  ' + note for note in notes), 0)
 
     @staticmethod
     def pdnsSchemaMigrations():
