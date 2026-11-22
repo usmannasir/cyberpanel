@@ -1187,5 +1187,31 @@ class LeftoverCertificateTests(unittest.TestCase):
                          ['_createDomain', 'createVirtualHost'])
 
 
+
+
+class HelperLocationTests(unittest.TestCase):
+    """The upgrade script finds the helpers staged beside it after it has changed directory."""
+
+    def test_a_script_started_by_a_relative_name_still_finds_its_helpers_later(self):
+        body = ast.parse(Path(__file__).with_name('upgrade.py').read_text()).body
+        wanted = [node for node in body
+                  if (isinstance(node, ast.Assign)
+                      and getattr(node.targets[0], 'id', '') == 'UPGRADE_SCRIPT_DIRECTORY')
+                  or (isinstance(node, ast.FunctionDef) and node.name == 'load_ols_diagnostic_helper')]
+        self.assertEqual(2, len(wanted))
+        before = os.getcwd()
+        with tempfile.TemporaryDirectory() as staged, tempfile.TemporaryDirectory() as elsewhere:
+            Path(staged, 'helperForTest.py').write_text('VALUE = 7\n')
+            try:
+                os.chdir(staged)
+                # Python 3.6 gives a script started as "python upgrade.py" this relative name.
+                scope = {'os': os, '__file__': 'upgrade.py'}
+                exec(compile(ast.Module(body=wanted, type_ignores=[]), 'upgrade.py', 'exec'), scope)
+                os.chdir(elsewhere)
+                self.assertEqual(7, scope['load_ols_diagnostic_helper']('helperForTest.py').VALUE)
+            finally:
+                os.chdir(before)
+
+
 if __name__ == '__main__':
     unittest.main()
