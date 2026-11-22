@@ -585,6 +585,49 @@ class HostnameCertificateTests(unittest.TestCase):
                               or call.endswith(' lscpd')])
         self.assertEqual(1, calls.count('password-check'))
 
+    def test_signal_while_the_run_is_being_closed_does_not_leave_it_open(self):
+        # The certificate failed; the end of the run asks the panel, and the
+        # signal arrives during that question.
+        for name in ('TERM', 'INT', 'HUP'):
+            with self.subTest(signal=name):
+                machine = self.machine()
+                result = machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED, probe_signal=name)
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertEqual(['hostname_ssl warning hostname_ssl', 'panel ready', 'install failed hostname_ssl'],
+                                 machine.events()[-3:])
+                self.assertNotIn('interrupted', ' '.join(machine.events()))
+                self.assertIn('a certificate for the hostname of this server could not be issued', result.stdout)
+
+    def test_signal_while_a_failed_run_holds_the_panel_does_not_leave_it_open(self):
+        # The second stop of the panel's service is the one of the end of the run.
+        for name in ('TERM', 'INT', 'HUP'):
+            with self.subTest(signal=name):
+                machine = Installer(self)
+                result = machine.run('-v', 'ols', fail_at='Post_Install_Required_Components',
+                                     stop_signal='2:' + name)
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertEqual(['finishing failed panel_setup', 'install failed panel_setup'], machine.events()[-2:])
+        # The first one is not: there the signal ends the run as interrupted.
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', fail_at='Post_Install_Required_Components', stop_signal='1:TERM')
+        self.assertEqual(-signal.SIGTERM, result.returncode)
+        self.assertEqual('install failed interrupted', machine.events()[-1])
+
+    def test_end_of_a_run_ignores_signals_before_it_does_anything_else(self):
+        functions, _ = script_parts()
+        begin = functions.index('\nInstall_On_Exit() {\n')
+        body = [line for line in functions[begin:functions.index('\n}\n', begin)].splitlines()[2:]
+                if not line.startswith('#')]
+        self.assertEqual(['local status=$? step reason panel_complete="No"', "trap '' HUP INT TERM"], body[:2])
+
+    def test_help_says_how_an_installation_is_stopped(self):
+        result = Installer(self).run('--help')
+        self.assertEqual(0, result.returncode)
+        self.assertIn('press Ctrl-C in the terminal it runs in', result.stdout)
+        self.assertIn('send the signal to the process group of the installer', result.stdout)
+        self.assertIn('a signal sent to the script alone takes effect only when the command that is running has ended',
+                      result.stdout)
+
     def test_certificate_counts_as_failed_only_once_its_request_has_failed(self):
         machine = self.machine()
         machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED)
