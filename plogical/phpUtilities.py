@@ -234,7 +234,9 @@ class phpUtilities:
             # phpVers is the path of the php.ini. Only a file the PHP settings
             # pages manage is written, and only from the staging directory.
             phpVers = phpUtilities.managedIniPath(phpVers)
-            content = phpUtilities.readStagedIni(tempPath)
+            # Line ends are written as LF, as this editor always did: a
+            # client of the API may send CRLF or CR.
+            content = phpUtilities.readStagedIni(tempPath).replace(b'\r\n', b'\n').replace(b'\r', b'\n')
 
             serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
             command = 'touch %s' % (serverLevelPHPRestart)
