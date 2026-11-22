@@ -369,6 +369,12 @@ class PasswordOutcomeTests(unittest.TestCase):
     def probes(self, machine):
         return [call for call in machine.recorded(machine.calls) if '127.0.0.1:8090' in call]
 
+    def assert_panel_stopped(self, machine, result):
+        # Left running, it would let anyone in: see Stop_Panel_Without_Password.
+        self.assertIn('systemctl stop lscpd', machine.recorded(machine.calls))
+        self.assertIn('The panel has been stopped', result.stdout)
+        self.assertIn("adminPass 'a new password'", result.stdout)
+
     def test_tree_that_can_read_a_file_gets_the_file(self):
         machine = Installer(self)
         result = machine.run('-v', 'ols', '-p', 'Typed-Secret-99')
@@ -379,6 +385,7 @@ class PasswordOutcomeTests(unittest.TestCase):
                           str(machine.stored_password)], call)
         self.assertEqual('Typed-Secret-99\n', machine.stored_password.read_text())
         self.assertEqual(0o600, stat.S_IMODE(machine.stored_password.stat().st_mode))
+        self.assertNotIn('systemctl stop lscpd', machine.recorded(machine.calls))
 
     def test_older_tree_gets_the_password_and_the_run_completes(self):
         machine = Installer(self)
@@ -413,6 +420,7 @@ class PasswordOutcomeTests(unittest.TestCase):
                 self.assertEqual([], self.probes(machine))
                 self.assertIn('The admin password could not be set in the panel', result.stdout)
                 self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+                self.assert_panel_stopped(machine, result)
 
     def test_administrator_without_the_given_password_fails_the_run(self):
         machine = Installer(self)
@@ -425,6 +433,7 @@ class PasswordOutcomeTests(unittest.TestCase):
         self.assertEqual([], self.probes(machine))
         self.assertIn('its administrator does not have the password of this installation', result.stdout)
         self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+        self.assert_panel_stopped(machine, result)
 
     def test_failed_certificate_is_no_working_panel_without_the_given_password(self):
         machine = Installer(self)
