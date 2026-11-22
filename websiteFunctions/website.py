@@ -2591,7 +2591,7 @@ Require valid-user
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                        " --phpVersion " + shlex.quote(phpSelection) + " --ssl " + str(1) + " --dkimCheck " + str(1) \
                        + " --openBasedir " + ("1" if data['openBasedir'] in (1, '1', True) else "0") + ' --path ' + shlex.quote(path) + ' --websiteOwner ' \
-                       + admin.userName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
+                       + shlex.quote(admin.userName) + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + f' --aliasDomain {str(alias)}'
 
             ProcessUtilities.popenExecutioner(execPath)
             time.sleep(2)
@@ -4468,7 +4468,7 @@ Require valid-user
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --ssl " + str(
-                ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email + ' --websiteOwner ' + admin.userName
+                ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email + ' --websiteOwner ' + shlex.quote(admin.userName)
 
             output = ProcessUtilities.outputExecutioner(execPath)
 

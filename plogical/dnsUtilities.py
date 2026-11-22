@@ -53,9 +53,10 @@ class DNS:
     ## DNS Functions
 
     def loadCFKeys(self):
-        cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
+        from plogical.panelUserNames import existing_file_for_user
+        cfFile = existing_file_for_user(DNS.CFPath, self.admin)
 
-        if os.path.exists(cfFile):
+        if cfFile is not None:
             data = open(cfFile, 'r').readlines()
             self.email = data[0].rstrip('\n')
             self.key = data[1].rstrip('\n')

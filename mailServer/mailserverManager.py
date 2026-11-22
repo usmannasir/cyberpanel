@@ -294,7 +294,7 @@ class MailServerManager(multi.Thread):
             website = Websites.objects.get(domain=selectedDomain)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = '%s setupAutoDiscover --virtualHostName %s --websiteOwner %s' % (execPath, selectedDomain, website.admin.userName)
+            execPath = '%s setupAutoDiscover --virtualHostName %s --websiteOwner %s' % (execPath, selectedDomain, shlex.quote(website.admin.userName))
 
             ProcessUtilities.executioner(execPath)
 
