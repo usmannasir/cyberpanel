@@ -72,6 +72,7 @@ class UpgradeCyberPanel:
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()
+        Upgrade.repairDatabaseGrants()
 
         self.PostStatus('Database updated.,55')
 

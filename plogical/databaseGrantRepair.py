@@ -1,0 +1,159 @@
+"""Give the grants made by earlier releases the exact form, during every upgrade.
+
+Earlier releases granted a database user its database by the plain name. In
+a grant `_` and `%` are wildcards (see databaseGrants), so the user of
+`shop_db` could also use a database called `shopXdb`. For every database
+registered in the panel, each account that holds a grant under the plain name
+(the database's own user at every host, the phpMyAdmin account of a panel
+user, an account added by hand) first gets the same privileges under the
+escaped name and only then loses the plain grant, so nobody is without access
+in between. A wildcard grant that is not the name of a registered database
+was made by someone else: it is reported and left as it is.
+
+Nothing here keeps state: a grant that is already exact is not touched, so the
+repair can run at every upgrade and a run that was interrupted is finished by
+the next one. It works on the server the panel creates its databases on, local
+or remote, with the panel's administrative account; where that account may not
+read or change grants the failure is reported and nothing else is affected.
+"""
+import re
+
+from plogical import databaseGrants
+
+# One line of SHOW GRANTS for a whole database, e.g.
+#   GRANT ALL PRIVILEGES ON `shop_db`.* TO `shop_user`@`localhost` WITH GRANT OPTION
+GRANT_LINE = re.compile(
+    r'GRANT (?P<privileges>[A-Z][A-Z ,]*) ON `(?P<database>(?:[^`]|``)+)`\.\* TO .*?(?P<option> WITH GRANT OPTION)?')
+
+COVERED_SHOWN = 12
+
+
+class RepairError(Exception):
+    pass
+
+
+def quote(name):
+    """The name between backticks, as mysqlUtilities.quoteIdentifier writes it."""
+    return '`' + str(name).replace('`', '``') + '`'
+
+
+def _rows(cursor, query, args=None):
+    cursor.execute(query, args)
+    return [tuple(databaseGrants.text(value) for value in row) for row in cursor.fetchall()]
+
+
+def _shown_grant(cursor, stored, user, host):
+    """(privileges, with grant option) as the server itself writes this account's grant on `stored`."""
+    holder, values = databaseGrants.holder(user, host)
+    for (line,) in _rows(cursor, 'SHOW GRANTS FOR ' + holder, values):
+        match = GRANT_LINE.fullmatch(line)
+        if match and match.group('database').replace('``', '`') == stored:
+            return match.group('privileges'), bool(match.group('option'))
+    raise RepairError('the server does not show this grant')
+
+
+def _held(cursor, stored, user, host):
+    return bool(_rows(cursor, 'SELECT 1 FROM mysql.db WHERE Db = %s AND User = %s AND Host = %s',
+                      (stored, user, host)))
+
+
+def _move(cursor, stored, user, host):
+    privileges, option = _shown_grant(cursor, stored, user, host)
+    escaped = databaseGrants.escape_grant_name(stored)
+    exact, plain = quote(escaped), quote(stored)
+    holder, values = databaseGrants.holder(user, host)
+    cursor.execute('GRANT %s ON %s.* TO %s%s' % (privileges, exact, holder, ' WITH GRANT OPTION' if option else ''),
+                   values)
+    if not _held(cursor, escaped, user, host):
+        raise RepairError('the exact grant was not stored')
+    cursor.execute('REVOKE %s ON %s.* FROM %s' % (privileges, plain, holder), values)
+    if option:
+        cursor.execute('REVOKE GRANT OPTION ON %s.* FROM %s' % (plain, holder), values)
+    if _held(cursor, stored, user, host):
+        raise RepairError('the plain grant is still there after the revoke')
+
+
+def repair(cursor, registered):
+    """Move the plain grants of registered databases to the exact form; list other wildcard grants.
+
+    `registered` holds the database names known to the panel.
+    """
+    result = {'literal': False, 'moved': [], 'failed': [], 'patterns': []}
+    if databaseGrants.names_are_literal(cursor):
+        # This server reads the name of a grant literally: nothing was ever a wildcard.
+        result['literal'] = True
+        return result
+    # A server that folds database names to lower case stores them that way in its grants.
+    folds = _rows(cursor, 'SELECT @@lower_case_table_names')[0][0] not in (0, '0')
+    known = set(name.lower() if folds else name for name in registered)
+    schemas = None
+    for stored, user, host in _rows(cursor, 'SELECT Db, User, Host FROM mysql.db ORDER BY Db, User, Host'):
+        if not databaseGrants.is_pattern(stored):
+            continue
+        if stored in known:
+            try:
+                _move(cursor, stored, user, host)
+                result['moved'].append([stored, user, host])
+            except Exception as error:
+                result['failed'].append([stored, user, host, type(error).__name__ + ': ' + str(error)])
+            continue
+        if schemas is None:
+            schemas = [row[0] for row in _rows(cursor, 'SELECT SCHEMA_NAME FROM information_schema.SCHEMATA')]
+        covered = sorted(name for name in known.union(schemas) if databaseGrants.pattern_matches(stored, name))
+        result['patterns'].append([stored, user, host, covered])
+    return result
+
+
+def describe(result, log):
+    """Tell the administrator what was done and what needs a look."""
+    if result['literal']:
+        log('Database grants: this server reads database names in grants literally; nothing to change.')
+        return
+    if result['moved']:
+        log('Database grants: %d grant(s) of earlier releases now name their own database only.'
+            % len(result['moved']))
+    for stored, user, host, reason in result['failed']:
+        log('WARNING: The grant on `%s` for %s@%s still covers similarly named databases (%s).'
+            % (stored, user or "''", host, reason))
+    for stored, user, host, covered in result['patterns']:
+        names = ', '.join(covered[:COVERED_SHOWN]) or 'no database at the moment'
+        if len(covered) > COVERED_SHOWN:
+            names += ' and %d more' % (len(covered) - COVERED_SHOWN)
+        log('NOTICE: The grant on `%s` for %s@%s is a pattern that is not the name of a database made in the '
+            'panel. It was left as it is. It covers: %s.' % (stored, user or "''", host, names))
+
+
+def panel_database():
+    """The name of the panel's own database, where it registers the databases it makes."""
+    try:
+        from CyberCP import settings
+        return str(settings.DATABASES['default']['NAME'])
+    except Exception:
+        return 'cyberpanel'
+
+
+def registered_databases(cursor, database):
+    """Names of the databases made in the panel, read with the administrative connection."""
+    return [row[0] for row in _rows(cursor, 'SELECT dbName FROM %s.databases_databases' % quote(database))]
+
+
+def run(connect=None, log=print):
+    """Entry point for the upgrader; `connect` returns (connection, cursor) or (0, 0)."""
+    if connect is None:
+        from plogical.mysqlUtilities import mysqlUtilities
+        connect = mysqlUtilities.setupConnection
+
+    connection, cursor = connect()
+    if connection == 0:
+        log('WARNING: Database grants were not checked: no connection to the database server.')
+        return 'no connection'
+    try:
+        result = repair(cursor, registered_databases(cursor, panel_database()))
+    finally:
+        connection.close()
+    describe(result, log)
+    if result['failed']:
+        return 'incomplete'
+    if result['moved']:
+        return 'repaired'
+    return 'nothing to change'

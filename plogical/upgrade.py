@@ -2099,6 +2099,21 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             Upgrade.stdOut('Unable to rotate invalid API access tokens: %s' % msg, 0)
 
     @staticmethod
+    def repairDatabaseGrants():
+        """Make the database grants of earlier releases name their own database only.
+
+        Earlier releases granted a database user its database under a name the
+        database server reads as a pattern (see the helper, which the new
+        source provides). A failure is reported and never stops the upgrade.
+        """
+        try:
+            from plogical.databaseGrantRepair import run as repair_database_grants
+            Upgrade.stdOut('Database grants: ' + repair_database_grants(
+                connect=Upgrade.setupConnection, log=Upgrade.stdOut), 0)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: Database grants were not checked: ' + str(error), 0)
+
+    @staticmethod
     def setupConnection(db=None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
@@ -5838,6 +5853,8 @@ pm.max_spare_servers = 3
         if not Upgrade.applyFirewallMigrations():
             raise RuntimeError('Required firewall database migrations failed')
         Upgrade.rotateInvalidAPITokens()
+
+        Upgrade.repairDatabaseGrants()
 
         ## Put function here to update custom ACLs
 
