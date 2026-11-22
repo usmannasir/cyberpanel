@@ -625,7 +625,8 @@ class ACLManager:
             # Future-proof: derive the string from the version so a newly
             # released PHP (8.6, 9.0, ...) never raises UnboundLocalError on
             # pages like the subdomain list. (#1726)
-            php = phpVersion.replace("PHP", "").replace(".", "").strip()
+            # The result becomes part of paths and command lines: digits only.
+            php = ''.join(character for character in str(phpVersion) if character in '0123456789')
 
         return php
 

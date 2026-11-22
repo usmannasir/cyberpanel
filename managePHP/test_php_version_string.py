@@ -45,6 +45,31 @@ class PHPVersionStringTests(unittest.TestCase):
                     self.manager.getPHPString(stored)
 
 
+class StoredVersionOnPagesTests(unittest.TestCase):
+    """ACLManager.getPHPString, which the WordPress pages use for the website's PHP command."""
+
+    def setUp(self):
+        source = Path(__file__).resolve().parents[1] / 'plogical' / 'acl.py'
+        owner = next(node for node in ast.parse(source.read_text()).body
+                     if isinstance(node, ast.ClassDef) and node.name == 'ACLManager')
+        function = next(node for node in owner.body
+                        if isinstance(node, ast.FunctionDef) and node.name == 'getPHPString')
+        function.decorator_list = []
+        namespace = {}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), 'exec'), namespace)
+        self.compact = namespace['getPHPString']
+
+    def test_offered_versions_keep_their_compact_form(self):
+        for selection in OFFERED:
+            self.assertEqual(selection[4:].replace('.', ''), self.compact(selection))
+
+    def test_the_result_is_digits_whatever_is_stored(self):
+        for stored in ('PHP 8.3;id', 'PHP $(id)', 'PHP ../../x', "PHP 8.3' x", 'PHP 8.3 -r', 'PHP 8.3/..',
+                       'PHP \u0668.\u0663', '', 'latest'):
+            with self.subTest(stored=stored):
+                self.assertRegex(self.compact(stored), r'\A[0-9]*\Z')
+
+
 class InstalledVersionListTests(unittest.TestCase):
     listing = '\n'.join('drwxr-xr-x 5 root root 4096 Nov 21 10:02 ' + name for name in (
         '.', '..', 'admin', 'conf', 'lsphp74', 'lsphp83', 'lsphp810', 'lsphp74.bak', 'lsphp83-old', 'lsphp8x'))
