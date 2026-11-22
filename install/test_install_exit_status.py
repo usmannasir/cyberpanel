@@ -24,7 +24,9 @@ class InstallerExitStatusTests(unittest.TestCase):
             fragment = fragment.replace('/var/log/installLogs.txt', str(log))
             script = ('Remote_MySQL=%s\nMySQL_Password=test-only\nFinal_Flags=()\n'
                       'Debug_Log2() { :; }\n' % remote) + fragment + '\necho POST_INSTALL_REACHED\n'
-            return subprocess.run(['bash'], input=script, text=True, capture_output=True)
+            # Written for Python 3.6 as well, the panel's interpreter on AlmaLinux 8.
+            return subprocess.run(['bash'], input=script, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  encoding='utf-8')
 
     def test_failed_installer_cannot_use_stale_success_marker(self):
         for remote in ('On', 'Off'):
