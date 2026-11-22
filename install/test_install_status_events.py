@@ -92,9 +92,18 @@ class SuccessfulRunTests(unittest.TestCase):
              'Pre_Install_Python_Environment', 'Pre_Install_Get_Panel_Source',
              'Pre_Install_System_Tweak', 'Main_Installation', 'Post_Install_Required_Components',
              'Post_Install_PHP_Session_Setup', 'Post_Install_PHP_TimezoneDB',
-             'Post_Install_Regenerate_Cert', 'Post_Install_Regenerate_Webadmin_Console_Passwd',
+             'Post_Install_Regenerate_Cert', 'Post_Install_Start_Web_Terminal',
+             'Post_Install_Regenerate_Webadmin_Console_Passwd',
              'Post_Install_Setup_Watchdog', 'Post_Install_Setup_Utility', 'Post_Install_Tweak'],
             machine.recorded(machine.phases))
+
+    def test_a_web_terminal_that_does_not_start_is_no_failure_of_the_installation(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', fail_at='Post_Install_Start_Web_Terminal')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(COMPLETE_RUN, machine.events())
+        self.assertIn('Post_Install_Start_Web_Terminal', machine.recorded(machine.phases))
+        self.assertIn('CyberPanel Successfully Installed', result.stdout)
 
     def test_lines_have_the_agreed_form_and_one_run_name(self):
         machine = Installer(self)
