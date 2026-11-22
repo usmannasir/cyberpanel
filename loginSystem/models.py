@@ -99,9 +99,14 @@ class Administrator(models.Model):
     def save(self, *args, **kwargs):
         # The name of a new user is held to the written rule on every path
         # that creates one. Users saved earlier keep the name they have.
+        # `name_from_backup` is passed by the restore of a website alone: the
+        # owner it recreates had its name before the rule existed and is held
+        # to what such users are held to. It is an argument of this call, not
+        # a value of the user, so nothing a request sends can set it.
+        from_backup = kwargs.pop('name_from_backup', False) is True
         if self._state.adding:
-            from plogical.panelUserNames import new_name_refusal
-            refusal = new_name_refusal(self.userName)
+            from plogical.panelUserNames import new_name_refusal, restored_name_refusal
+            refusal = (restored_name_refusal if from_backup else new_name_refusal)(self.userName)
             if refusal is not None:
                 raise ValueError(refusal)
         super(Administrator, self).save(*args, **kwargs)

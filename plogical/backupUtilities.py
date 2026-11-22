@@ -751,6 +751,8 @@ class backupUtilities:
 
             ### Fetch user details
 
+            userName = None
+
             try:
 
                 userName = backupMetaData.find('userName').text
@@ -775,9 +777,16 @@ class backupUtilities:
                                              initWebsitesLimit=initWebsitesLimit, acl=acl,
                                              lastName=lastName, email=email, type=type, owner=owner, token=token,
                                              api=api, securityLevel=securityLevel, state=state)
-                    siteUser.save()
-            except:
+                    # The owner had this name before the rule for new names existed.
+                    siteUser.save(name_from_backup=True)
+            except BaseException as msg:
                 siteUser = Administrator.objects.get(userName='admin')
+                if userName is not None:
+                    # Nobody is told otherwise that the customer's login does not exist here.
+                    notice = ('The owner %s of this backup was not recreated (%s). The website was given to admin.'
+                              % (repr(userName)[:120], str(msg)[:200]))
+                    logging.CyberCPLogFileWriter.writeToFile(notice + ' [createWebsiteFromBackup]')
+                    logging.CyberCPLogFileWriter.statusWriter(os.path.join(path, 'status'), notice)
 
             ## Pre-creation checks
 

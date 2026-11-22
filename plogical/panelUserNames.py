@@ -30,6 +30,20 @@ def new_name_refusal(name):
     return None
 
 
+def restored_name_refusal(name):
+    """Why the owner a restore recreates from a backup may not have this name; None when it may.
+
+    Such a user had the name before the rule for new names existed. It is
+    held to what existing users are held to, and never gets a name of the
+    server.
+    """
+    if not stored_name_is_usable(name):
+        return 'A user name from a backup may contain letters, numbers, dots, dashes, underscores, @, + and spaces.'
+    if databaseAccounts.is_system_account(name):
+        return 'This user name is reserved for the server. Choose another name.'
+    return None
+
+
 def stored_name_is_usable(name):
     """True when the name of an existing user can be handed to other parts of the panel."""
     return isinstance(name, str) and _STORED_NAME.fullmatch(name) is not None
