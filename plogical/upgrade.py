@@ -2140,6 +2140,21 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             Upgrade.stdOut('WARNING: AI Scanner backups of earlier releases were not looked for: ' + str(error), 0)
 
     @staticmethod
+    def removeStaleBackupStaging():
+        """Remove the work folders that WordPress backups of earlier releases left behind.
+
+        Each held a full copy of a site, its database dump and its
+        wp-config.php, readable by every local account (see the helper,
+        which the new source provides, for what counts as one). A failure
+        is reported and never stops the upgrade.
+        """
+        try:
+            from plogical.backupStaging import remove_stale_staging
+            remove_stale_staging(log=lambda message: Upgrade.stdOut(message, 0))
+        except Exception as error:
+            Upgrade.stdOut('WARNING: Backup work folders of earlier releases were not looked for: ' + str(error), 0)
+
+    @staticmethod
     def reportN8NSites():
         """Name the n8n Docker sites that still run the way earlier releases set them up.
 
@@ -5966,6 +5981,7 @@ pm.max_spare_servers = 3
         Upgrade.reportN8NSites()
 
         Upgrade.relocateScannerBackups()
+        Upgrade.removeStaleBackupStaging()
 
         ## Put function here to update custom ACLs
 

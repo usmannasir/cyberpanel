@@ -75,6 +75,7 @@ class UpgradeCyberPanel:
         Upgrade.repairDatabaseGrants()
         Upgrade.reportN8NSites()
         Upgrade.relocateScannerBackups()
+        Upgrade.removeStaleBackupStaging()
 
         self.PostStatus('Database updated.,55')
 
