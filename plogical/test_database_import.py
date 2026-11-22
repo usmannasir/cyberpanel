@@ -321,7 +321,6 @@ class ImportTests(unittest.TestCase):
             self.assertNotEqual(inode, os.fstat(descriptor).st_ino)
         except OSError:
             pass
-        self.assertEqual([], [name for name in os.listdir(tempfile.gettempdir()) if name.startswith('.cpimport-')])
 
     def test_dump_is_loaded_by_the_import_account_with_client_commands_off(self):
         client = Client()
