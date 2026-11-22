@@ -44,6 +44,9 @@ def container_name_matches(application_name, container_name):
 
 COMPOSE_PROJECT_LABEL = 'com.docker.compose.project'
 COMPOSE_SERVICE_LABEL = 'com.docker.compose.service'
+COMPOSE_DIRECTORY_LABEL = 'com.docker.compose.project.working_dir'
+
+SITE_NAME_IN_USE = 'The site name "%s" is in use on this server; choose another.'
 
 
 def compose_project_names(site_name):
@@ -52,21 +55,61 @@ def compose_project_names(site_name):
     A site's containers are started with ``-p <site name>`` and Docker Compose
     records that name in a label on each of them: in lower case and, for a name
     from before site names were limited to lower case letters and digits,
-    without the characters it does not allow. A container belongs to the site
-    only when the label is exactly one of these names. Part of a container
-    name says nothing: "n" is part of the names of every "n8n" container.
+    without the characters it does not allow. Hyphens and underscores are
+    allowed: only Docker Compose before 1.21 took them out, and that cannot
+    read the compose files of a site. A container belongs to the site only
+    when the label is exactly one of these names. Part of a container name
+    says nothing: "n" is part of the names of every "n8n" container.
     """
     if not isinstance(site_name, str):
         return []
     lowered = site_name.lower()
     names = []
-    for name in (site_name, lowered, re.sub('[^-_a-z0-9]', '', lowered), re.sub('[^a-z0-9]', '', lowered)):
+    for name in (site_name, lowered, re.sub('[^-_a-z0-9]', '', lowered)):
         if name and name not in names:
             names.append(name)
     return names
 
 
-def site_containers(client, site_name, service=None):
+def site_directory(domain):
+    """The directory of the Docker site on a website, or None for a domain that cannot name one."""
+    if site_directory_name(domain) is None:
+        return None
+    return '/home/docker/' + domain
+
+
+def container_of_site(container, site_name, domain):
+    """
+    Whether a container is one of the Docker site ``site_name`` on the website ``domain``.
+
+    It must carry the label of the site's Docker Compose project. Another
+    project on the server can have the same name, so the directory counts as
+    well: Docker Compose records the directory of the compose file a container
+    was started from, and for a site that is always its own directory under
+    /home/docker. A container started from another directory is not the
+    site's. A container without that record, from a Docker Compose too old to
+    write it, is taken by its project alone.
+    """
+    labels = getattr(container, 'labels', None) or {}
+    project = labels.get(COMPOSE_PROJECT_LABEL)
+    directory = site_directory(domain)
+
+    if not project or project not in compose_project_names(site_name) or directory is None:
+        return False
+
+    started_from = labels.get(COMPOSE_DIRECTORY_LABEL)
+
+    if not started_from:
+        return True
+
+    if not isinstance(started_from, str):
+        return False
+
+    started_from = os.path.normpath(started_from).lower()
+    return started_from in (directory.lower(), os.path.realpath(directory).lower())
+
+
+def site_containers(client, site_name, domain, service=None):
     """Every container, running or not, of one Docker site, optionally of one of its services."""
     found = []
     for project in compose_project_names(site_name):
@@ -74,9 +117,22 @@ def site_containers(client, site_name, service=None):
         if service is not None:
             labels.append('%s=%s' % (COMPOSE_SERVICE_LABEL, service))
         for container in client.containers.list(all=True, filters={'label': labels}):
-            if container.id not in [known.id for known in found]:
+            if container.id not in [known.id for known in found] and container_of_site(container, site_name, domain):
                 found.append(container)
     return found
+
+
+def site_name_in_use(client, site_name):
+    """
+    Whether containers on this server already run as the Docker Compose
+    project a new site of this name would be started as: the project of
+    another Docker site, or one that somebody runs beside the panel. Such a
+    site would be started into that project and taken down with it.
+    """
+    for project in compose_project_names(site_name):
+        if client.containers.list(all=True, filters={'label': ['%s=%s' % (COMPOSE_PROJECT_LABEL, project)]}):
+            return True
+    return False
 
 
 def compose_command():
@@ -1074,6 +1130,15 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 logging.statusWriter(self.JobID, f'Docker container already exists on this domain. [404]')
                 return 0
 
+            ## The page that started this job has asked already; the job asks
+            ## again just before it gives the name to the site.
+
+            problem = self.site_name_problem(sitename)
+
+            if problem is not None:
+                logging.statusWriter(tempStatusPath, problem + ' [404]')
+                return 0
+
             dbname = randomPassword.generate_pass()
             dbpasswd = randomPassword.generate_pass()
             dbusername = randomPassword.generate_pass()
@@ -1143,6 +1208,27 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
             return 0
 
+    @staticmethod
+    def site_name_problem(site_name):
+        """
+        Say why a new Docker site cannot have this name, or None: another
+        Docker site has it, or containers on the server already run as its
+        Docker Compose project. A server whose Docker does not answer has no
+        such containers running, and nothing can be started on it either.
+        """
+        from websiteFunctions.models import DockerSites
+
+        if DockerSites.objects.filter(SiteName=site_name).count() > 0:
+            return SITE_NAME_IN_USE % site_name
+
+        try:
+            in_use = site_name_in_use(docker.from_env(), site_name)
+        except BaseException as msg:
+            logging.writeToFile('Docker did not answer when the site name %s was checked: %s' % (site_name, str(msg)))
+            in_use = False
+
+        return SITE_NAME_IN_USE % site_name if in_use else None
+
     def DeleteDockerApp(self):
         try:
 
@@ -1166,7 +1252,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 ProcessUtilities.executioner(command)
 
             client = docker.from_env()
-            containers = site_containers(client, name)
+            containers = site_containers(client, name, domain)
 
             logging.writeToFile(f'List of containers {str(containers)}')
 
@@ -1492,7 +1578,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                            f"-p {shlex.quote(project)} down -v")
                 ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-            for container in site_containers(docker.from_env(), self.data['SiteName']):
+            for container in site_containers(docker.from_env(), self.data['SiteName'], self.data['finalURL']):
                 command = f'docker rm -f {shlex.quote(container.id)}'
                 ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -1516,7 +1602,8 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
         Returns the container object or None if not found.
         """
         try:
-            containers = site_containers(docker.from_env(), self.data['SiteName'], service_name)
+            containers = site_containers(docker.from_env(), self.data['SiteName'], self.data['finalURL'],
+                                         service_name)
             return containers[0] if containers else None
         except Exception as e:
             logging.writeToFile(f'Error finding container: {str(e)}')
@@ -1875,7 +1962,8 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 remarks.append('HAS NO OWNER ACCOUNT: whoever opens it first becomes its owner')
 
             # The application container only: the database container beside it is not n8n.
-            for container in site_containers(client, site.SiteName, site.SiteName.replace(' ', '-')):
+            for container in site_containers(client, site.SiteName, site.admin.domain,
+                                             site.SiteName.replace(' ', '-')):
                 for remark in n8n_container_remarks(container.attrs):
                     if remark not in remarks:
                         remarks.append(remark)

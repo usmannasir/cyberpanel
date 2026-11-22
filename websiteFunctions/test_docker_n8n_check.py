@@ -86,7 +86,8 @@ class ReportTests(unittest.TestCase):
         containers = {('flows', 'flows'): [SimpleNamespace(attrs=OLD)], ('flows', None): [SimpleNamespace(attrs=OLD), SimpleNamespace(attrs=DATABASE)],
                       ('fresh', 'fresh'): [SimpleNamespace(attrs=NEW)], ('fresh', None): [SimpleNamespace(attrs=NEW), SimpleNamespace(attrs=DATABASE)]}
 
-        def select(client, name, service=None):
+        def select(client, name, domain, service=None):
+            self.assertEqual(name + '.example', domain)
             return containers[(name, service)]
 
         with mock.patch.dict(sys.modules, {'websiteFunctions.models': models}), \

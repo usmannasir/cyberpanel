@@ -401,7 +401,7 @@ extprocessor docker40002x {
         self.assertEqual('11042', next_site_port([], ''.join(written)))
 
 
-def create(ports, config, site_name='shop'):
+def create(ports, config, site_name='shop', rows_of_the_name=0, name_in_use=False):
     """Run the real creation job; ``config`` is what reading the web server configuration answers."""
     site = Docker_Sites.__new__(Docker_Sites)
     site.JobID = '/home/cyberpanel/4711'
@@ -417,6 +417,7 @@ def create(ports, config, site_name='shop'):
     models.Websites.objects.filter.return_value.count.return_value = 1
     models.Websites.objects.get.return_value = row
     models.DockerSites.objects.values_list.return_value = ports
+    models.DockerSites.objects.filter.return_value.count.return_value = rows_of_the_name
     models.DockerSites.objects.count.return_value = len(ports)
     models.DockerSites.objects.last.return_value = SimpleNamespace(port=ports[-1] if ports else None)
     acl = mock.Mock()
@@ -434,11 +435,13 @@ def create(ports, config, site_name='shop'):
                 os.devnull if path == '/home/cyberpanel/4711' else path, *more)), \
             mock.patch.object(docker_sites.logging, 'statusWriter') as status, \
             mock.patch.object(docker_sites.logging, 'writeToFile'), \
+            mock.patch.object(docker_sites.docker, 'from_env'), \
+            mock.patch.object(docker_sites, 'site_name_in_use', return_value=name_in_use) as in_use, \
             mock.patch.object(docker_sites, 'Docker_Sites') as deployment:
         deployment.web_server_config = Docker_Sites.web_server_config
         result = Docker_Sites.SubmitDockersiteCreation(site)
     return SimpleNamespace(port=deployment.call_args[0][1]['port'] if deployment.call_args else None, models=models,
-                           output=output, result=result, started=deployment.call_count,
+                           output=output, result=result, started=deployment.call_count, in_use=in_use,
                            status=[call[0] for call in status.call_args_list])
 
 
@@ -492,6 +495,31 @@ class AllocationTests(unittest.TestCase):
             self.assertEqual(0, Docker_Sites.SubmitDockersiteCreation(site))
         status.assert_called_once_with('/home/cyberpanel/4711',
                                        'The Docker site could not be created: first line second line [404]')
+
+
+class SiteNameTests(unittest.TestCase):
+    """The job asks again whether the name is free just before it gives it to the site."""
+
+    MESSAGE = 'The site name "shop" is in use on this server; choose another. [404]'
+
+    def test_a_free_name_gets_its_site(self):
+        run = create(['11001'], (1, PortTests.CONFIG))
+        self.assertEqual(1, run.started)
+        run.models.DockerSites.objects.filter.assert_called_once_with(SiteName='shop')
+        self.assertEqual('shop', run.in_use.call_args[0][1])
+
+    def test_containers_already_running_under_the_name_stop_the_job_before_anything_is_made(self):
+        run = create(['11001'], (1, PortTests.CONFIG), name_in_use=True)
+        self.assertEqual(0, run.result)
+        self.assertEqual(0, run.started)
+        run.models.DockerSites.assert_not_called()
+        self.assertEqual([('/home/cyberpanel/4711', self.MESSAGE)], run.status)
+
+    def test_another_site_of_the_name_stops_the_job_with_the_same_message(self):
+        run = create(['11001'], (1, PortTests.CONFIG), rows_of_the_name=1)
+        self.assertEqual(0, run.started)
+        run.models.DockerSites.assert_not_called()
+        self.assertEqual([('/home/cyberpanel/4711', self.MESSAGE)], run.status)
 
 
 class DeleteTests(unittest.TestCase):

@@ -23,6 +23,12 @@ REQUEST = {
 
 def submit(website=0, child=0, owns=0, **changes):
     """Run the real entry point for a reseller who may create websites."""
+    cls, env, services = prepared(website, child, owns)
+    result = cls().submitDockerSiteCreation(userID=7, data=dict(REQUEST, **changes))
+    return result, env, services
+
+
+def prepared(website=0, child=0, owns=0):
     cls, env, services = load_wordpress_manager()
     acl = services['ACLManager']
     acl.loadedACL.return_value = {'admin': 0}
@@ -39,8 +45,8 @@ def submit(website=0, child=0, owns=0, **changes):
     env['DockerPackages'].objects.get.return_value = SimpleNamespace(CPUs=4, Ram=4096)
     env['DOCKER_APPS'] = docker_sites.DOCKER_APPS
     env['Docker_Sites'] = mock.Mock()
-    result = cls().submitDockerSiteCreation(userID=7, data=dict(REQUEST, **changes))
-    return result, env, services
+    env['Docker_Sites'].site_name_problem.return_value = None
+    return cls, env, services
 
 
 class EntryPointTests(unittest.TestCase):
@@ -51,6 +57,7 @@ class EntryPointTests(unittest.TestCase):
                 self.assertEqual('refused', result)
                 services['ACLManager'].loadErrorJson.assert_called_once_with('createWebSiteStatus', 0)
                 env['Docker_Sites'].assert_not_called()
+                env['Docker_Sites'].site_name_problem.assert_not_called()
 
     def test_ownership_is_asked_for_the_named_domain_and_the_signed_in_user(self):
         result, env, services = submit(website=1, owns=0)
@@ -106,9 +113,27 @@ class EntryPointTests(unittest.TestCase):
                 env['DockerPackages'].objects.get.return_value = SimpleNamespace(CPUs=4, Ram=4096)
                 env['DOCKER_APPS'] = docker_sites.DOCKER_APPS
                 env['Docker_Sites'] = mock.Mock()
+                env['Docker_Sites'].site_name_problem.return_value = None
                 self.assertEqual('refused', cls().submitDockerSiteCreation(userID=7, data=dict(REQUEST)))
                 acl.checkOwnership.assert_not_called()
                 env['Docker_Sites'].assert_not_called()
+                env['Docker_Sites'].site_name_problem.assert_not_called()
+
+    def test_a_site_name_in_use_on_the_server_is_refused_before_any_job_starts(self):
+        message = 'The site name "shop" is in use on this server; choose another.'
+        for rows in ({}, {'website': 1, 'owns': 1}):
+            with self.subTest(rows=rows):
+                cls, env, services = prepared(**rows)
+                env['Docker_Sites'].site_name_problem.return_value = message
+                reply = json.loads(cls().submitDockerSiteCreation(userID=7, data=dict(REQUEST)).content)
+                self.assertEqual({'status': 0, 'error_message': message}, reply)
+                env['Docker_Sites'].site_name_problem.assert_called_once_with('shop')
+                env['Docker_Sites'].assert_not_called()
+
+    def test_a_free_site_name_is_asked_about_once_and_the_job_starts(self):
+        result, env, services = submit()
+        env['Docker_Sites'].site_name_problem.assert_called_once_with('shop')
+        env['Docker_Sites'].return_value.start.assert_called_once_with()
 
 
 class WorkerTests(unittest.TestCase):
@@ -133,6 +158,7 @@ class WorkerTests(unittest.TestCase):
         models.Websites.objects.filter.return_value.count.return_value = exists
         models.Websites.objects.get.return_value = row
         models.DockerSites.objects.values_list.return_value = []
+        models.DockerSites.objects.filter.return_value.count.return_value = 0
         website = SimpleNamespace(WebsiteManager=manager or mock.Mock())
         login = SimpleNamespace(Administrator=mock.Mock())
         acl = mock.Mock()
@@ -144,6 +170,8 @@ class WorkerTests(unittest.TestCase):
                 mock.patch.object(docker_sites, 'ACLManager', acl, create=True), \
                 mock.patch.object(docker_sites, 'randomPassword', mock.Mock(), create=True), \
                 mock.patch.object(docker_sites.logging, 'writeToFile'), \
+                mock.patch.object(docker_sites.docker, 'from_env'), \
+                mock.patch.object(docker_sites, 'site_name_in_use', return_value=False), \
                 mock.patch.object(docker_sites, 'Docker_Sites') as deployment:
             deployment.web_server_config.return_value = ''
             result = real.SubmitDockersiteCreation(site)

@@ -8041,6 +8041,16 @@ StrictHostKeyChecking no
                 if ACLManager.checkOwnership(Domain, admin, currentACL) != 1:
                     return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
+            ## The name becomes the Docker Compose project of the site. Containers
+            ## that already run under that name on this server are not the site's.
+
+            problem = Docker_Sites.site_name_problem(sitename)
+
+            if problem is not None:
+                final_dic = {'status': 0, 'error_message': problem}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             data = {}
 

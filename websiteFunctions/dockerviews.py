@@ -7,7 +7,7 @@ from plogical.acl import ACLManager
 from django.shortcuts import redirect
 from loginSystem.views import loadLoginPage
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from plogical.DockerSites import COMPOSE_PROJECT_LABEL, compose_project_names
+from plogical.DockerSites import container_of_site
 
 def require_login(view_func):
     def wrapper(request, *args, **kwargs):
@@ -41,9 +41,10 @@ def container_of_owned_site(request):
     to a Docker site of the signed-in user, else (None, the refusal to send).
 
     The request names a Docker site and a container. The user must own the
-    website the site is installed on, and the container must carry the label of
-    that site's Docker Compose project: a container of another site, or one the
-    administrator started, is not found.
+    website the site is installed on, and the container must be one of that
+    site: it carries the label of the site's Docker Compose project and was
+    started from the site's own directory. A container of another site, or one
+    the administrator started, is not found.
     """
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
@@ -69,9 +70,7 @@ def container_of_owned_site(request):
     if container is None:
         return None, refusal('Container not found')
 
-    project = (container.labels or {}).get(COMPOSE_PROJECT_LABEL)
-
-    if not project or project not in compose_project_names(docker_site.SiteName):
+    if not container_of_site(container, docker_site.SiteName, docker_site.admin.domain):
         return None, refusal('Container not found')
 
     return container, None
