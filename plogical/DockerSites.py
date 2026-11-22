@@ -1647,6 +1647,21 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
         raise DockerDeploymentError('n8n did not become ready to create its administrator account.')
 
+    def n8n_encryption_key(self):
+        """
+        The key a new n8n site encrypts its stored credentials with.
+
+        Every site gets a random key of its own. It is made once for a
+        deployment and then lives in the site's compose file, which only root
+        can read, and from there in the settings n8n keeps in its data
+        directory. A site that is already running is never given another key:
+        its compose file is not written again, and with another key n8n could
+        no longer read what it has stored.
+        """
+        if not self.data.get('n8nEncryptionKey'):
+            self.data['n8nEncryptionKey'] = randomPassword.generate_pass(32)
+        return self.data['n8nEncryptionKey']
+
     def generate_compose_config(self):
         """
         Generate the docker-compose configuration with improved security and reliability
@@ -1691,7 +1706,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 'WEBHOOK_TUNNEL_URL': f"https://{self.data['finalURL']}",
                 'N8N_PUSH_BACKEND': 'sse',
                 'GENERIC_TIMEZONE': 'UTC',
-                'N8N_ENCRYPTION_KEY': 'auto',
+                'N8N_ENCRYPTION_KEY': self.n8n_encryption_key(),
                 'N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS': 'true',
                 'DB_POSTGRESDB_SCHEMA': 'public',
                 'N8N_PROTOCOL': 'https',
