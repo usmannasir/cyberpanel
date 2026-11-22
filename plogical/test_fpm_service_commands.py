@@ -120,15 +120,31 @@ class FPMServiceCommandTests(unittest.TestCase):
         loader.vhost.changePHP(SPLIT_SELECTION, '/usr/local/lsws/conf/vhosts/example.test/vhost.conf')
         self.assertEqual([], service_calls(loader.process))
 
-    def test_site_php_change_on_apache_backend_reloads_with_an_argument_list(self):
+    def test_site_php_change_on_apache_backend_leaves_the_service_to_the_apache_worker(self):
         change = PHPChange(OLS, apache_backend=True)
         self.addCleanup(change.close)
-        change.apache.fpmReload = 'reload-or-restart'
-        change.apache.fpmServiceCommand.side_effect = \
-            lambda action, selection: ['systemctl', action, '--', phpConfig.fpm_service_for_selection(selection, False)]
         result, output = change.run('/usr/local/lsws/conf/vhosts/example.test/vhost.conf', 'PHP 8.1')
         self.assertEqual((1, 'None'), tuple(result), output)
-        self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php8.1-fpm']], change.events)
+        change.apache.changePHP.assert_called_once_with(
+            'PHP 8.1', '/usr/local/lsws/conf/vhosts/example.test/vhost.conf')
+        # The Apache worker has reloaded the service; nothing is run here.
+        self.assertEqual([], change.events)
+        change.apache.fpmServiceCommand.assert_not_called()
+
+    def test_one_php_change_on_the_apache_backend_asks_the_fpm_service_once(self):
+        # The website worker and the Apache worker it calls, both real.
+        loader = self.loader()
+        change = PHPChange(OLS, apache_backend=True)
+        self.addCleanup(change.close)
+        commands = []
+        for process in (loader.process, change.process):
+            process.normalExecutioner.side_effect = lambda command: commands.append(command) or 1
+        change.namespace['ApacheVhost'] = loader.vhost
+        result, output = change.run('/usr/local/lsws/conf/vhosts/example.test/vhost.conf', 'PHP 8.1')
+        self.assertEqual((1, 'None'), tuple(result), output)
+        self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php8.1-fpm'], 'systemctl restart apache2'],
+                         commands)
+        self.assertEqual(1, len([command for command in commands if 'fpm' in str(command)]))
 
 
 class ArgumentListRunnerTests(unittest.TestCase):

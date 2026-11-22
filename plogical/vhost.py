@@ -869,11 +869,11 @@ class vhost:
                     except:
                         pass
                 else:
+                    # ApacheVhost.changePHP wrote the pool, closed the file,
+                    # asked the PHP-FPM service to re-read its pools and
+                    # restarted Apache. The service is not asked a second
+                    # time while it is still re-reading.
                     logging.CyberCPLogFileWriter.writeToFile('apache vhost 1')
-
-                    php = PHPManager.getPHPString(phpVersion)
-
-                    ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
                 print("1,None")
                 return 1,'None'
