@@ -236,6 +236,18 @@ class RetireTests(unittest.TestCase):
         self.assertEqual(0, access.retire([self.user()]))
         self.assertEqual(1, access.retire([]))
 
+    def test_account_that_cannot_be_dropped_keeps_its_record_and_key_for_the_next_attempt(self):
+        record = self.record('cp-pma-7')
+        self.cursor.fail = 'DROP USER'
+        self.assertEqual(0, access.retire([self.user()]))
+        self.assertEqual([record], self.records)
+        access.remove_key.assert_not_called()
+        # The next removal finds the record and finishes the work.
+        self.cursor.fail = None
+        self.assertEqual(1, access.retire([self.user()]))
+        self.assertEqual([], self.records)
+        access.remove_key.assert_called_once_with(7)
+
     def test_website_leaving_an_owner_retires_the_owner_and_the_reseller_above(self):
         owner = SimpleNamespace(pk=7, userName='customer', owner=4)
         reseller = SimpleNamespace(pk=4, userName='reseller1', owner=1)

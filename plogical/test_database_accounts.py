@@ -386,7 +386,9 @@ class RemoteAccessTests(unittest.TestCase):
         self.utilities.changePassword.return_value = 0
         self.assertEqual(0, self.open()[0])
         self.assertEqual([('DROP USER IF EXISTS %s@%s', ('exam_user', '203.0.113.5'))], self.cursor.ran('DROP'))
-        self.connection.close.assert_called_once_with()
+        # One connection tells the host the panel's accounts are made at, one removes the account.
+        self.assertEqual(2, self.utilities.setupConnection.call_count)
+        self.assertEqual(2, self.connection.close.call_count)
 
     def test_account_left_half_made_is_removed(self):
         self.utilities.createDatabase.return_value = 0
@@ -400,7 +402,31 @@ class RemoteAccessTests(unittest.TestCase):
             self.assertEqual(0, self.open()[0])
         self.utilities.createDatabase.assert_not_called()
         self.utilities.changePassword.assert_not_called()
-        self.utilities.setupConnection.assert_not_called()
+        self.assertEqual([], self.cursor.statements)
+
+    def test_local_account_is_found_on_a_server_with_its_database_elsewhere(self):
+        # The panel's accounts are made at this machine's address there, and
+        # the address is known once a connection was made in this process.
+        def connect():
+            self.utilities.LOCALHOST = '192.0.2.10'
+            return self.connection, self.cursor
+
+        self.utilities.setupConnection.side_effect = connect
+        self.passwords = {'192.0.2.10': '*HASH'}
+        self.assertEqual((1, None), self.open())
+        self.utilities.changePassword.assert_called_with('exam_user', '*HASH', 1, '203.0.113.5')
+        self.assertEqual([], self.cursor.ran('DROP'))
+        # The address the panel connects from is never taken for a previous remote host.
+        self.passwords = {'192.0.2.10': '*HASH', '203.0.113.5': '*HASH'}
+        self.utilities.LOCALHOST = 'localhost'
+        self.assertEqual((1, None), self.open(host='203.0.113.6', previous='192.0.2.10'))
+        self.assertEqual([], self.cursor.ran('DROP'))
+
+    def test_connection_that_cannot_be_made_changes_nothing(self):
+        self.utilities.setupConnection.return_value = (0, 0)
+        self.passwords = {'192.0.2.10': '*HASH'}
+        self.assertEqual(0, self.open()[0])
+        self.utilities.createDatabase.assert_not_called()
 
     def test_existing_account_is_neither_created_nor_removed(self):
         self.passwords['203.0.113.5'] = '*OLD'

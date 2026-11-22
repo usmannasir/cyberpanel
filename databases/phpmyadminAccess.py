@@ -125,10 +125,12 @@ def _retire_earlier(cursor, host, user):
 def _retire_current(cursor, host, user):
     from databases.models import GlobalUserDB
     account = databaseAccounts.phpmyadmin_account(user.pk)
+    # The account goes first. While it cannot be dropped its record and key
+    # stay, so that the next removal or the user's next visit finishes the work.
+    databaseAccounts.drop_account(cursor, account, host)
     for record in GlobalUserDB.objects.filter(username=account):
         if record.username == account:
             record.delete()
-    databaseAccounts.drop_account(cursor, account, host)
     remove_key(user.pk)
 
 

@@ -52,6 +52,26 @@ class NewNameTests(unittest.TestCase):
         self.assertIsNone(new_name_refusal('admin'))
 
 
+class ImportTests(unittest.TestCase):
+    def test_rule_is_read_without_django_settings_or_the_database_driver(self):
+        # Saving a user reads the rule; the installer does that before the panel is configured.
+        import os
+        import subprocess
+        import sys
+        code = ("import sys\n"
+                "sys.modules['MySQLdb'] = None\n"
+                "sys.modules['django'] = None\n"
+                "from plogical.panelUserNames import new_name_refusal, restored_name_refusal\n"
+                "assert new_name_refusal('admin') is None\n"
+                "assert new_name_refusal('root') is not None\n"
+                "assert restored_name_refusal('John Smith') is None\n"
+                "print('read')\n")
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        environment = dict((key, value) for key, value in os.environ.items() if key != 'DJANGO_SETTINGS_MODULE')
+        output = subprocess.check_output([sys.executable, '-c', code], cwd=root, env=environment)
+        self.assertEqual(b'read', output.strip())
+
+
 class StoredNameTests(unittest.TestCase):
     def test_names_earlier_releases_accepted_stay_usable(self):
         for name in ('admin', 'john', 'John.Doe', 'john-doe', 'john_doe', '_john', 'john@example.com',

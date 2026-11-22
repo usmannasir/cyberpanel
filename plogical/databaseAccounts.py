@@ -336,7 +336,7 @@ def open_remote_access(utilities, passwords, database, user, host, previous_host
     # The server keeps host names in lower case.
     host = host.lower()
     passwords = dict((known.lower(), stored) for known, stored in passwords.items())
-    local_hosts = (str(utilities.LOCALHOST).lower(), 'localhost', '127.0.0.1')
+    local_hosts = (_panel_host(utilities), 'localhost', '127.0.0.1')
     local_hash = None
     for local in local_hosts:
         if passwords.get(local):
@@ -357,6 +357,21 @@ def open_remote_access(utilities, passwords, database, user, host, previous_host
     if previous_host and previous_host != host and previous_host not in local_hosts and previous_host in passwords:
         _drop(utilities, user, previous_host)
     return 1, None
+
+
+def _panel_host(utilities):
+    """The host the panel's own accounts are made at, in lower case.
+
+    With the database server on another machine that is this machine's
+    address, which is known once a connection was made in this process.
+    """
+    try:
+        connection, cursor = utilities.setupConnection()
+        if connection != 0:
+            connection.close()
+    except Exception:
+        pass
+    return str(utilities.LOCALHOST).lower()
 
 
 def _drop(utilities, user, host):
