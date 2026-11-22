@@ -62,10 +62,17 @@ def _move(cursor, stored, user, host):
     escaped = databaseGrants.escape_grant_name(stored)
     exact, plain = quote(escaped), quote(stored)
     holder, values = databaseGrants.holder(user, host)
-    cursor.execute('GRANT %s ON %s.* TO %s%s' % (privileges, exact, holder, ' WITH GRANT OPTION' if option else ''),
-                   values)
-    if not _held(cursor, escaped, user, host):
-        raise RepairError('the exact grant was not stored')
+    if _held(cursor, escaped, user, host):
+        # The account already holds an exact grant, and the server uses that
+        # one alone for this database. It is what the account keeps: the
+        # privileges of the plain grant are not added to it.
+        kept, kept_option = _shown_grant(cursor, escaped, user, host)
+    else:
+        kept, kept_option = privileges, option
+        cursor.execute('GRANT %s ON %s.* TO %s%s' % (kept, exact, holder, ' WITH GRANT OPTION' if kept_option else ''),
+                       values)
+        if not _held(cursor, escaped, user, host):
+            raise RepairError('the exact grant was not stored')
     cursor.execute('REVOKE %s ON %s.* FROM %s' % (privileges, plain, holder), values)
     if option:
         cursor.execute('REVOKE GRANT OPTION ON %s.* FROM %s' % (plain, holder), values)
@@ -73,7 +80,7 @@ def _move(cursor, stored, user, host):
         raise RepairError('the plain grant is still there after the revoke')
     if not _held(cursor, escaped, user, host):
         # A server that read the revoke as a pattern took the exact grant with it: it is given again.
-        cursor.execute('GRANT %s ON %s.* TO %s%s' % (privileges, exact, holder, ' WITH GRANT OPTION' if option else ''),
+        cursor.execute('GRANT %s ON %s.* TO %s%s' % (kept, exact, holder, ' WITH GRANT OPTION' if kept_option else ''),
                        values)
         if not _held(cursor, escaped, user, host):
             raise RepairError('the exact grant did not stay after the revoke')
@@ -84,17 +91,24 @@ def repair(cursor, registered):
 
     `registered` holds the database names known to the panel.
     """
-    result = {'literal': False, 'moved': [], 'failed': [], 'patterns': []}
+    result = {'literal': False, 'moved': [], 'failed': [], 'patterns': [], 'too_long': []}
     if databaseGrants.names_are_literal(cursor):
         # This server reads the name of a grant literally: nothing was ever a wildcard.
         result['literal'] = True
         return result
+    # The grants are read from what the server writes: it has to write them one way.
+    databaseGrants.plain_session(cursor)
     # A server that folds database names to lower case stores them that way in its grants.
     folds = _rows(cursor, 'SELECT @@lower_case_table_names')[0][0] not in (0, '0')
     known = set(name.lower() if folds else name for name in registered)
     schemas = None
     for stored, user, host in _rows(cursor, 'SELECT Db, User, Host FROM mysql.db ORDER BY Db, User, Host'):
         if not databaseGrants.is_pattern(stored):
+            continue
+        if stored in known and not databaseGrants.exact_name_fits(stored):
+            # The server accepts no exact grant for this name; said once per database.
+            if stored not in result['too_long']:
+                result['too_long'].append(stored)
             continue
         if stored in known:
             try:
@@ -121,6 +135,11 @@ def describe(result, log):
     for stored, user, host, reason in result['failed']:
         log('WARNING: The grant on `%s` for %s@%s still covers similarly named databases (%s).'
             % (stored, user or "''", host, reason))
+    for stored in result.get('too_long', ()):
+        log('NOTICE: The grants on `%s` were left as they are. The name of this database is too long for a grant '
+            'that covers it alone: each `_` and `%%` counts twice and the server accepts %d characters. Its users '
+            'can also reach databases whose names differ only where this name has `_` or `%%`.'
+            % (stored, databaseGrants.NAME_LENGTH))
     for stored, user, host, covered in result['patterns']:
         names = ', '.join(covered[:COVERED_SHOWN]) or 'no database at the moment'
         if len(covered) > COVERED_SHOWN:
