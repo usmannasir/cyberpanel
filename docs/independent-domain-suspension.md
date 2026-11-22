@@ -56,7 +56,10 @@ Three consequences of judging a change by what it added:
   line that was not there before, a test that cannot run or ends with another
   status than 0, 1 or 2, or a restart that fails. The websites then stay
   suspended. Suspending keeps the strict rule: any error line it adds
-  refuses it.
+  refuses it. A child that is suspended on its own stays suspended when its
+  parent is restored; if an earlier release wrote its file, the file is
+  written again in the present form, which does not make the parent's restore
+  a suspension.
 - Line numbers are ignored when comparing, but only in messages about the
   websites whose files the change edits, because suspension moves the lines
   of exactly those files.
