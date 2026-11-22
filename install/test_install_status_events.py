@@ -5,9 +5,12 @@ Every test runs the real top level of the script in a temporary machine
 """
 import os
 import re
+import shutil
 import signal
+import socket
 import stat
 import subprocess
+import time
 import unittest
 from unittest.mock import patch
 
@@ -85,8 +88,9 @@ class SuccessfulRunTests(unittest.TestCase):
         self.assertEqual(COMPLETE_RUN, machine.events())
         self.assertIn('CyberPanel Successfully Installed', result.stdout)
         # An error page is not an answer.
-        self.assertIn('curl --silent --fail --insecure --max-time 5 --output /dev/null https://127.0.0.1:8090/',
-                      machine.recorded(machine.calls))
+        self.assertIn('curl --silent --fail --insecure --noproxy * --max-time 15 --output /dev/null '
+                      'https://127.0.0.1:8090/', machine.recorded(machine.calls))
+        self.assertIn('Waiting for the panel to answer on port 8090 (3 minutes at most)...', result.stdout)
         self.assertEqual(
             ['Pre_Install_Setup_Repository', 'Pre_Install_Required_Components',
              'Pre_Install_Python_Environment', 'Pre_Install_Get_Panel_Source',
@@ -375,8 +379,50 @@ class FailedRunTests(unittest.TestCase):
         self.assertEqual(['hostname_ssl skipped', 'ready running', 'ready failed panel_setup',
                           'install failed panel_setup'], machine.events()[-4:])
         self.assertNotIn('panel ready', machine.events())
-        self.assertIn('does not answer on port 8090', result.stdout)
+        self.assertIn('did not answer on port 8090 within 3 minutes', result.stdout)
+        self.assertIn('Check it with: systemctl status lscpd\nPanel username: admin\n'
+                      'Panel password: stored in %s\n' % machine.stored_password, result.stdout)
         self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+
+    def probe_limits(self, machine):
+        return [int(call.split('--max-time ')[1].split()[0])
+                for call in machine.recorded(machine.calls) if '127.0.0.1:8090' in call]
+
+    def test_wait_for_the_panel_ends_after_three_minutes_whatever_the_requests_do(self):
+        # The harness's clock is the script's SECONDS: waiting moves it on, and
+        # so does real time, by a second or two over a run. Hence the ranges.
+        # Refused at once: asked every two seconds, 180 seconds long.
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', panel_exit=7)
+        self.assertEqual(1, result.returncode)
+        limits = self.probe_limits(machine)
+        self.assertIn(len(limits), range(85, 91))
+        self.assertEqual([15] * 78, limits[:78])
+        self.assertLessEqual(limits[-1], 3)
+        # No answer at all: every request lasts as long as it may, and the last
+        # one is given only what is left of the three minutes.
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', panel_exit=28, panel_hangs=True)
+        self.assertEqual(1, result.returncode)
+        limits = self.probe_limits(machine)
+        self.assertEqual([15] * 10, limits[:10])
+        self.assertEqual(11, len(limits))
+        self.assertLess(limits[-1], 15)
+        self.assertIn(sum(limits) + 2 * (len(limits) - 1), range(175, 181))
+        self.assertEqual(['ready failed panel_setup', 'install failed panel_setup'], machine.events()[-2:])
+
+    def test_panel_that_answers_late_is_a_complete_installation(self):
+        machine = Installer(self)
+        harness = machine.harness()
+        refused = '      return "$QA_PANEL_EXIT"\n'
+        self.assertEqual(1, harness.count(refused))
+        # Refused for the first two minutes, then answered.
+        harness = harness.replace(refused, '      if (( SECONDS < 120 )); then return 7; fi\n      return 0\n')
+        with patch.object(machine, 'harness', return_value=harness):
+            result = machine.run('-v', 'ols')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(COMPLETE_RUN, machine.events())
+        self.assertGreater(len(self.probe_limits(machine)), 50)
 
     def test_ending_by_a_signal_is_recorded(self):
         machine = Installer(self)
@@ -434,6 +480,65 @@ class HostnameCertificateTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertEqual(['hostname_ssl failed panel_setup', 'install failed panel_setup'],
                          machine.events()[-2:])
+
+
+@unittest.skipUnless(shutil.which('curl'), 'curl is needed')
+class ReadinessProbeTests(unittest.TestCase):
+    """Panel_Answers as it is, with the real curl."""
+
+    def setUp(self):
+        functions, _ = script_parts()
+        start = functions.index('\nPanel_Answers() {\n') + 1
+        self.function = functions[start:functions.index('\n}\n', start) + 3]
+        # Stands in for a proxy: it only lets itself be connected to.
+        self.proxy = socket.socket()
+        self.addCleanup(self.proxy.close)
+        self.proxy.bind(('127.0.0.1', 0))
+        self.proxy.listen(8)
+        self.proxy.settimeout(0.3)
+        # A port of this machine on which nothing listens.
+        unused = socket.socket()
+        unused.bind(('127.0.0.1', 0))
+        self.port = unused.getsockname()[1]
+        unused.close()
+
+    def asked_of_the_proxy(self):
+        count = 0
+        while True:
+            try:
+                connection, _ = self.proxy.accept()
+            except socket.timeout:
+                return count
+            connection.close()
+            count += 1
+
+    def probe(self, function, seconds):
+        address = 'https://127.0.0.1:8090/'
+        self.assertEqual(1, function.count(address))
+        environment = {'PATH': os.environ['PATH']}
+        for name in ('http_proxy', 'https_proxy', 'HTTPS_PROXY', 'all_proxy', 'ALL_PROXY'):
+            environment[name] = 'http://127.0.0.1:%d' % self.proxy.getsockname()[1]
+        script = function.replace(address, 'https://127.0.0.1:%d/' % self.port) + '\nPanel_Answers %d\n' % seconds
+        return subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              universal_newlines=True, env=environment, timeout=120)
+
+    def test_proxy_named_in_the_environment_is_not_asked(self):
+        result = self.probe(self.function, 1)
+        self.assertEqual((1, '', ''), (result.returncode, result.stdout, result.stderr))
+        self.assertEqual(0, self.asked_of_the_proxy())
+        # The same request without the option goes to the proxy: this test would see it.
+        option = " --noproxy '*'"
+        self.assertEqual(1, self.function.count(option))
+        self.probe(self.function.replace(option, ''), 1)
+        self.assertGreater(self.asked_of_the_proxy(), 0)
+
+    def test_wait_ends_when_its_time_is_over(self):
+        started = time.time()
+        result = self.probe(self.function, 3)
+        waited = time.time() - started
+        self.assertEqual(1, result.returncode)
+        self.assertGreater(waited, 2)
+        self.assertLess(waited, 12)
 
 
 if __name__ == '__main__':

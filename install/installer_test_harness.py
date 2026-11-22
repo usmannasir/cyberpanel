@@ -84,7 +84,15 @@ curl() {
     *cyberpanel.sh/?ip*) printf '%s' "$QA_IP" ;;
     *cyberpanel.sh/?country*) printf 'US' ;;
     *latest.php*) printf 'LSWS_STABLE=6.3.4 BUILD 1\n' ;;
-    *127.0.0.1:8090*) return "$QA_PANEL_EXIT" ;;
+    *127.0.0.1:8090*)
+      if [ "$QA_PANEL_EXIT" != 0 ] && [ "$QA_PANEL_HANGS" = 1 ]; then
+        # A request that gets no answer lasts as long as it was allowed to.
+        local limit="$*"
+        limit=${limit#*--max-time }
+        SECONDS=$((SECONDS + ${limit%% *}))
+      fi
+      return "$QA_PANEL_EXIT"
+      ;;
   esac
   return 0
 }
@@ -95,7 +103,8 @@ systemctl() {
   if [ "$1" = is-active ]; then [ "$3" = "$QA_ACTIVE_SERVICE" ]; return; fi
   return 0
 }
-sleep() { :; }
+# Time passes without being waited for: SECONDS is the clock of the script.
+sleep() { SECONDS=$((SECONDS + ${1%.*})); }
 timeout() { return 1; }
 reboot() { note "reboot"; }
 hostname() { printf '%s\n' 'qa.example.test'; }
@@ -270,6 +279,7 @@ class Installer:
             'QA_IP': options.pop('ip', '192.0.2.10'),
             'QA_UID': str(options.pop('uid', 0)),
             'QA_PANEL_EXIT': str(options.pop('panel_exit', 0)),
+            'QA_PANEL_HANGS': str(int(options.pop('panel_hangs', False))),
             'QA_ACTIVE_SERVICE': options.pop('active_service', ''),
             'QA_DNS': str(int(options.pop('dns', False))),
             'QA_CREATE_OUTPUT': options.pop('create_output', CLI_OK),
