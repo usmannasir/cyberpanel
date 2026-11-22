@@ -166,6 +166,7 @@ class ChildRestoreActivationTests(unittest.TestCase):
         db.transaction = SimpleNamespace(atomic=contextlib.nullcontext)
         self.patchers = [patch.dict(sys.modules, {'django.db': db}),
                          patch.object(websiteSuspension, 'suspension_lock', lambda *args: contextlib.nullcontext()),
+                         patch.object(websiteSuspension, 'config_check'),
                          patch.object(websiteSuspension, '_checked')]
         for p in self.patchers:
             p.start()

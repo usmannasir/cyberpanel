@@ -28,8 +28,13 @@ matches the website being restored.
 Vhost changes use the normal privileged command service. Parent and child
 operations serialize with child provisioning and lock the parent database row.
 The shared helper preserves existing rewrite rules, writes vhosts atomically,
-checks the server configuration and activates it. Any failure before the
-database commit restores original vhost files and attempts to reactivate them.
+checks the server configuration and activates it. The server's configuration
+test is run before and after the change, and only an error the change added
+refuses it: a fresh installation already ends the test with status 1 for
+warnings about its stock Example virtual host, and an error in one website
+ends it with 2 while the server keeps running. Any failure before the
+database commit restores original vhost files and attempts to reactivate them;
+the restored files are judged against the same earlier result.
 Recovery failure is reported explicitly. Suspension applies at vhost rewrite
 level, before more-specific contexts, and affects HTTP and HTTPS using the
 same vhost. Existing SSL certificates are not changed.
@@ -43,7 +48,7 @@ frontend configuration.
 Run without panel bootstrap:
 
 ```console
-python -m unittest plogical.test_website_suspension websiteFunctions.test_domain_suspension plogical.test_child_creation_suspension plogical.test_child_backup_suspension plogical.test_upgrade_login_schema websiteFunctions.test_addon_parent_ownership
+python -m unittest plogical.test_website_suspension plogical.test_website_suspension_check websiteFunctions.test_domain_suspension plogical.test_child_creation_suspension plogical.test_child_backup_suspension plogical.test_upgrade_login_schema websiteFunctions.test_addon_parent_ownership
 node --test websiteFunctions/test_domain_suspension_ui.cjs
 node --check websiteFunctions/static/websiteFunctions/websiteFunctions.js
 ```
@@ -60,6 +65,9 @@ ordinary paths and a more-specific static/proxy context throughout:
 6. Repeat each operation; verify no duplicate blocks or extra server activation.
 7. Simulate config validation/activation failure; verify original files and
    database states survive, and original content still serves.
+   Repeat items 1 and 3 on a server whose configuration test does not end
+   with 0 before the change (a fresh installation, and one website with an
+   error of its own): both must succeed.
 8. Verify cross-owner and missing-permission requests cannot mutate any vhost.
 9. Create/regenerate a child under suspended parent; it must never serve content
    before inheriting the parent's effective suspension.
