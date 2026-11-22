@@ -7,6 +7,25 @@ from install.installer_test_harness import Installer, script_parts
 
 COMPONENTS = {'postfix': 'Postfix_Switch', 'powerdns': 'PowerDNS_Switch', 'pureftpd': 'PureFTPd_Switch'}
 
+# One argument, and the components it names.
+ACCEPTED_LISTS = (
+    ('postfix powerdns', ('postfix', 'powerdns')),
+    ('postfix  pureftpd ', ('postfix', 'pureftpd')),
+    (',postfix', ('postfix',)),
+    ('postfix,', ('postfix',)),
+    ('postfix,,powerdns', ('postfix', 'powerdns')),
+    ('postfix, powerdns', ('postfix', 'powerdns')),
+    ('PowerDNS/pureftpd', ('powerdns', 'pureftpd')),
+    ('/postfix/', ('postfix',)),
+    ('postfix,powerdns pureftpd', ('postfix', 'powerdns', 'pureftpd')),
+)
+# Arguments that name no component, though some hold the name of one.
+REFUSED_WORDS = (
+    'nopostfix', 'postfixx', '--postfix', '-postfix', 'postfix=on', 'postfix+powerdns', 'postfix;powerdns',
+    'postfix|powerdns', 'nopowerdns', 'pureftpd;reboot', 'postfix,nginx', 'postfix nginx', ',', ' ', '/',
+    'postfix\tpowerdns', 'postfix\npowerdns', 'postfix.', 'p0stfix',
+)
+
 
 def function(name):
     functions, _ = script_parts()
@@ -62,16 +81,39 @@ class ComponentChoiceTests(unittest.TestCase):
         self.assertEqual((0, 'Off Off Off'), self.switches('-v', 'ols', '-m', '-p', 'postfix-powerdns'))
         self.assertEqual((0, 'Off On Off'), self.switches('-v', 'ols', '-p', 'pureftpd1', '-m', 'powerdns'))
 
-    def test_a_word_that_only_contains_a_component_name_is_refused(self):
-        for word in ('postfixx', 'nopowerdns', 'pureftpd;reboot', 'postfix,', ',postfix', 'postfix,nginx'):
+    def test_a_word_that_is_no_component_name_is_refused(self):
+        for word in REFUSED_WORDS:
             with self.subTest(word=word):
                 status, output = self.switches('-v', 'ols', '-m', word)
-                if word == 'postfix,':
-                    # A trailing separator names nothing more.
-                    self.assertEqual((0, 'On Off Off'), (status, output))
-                else:
-                    self.assertEqual(2, status)
-                    self.assertIn('FAILED invalid_input 2', output)
+                self.assertEqual(2, status)
+                self.assertIn('FAILED invalid_input 2', output)
+
+    def test_one_argument_may_hold_several_names(self):
+        for word, chosen in ACCEPTED_LISTS:
+            with self.subTest(word=word):
+                self.assertEqual((0, self.expected(chosen)), self.switches('-v', 'ols', '-m', word))
+                self.assertEqual((0, self.expected(chosen)), self.switches(word, '-m', '-v', 'ols'))
+
+    def test_first_check_of_the_command_line_knows_the_same_names(self):
+        usage = ('Show_Help() { echo HELP; }\nAdmin_Pass_From_File=""\n' + function('Named_Components')
+                 + function('Branch_Problem') + function('License_Problem') + function('Password_Problem')
+                 + function('Check_Usage') + 'Check_Usage "$@"\necho ACCEPTED\n')
+
+        def check(*arguments):
+            result = subprocess.run(['bash', '-c', usage, 'bash'] + list(arguments), stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, universal_newlines=True, timeout=20)
+            self.assertEqual('', result.stderr)
+            return result.returncode, result.stdout.strip().splitlines()[-1]
+
+        for word, _ in ACCEPTED_LISTS:
+            with self.subTest(word=word):
+                self.assertEqual((0, 'ACCEPTED'), check('-v', 'ols', '-m', word))
+        for word in REFUSED_WORDS:
+            with self.subTest(word=word):
+                self.assertEqual(2, check('-v', 'ols', '-m', word)[0])
+        # An option that needs a value and has none is still refused.
+        self.assertEqual(2, check('-m', 'postfix', '-v')[0])
+        self.assertEqual(2, check('-v')[0])
 
     def test_component_names_without_minimal_keep_the_full_installation(self):
         self.assertEqual((0, 'On On On'), self.switches('-v', 'ols', 'postfix'))
