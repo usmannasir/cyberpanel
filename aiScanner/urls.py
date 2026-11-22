@@ -23,11 +23,6 @@ urlpatterns = [
     path('scheduled-scans/<int:scan_id>/', scheduled_views.scheduledScanDetail, name='aiScannerScheduledScanDetail'),
     path('scheduled-scans/<int:scan_id>/toggle/', scheduled_views.toggleScheduledScan, name='aiScannerToggleScheduledScan'),
     path('scheduled-scans/<int:scan_id>/executions/', scheduled_views.scheduledScanExecutions, name='aiScannerScheduledScanExecutions'),
-    
-    # Note: RESTful API endpoints are in /api/urls.py for external access
-    
-    # Legacy API endpoints (for backward compatibility)
-    path('api/authenticate/', views.aiScannerAuthenticate, name='aiScannerAuthenticate'),
-    path('api/list-files/', views.aiScannerListFiles, name='aiScannerListFiles'),
-    path('api/get-file/', views.aiScannerGetFile, name='aiScannerGetFile'),
+
+    # Note: the endpoints the scanner platform calls are in /api/urls.py
 ]
