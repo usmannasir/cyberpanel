@@ -178,6 +178,8 @@ class UndoneCreationTests(unittest.TestCase):
             'WPSites': NS(objects=NS(filter=lambda **kwargs: [])),
             'ACLManager': NS(FindIfChild=lambda: 0),
             'mysqlUtilities': NS(deleteDatabase=lambda *args: self.events.append('database') or 1),
+            # The deletion also has the pattern forwarding map rebuilt; that is not what is looked at here.
+            'patternForwardingMap': NS(rebuild_after_removal=lambda: None),
             'DNS': NS(deleteDNSZone=lambda domain: self.events.append('dns-zone:' + domain) or 1),
             'installUtilities': NS(installUtilities=NS(reStartLiteSpeed=lambda: None)),
             'os': NS(path=NS(exists=lambda path: path == '/root/.acme.sh/fixture.test')),
