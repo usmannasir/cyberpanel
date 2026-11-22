@@ -574,6 +574,11 @@ class CPBackupsV2(multi.Thread):
                     command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
                     ProcessUtilities.executioner(command)
 
+                    if not self.MergeSnapshotFlag:
+                        # A step failed and has said so, and the snapshots of this
+                        # run are forgotten: the job does not end as completed.
+                        return 0
+
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.CyberCPLogFileWriter.writeToFile(f'Snapshots to be merged {str(self.snapshots)}')
 
@@ -741,46 +746,35 @@ class CPBackupsV2(multi.Thread):
         # command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
         # ProcessUtilities.executioner(command)
 
-        source = f'/home/vmail/{self.website.domain}'
-
-        # The panel's own process may not enter the mail store, so it cannot
-        # tell a website without mail from one whose mail it cannot see. The
-        # question is answered with privilege.
+        # The mail store is the mail account's; the repository, and the rclone
+        # settings it is reached with, are the website's. Neither rustic nor
+        # rclone runs with privilege on those settings: the helper has the
+        # mail account read the mail and the website's account store it as
+        # one archive. See IncBackups/mailArchive.py.
         from IncBackups import mailArchive
-        found, detail = mailArchive.read_outcome(
-            ProcessUtilities.outputExecutioner(mailArchive.helper_command('look', self.website.domain)))
+        command = mailArchive.helper_command('backup', self.website.domain, self.website.externalApp,
+                                             shlex.split(self.repo)[0], program='rustic')
+        outcome, detail = mailArchive.read_outcome(ProcessUtilities.outputExecutioner(command))
 
-        if found == mailArchive.NO_FOLDER:
+        if outcome == mailArchive.NO_FOLDER:
             return CPBackupsV2.NO_MAIL_FOLDER
 
-        if found != mailArchive.PRESENT:
-            self.UpdateStatus(detail, CPBackupsV2.FAILED)
+        if outcome != mailArchive.SAVED:
+            self.UpdateStatus(CPBackupsV2.StatusText(detail), CPBackupsV2.FAILED)
             return 0
 
-        ## Pending add user provided folders in the exclude list
-
-        exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
-
-        command = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
-
-        result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
-
-        try:
-            SnapShotID = result['id']  ## snapshot id that we need to store in db
-            files_new = result['summary']['files_new']  ## basically new files in backup
-            total_duration = result['summary']['total_duration']  ## time taken
-
-            self.snapshots.append(SnapShotID)
-
-            ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
-
-            # self.BackupConfig(SnapShotID)
-
-        except BaseException as msg:
-            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
-            return 0
+        self.snapshots.append(detail)
 
         return 1
+
+    @staticmethod
+    def StatusText(text):
+        """Text for a status line, which ends in a mark and may end in `,<percent>`.
+
+        The messages of the programs a step ran carry the names of files and
+        mail folders, so brackets and commas in them are replaced.
+        """
+        return str(text).replace('[', '(').replace(']', ')').replace(',', ';')
 
     #### Resote Functions
 
@@ -1043,18 +1037,36 @@ class CPBackupsV2(multi.Thread):
                             'database user and belong to a locked import account; see the CyberPanel main log.',
                             CPBackupsV2.RUNNING)
 
+                elif restoreKind == 'mail':
+                    # Mail saved as a folder tree could only be written back by
+                    # running rustic and rclone with privilege on settings the
+                    # website's account controls. That is not done.
+                    self.UpdateStatus(
+                        'The mail in this snapshot was saved as a folder tree by an earlier version of Backup V2. '
+                        'The panel does not restore mail in that form. Take a new backup to be able to restore mail.',
+                        CPBackupsV2.FAILED)
+                    return 0
+
+                elif restoreKind == 'mailarchive':
+                    # The website's account reads the archive out of its
+                    # repository and the mail account unpacks it.
+                    from IncBackups import mailArchive
+                    command = mailArchive.helper_command('restore', self.website.domain, self.website.externalApp,
+                                                         shlex.split(self.repo)[0], program='rustic',
+                                                         snapshot=snapshot)
+                    outcome, detail = mailArchive.read_outcome(ProcessUtilities.outputExecutioner(command))
+
+                    if outcome != mailArchive.RESTORED:
+                        self.UpdateStatus(CPBackupsV2.StatusText(detail), CPBackupsV2.FAILED)
+                        return 0
+
+                    self.UpdateStatus('Mail restored: %s..,90' % CPBackupsV2.StatusText(detail), CPBackupsV2.RUNNING)
+
                 else:
 
-                    if restoreKind == 'mail':
-                        externalApp = None
-                        InitialCommand = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && '
-                    else:
-                        externalApp = self.website.externalApp
-                        InitialCommand = ''
-
-                    command = InitialCommand + restore_command(self.repo, snapshot, restoreValue)
+                    command = restore_command(self.repo, snapshot, restoreValue)
                     restoreStatus, result = ProcessUtilities.outputExecutioner(
-                        command, externalApp, True, None, True)
+                        command, self.website.externalApp, True, None, True)
 
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.CyberCPLogFileWriter.writeToFile(result)

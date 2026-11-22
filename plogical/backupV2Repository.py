@@ -2,6 +2,7 @@ import os
 import re
 import shlex
 
+from IncBackups.mailArchive import archive_name
 from plogical.backupExcludes import SITE_BACKUP_DIRECTORIES
 
 
@@ -62,7 +63,10 @@ def restore_target(path, domain):
     """Classify the path chosen for a restore, or raise ValueError.
 
     ('database', name)  a dump of one database, stored as <name>.sql
-    ('mail', path)      this website's own mail directory, or a path below it
+    ('mailarchive', name)  this website's mail, stored as one archive
+    ('mail', path)      this website's own mail directory, or a path below it,
+                        as earlier versions stored mail; it is recognised so
+                        that the restore can say why it is not done
     ('files', path)     this website's own home, or a path below it
 
     The path comes from the browser. Only these three kinds exist, so a restore
@@ -72,6 +76,8 @@ def restore_target(path, domain):
         raise ValueError('Invalid backup domain.')
     if not isinstance(path, str) or not path or any(ord(char) < 32 or ord(char) == 127 for char in path):
         raise ValueError('Invalid restore path.')
+    if path == archive_name(domain):
+        return 'mailarchive', path
     if '/' not in path and path.endswith('.sql'):
         name = path[:-len('.sql')]
         if _DATABASE_NAME.fullmatch(name) is None:

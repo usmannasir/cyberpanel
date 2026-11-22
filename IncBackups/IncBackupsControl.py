@@ -482,19 +482,26 @@ class IncJobs(multi.Thread):
 
     def restoreEmail(self):
         """Bring the mail of a snapshot back. It is done only when the mail helper says so."""
+        typedPassword = None
         try:
             domain = getattr(self.website, 'domain', self.website)
 
             if self.reconstruct == 'remote':
-                # Here the password is the one typed for the remote repository.
                 destination, snapshot = self.backupDestinations, self.jobid
-                secret = dict(password=self.passwordFile)
             else:
                 destination, snapshot = self.jobid.destination, self.jobid.snapshotid
-                secret = dict(password_file=self.passwordFile)
 
             if destination[:4] == 'sftp':
                 return self.sftpFunction('none', 'none', 1)
+
+            if self.reconstruct == 'remote':
+                # Here the password is the one typed for the remote repository.
+                # It is left in a private file for the helper, which gives it
+                # to restic alone: a command line can be read by every account.
+                typedPassword = mailArchive.keep_secret(self.passwordFile)
+                secret = dict(password_from=typedPassword)
+            else:
+                secret = dict(password_file=self.passwordFile)
 
             # The mail store is the mail account's and the repository the
             # website's. The helper runs restic as the website and writes the
@@ -508,13 +515,15 @@ class IncJobs(multi.Thread):
                 logging.statusWriter(self.statusPath, '%s [IncJobs.restoreEmail][5009]' % detail, 1)
                 return 0
 
-            logging.statusWriter(self.statusPath, '%s mail files restored to %s.' % (
-                detail, mailArchive.mail_folder(domain)), 1)
+            logging.statusWriter(self.statusPath, 'Mail restored to %s: %s.' % (
+                mailArchive.mail_folder(domain), detail), 1)
             return 1
 
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
             return 0
+        finally:
+            mailArchive.forget_secret(typedPassword)
 
     def reconstructWithMeta(self):
         try:
@@ -1013,11 +1022,8 @@ Subject: %s
                 if self.backupDatabases() == 0:
                     return 0
 
-            if websiteEmails:
-                if self.emailBackup() == 0:
-                    return 0
-
-            ## Backup job done
+            ## The meta snapshot comes before the mail, so that what the job
+            ## has saved by then can rebuild the website even if the mail step fails.
 
             metaSaved = self.metaBackup()
 
@@ -1034,6 +1040,12 @@ Subject: %s
             # the job has failed, and the step has said why.
             if metaSaved == 0:
                 return 0
+
+            if websiteEmails:
+                if self.emailBackup() == 0:
+                    return 0
+
+            ## Backup job done
 
             logging.statusWriter(self.statusPath, 'Completed', 1)
 
