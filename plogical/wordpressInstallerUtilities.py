@@ -247,3 +247,19 @@ def worker_failure_reason(status):
 def out_of_quota(output):
     """Whether a command stopped because the account's disk quota is used up."""
     return 'Disk quota exceeded' in str(output or '')
+
+
+# How the database client reports a statement it could not run:
+# "ERROR 1064 (42000) at line 1 in file: ...", at the start of a line.
+DATABASE_CLIENT_ERROR = re.compile(r'^ERROR [0-9]+ \([0-9A-Za-z]+\).*$', re.MULTILINE)
+
+
+def database_client_error(output):
+    """The first error the database client reported in what an import printed, or None.
+
+    An import through WP-CLI goes on after a statement fails, ends with
+    "Success" and exits with status 0: the client's own error line is the
+    only sign that the dump was not imported as it is.
+    """
+    found = DATABASE_CLIENT_ERROR.search(str(output if output is not None else ''))
+    return brief_output(found.group(0)) if found is not None else None

@@ -166,3 +166,37 @@ def address_is_on(address, domain):
 def restored_site_address(domain, path):
     """The address WordPress Manager records for a site: its domain, and its folder when it has one."""
     return domain if not path else '%s/%s' % (domain, path)
+
+
+# The row of the options table that holds a site's address, as a dump writes it.
+DUMP_SITE_ADDRESS = re.compile(r"'siteurl','([^']*)'")
+DUMP_SITE_ADDRESS_FILTER = "'siteurl','[^']*'"
+
+
+def dump_site_address(found):
+    """The site address a dump carries, from the lines of it that hold the siteurl row; None when it has none."""
+    match = DUMP_SITE_ADDRESS.search(str(found or ''))
+    return match.group(1) if match is not None and match.group(1) else None
+
+
+def database_not_replaced(dump_address, address, new_domain):
+    """Why the database of a new site is not the one from the dump after the import, or None when it is.
+
+    A new site starts with the database of a plain installation, whose
+    address is on the new domain. dump_address is what the dump says the
+    site's address is (None when it could not be read from the dump),
+    address what the database says after the import and before any
+    address is rewritten. The two must be the same; without an address
+    from the dump, the database must at least no longer be the plain one.
+    """
+    address = str(address or '').strip()
+    if dump_address is not None:
+        # WordPress gives its address without a slash at the end, whatever is stored.
+        if address.rstrip('/') != dump_address.rstrip('/'):
+            return ('after the import the database gives "%s" as the site address, the dump gives "%s"'
+                    % (address[:120], dump_address[:120]))
+        return None
+    if not address or address_is_on(address, new_domain):
+        return ('after the import the database still gives "%s" as the site address, as the plain '
+                'installation did' % address[:120])
+    return None

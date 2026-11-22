@@ -26,7 +26,7 @@ from websiteFunctions.wordpressRestore import backup_layout
 SOURCE = (Path(__file__).resolve().parents[1] / 'plogical/applicationInstaller.py').read_text()
 PHP = '/usr/local/lsws/lsphp83/bin/php'
 METHODS = ['siteCommand', 'directoryEntries', 'removeAddedEntries', 'removeCreatedWebsite', 'wordpressInstallNew',
-           'pathPresent', 'restoreStep', 'siteConfigValue', 'siteDatabaseSettings', 'foundBeforeCreation',
+           'pathPresent', 'restoreStep', 'importDump', 'siteConfigValue', 'siteDatabaseSettings', 'foundBeforeCreation',
            'backupLayout', 'otherDomainRefusal', 'placeBackup', 'restoreToNewSite', 'fillNewSiteFromBackup']
 CONFIG = {'WPtitle': 'Source', 'WebVHuser': 'sourceuser', 'WebadminEmail': 'owner@example.test',
           'WPAutoUpdates': 'Disabled', 'WPPluginUpdates': 'Disabled', 'WPThemeUpdates': 'Disabled',
@@ -38,6 +38,22 @@ STORED = '/usr/local/CyberCP/tmp/' + FOLDER
 LISTING = '\n'.join([STORED + '/public_html/wp-includes/version.php', STORED + '/public_html/wp-config.php',
                      STORED + '/sourcedb.sql'])
 SITE = '/home/new.example/public_html/'
+# What `wp db import` printed for a dump that is not SQL, measured as the
+# site's account on a server: it ends with "Success" and exits with status 0.
+BROKEN_IMPORT = """--------------
+NOT SQL
+--------------
+
+ERROR 1064 (42000) at line 1 in file: '/tmp/bad.sql': You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'NOT SQL' at line 1
+Success: Imported from '/tmp/bad.sql'.
+"""
+CLIENT_ERROR = ("ERROR 1064 (42000) at line 1 in file: '/tmp/bad.sql': You have an error in your SQL syntax; check "
+                "the manual that corresponds to your MariaDB server version for the right syntax to use near "
+                "'NOT SQL' at line 1")
+
+
+def wordpress_cli(*arguments):
+    return utilities.wordpress_cli_command(PHP, '/home/site.example/public_html', *arguments)
 
 
 class Response:
@@ -97,7 +113,7 @@ class Harness(unittest.TestCase):
                      'current_wordpress_version', 'directory_entry_names', 'entries_added_since',
                      'php_binary_for_selection', 'single_line_value', 'wordpress_cli_command',
                      'wordpress_config_set_command', 'wordpress_table_prefix_command', 'brief_output',
-                     'out_of_quota', 'worker_failure_reason'):
+                     'database_client_error', 'out_of_quota', 'worker_failure_reason'):
             self.namespace[name] = getattr(utilities, name)
         loaded = dict(zip(METHODS, load_methods('plogical/applicationInstaller.py', 'ApplicationInstaller',
                                                 METHODS, self.namespace)))
@@ -125,7 +141,7 @@ class Harness(unittest.TestCase):
         self.commands.append((user, command))
         for fragment, reply in self.replies.items():
             if fragment in command:
-                return reply
+                return reply(self.site_commands()) if callable(reply) else reply
         return True, b'Success: done.\n'
 
     def site_commands(self):
@@ -257,8 +273,16 @@ class NewSiteContentTests(Harness):
         self.replies = {
             'config get DB_NAME': (True, b'newdb\n'), 'config get DB_USER': (True, b'newuser_db\n'),
             'config get DB_PASSWORD': (True, b"p a$$'w\n"), 'config get table_prefix': (True, b'wp_\n'),
-            'option get siteurl': (True, b'http://new.example\n'),
+            'option get siteurl': self.site_address,
+            'grep -a -o -m1': (True, b"'siteurl','https://source.example'\n"),
         }
+
+    def site_address(self, commands):
+        """The address in the site's database: the dump's from the import until the addresses are rewritten."""
+        imported = [index for index, command in enumerate(commands) if 'db import' in command]
+        if imported and not [command for command in commands[imported[-1]:] if 'search-replace' in command]:
+            return True, b'https://source.example\n'
+        return True, b'http://new.example\n'
 
     def fill(self, kind='both', config=None, listing=LISTING):
         return self.installer.fillNewSiteFromBackup(
@@ -336,21 +360,23 @@ class NewSiteContentTests(Harness):
 
     def test_every_failed_step_ends_the_restore_before_the_next_one(self):
         steps = ('config get DB_NAME', '--strip-components=5', 'config set DB_USER', '--strip-components=6', 'cp -f',
-                 'db import', 'search-replace', 'core is-installed', 'option get siteurl')
+                 'db import', 'option get siteurl', 'search-replace', 'core is-installed')
         for index, step in enumerate(steps):
             with self.subTest(step=step):
                 self.commands = []
                 self.web_server.reset_mock()
+                usual = self.replies.get(step)
                 self.replies[step] = (False, b'it failed\n')
                 with self.assertRaises(BaseException) as raised:
                     self.fill()
                 del self.replies[step]
+                if usual is not None:
+                    self.replies[step] = usual
                 self.assertIn('it failed', str(raised.exception))
                 self.assertIn(step, self.site_commands()[-1])
                 for later in steps[index + 1:]:
                     self.assertFalse([command for command in self.site_commands() if later in command], later)
                 self.web_server.reStartLiteSpeed.assert_not_called()
-        self.replies['config get DB_NAME'] = (True, b'newdb\n')
 
     def test_a_reported_wordpress_error_ends_the_restore_even_when_the_command_exits_with_zero(self):
         self.replies['db import'] = (True, b'Error: Import file missing or not readable.\n')
@@ -374,10 +400,47 @@ class NewSiteContentTests(Harness):
             with self.subTest(address=address):
                 self.replies['option get siteurl'] = (True, address)
                 with self.assertRaisesRegex(BaseException, 'instead of under new.example'):
-                    self.fill()
+                    self.fill('files')
         self.web_server.reStartLiteSpeed.assert_not_called()
         for address in (b'http://new.example\n', b'https://www.new.example/blog\n', b'HTTPS://New.Example\n'):
             self.replies['option get siteurl'] = (True, address)
+            self.fill('files')
+
+    def test_a_dump_the_database_refused_fails_the_restore_whatever_the_import_says_of_itself(self):
+        # Exit status 0 and "Success", as measured.
+        self.replies['db import'] = (True, BROKEN_IMPORT.encode())
+        with self.assertRaises(BaseException) as raised:
+            self.fill()
+        self.assertEqual('The database could not be imported: ' + CLIENT_ERROR, str(raised.exception))
+        self.assertIn('db import', self.site_commands()[-1])
+        self.web_server.reStartLiteSpeed.assert_not_called()
+
+    def test_a_database_that_the_import_did_not_replace_cannot_pass(self):
+        # The import claims success, but the database still is the plain
+        # installation's: its address is the new domain, not the dump's.
+        self.replies['option get siteurl'] = (True, b'http://new.example\n')
+        with self.assertRaises(BaseException) as raised:
+            self.fill()
+        self.assertEqual('The database of the backup did not take the place of the new site\'s own: after the import '
+                         'the database gives "http://new.example" as the site address, the dump gives '
+                         '"https://source.example"', str(raised.exception))
+        self.assertFalse([command for command in self.site_commands() if 'search-replace' in command])
+
+    def test_the_dumps_own_address_is_read_before_the_import_and_compared_before_any_rewriting(self):
+        self.fill()
+        commands = self.site_commands()
+        read = self.position('grep -a -o -m1')
+        self.assertEqual("grep -a -o -m1 -E %s %s/sourcedb.sql" % (shlex.quote("'siteurl','[^']*'"), self.work),
+                         commands[read])
+        asked = [index for index, command in enumerate(commands) if 'option get siteurl' in command]
+        self.assertEqual(2, len(asked))
+        self.assertTrue(read < self.position('db import') < asked[0] < self.position('search-replace') < asked[1])
+
+    def test_a_dump_without_a_readable_address_must_at_least_have_replaced_the_plain_database(self):
+        self.replies['grep -a -o -m1'] = (False, b'')
+        self.fill()
+        self.replies['option get siteurl'] = (True, b'http://new.example\n')
+        with self.assertRaisesRegex(BaseException, 'still gives "http://new.example" as the site address'):
             self.fill()
 
     def test_a_used_up_quota_is_named_as_the_reason(self):
@@ -473,6 +536,44 @@ class ExistingSiteContentTests(Harness):
                                                              False))
         self.assertEqual(('table_prefix', 'wp_'), self.installer.siteDatabaseSettings(
             PHP, '/home/site.example/public_html', 'siteuser', True)[-1])
+
+
+class DumpImportTests(Harness):
+    def run_import(self, reply, after=''):
+        self.replies['db import'] = reply
+        return self.installer.importDump(PHP, '/home/site.example/public_html', 'siteuser', '/work/site/db.sql', after)
+
+    def test_a_sound_import_passes(self):
+        self.assertIsNone(self.run_import((True, b"Success: Imported from '/work/site/db.sql'.\n")))
+        self.assertEqual([('siteuser', wordpress_cli('db', 'import', '/work/site/db.sql') + ' 2>&1')], self.commands)
+
+    def test_an_error_line_of_the_database_client_fails_the_import_despite_status_zero_and_success(self):
+        with self.assertRaises(BaseException) as raised:
+            self.run_import((True, BROKEN_IMPORT.encode()))
+        self.assertEqual('The database could not be imported: ' + CLIENT_ERROR, str(raised.exception))
+
+    def test_an_existing_site_is_told_that_its_database_may_be_partly_imported(self):
+        with self.assertRaises(BaseException) as raised:
+            self.run_import((True, BROKEN_IMPORT.encode()), '. The database of this site may be partly imported')
+        self.assertEqual('The database could not be imported: %s. The database of this site may be partly imported'
+                         % CLIENT_ERROR, str(raised.exception))
+
+    def test_a_failed_command_and_a_reported_wordpress_error_still_fail_it(self):
+        for reply, reason in (((False, b''), 'the command failed'),
+                              ((False, b'mysql: command not found\n'), 'mysql: command not found'),
+                              ((True, b'Error: Import file missing or not readable: /x\n'), 'Error: Import file')):
+            with self.assertRaisesRegex(BaseException, 'The database could not be imported: ' + reason):
+                self.run_import(reply)
+
+    def test_only_the_clients_own_error_lines_count(self):
+        for output in (b"Success: Imported from 'x'.\n", b'error 1064 (42000) at line 1\n',
+                       b'-- a comment about ERROR 1064 (42000) in the dump\n', b'ERROR in a title\n',
+                       b' ERROR 1064 (42000) indented\n'):
+            self.assertIsNone(self.run_import((True, output)), output)
+        for output in (b'ERROR 1146 (42S02) at line 12: Table does not exist\nSuccess: Imported.\n',
+                       b'first\nERROR 2006 (HY000) at line 5 in file: MySQL server has gone away\n'):
+            with self.assertRaisesRegex(BaseException, r'could not be imported: ERROR \d+ \('):
+                self.run_import((True, output))
 
 
 class ArchiveReadingTests(Harness):
@@ -1045,8 +1146,14 @@ class RestoreSourceTests(unittest.TestCase):
                 for step in ('cp -R', 'db import', 'search-replace', 'config get', 'config set', 'tar '):
                     self.assertNotIn(step, line)
         live = '\n'.join(self.restore_lines())
-        self.assertEqual(2, live.count("'db', 'import'"))
         self.assertEqual(2, live.count('self.restoreToNewSite('))
+
+    def test_every_import_looks_for_the_database_clients_error_lines(self):
+        live = '\n'.join(line for line in SOURCE.splitlines() if not line.lstrip().startswith('#'))
+        self.assertEqual(1, live.count("'db', 'import'"))
+        self.assertEqual(3, live.count('self.importDump(FinalPHPPath, newWPpath, VHuser, '))
+        # Into an existing site, a failed import says what it may have left.
+        self.assertEqual(2, live.count("'. The database of this site may be partly imported')"))
 
     def test_no_restore_unpacks_an_archive_with_roots_rights(self):
         live = [line for line in SOURCE.splitlines() if not line.lstrip().startswith('#')]

@@ -15,6 +15,7 @@ from plogical.wordpressInstallerUtilities import (
     build_directory_listing_command,
     build_entry_removal_command,
     current_wordpress_version,
+    database_client_error,
     directory_entry_names,
     entries_added_since,
     out_of_quota,
@@ -143,6 +144,34 @@ class StatusTextTests(unittest.TestCase):
         self.assertTrue(out_of_quota("tar: wp-content/a.jpg: Cannot write: Disk quota exceeded\n"))
         self.assertFalse(out_of_quota('tar: Unexpected EOF in archive'))
         self.assertFalse(out_of_quota(None))
+
+
+class DatabaseClientErrorTests(unittest.TestCase):
+    # Printed by `wp db import` for a dump that is not SQL; the command exited with status 0.
+    MEASURED = """--------------
+NOT SQL
+--------------
+
+ERROR 1064 (42000) at line 1 in file: '/tmp/bad.sql': You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'NOT SQL' at line 1
+Success: Imported from '/tmp/bad.sql'.
+"""
+
+    def test_the_clients_error_line_is_found_in_an_import_that_calls_itself_a_success(self):
+        self.assertEqual(
+            "ERROR 1064 (42000) at line 1 in file: '/tmp/bad.sql': You have an error in your SQL syntax; check the "
+            "manual that corresponds to your MariaDB server version for the right syntax to use near 'NOT SQL' at "
+            "line 1", database_client_error(self.MEASURED))
+
+    def test_the_first_of_several_is_given_and_a_long_one_is_shortened(self):
+        self.assertEqual('ERROR 1146 (42S02) at line 3: no table',
+                         database_client_error('ERROR 1146 (42S02) at line 3: no table\nERROR 1064 (42000) at line 9\n'))
+        self.assertLessEqual(len(database_client_error('ERROR 1064 (42000) ' + 'x' * 2000)), 304)
+
+    def test_nothing_else_is_taken_for_one(self):
+        for output in ("Success: Imported from '/tmp/good.sql'.\n", '', None, 'error 1064 (42000) at line 1',
+                       'Error 1064 (42000) at line 1', 'see ERROR 1064 (42000) above', '  ERROR 1064 (42000)',
+                       'ERROR: something', 'ERROR 1064 at line 1', 'ERROR (42000) at line 1'):
+            self.assertIsNone(database_client_error(output), output)
 
 
 class ReusedByCreationTests(unittest.TestCase):
