@@ -2114,6 +2114,21 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             Upgrade.stdOut('WARNING: Database grants were not checked: ' + str(error), 0)
 
     @staticmethod
+    def relocateScannerBackups():
+        """Move the AI Scanner's backups of earlier releases out of the folders the web server serves.
+
+        Earlier releases kept them inside the site directory (see the helper,
+        which the new source provides); they go to the website's private
+        folder in its home. A failure is reported and never stops the upgrade.
+        """
+        try:
+            from plogical.scannerBackupRelocation import run as relocate_scanner_backups
+            Upgrade.stdOut('AI Scanner backups: ' + relocate_scanner_backups(
+                connect=Upgrade.setupConnection, log=Upgrade.stdOut), 0)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: AI Scanner backups of earlier releases were not looked for: ' + str(error), 0)
+
+    @staticmethod
     def setupConnection(db=None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
@@ -5855,6 +5870,8 @@ pm.max_spare_servers = 3
         Upgrade.rotateInvalidAPITokens()
 
         Upgrade.repairDatabaseGrants()
+
+        Upgrade.relocateScannerBackups()
 
         ## Put function here to update custom ACLs
 
