@@ -1,4 +1,6 @@
 import json
+import math
+import re
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -9,12 +11,26 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.securityUtils import constant_time_equal
 
 
+# A counter as text: digits only, and no more of them than a counter needs.
+DIGITS = re.compile(r'[0-9]{1,10}\Z')
+
+
 def count(data, name, highest=2147483647):
-    """A counter from a status update: a whole number between nothing and the highest the field holds."""
+    """A counter from a status update: a whole number between nothing and the highest the field holds.
+
+    Taken from a number, or from text that is nothing but a few digits.
+    """
     value = data.get(name, 0)
-    if isinstance(value, bool):
+    if isinstance(value, str):
+        value = value.strip()
+        if DIGITS.match(value) is None:
+            raise ValueError(name)
+        value = int(value)
+    elif isinstance(value, float) and math.isfinite(value):
+        value = int(value)
+    elif isinstance(value, bool) or not isinstance(value, int):
         raise ValueError(name)
-    return min(max(int(value), 0), highest)
+    return min(max(value, 0), highest)
 
 
 @csrf_exempt
