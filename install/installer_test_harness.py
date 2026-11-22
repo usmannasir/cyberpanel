@@ -23,7 +23,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
-TOP_LEVEL_START = '\nCheck_Usage "$@"\n'
+TOP_LEVEL_START = '\nRead_Admin_Password_File\n'
 
 # Functions of the script that run as they are.
 REAL_FUNCTIONS = (

@@ -39,7 +39,8 @@ class PasswordFileReaderTests(unittest.TestCase):
 
     def read(self, path):
         script = function('Read_Admin_Password_File') + (
-            'Read_Admin_Password_File\nstatus=$?\nprintf "%s" "$Admin_Pass_From_File"\nexit $status\n')
+            'Read_Admin_Password_File\nstatus=$?\nprintf "%s" "$Admin_Pass_From_File"\n'
+            'printf "%s" "$Admin_Pass_File_Problem" >&2\nexit $status\n')
         environment = {'PATH': os.environ['PATH']}
         if path is not None:
             environment['CP_ADMIN_PASSWORD_FILE'] = str(path)
@@ -160,6 +161,24 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual([], machine.event_lines())
         self.assertEqual([], machine.recorded(machine.calls))
         self.assertEqual([], machine.recorded(machine.phases))
+
+    def test_help_is_given_whatever_the_file_is(self):
+        machine = Installer(self)
+        result = machine.run('--help', environment={'CP_ADMIN_PASSWORD_FILE': str(machine.root / 'missing')})
+        self.assertEqual((0, ''), (result.returncode, result.stderr))
+        self.assertIn('CyberPanel Installer Script Help', result.stdout)
+
+    @AS_ROOT
+    def test_value_of_the_password_option_is_not_looked_at_when_the_file_is_used(self):
+        # "short" would end the run with status 2 without the file.
+        machine = Installer(self)
+        path = password_file(str(machine.root / 'home'))
+        result = machine.run('-v', 'ols', '-p', 'short', environment={'CP_ADMIN_PASSWORD_FILE': str(path)})
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual('install complete', machine.events()[-1])
+        self.assertEqual(SECRET + '\n', machine.stored_password.read_text())
+        self.assertIn('The password option is not used', result.stdout)
+        self.assertEqual(2, Installer(self).run('-v', 'ols', '-p', 'short').returncode)
 
     def test_password_on_the_command_line_is_masked_in_both_logs(self):
         for option in ('-p', '--password'):
