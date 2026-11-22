@@ -2318,6 +2318,17 @@ openssl req -x509 -config "$cert_conf" -extensions 'server_exts' -nodes -days 82
 rm -f "$cert_conf"
 }
 
+# install.py enables the Web Terminal unit without starting it: the unit runs
+# /usr/local/CyberCP/bin/python, which Post_Install_Required_Components creates,
+# with the panel key pair, which Post_Install_Regenerate_Cert has just replaced.
+# The helper starts the unit only if it is still enabled and that interpreter exists.
+Post_Install_Start_Web_Terminal() {
+log_function_start "Post_Install_Start_Web_Terminal"
+if ! /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/terminalService.py start-installed; then
+  log_warning "Web Terminal service could not be started; check: systemctl status fastapi_ssh_server"
+fi
+}
+
 # When lscpd sets PYTHONHOME=/usr, lswsgi loads Django from system Python—not the CyberCP venv.
 # Mirror requirements into system site-packages. See https://peps.python.org/pep-0668/
 Install_CyberCP_Runtime_Python_Requirements() {
@@ -2825,6 +2836,8 @@ Post_Install_PHP_Session_Setup
 Post_Install_PHP_TimezoneDB
 
 Post_Install_Regenerate_Cert
+
+Post_Install_Start_Web_Terminal
 
 Post_Install_Regenerate_Webadmin_Console_Passwd
 

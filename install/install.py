@@ -3140,6 +3140,8 @@ def main():
     from plogical.cloudflareSudo import provision as provision_cloudflare_sudo
     provision_cloudflare_sudo()
     configure_jwt_secret()
+    # Installs and enables the Web Terminal unit. Its interpreter does not exist
+    # yet: cyberpanel.sh creates it after this script and then starts the unit.
     from plogical.terminalService import configure_terminal_service
     configure_terminal_service(fresh_install=True)
 

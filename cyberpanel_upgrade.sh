@@ -2173,14 +2173,21 @@ rm -rf /root/cyberpanel_upgrade_tmp
 
 Restart_Web_Terminal() {
 if [[ -x /usr/local/CyberCP/bin/python ]] && \
-   [[ -f /etc/systemd/system/fastapi_ssh_server.service ]] && \
-   systemctl is-active --quiet fastapi_ssh_server; then
-  systemctl daemon-reload
-  systemctl reset-failed fastapi_ssh_server >/dev/null 2>&1 || true
-  if systemctl restart fastapi_ssh_server; then
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Web Terminal restarted after virtualenv rebuild" | tee -a /var/log/cyberpanel_upgrade_debug.log
-  else
-    echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Web Terminal could not be restarted" | tee -a /var/log/cyberpanel_upgrade_debug.log
+   [[ -f /etc/systemd/system/fastapi_ssh_server.service ]]; then
+  if systemctl is-active --quiet fastapi_ssh_server; then
+    systemctl daemon-reload
+    systemctl reset-failed fastapi_ssh_server >/dev/null 2>&1 || true
+    if systemctl restart fastapi_ssh_server; then
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Web Terminal restarted after virtualenv rebuild" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    else
+      echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: Web Terminal could not be restarted" | tee -a /var/log/cyberpanel_upgrade_debug.log
+    fi
+  elif [[ -f /usr/local/CyberCP/plogical/terminalService.py ]]; then
+    # Not running: an enabled unit left in failed state (its interpreter was
+    # missing when it was started) is started again; a stopped, disabled or
+    # masked unit is left as the administrator set it.
+    env -u PYTHONHOME -u PYTHONPATH /usr/local/CyberCP/bin/python \
+      /usr/local/CyberCP/plogical/terminalService.py repair 2>&1 | tee -a /var/log/cyberpanel_upgrade_debug.log
   fi
 fi
 }
