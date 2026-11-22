@@ -41,7 +41,9 @@ class RestoreSSLTests(unittest.TestCase):
         databases = Mock()
         databases.createDatabaseAndRegister.return_value = (1, 'None')
         dns = Mock()
-        namespace = dict(os=os, ElementTree=ElementTree,
+        # The database user starts with a password of the restore's own making.
+        passwords = Mock(return_value='starting-password')
+        namespace = dict(os=os, ElementTree=ElementTree, generate_pass=passwords,
                          Administrator=SimpleNamespace(objects=Mock(get=Mock(return_value=user))),
                          Websites=SimpleNamespace(objects=Mock(get=Mock(return_value=website))),
                          ChildDomains=SimpleNamespace(objects=Mock()),
@@ -64,7 +66,8 @@ class RestoreSSLTests(unittest.TestCase):
                 </database></Databases></metaFile>''')
             self.assertEqual(namespace['createWebsiteFromBackup'](str(archive), 'fixture'), (1, 'None'))
         databases.createDatabaseAndRegister.assert_called_once_with(
-            'example_db', 'example_user', 'cyberpanel', website)
+            'example_db', 'example_user', 'starting-password', website)
+        passwords.assert_called_once_with(32)
         dns.createDNSZone.assert_called_once_with('example.test', user)
 
     def test_creation_can_defer_mail_setup_without_changing_the_default(self):
