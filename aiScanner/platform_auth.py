@@ -39,3 +39,26 @@ def scanner_payment_setup_request(admin, cyberpanel_host):
         'domain': callback.hostname,
         'return_url': 'https://' + cyberpanel_host + '/aiscanner/setup-complete/',
     }, headers
+
+
+PLATFORM_HOST = 'platform.cyberpersons.com'
+
+
+def platform_page_url(url):
+    """An address the platform returned for the browser to open, or None.
+
+    The browser is sent only to an https page on the platform itself.
+    """
+    from urllib.parse import urlsplit
+    if not isinstance(url, str) or not url or len(url) > 2048 or any(ord(char) <= 32 or char == '\\' for char in url):
+        return None
+    try:
+        parts = urlsplit(url)
+        if parts.hostname != PLATFORM_HOST or parts.username or parts.password or parts.port not in (None, 443):
+            return None
+    except ValueError:
+        return None
+    if parts.scheme == 'http':
+        # Same host: only the scheme is raised.
+        return 'https' + url[4:]
+    return url if parts.scheme == 'https' else None

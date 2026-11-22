@@ -15,7 +15,7 @@ from loginSystem.models import Administrator
 from .models import AIScannerSettings, ScanHistory, FileAccessToken
 from .access import scanner_allowed
 from .panel_address import panel_address
-from .platform_auth import saved_scanner_auth_headers, scanner_payment_setup_request
+from .platform_auth import platform_page_url, saved_scanner_auth_headers, scanner_payment_setup_request
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -66,21 +66,17 @@ class AIScannerManager:
             
             # Get current balance if payment is configured
             current_balance = scanner_settings.balance
-            self.logger.writeToFile(f'[AIScannerManager.scannerHome] Stored balance: {current_balance}')
             
             if scanner_settings.is_payment_configured:
                 # Try to fetch latest balance from API (now supports flexible auth)
-                self.logger.writeToFile(f'[AIScannerManager.scannerHome] Fetching balance from API...')
                 api_balance = self.get_account_balance(scanner_settings.api_key)
-                self.logger.writeToFile(f'[AIScannerManager.scannerHome] API returned balance: {api_balance}')
                 
                 if api_balance is not None:
                     scanner_settings.balance = api_balance
                     scanner_settings.save()
                     current_balance = api_balance
-                    self.logger.writeToFile(f'[AIScannerManager.scannerHome] Updated balance to: {current_balance}')
                 else:
-                    self.logger.writeToFile(f'[AIScannerManager.scannerHome] API balance call failed, keeping stored balance: {current_balance}')
+                    self.logger.writeToFile('[AIScannerManager.scannerHome] Balance request failed, keeping the stored balance')
             
             # Check VPS free scans availability
             server_ip = ACLManager.fetchIP()
@@ -151,14 +147,12 @@ class AIScannerManager:
             cyberpanel_domain = cyberpanel_host.split(':')[0]  # Domain only for email fallback
             admin_email = admin.email if hasattr(admin, 'email') and admin.email else f'{admin.userName}@{cyberpanel_domain}'
             
-            self.logger.writeToFile(f'[AIScannerManager.setupPayment] Admin: {admin.userName}, Email: {admin_email}, Host: {cyberpanel_host}')
-            
             # Setup payment with AI Scanner API
-            self.logger.writeToFile(f'[AIScannerManager.setupPayment] Attempting payment setup for {admin_email} on {cyberpanel_host}')
+            self.logger.writeToFile(f'[AIScannerManager.setupPayment] Attempting payment setup for {admin.userName} on {cyberpanel_host}')
             setup_data = self.setup_ai_scanner_payment(admin_email, cyberpanel_host, admin=admin)
             
             if setup_data:
-                self.logger.writeToFile(f'[AIScannerManager.setupPayment] Payment setup successful for {admin_email}')
+                self.logger.writeToFile(f'[AIScannerManager.setupPayment] Payment setup started for {admin.userName}')
                 # Only the session that started the set-up may complete it, once and soon.
                 request.session['aiScannerSetupStarted'] = int(time.time())
                 return JsonResponse({
@@ -167,7 +161,7 @@ class AIScannerManager:
                     'token': setup_data['token']
                 })
             else:
-                self.logger.writeToFile(f'[AIScannerManager.setupPayment] Payment setup failed for {admin_email}')
+                self.logger.writeToFile(f'[AIScannerManager.setupPayment] Payment setup failed for {admin.userName}')
                 return JsonResponse({
                     'success': False,
                     'error': 'Failed to setup payment. Please check the logs and try again.'
@@ -522,14 +516,14 @@ class AIScannerManager:
             setup_data = self.setup_add_payment_method(api_key_to_use, admin_email, cyberpanel_host)
             
             if setup_data:
-                self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Payment method setup successful for {admin_email}')
+                self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Payment method setup started for {admin.userName}')
                 return JsonResponse({
                     'success': True,
                     'setup_url': setup_data['setup_url'],
                     'token': setup_data.get('token', '')
                 })
             else:
-                self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Payment method setup failed for {admin_email}')
+                self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Payment method setup failed for {admin.userName}')
                 return JsonResponse({
                     'success': False,
                     'error': 'Failed to setup payment method. Please try again.'
@@ -558,26 +552,20 @@ class AIScannerManager:
             
             status = request.GET.get('status')
             
-            # Log all URL parameters for debugging
-            self.logger.writeToFile(f'[AIScannerManager.paymentMethodComplete] All URL params: {dict(request.GET)}')
-            
             if status == 'success':
-                payment_method_id = request.GET.get('payment_method_id')
-                card_last4 = request.GET.get('card_last4')
-                card_brand = request.GET.get('card_brand')
+                # What the address says about the card is shown only when it looks like a card.
+                card_last4 = request.GET.get('card_last4') or ''
+                card_brand = request.GET.get('card_brand') or ''
                 
-                self.logger.writeToFile(f'[AIScannerManager.paymentMethodComplete] Payment method added: {payment_method_id} ({card_brand} ****{card_last4})')
-                
-                if payment_method_id:
+                if re.fullmatch(r'[0-9]{4}', card_last4) and re.fullmatch(r'[A-Za-z][A-Za-z ]{0,19}', card_brand):
                     messages.success(request, f'Payment method added successfully! New {card_brand} card ending in {card_last4}.')
-                    self.logger.writeToFile(f'[AIScannerManager] Payment method added for {admin.userName}: {card_brand} ****{card_last4}')
                 else:
                     messages.success(request, 'Payment method added successfully!')
+                self.logger.writeToFile(f'[AIScannerManager] Payment method added for {admin.userName}')
                     
             elif status in ['failed', 'cancelled', 'error']:
-                error = request.GET.get('error', 'Failed to add payment method')
-                messages.error(request, f'Failed to add payment method: {error}')
-                self.logger.writeToFile(f'[AIScannerManager] Payment method add failed for {admin.userName}: {error}')
+                messages.error(request, 'Failed to add payment method.')
+                self.logger.writeToFile(f'[AIScannerManager] Payment method add failed for {admin.userName}')
             
             return redirect('aiScannerHome')
             
@@ -608,9 +596,6 @@ class AIScannerManager:
                 return None
             payload, auth_headers = setup_request
 
-            self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] Sending request to: {self.AI_SCANNER_API_BASE}/cyberpanel/setup-payment/')
-            self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] Payload: {payload}')
-            
             response = requests.post(
                 f'{self.AI_SCANNER_API_BASE}/cyberpanel/setup-payment/',
                 json=payload,
@@ -623,12 +608,16 @@ class AIScannerManager:
             if response.status_code == 200:
                 data = response.json()
                 if data.get('success'):
+                    payment_url = platform_page_url(data.get('payment_url'))
+                    if payment_url is None:
+                        self.logger.writeToFile('[AIScannerManager.setup_ai_scanner_payment] The platform returned an address outside the platform')
+                        return None
                     return {
-                        'payment_url': data['payment_url'],
+                        'payment_url': payment_url,
                         'token': data['token']
                     }
                 else:
-                    self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] API returned success=false: {data.get("error", "Unknown error")}')
+                    self.logger.writeToFile('[AIScannerManager.setup_ai_scanner_payment] API returned success=false')
             else:
                 self.logger.writeToFile(f'[AIScannerManager.setup_ai_scanner_payment] Non-200 status code: {response.status_code}')
             
@@ -640,29 +629,22 @@ class AIScannerManager:
     def get_account_balance(self, api_key):
         """Get current account balance"""
         try:
-            self.logger.writeToFile(f'[AIScannerManager.get_account_balance] Requesting balance from: {self.AI_SCANNER_API_BASE}/api/account/balance/')
-            
             response = requests.get(
                 f'{self.AI_SCANNER_API_BASE}/api/account/balance/',
                 headers={'X-API-Key': api_key},
                 timeout=10
             )
             
-            self.logger.writeToFile(f'[AIScannerManager.get_account_balance] Response status: {response.status_code}')
-            self.logger.writeToFile(f'[AIScannerManager.get_account_balance] Response content: {response.text}')
-            
             if response.status_code == 200:
                 data = response.json()
                 if data.get('success'):
                     # Use the new balance_usd field from flexible API
                     balance = float(data.get('balance_usd', data.get('balance', 0)))
-                    auth_method = data.get('authenticated_via', 'unknown')
-                    self.logger.writeToFile(f'[AIScannerManager.get_account_balance] Parsed balance: {balance} (auth: {auth_method})')
                     return balance
                 else:
                     # Even failed responses now include balance_usd hint
                     balance_hint = data.get('balance_usd', 0)
-                    self.logger.writeToFile(f'[AIScannerManager.get_account_balance] API returned success=false: {data.get("error", "Unknown error")} (balance hint: {balance_hint})')
+                    self.logger.writeToFile('[AIScannerManager.get_account_balance] API returned success=false')
                     # Return the balance hint if available, even on auth failure
                     if balance_hint > 0:
                         return float(balance_hint)
@@ -689,7 +671,6 @@ class AIScannerManager:
             }
             
             self.logger.writeToFile(f'[AIScannerManager.submit_wordpress_scan] Submitting scan {scan_id} for {domain}')
-            self.logger.writeToFile(f'[AIScannerManager.submit_wordpress_scan] Payload: {payload}')
             
             response = requests.post(
                 f'{self.AI_SCANNER_API_BASE}/api/scan/submit-v2/',
@@ -699,7 +680,6 @@ class AIScannerManager:
             )
             
             self.logger.writeToFile(f'[AIScannerManager.submit_wordpress_scan] Response status: {response.status_code}')
-            self.logger.writeToFile(f'[AIScannerManager.submit_wordpress_scan] Response content: {response.text}')
             
             if response.status_code == 200:
                 data = response.json()
@@ -708,7 +688,7 @@ class AIScannerManager:
                     self.logger.writeToFile(f'[AIScannerManager.submit_wordpress_scan] Platform assigned scan ID: {platform_scan_id}')
                     return platform_scan_id
                 else:
-                    self.logger.writeToFile(f'[AIScannerManager.submit_wordpress_scan] Platform returned success=false: {data.get("error", "Unknown error")}')
+                    self.logger.writeToFile('[AIScannerManager.submit_wordpress_scan] Platform returned success=false')
             else:
                 self.logger.writeToFile(f'[AIScannerManager.submit_wordpress_scan] Non-200 status code: {response.status_code}')
             
@@ -763,15 +743,12 @@ class AIScannerManager:
             self.logger.writeToFile(f'[AIScannerManager.check_vps_free_scans] Response status: {response.status_code}')
             
             if response.status_code == 200:
-                data = response.json()
-                self.logger.writeToFile(f'[AIScannerManager.check_vps_free_scans] Response data: {data}')
-                return data
+                return response.json()
             else:
-                self.logger.writeToFile(f'[AIScannerManager.check_vps_free_scans] API error: {response.text}')
                 return {'success': False, 'is_vps': False, 'error': 'API call failed'}
         except Exception as e:
-            self.logger.writeToFile(f'[AIScannerManager.check_vps_free_scans] Error: {str(e)}')
-            return {'success': False, 'is_vps': False, 'error': str(e)}
+            self.logger.writeToFile(f'[AIScannerManager.check_vps_free_scans] Error: {type(e).__name__}')
+            return {'success': False, 'is_vps': False, 'error': 'API call failed'}
 
     def setup_add_payment_method(self, api_key, user_email, cyberpanel_host):
         """Setup additional payment method with AI Scanner API"""
@@ -782,9 +759,6 @@ class AIScannerManager:
                 'action': 'add_payment_method'  # Indicate this is adding a payment method, not initial setup
             }
             
-            self.logger.writeToFile(f'[AIScannerManager.setup_add_payment_method] Sending request to: {self.AI_SCANNER_API_BASE}/cyberpanel/add-payment-method/')
-            self.logger.writeToFile(f'[AIScannerManager.setup_add_payment_method] Payload: {payload}')
-            
             response = requests.post(
                 f'{self.AI_SCANNER_API_BASE}/cyberpanel/add-payment-method/',
                 headers={'X-API-Key': api_key},
@@ -793,17 +767,20 @@ class AIScannerManager:
             )
             
             self.logger.writeToFile(f'[AIScannerManager.setup_add_payment_method] Response status: {response.status_code}')
-            self.logger.writeToFile(f'[AIScannerManager.setup_add_payment_method] Response content: {response.text}')
             
             if response.status_code == 200:
                 data = response.json()
                 if data.get('success'):
+                    setup_url = platform_page_url(data.get('setup_url'))
+                    if setup_url is None:
+                        self.logger.writeToFile('[AIScannerManager.setup_add_payment_method] The platform returned an address outside the platform')
+                        return None
                     return {
-                        'setup_url': data['setup_url'],
+                        'setup_url': setup_url,
                         'token': data.get('token', '')
                     }
                 else:
-                    self.logger.writeToFile(f'[AIScannerManager.setup_add_payment_method] API returned success=false: {data.get("error", "Unknown error")}')
+                    self.logger.writeToFile('[AIScannerManager.setup_add_payment_method] API returned success=false')
             else:
                 self.logger.writeToFile(f'[AIScannerManager.setup_add_payment_method] Non-200 status code: {response.status_code}')
             
@@ -843,7 +820,7 @@ class AIScannerManager:
                         'vps_id': data.get('vps_id')
                     }
                 else:
-                    self.logger.writeToFile(f'[AIScannerManager.get_or_create_vps_api_key] API returned success=false: {data.get("error", "Unknown error")}')
+                    self.logger.writeToFile('[AIScannerManager.get_or_create_vps_api_key] API returned success=false')
             else:
                 self.logger.writeToFile(f'[AIScannerManager.get_or_create_vps_api_key] Non-200 status code: {response.status_code}')
             
