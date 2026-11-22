@@ -20,15 +20,22 @@ recommended for every server.
   could be answered with the other's certificate. The DNS-validated route
   follows the same rule.
 - An upgrade completes the listener maps of websites that already have a
-  certificate. Listeners on other ports or on a single address are left as
-  they are.
+  certificate that is in date and names the website. Listeners on other
+  ports or on a single address are left as they are, and a website whose
+  file cannot be changed is named in the upgrade log and skipped.
+- A website that is created again after it was deleted is created over the
+  self-signed certificate its predecessor left, as a first creation would
+  be. Before, the creation failed when no public certificate could be
+  issued.
 
 ### Websites
 - A website is suspended and restored on a server whose OpenLiteSpeed
   configuration test already reports warnings or an error in another
   website. The change is refused, and undone, only when it adds an error.
   The same holds for a child domain created under a suspended website and
-  for a child domain's state restored from a backup.
+  for a child domain's state restored from a backup. Restoring a suspended
+  website is undone only for damage (a fatal error, a web server that does
+  not restart), not for an error its own configuration brings back.
 - A website on the Apache backend is written only for a system user that
   exists. Apache's own configuration test runs before and after the change,
   a refused change is undone and reported, and Apache is not restarted into
@@ -36,8 +43,15 @@ recommended for every server.
   OpenLiteSpeed configuration until Apache runs with the new one. The Apache
   configuration editor and the PHP version change follow the same rule.
 - The system user of a new website is named in lower case.
-- An upgrade takes a virtual host or PHP-FPM pool that names a missing
-  system user out of use, so that the other websites on Apache answer again.
+- An upgrade closes a virtual host of the panel that names a missing system
+  user (it answers 403) and sets its PHP-FPM pool aside, so that the other
+  websites on Apache answer again. Once the user exists, changing the
+  website's PHP version opens it again. Files the panel did not write are
+  reported and left alone.
+- The OpenLiteSpeed proxy backends for Apache are defined once and on the
+  right ports; duplicate definitions of earlier releases are removed.
+- A backup whose website user name this system does not accept is restored
+  under a new name.
 
 ### Users
 - The Create ACL page shows a checkbox for every permission it saves,
@@ -45,13 +59,23 @@ recommended for every server.
   only what the request names; a permission that is not sent is not granted.
   Stored ACLs are not changed by the upgrade: open an ACL made on the earlier
   page in Modify ACL to review its backup and SSL permissions.
+- A permission is sent as true or false (1, 0 and the words are accepted). A
+  request with any other value is refused and nothing is stored.
 
 ### Backups
 - An incremental backup with emails selected stores the website's mail, read
   by the mail user and stored by the website's user. It says so when the
   website has no mail folder, and fails when the mail cannot be read in
-  full. Restoring mail unpacks inside the website's mail folder only.
-  Restore points of mail made by earlier releases hold no mail.
+  full. Restoring mail checks the whole archive first, writes inside the
+  website's mail folder only, with private permissions, and leaves Dovecot's
+  index files of a mailbox in use as they are. Restore points of mail made
+  by earlier releases hold no mail.
+- Backup V2 stores and restores mail the same way; nothing runs as root on a
+  website's own storage settings. Mail in Backup V2 snapshots of earlier
+  releases is not restored by the panel: take a new backup.
+- A mail folder that is a link to another location fails the mail step with
+  the link named; mount the location at that path instead.
+- A Backup V2 job no longer ends as successful after a step that failed.
 - A restore stops at a step that failed, and a backup fails when its
   metadata could not be stored.
 - The Backup V2 create, restore, schedule and repository pages, the
@@ -61,7 +85,12 @@ recommended for every server.
 ### WordPress
 - Restoring a WordPress backup to a new site produces a working copy with
   its own database, or reports why not and removes the website it created.
-  The new site starts from the current WordPress release.
+  The new site starts from the current WordPress release. A DNS zone, mail
+  folder or certificate folder that existed before the job is kept when the
+  website is removed again. Multisite backups and backups that fix the site
+  address in wp-config.php are refused before anything is created.
+- A backup is never unpacked as root, and a restore into an existing website
+  keeps that website's own database settings even when it stops half way.
 - Restore steps see the real result of a copy or a database import; a
   failed step is reported instead of "Completed".
 - A failed WordPress deployment to a new domain removes the website it
@@ -71,13 +100,18 @@ recommended for every server.
 - A pattern forwarding rule reaches Postfix: the panel writes the map
   through its root helper and Postfix reads it after exact forwardings and
   mailboxes and before the catch-all. A rule is refused when the map cannot
-  be written. Patterns match addresses of their own domain only. An upgrade
-  puts rules saved by earlier releases into use.
+  be written. Patterns match addresses of their own domain only and are
+  limited in length and repetition; a domain holds up to 20 rules. A rule
+  the mail server cannot use is left out and marked on the page. Rules of a
+  deleted website or mail domain leave the map with it. An upgrade puts
+  rules saved by earlier releases into use.
 
 ### Web Terminal
 - The Web Terminal service is started once its interpreter exists, at the
-  end of an installation. An upgrade starts an enabled service it finds in
-  failed state; a stopped, disabled or masked service is left as it is.
+  end of an installation. An upgrade starts an enabled service that failed
+  because its program could not be executed; a service that failed for
+  another reason, or is stopped, disabled or masked, is left as it is and
+  named in the upgrade output.
 
 ## v3.0.12 (build 12) — 2026-11-22
 
