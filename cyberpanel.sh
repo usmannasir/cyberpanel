@@ -107,6 +107,10 @@ Install_Events_File="/var/log/cyberpanel/install_events.log"
 Install_Run_Active="No"
 Install_Run_ID=""
 Install_Fail_Code=""
+# The step the script itself started last. The events file says more (it also
+# has the steps of the Python installer) and is asked first; this is what is
+# known when that file cannot be used.
+Install_Current_Step=""
 
 Install_Event() {
 # Install_Event <step> <state> [<code>]
@@ -116,13 +120,21 @@ return 0
 }
 
 Install_Open_Step() {
-# Prints the step of this run that is running, if there is one.
-[[ -n "$Install_Run_ID" ]] || return 0
+# Prints the step of this run that is running, if there is one. Fails when the
+# events file has nothing of this run, which is when it cannot be written.
+[[ -n "$Install_Run_ID" ]] || return 1
 awk -v run="$Install_Run_ID" '
+  $2 == run { known = 1 }
   $2 == run && $4 == "running" { open = $3; next }
   $2 == run && $3 == open { open = "" }
-  END { if (open != "") print open }
+  END { if (open != "") print open; exit (known ? 0 : 1) }
 ' "$Install_Events_File" 2>/dev/null
+}
+
+Install_Running_Step() {
+# The step that is running: what the events file says, or, when the file
+# cannot be used, the step this script started last.
+Install_Open_Step || echo "$Install_Current_Step"
 }
 
 Install_Step() {
@@ -133,6 +145,7 @@ if [[ -n "$open" ]]; then
   Install_Event "$open" done
 fi
 Install_Event "$1" running
+Install_Current_Step="$1"
 }
 
 Install_Run_Start() {
@@ -151,6 +164,7 @@ if [[ "$run_id" =~ ^[0-9a-f]{32}$ ]]; then
 fi
 Install_Event install started "$1"
 Install_Event preflight running
+Install_Current_Step="preflight"
 }
 
 Install_Default_Reason() {
@@ -187,7 +201,7 @@ if [[ "$Install_Run_Active" != "Yes" ]]; then
   return
 fi
 Install_Run_Active="No"
-step=$(Install_Open_Step)
+step=$(Install_Running_Step)
 reason="${Install_Fail_Code:-$(Install_Default_Reason "$step")}"
 if [[ "$step" = "hostname_ssl" ]] && Admin_Password_Is_Set; then
   # The panel was complete before this step, whatever became of the step,
@@ -217,6 +231,34 @@ fi
 exit "$status"
 }
 trap Install_On_Exit EXIT
+
+Install_On_Signal() {
+# Install_On_Signal <signal>: the run is ended from outside, by Ctrl-C, a
+# closed terminal or a kill. Whatever step it was in, it is recorded as
+# interrupted; nothing is said about a certificate and the panel is not
+# asked. The script then ends by the same signal, so that whoever started it
+# sees the signal and not a status of the script's own.
+local step
+if [[ "$Install_Run_Active" = "Yes" ]]; then
+  Install_Run_Active="No"
+  step=$(Install_Running_Step)
+  if [[ -n "$step" ]]; then
+    Install_Event "$step" failed interrupted
+  fi
+  Install_Event install failed interrupted
+fi
+trap - EXIT "$1"
+kill -s "$1" "$$"
+# Only reached when the signal cannot end the script.
+case "$1" in
+  HUP) exit 129 ;;
+  INT) exit 130 ;;
+  *) exit 143 ;;
+esac
+}
+trap 'Install_On_Signal HUP' HUP
+trap 'Install_On_Signal INT' INT
+trap 'Install_On_Signal TERM' TERM
 
 # Initialize logging
 log_info "CyberPanel installation started"
@@ -2603,6 +2645,7 @@ if [[ -n "$open" ]]; then
 fi
 Install_Event install complete
 Install_Run_Active="No"
+Install_Current_Step=""
 }
 
 Post_Install_Display_Final_Info() {
@@ -2994,8 +3037,8 @@ Setup_Hostname_SSL() {
 local hostname_value php_version php_suffix create_result ssl_result
 local lsws_root="${LSWS_ROOT:-/usr/local/lsws}"
 # How far this got, for the status events: skipped (the hostname does not
-# resolve, nothing was tried), failed, certificate_failed (the website exists,
-# only the certificate is missing) or issued.
+# resolve, nothing was tried), failed, certificate_failed (the website exists
+# and the request for the certificate has failed) or issued.
 Hostname_SSL_Result="skipped"
 hostname_value=$(hostname --fqdn) || return 0
 if [[ -z "$hostname_value" || -z "$(dig @1.1.1.1 +short "$hostname_value")" ]]; then
@@ -3017,12 +3060,13 @@ for php_version in 8.3 8.2 8.4 8.5 8.1 8.0 7.4; do
       log_error "Hostname website creation did not report success; skipping hostname SSL"
       return 1
     fi
-    Hostname_SSL_Result="certificate_failed"
     if ! ssl_result=$(cyberpanel hostNameSSL --domainName "$hostname_value"); then
+      Hostname_SSL_Result="certificate_failed"
       log_error "Hostname SSL command failed"
       return 1
     fi
     if ! printf '%s' "$ssl_result" | CyberPanel_CLI_Succeeded; then
+      Hostname_SSL_Result="certificate_failed"
       log_error "Hostname SSL did not report success"
       return 1
     fi

@@ -452,16 +452,40 @@ class FailedRunTests(unittest.TestCase):
         self.assertEqual(COMPLETE_RUN, machine.events())
         self.assertGreater(len(self.probe_limits(machine)), 50)
 
-    def test_ending_by_a_signal_is_recorded(self):
+    def test_ending_by_a_signal_is_recorded_as_interrupted_and_keeps_the_signal(self):
+        for name in ('TERM', 'INT', 'HUP'):
+            with self.subTest(signal=name):
+                machine = Installer(self)
+                harness = machine.harness()
+                self.assertEqual(1, harness.count('Pre_Install_Python_Environment() { phase'))
+                harness = harness.replace('Pre_Install_Python_Environment() { phase',
+                                          'Pre_Install_Python_Environment() { kill -%s $$; phase' % name)
+                with patch.object(machine, 'harness', return_value=harness):
+                    result = machine.run('-v', 'ols')
+                self.assertEqual(-getattr(signal, 'SIG' + name), result.returncode)
+                self.assertEqual(up_to('python_env') + ['python_env failed interrupted', 'install failed interrupted'],
+                                 machine.events())
+                # The step in which the signal came was not gone on with.
+                self.assertNotIn('Pre_Install_Get_Panel_Source', machine.recorded(machine.phases))
+
+    def test_ctrl_c_at_the_menu_is_an_interrupted_run(self):
         machine = Installer(self)
-        harness = machine.harness()
-        self.assertEqual(1, harness.count('Pre_Install_Python_Environment() { phase'))
-        harness = harness.replace('Pre_Install_Python_Environment() { phase',
-                                  'Pre_Install_Python_Environment() { kill -TERM $$; phase')
-        with patch.object(machine, 'harness', return_value=harness):
-            result = machine.run('-v', 'ols')
-        self.assertEqual(-signal.SIGTERM, result.returncode)
-        self.assertEqual(['python_env failed python_env', 'install failed python_env'], machine.events()[-2:])
+        process = machine.start('--debug')
+        try:
+            shown = ''
+            while '2. Exit.' not in shown:
+                line = process.stdout.readline()
+                self.assertNotEqual('', line, 'the menu was not shown: ' + shown)
+                shown += line
+            process.send_signal(signal.SIGINT)
+            process.communicate(timeout=60)
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.communicate()
+        self.assertEqual(-signal.SIGINT, process.returncode)
+        self.assertEqual(['install started 3.0.11', 'preflight running', 'preflight failed interrupted',
+                          'install failed interrupted'], machine.events())
 
 
 class HostnameCertificateTests(unittest.TestCase):
@@ -493,6 +517,48 @@ class HostnameCertificateTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertEqual(['hostname_ssl warning hostname_ssl', 'install failed hostname_ssl'],
                          machine.events()[-2:])
+
+    def test_signal_during_the_certificate_request_is_an_interrupted_run_and_nothing_else(self):
+        # No notice about a certificate (the request had not failed), the panel
+        # is not asked for the password and gets no request.
+        machine = self.machine()
+        result = machine.run('-v', 'ols', dns=True, tls_signal='TERM')
+        self.assertEqual(-signal.SIGTERM, result.returncode)
+        self.assertEqual(up_to('hostname_ssl') + ['hostname_ssl failed interrupted', 'install failed interrupted'],
+                         machine.events())
+        self.assertNotIn('Visit: https://', result.stdout)
+        self.assertNotIn('could not be issued', result.stdout)
+        calls = machine.recorded(machine.calls)
+        self.assertEqual([], [call for call in calls if '127.0.0.1:8090' in call or call == 'password-check'])
+
+    def test_certificate_counts_as_failed_only_once_its_request_has_failed(self):
+        machine = self.machine()
+        machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED)
+        self.assertIn('result-during-the-certificate-request=failed', machine.recorded(machine.calls))
+        self.assertIn('hostname_ssl warning hostname_ssl', machine.events())
+
+    def test_notice_about_the_certificate_does_not_need_the_events_file(self):
+        # A directory where the file belongs: nothing can be written or read there.
+        machine = self.machine()
+        machine.events_file.parent.mkdir(parents=True)
+        machine.events_file.mkdir()
+        result = machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED)
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertIn('a certificate for the hostname of this server could not be issued', result.stdout)
+        self.assertIn('Visit: https://192.0.2.10:8090', result.stdout)
+        self.assertTrue(machine.events_file.is_dir())
+        # A run that completes is not troubled by it either.
+        machine = Installer(self)
+        machine.events_file.parent.mkdir(parents=True)
+        machine.events_file.mkdir()
+        result = machine.run('-v', 'ols')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn('CyberPanel Successfully Installed', result.stdout)
+        # A failure is still one, with the status it had, when it cannot be recorded.
+        machine = Installer(self)
+        machine.events_file.parent.mkdir(parents=True)
+        machine.events_file.mkdir()
+        self.assertEqual(1, machine.run('-v', 'ols', fail_at='Pre_Install_Python_Environment').returncode)
 
     def test_website_that_could_not_be_created_is_a_failure_without_access_details(self):
         machine = self.machine()
