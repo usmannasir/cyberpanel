@@ -10,7 +10,6 @@ urlpatterns = [
     path('refresh-balance/', views.refreshBalance, name='aiScannerRefreshBalance'),
     path('add-payment-method/', views.addPaymentMethod, name='aiScannerAddPaymentMethod'),
     path('payment-method-complete/', views.paymentMethodComplete, name='aiScannerPaymentMethodComplete'),
-    path('callback/', views.scanCallback, name='aiScannerCallback'),
     
     # Scan management
     path('scan-history/', views.getScanHistory, name='aiScannerHistory'),

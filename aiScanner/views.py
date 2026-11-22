@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from loginSystem.views import loadLoginPage
 from .aiScannerManager import AIScannerManager
@@ -75,13 +74,6 @@ def paymentMethodComplete(request):
         return sm.paymentMethodComplete(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
-
-
-@csrf_exempt
-def scanCallback(request):
-    """Handle scan results callback from AI Scanner API"""
-    sm = AIScannerManager()
-    return sm.scanCallback(request)
 
 
 def getScanHistory(request):

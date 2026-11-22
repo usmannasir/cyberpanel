@@ -3,6 +3,8 @@ import os
 import mimetypes
 import base64
 from datetime import timedelta
+from decimal import Decimal
+from django.db.models import F
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -434,6 +436,32 @@ def get_file_content(request):
         return JsonResponse({'error': 'Internal server error'}, status=500)
 
 
+def whole_number(value):
+    """A count from a callback: a whole number that is never negative."""
+    try:
+        if isinstance(value, bool):
+            return 0
+        number = int(Decimal(str(value).strip()))
+    except (ArithmeticError, ValueError):
+        return 0
+    return min(max(number, 0), 2147483647)
+
+
+def money(value):
+    """An amount of money from a callback, as a decimal that is never negative."""
+    try:
+        amount = Decimal(str(value).replace('$', '').replace(',', '').strip())
+        if not amount.is_finite() or amount <= 0 or amount >= 10000:
+            return Decimal('0')
+        return amount.quantize(Decimal('0.000001'))
+    except (ArithmeticError, ValueError):
+        return Decimal('0')
+
+
+# What a scan can become when the platform reports its end.
+FINAL_SCAN_STATES = ('completed', 'failed', 'cancelled')
+
+
 @csrf_exempt
 @require_http_methods(['POST'])
 def scan_callback(request):
@@ -442,6 +470,10 @@ def scan_callback(request):
 
     POST /api/ai-scanner/callback
     Content-Type: application/json
+    X-API-Key: the scanner key of the scan's owner
+
+    A scan ends once: the first callback that reports its end is stored, and
+    a repeated one changes nothing.
 
     Expected payload:
     {
@@ -469,9 +501,11 @@ def scan_callback(request):
     try:
         # Parse JSON payload
         data = json.loads(request.body)
+        if not isinstance(data, dict):
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON payload'}, status=400)
 
         scan_id = data.get('scan_id')
-        if not scan_id:
+        if not scan_id or not isinstance(scan_id, str):
             logging.writeToFile("[API] Callback rejected: missing scan_id")
             return JsonResponse({'error': 'scan_id required'}, status=400)
 
@@ -487,60 +521,60 @@ def scan_callback(request):
             logging.writeToFile(f"[API] Callback rejected: scan not found or missing scanner settings for {scan_id}")
             return JsonResponse({'error': 'Scan not found'}, status=404)
 
-        if provided_key != scanner_settings.api_key:
+        if not scanner_settings.api_key or not constant_time_equal(provided_key, scanner_settings.api_key):
             logging.writeToFile(f'[API] Callback rejected: invalid key for scan {scan_id}')
             return JsonResponse({'error': 'Invalid API key'}, status=403)
 
         status = data.get('status')
-        summary = data.get('summary', {})
-        findings = data.get('findings', [])
+        if status not in FINAL_SCAN_STATES:
+            logging.writeToFile(f'[API] Callback rejected: scan {scan_id} reported an unknown state')
+            return JsonResponse({'status': 'error', 'message': 'Invalid status', 'scan_id': scan_id}, status=400)
+
+        summary = data.get('summary') if isinstance(data.get('summary'), dict) else {}
+        findings = data.get('findings') if isinstance(data.get('findings'), list) else []
+        findings = [finding for finding in findings if isinstance(finding, dict)]
         ai_analysis = data.get('ai_analysis', '')
         completed_at = data.get('completed_at')
+        total_findings = whole_number(summary.get('total_findings', 0))
+        files_scanned = whole_number(summary.get('files_scanned', 0))
+        cost = money(summary.get('cost', 0)) if status == 'completed' else Decimal('0')
+
+        # Only a scan that is still under way can end, and only the first
+        # callback gets to end it.
+        if ScanHistory.objects.filter(pk=scan_record.pk, status__in=('pending', 'running')).update(status=status) != 1:
+            logging.writeToFile(f"[API] Callback for scan {scan_id} ignored: the scan has already ended")
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Callback already processed',
+                'scan_id': scan_id
+            })
 
         logging.writeToFile(f"[API] Received callback for scan {scan_id}: {status}")
 
-        # Update scan status in CyberPanel database
         try:
-            from django.utils import timezone
-            import datetime
-
             # Update scan record
             scan_record.status = status
-            scan_record.issues_found = summary.get('total_findings', 0)
-            scan_record.files_scanned = summary.get('files_scanned', 0)
-
-            # Parse and store cost
-            cost_str = summary.get('cost', '$0.00')
-            try:
-                # Remove '$' and convert to float
-                cost_value = float(cost_str.replace('$', '').replace(',', ''))
-                scan_record.cost_usd = cost_value
-            except (ValueError, AttributeError):
-                scan_record.cost_usd = 0.0
+            scan_record.issues_found = total_findings
+            scan_record.files_scanned = files_scanned
+            scan_record.cost_usd = cost
 
             # Store findings and AI analysis
             scan_record.set_findings(findings)
-
-            # Build summary dict
-            summary_dict = {
-                'threat_level': summary.get('threat_level', 'UNKNOWN'),
-                'total_findings': summary.get('total_findings', 0),
-                'files_scanned': summary.get('files_scanned', 0),
-                'ai_analysis': ai_analysis
-            }
-            scan_record.set_summary(summary_dict)
+            scan_record.set_summary({
+                'threat_level': str(summary.get('threat_level', 'UNKNOWN'))[:20],
+                'total_findings': total_findings,
+                'files_scanned': files_scanned,
+                'ai_analysis': ai_analysis if isinstance(ai_analysis, str) else ''
+            })
 
             # Set completion time
-            if completed_at:
+            scan_record.completed_at = timezone.now()
+            if isinstance(completed_at, str):
                 try:
-                    # Parse ISO format datetime
                     from plogical.isoTime import parse_iso_datetime
-                    completed_datetime = parse_iso_datetime(completed_at.replace('Z', '+00:00'))
-                    scan_record.completed_at = completed_datetime
+                    scan_record.completed_at = parse_iso_datetime(completed_at.replace('Z', '+00:00'))
                 except (TypeError, ValueError):
-                    scan_record.completed_at = timezone.now()
-            else:
-                scan_record.completed_at = timezone.now()
+                    pass
 
             scan_record.save()
 
@@ -548,68 +582,42 @@ def scan_callback(request):
             try:
                 from .status_models import ScanStatusUpdate
                 status_update, _ = ScanStatusUpdate.objects.get_or_create(scan_id=scan_id)
-                status_update.phase = 'completed'
+                status_update.phase = status
                 status_update.progress = 100
-                status_update.files_discovered = summary.get('files_scanned', 0)  # Use files_scanned as approximation
-                status_update.files_scanned = summary.get('files_scanned', 0)
+                status_update.files_discovered = files_scanned  # Use files_scanned as approximation
+                status_update.files_scanned = files_scanned
                 status_update.files_remaining = 0
-                status_update.threats_found = summary.get('total_findings', 0)
+                status_update.threats_found = total_findings
                 # Extract critical and high threats from findings if available
-                critical_count = 0
-                high_count = 0
-                for finding in findings:
-                    severity = finding.get('severity', '').lower()
-                    if severity == 'critical':
-                        critical_count += 1
-                    elif severity == 'high':
-                        high_count += 1
-                status_update.critical_threats = critical_count
-                status_update.high_threats = high_count
-                status_update.activity_description = f"Scan completed - {summary.get('total_findings', 0)} threats found"
+                severities = [str(finding.get('severity', '')).lower() for finding in findings]
+                status_update.critical_threats = severities.count('critical')
+                status_update.high_threats = severities.count('high')
+                status_update.activity_description = f"Scan {status} - {total_findings} threats found"
                 status_update.save()
-                logging.writeToFile(f"[API] Updated ScanStatusUpdate for completed scan {scan_id}")
             except Exception as e:
-                logging.writeToFile(f"[API] Error updating ScanStatusUpdate: {str(e)}")
+                logging.writeToFile(f"[API] Error updating ScanStatusUpdate: {type(e).__name__}")
 
-            # Update user balance if scan cost money
-            if scan_record.cost_usd > 0:
+            # Take the cost off the balance once, and only when the balance covers it
+            if cost > 0:
                 try:
-                    scanner_settings = scan_record.admin.ai_scanner_settings
-                    if scanner_settings.balance >= scan_record.cost_usd:
-                        # Convert to same type to avoid Decimal/float issues
-                        scanner_settings.balance = float(scanner_settings.balance) - float(scan_record.cost_usd)
-                        scanner_settings.save()
-                        logging.writeToFile(f"[API] Deducted ${scan_record.cost_usd} from {scan_record.admin.userName} balance")
-                    else:
-                        logging.writeToFile(f"[API] Insufficient balance for scan cost: ${scan_record.cost_usd}")
+                    charged = AIScannerSettings.objects.filter(
+                        pk=scanner_settings.pk, balance__gte=cost).update(balance=F('balance') - cost)
+                    if charged != 1:
+                        logging.writeToFile(f"[API] Balance does not cover the cost of scan {scan_id}")
                 except Exception as e:
-                    logging.writeToFile(f"[API] Error updating balance: {str(e)}")
+                    logging.writeToFile(f"[API] Error updating balance: {type(e).__name__}")
 
             # Deactivate file access tokens for this scan
             try:
-                from .models import FileAccessToken
                 FileAccessToken.objects.filter(scan_history=scan_record).update(is_active=False)
-                logging.writeToFile(f"[API] Deactivated file access tokens for scan {scan_id}")
             except Exception as e:
-                logging.writeToFile(f"[API] Error deactivating tokens: {str(e)}")
+                logging.writeToFile(f"[API] Error deactivating tokens: {type(e).__name__}")
 
-            logging.writeToFile(f"[API] Scan {scan_id} completed successfully:")
-            logging.writeToFile(f"[API]   Status: {status}")
-            logging.writeToFile(f"[API]   Threat Level: {summary.get('threat_level')}")
-            logging.writeToFile(f"[API]   Findings: {summary.get('total_findings')}")
-            logging.writeToFile(f"[API]   Files Scanned: {summary.get('files_scanned')}")
-            logging.writeToFile(f"[API]   Cost: {summary.get('cost')}")
-
-        except ScanHistory.DoesNotExist:
-            logging.writeToFile(f"[API] Scan record not found: {scan_id}")
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Scan record not found',
-                'scan_id': scan_id
-            }, status=404)
+            logging.writeToFile(
+                f"[API] Scan {scan_id} {status}: {total_findings} findings, {files_scanned} files scanned")
 
         except Exception as e:
-            logging.writeToFile(f"[API] Failed to update scan record: {str(e)}")
+            logging.writeToFile(f"[API] Failed to update scan record: {type(e).__name__}")
             return JsonResponse({
                 'status': 'error',
                 'message': 'Failed to update scan record',
@@ -631,7 +639,7 @@ def scan_callback(request):
         }, status=400)
 
     except Exception as e:
-        logging.writeToFile(f"[API] Callback processing error: {str(e)}")
+        logging.writeToFile(f"[API] Callback processing error: {type(e).__name__}")
         return JsonResponse({
             'status': 'error',
             'message': 'Internal server error'
