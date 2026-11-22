@@ -1,5 +1,7 @@
 import requests
 import json
+import re
+import time
 import uuid
 import secrets
 from datetime import datetime, timedelta
@@ -11,6 +13,7 @@ from django.urls import reverse
 from django.contrib import messages
 from loginSystem.models import Administrator
 from .models import AIScannerSettings, ScanHistory, FileAccessToken
+from .access import scanner_allowed
 from .panel_address import panel_address
 from .platform_auth import saved_scanner_auth_headers, scanner_payment_setup_request
 from plogical.acl import ACLManager
@@ -19,6 +22,9 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class AIScannerManager:
     AI_SCANNER_API_BASE = 'https://platform.cyberpersons.com/ai-scanner'
+    # Payment set-up must come back to the session that started it within this many seconds.
+    SETUP_TIME_LIMIT = 3600
+    API_KEY_SHAPE = re.compile(r'cp_[A-Za-z0-9_-]{20,200}')
     
     def __init__(self):
         self.logger = logging
@@ -153,6 +159,8 @@ class AIScannerManager:
             
             if setup_data:
                 self.logger.writeToFile(f'[AIScannerManager.setupPayment] Payment setup successful for {admin_email}')
+                # Only the session that started the set-up may complete it, once and soon.
+                request.session['aiScannerSetupStarted'] = int(time.time())
                 return JsonResponse({
                     'success': True,
                     'payment_url': setup_data['payment_url'],
@@ -170,109 +178,55 @@ class AIScannerManager:
             return JsonResponse({'success': False, 'error': 'Internal server error'})
     
     def setupComplete(self, request, userID):
-        """Handle return from payment setup"""
+        """Handle return from payment setup
+
+        The platform sends the browser back here with the new key in the
+        address. It is stored only for a signed-in user who may use the
+        scanner and who started the set-up in this session a short while ago.
+        """
         try:
             admin = Administrator.objects.get(pk=userID)
+            if not scanner_allowed(ACLManager.loadedACL(userID)):
+                return ACLManager.loadError()
+
+            # The marker of a started set-up is used up whatever comes back.
+            started = request.session.pop('aiScannerSetupStarted', None)
             status = request.GET.get('status')
-            
-            # Log all URL parameters for debugging
-            
-            if status == 'success':
-                api_key = request.GET.get('api_key')
-                balance = request.GET.get('balance', '0.00')
-                charged = request.GET.get('charged') == 'true'
-                amount = request.GET.get('amount', '0.00')
-                
-                self.logger.writeToFile(f'[AIScannerManager.setupComplete] API Key: {api_key[:20] if api_key else "None"}...')
-                self.logger.writeToFile(f'[AIScannerManager.setupComplete] Balance from URL: {balance}')
-                self.logger.writeToFile(f'[AIScannerManager.setupComplete] Charged: {charged}, Amount: {amount}')
-                
-                if api_key:
-                    try:
-                        # Convert balance to float with error handling
-                        balance_float = float(balance) if balance else 0.0
-                        
-                        # Update scanner settings
-                        scanner_settings, created = AIScannerSettings.objects.get_or_create(
-                            admin=admin,
-                            defaults={
-                                'api_key': api_key,
-                                'balance': balance_float,
-                                'is_payment_configured': True
-                            }
-                        )
-                        
-                        if not created:
-                            # Update existing record
-                            scanner_settings.api_key = api_key
-                            scanner_settings.balance = balance_float
-                            scanner_settings.is_payment_configured = True
-                            scanner_settings.save()
-                            self.logger.writeToFile(f'[AIScannerManager.setupComplete] Updated existing scanner settings')
-                        else:
-                            self.logger.writeToFile(f'[AIScannerManager.setupComplete] Created new scanner settings')
-                        
-                        # Verify the save worked
-                        scanner_settings.refresh_from_db()
-                        self.logger.writeToFile(f'[AIScannerManager.setupComplete] Final state - API Key: {scanner_settings.api_key[:20] if scanner_settings.api_key else "None"}..., Balance: {scanner_settings.balance}, Configured: {scanner_settings.is_payment_configured}')
-                        
-                        # Success message
-                        if charged:
-                            messages.success(request, f'Payment setup successful! ${amount} charged to your card. You have ${balance} credit.')
-                        else:
-                            messages.success(request, f'Payment setup successful! You have ${balance} credit.')
-                        
-                        self.logger.writeToFile(f'[AIScannerManager] Payment setup completed for {admin.userName} with balance ${balance}')
-                        
-                    except ValueError as e:
-                        self.logger.writeToFile(f'[AIScannerManager.setupComplete] Balance conversion error: {str(e)}')
-                        messages.error(request, 'Payment setup completed but balance format invalid.')
-                    except Exception as e:
-                        self.logger.writeToFile(f'[AIScannerManager.setupComplete] Database save error: {str(e)}')
-                        messages.error(request, 'Payment setup completed but failed to save settings.')
+
+            if status in ('success', 'partial_success'):
+                api_key = request.GET.get('api_key') or ''
+                if isinstance(started, bool) or not isinstance(started, int) \
+                        or not 0 <= time.time() - started <= self.SETUP_TIME_LIMIT:
+                    self.logger.writeToFile(f'[AIScannerManager.setupComplete] No payment setup in progress for {admin.userName}')
+                    messages.error(request, 'Payment setup was not started from this session or took too long. Please start it again.')
+                elif not self.API_KEY_SHAPE.fullmatch(api_key):
+                    self.logger.writeToFile('[AIScannerManager.setupComplete] No valid API key received')
+                    messages.error(request, 'Payment setup completed but no valid API key was received.')
                 else:
-                    self.logger.writeToFile(f'[AIScannerManager.setupComplete] No API key received in success callback')
-                    messages.error(request, 'Payment setup completed but API key not received.')
-                    
-            elif status == 'partial_success':
-                # Handle partial success (payment method added but charge failed)
-                api_key = request.GET.get('api_key')
-                if api_key:
-                    try:
-                        scanner_settings, created = AIScannerSettings.objects.get_or_create(
-                            admin=admin,
-                            defaults={
-                                'api_key': api_key,
-                                'balance': 0.0,
-                                'is_payment_configured': True
-                            }
-                        )
-                        
-                        if not created:
-                            scanner_settings.api_key = api_key
-                            scanner_settings.is_payment_configured = True
-                            scanner_settings.save()
-                        
+                    # The balance is asked from the platform; what the address says is never stored.
+                    settings_values = {'api_key': api_key, 'is_payment_configured': True}
+                    balance = self.get_account_balance(api_key)
+                    if balance is not None:
+                        settings_values['balance'] = balance
+                    AIScannerSettings.objects.update_or_create(admin=admin, defaults=settings_values)
+
+                    if status == 'success':
+                        messages.success(request, 'Payment setup successful!')
+                    else:
                         messages.warning(request, 'Payment method added but initial charge failed. Please add funds manually.')
-                        self.logger.writeToFile(f'[AIScannerManager] Partial payment setup for {admin.userName}')
-                    except Exception as e:
-                        self.logger.writeToFile(f'[AIScannerManager.setupComplete] Partial success save error: {str(e)}')
-                        messages.error(request, 'Payment method setup partially failed.')
-                else:
-                    messages.error(request, 'Payment method setup failed - no API key received.')
-                    
+                    self.logger.writeToFile(f'[AIScannerManager] Payment setup completed for {admin.userName} ({status})')
+
             elif status in ['failed', 'cancelled', 'error']:
-                error = request.GET.get('error', 'Payment setup failed')
-                messages.error(request, f'Payment setup failed: {error}')
-                self.logger.writeToFile(f'[AIScannerManager] Payment setup failed for {admin.userName}: {error}')
-            
+                messages.error(request, 'Payment setup failed or was cancelled.')
+                self.logger.writeToFile(f'[AIScannerManager] Payment setup failed for {admin.userName}')
+
             return redirect('aiScannerHome')
-            
+
         except Exception as e:
-            self.logger.writeToFile(f'[AIScannerManager.setupComplete] Error: {str(e)}')
+            self.logger.writeToFile(f'[AIScannerManager.setupComplete] Error: {type(e).__name__}')
             messages.error(request, 'An error occurred during payment setup.')
             return redirect('aiScannerHome')
-    
+
     def startScan(self, request, userID):
         """Start a new AI security scan"""
         try:
