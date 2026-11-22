@@ -189,8 +189,23 @@ fi
 Install_Run_Active="No"
 step=$(Install_Open_Step)
 reason="${Install_Fail_Code:-$(Install_Default_Reason "$step")}"
-if [[ -n "$step" ]]; then
+if [[ "$step" = "hostname_ssl" && "${Hostname_SSL_Result:-}" = "certificate_failed" ]]; then
+  # The panel is installed and its website for the hostname exists; only the
+  # certificate is missing. The exit status stays what it was, and the person
+  # installing is told how to reach the panel.
+  reason="hostname_ssl"
+  echo -e "\nCyberPanel is installed, but a certificate for the hostname of this server could not be issued."
+  echo "Visit: https://$Server_IP:8090"
+  echo "Panel username: admin"
+  echo "Panel password: stored in /etc/cyberpanel/adminPass"
+  echo -e "The certificate can be issued later in the panel under SSL > Hostname SSL.\n"
+  Install_Event hostname_ssl warning "$reason"
+elif [[ -n "$step" ]]; then
   Install_Event "$step" failed "$reason"
+fi
+if [[ "$step" = "hostname_ssl" ]] && Panel_Answers 15; then
+  # The panel was complete before this step, whatever became of the step.
+  Install_Event panel ready
 fi
 Install_Event install failed "$reason"
 if [[ "$status" -eq 0 && "$reason" != "cancelled" ]]; then
@@ -2399,6 +2414,9 @@ return 1
 Install_Run_Finish() {
 # The last step: the installation is complete once the panel answers.
 local open
+if [[ "${Hostname_SSL_Result:-}" = "skipped" ]]; then
+  Install_Event hostname_ssl skipped
+fi
 Install_Step ready
 if ! Panel_Answers; then
   echo -e "\nCyberPanel was installed, but the panel does not answer on port 8090."
@@ -2803,10 +2821,15 @@ sys.exit(0 if ok else 1)
 Setup_Hostname_SSL() {
 local hostname_value php_version php_suffix create_result ssl_result
 local lsws_root="${LSWS_ROOT:-/usr/local/lsws}"
+# How far this got, for the status events: skipped (the hostname does not
+# resolve, nothing was tried), failed, certificate_failed (the website exists,
+# only the certificate is missing) or issued.
+Hostname_SSL_Result="skipped"
 hostname_value=$(hostname --fqdn) || return 0
 if [[ -z "$hostname_value" || -z "$(dig @1.1.1.1 +short "$hostname_value")" ]]; then
   return 0
 fi
+Hostname_SSL_Result="failed"
 
 # Prefer the supported PHP 8.3 runtime for a new hostname website. Require
 # its LSAPI executable; a CLI-only package cannot serve the website.
@@ -2822,6 +2845,7 @@ for php_version in 8.3 8.2 8.4 8.5 8.1 8.0 7.4; do
       log_error "Hostname website creation did not report success; skipping hostname SSL"
       return 1
     fi
+    Hostname_SSL_Result="certificate_failed"
     if ! ssl_result=$(cyberpanel hostNameSSL --domainName "$hostname_value"); then
       log_error "Hostname SSL command failed"
       return 1
@@ -2830,6 +2854,7 @@ for php_version in 8.3 8.2 8.4 8.5 8.1 8.0 7.4; do
       log_error "Hostname SSL did not report success"
       return 1
     fi
+    Hostname_SSL_Result="issued"
     return 0
   fi
 done

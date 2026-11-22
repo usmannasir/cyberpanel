@@ -25,7 +25,9 @@ EVENT_LINE = re.compile(
 
 COMPLETE_RUN = ['install started 3.0.11']
 for name in STEPS:
-    if name == 'ready':
+    if name == 'hostname_ssl':
+        COMPLETE_RUN += ['hostname_ssl running', 'hostname_ssl skipped']
+    elif name == 'ready':
         COMPLETE_RUN += ['ready running', 'panel ready', 'ready done']
     else:
         COMPLETE_RUN += [name + ' running', name + ' done']
@@ -122,6 +124,21 @@ class SuccessfulRunTests(unittest.TestCase):
         self.assertEqual('install complete', events[-1])
         self.assertEqual([step for step in STEPS if step not in ('ftp', 'dns', 'email')],
                          [event.split()[0] for event in events if event.endswith(' running')])
+
+    def test_issued_hostname_certificate_is_a_finished_step(self):
+        machine = Installer(self)
+        machine.path('/usr/local/lsws/lsphp83/bin').mkdir(parents=True)
+        runtime = machine.path('/usr/local/lsws/lsphp83/bin/lsphp')
+        runtime.write_text('#!/bin/sh\n')
+        runtime.chmod(0o755)
+        result = machine.run('-v', 'ols', dns=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        events = machine.events()
+        self.assertIn('hostname_ssl done', events)
+        self.assertNotIn('hostname_ssl skipped', events)
+        self.assertEqual(['cyberpanel createWebsite', 'cyberpanel hostNameSSL'],
+                         [' '.join(call.split()[:2]) for call in machine.recorded(machine.calls)
+                          if call.startswith('cyberpanel ')])
 
     def test_a_second_run_is_added_below_the_first(self):
         machine = Installer(self)
@@ -341,7 +358,7 @@ class FailedRunTests(unittest.TestCase):
         machine = Installer(self)
         result = machine.run('-v', 'ols', panel_exit=7)
         self.assertEqual(1, result.returncode)
-        self.assertEqual(['hostname_ssl done', 'ready running', 'ready failed panel_setup',
+        self.assertEqual(['hostname_ssl skipped', 'ready running', 'ready failed panel_setup',
                           'install failed panel_setup'], machine.events()[-4:])
         self.assertNotIn('panel ready', machine.events())
         self.assertIn('does not answer on port 8090', result.stdout)
@@ -357,6 +374,52 @@ class FailedRunTests(unittest.TestCase):
             result = machine.run('-v', 'ols')
         self.assertEqual(-signal.SIGTERM, result.returncode)
         self.assertEqual(['python_env failed python_env', 'install failed python_env'], machine.events()[-2:])
+
+
+class HostnameCertificateTests(unittest.TestCase):
+    def machine(self):
+        machine = Installer(self)
+        machine.path('/usr/local/lsws/lsphp83/bin').mkdir(parents=True)
+        runtime = machine.path('/usr/local/lsws/lsphp83/bin/lsphp')
+        runtime.write_text('#!/bin/sh\n')
+        runtime.chmod(0o755)
+        return machine
+
+    def test_failed_certificate_is_a_warning_on_a_panel_that_is_ready(self):
+        machine = self.machine()
+        result = machine.run('-v', 'ols', '-p', 'Hunter2-secret', dns=True, tls_output=CLI_FAILED)
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(up_to('hostname_ssl') + ['hostname_ssl warning hostname_ssl', 'panel ready',
+                                                  'install failed hostname_ssl'], machine.events())
+        self.assertIn('Hostname SSL', result.stderr)
+        self.assertIn('Visit: https://192.0.2.10:8090', result.stdout)
+        self.assertIn('Panel username: admin', result.stdout)
+        self.assertIn('stored in %s' % machine.path('/etc/cyberpanel/adminPass'), result.stdout)
+        after_notice = result.stdout.split('could not be issued', 1)[1]
+        self.assertNotIn('Hunter2-secret', after_notice)
+        self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
+
+    def test_failed_certificate_on_a_panel_that_does_not_answer(self):
+        machine = self.machine()
+        result = machine.run('-v', 'ols', dns=True, tls_output=CLI_FAILED, panel_exit=7)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(['hostname_ssl warning hostname_ssl', 'install failed hostname_ssl'],
+                         machine.events()[-2:])
+
+    def test_website_that_could_not_be_created_is_a_failure_without_access_details(self):
+        machine = self.machine()
+        result = machine.run('-v', 'ols', dns=True, create_output=CLI_FAILED)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(up_to('hostname_ssl') + ['hostname_ssl failed panel_setup', 'panel ready',
+                                                  'install failed panel_setup'], machine.events())
+        self.assertNotIn('Visit: https://', result.stdout)
+
+    def test_no_runtime_for_the_hostname_website_is_a_failure(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', dns=True, panel_exit=7)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(['hostname_ssl failed panel_setup', 'install failed panel_setup'],
+                         machine.events()[-2:])
 
 
 if __name__ == '__main__':
