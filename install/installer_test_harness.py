@@ -14,6 +14,7 @@ things keep a mistake here from touching the machine the tests run on:
    directory.
 """
 import ast
+import os
 from pathlib import Path
 import re
 import shutil
@@ -186,12 +187,17 @@ for directive in sys.argv[3:]:
 DEFAULT_PYTHON_STEPS = 'step:php step:database step:ftp step:dns step:email step:panel finish'
 
 
-def default_signals():
-    """The script is started the way a terminal starts it. A test run that was
-    itself started in the background has interrupts ignored, and a shell
-    cannot react to a signal it was started to ignore."""
-    for number in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
-        signal.signal(number, signal.SIG_DFL)
+def as_a_terminal_starts_it(mask):
+    """What the script's process is given before it starts: signals as a
+    terminal leaves them (a test run that was itself started in the background
+    has interrupts ignored, and a shell cannot react to a signal it was started
+    to ignore), and the file mode mask the test asks for."""
+    def prepare():
+        for number in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
+            signal.signal(number, signal.SIG_DFL)
+        if mask is not None:
+            os.umask(mask)
+    return prepare
 
 
 def parse_as_python_36(source, interpreter=None):
@@ -324,6 +330,7 @@ class Installer:
         environment.update(options.pop('environment', {}))
         # With trace=True every command that runs is written to the error output.
         shell = [shutil.which('bash')] + (['-x'] if options.pop('trace', False) else [])
+        mask = options.pop('umask', None)
         if options:
             raise TypeError('Unknown options: %s' % sorted(options))
         script = self.root / 'harness.sh'
@@ -331,7 +338,7 @@ class Installer:
         return subprocess.Popen(
             shell + [str(script)] + list(arguments), stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
-            env=environment, cwd=str(self.root / 'home'), preexec_fn=default_signals)
+            env=environment, cwd=str(self.root / 'home'), preexec_fn=as_a_terminal_starts_it(mask))
 
     def events(self):
         """The event lines without time and run name, in order."""

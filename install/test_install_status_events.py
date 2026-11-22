@@ -119,11 +119,29 @@ class SuccessfulRunTests(unittest.TestCase):
         times = [int(line.split()[0]) for line in lines]
         self.assertEqual(sorted(times), times)
 
-    def test_file_is_for_root_only(self):
+    def test_file_is_for_root_only_whatever_the_file_mode_mask(self):
+        for mask in (0o022, 0o000):
+            with self.subTest(mask=oct(mask)):
+                machine = Installer(self)
+                machine.run('-v', 'ols', umask=mask)
+                self.assertEqual(0o600, stat.S_IMODE(machine.events_file.stat().st_mode))
+        # A file that is already there, readable by all, is closed too.
         machine = Installer(self)
-        os.umask(os.umask(0o022))
-        machine.run('-v', 'ols')
+        machine.events_file.parent.mkdir(parents=True)
+        machine.events_file.write_text('')
+        machine.events_file.chmod(0o644)
+        machine.run('-v', 'ols', umask=0o022)
         self.assertEqual(0o600, stat.S_IMODE(machine.events_file.stat().st_mode))
+
+    def test_mode_test_would_notice_the_file_left_to_the_mask(self):
+        # Without the line that creates the file closed, the mask decides.
+        machine = Installer(self)
+        harness = machine.harness()
+        closing = '  { ( umask 077; : >> "$Install_Events_File" ) && chmod 600 "$Install_Events_File"; } 2>/dev/null\n'
+        self.assertEqual(1, harness.count(closing))
+        with patch.object(machine, 'harness', return_value=harness.replace(closing, '')):
+            machine.run('-v', 'ols', umask=0o022)
+        self.assertEqual(0o644, stat.S_IMODE(machine.events_file.stat().st_mode))
 
     def test_components_left_out_are_skipped(self):
         machine = Installer(self)
