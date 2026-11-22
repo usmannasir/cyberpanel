@@ -145,6 +145,7 @@ def submit(**changes):
     env['DOCKER_APPS'] = docker_sites.DOCKER_APPS
     env['n8n_password_problem'] = docker_sites.n8n_password_problem
     env['Docker_Sites'] = mock.Mock()
+    env['Docker_Sites'].site_name_problem.return_value = None
     reply = json.loads(cls().submitDockerSiteCreation(userID=7, data=dict(REQUEST, **changes)).content)
     return reply, env
 

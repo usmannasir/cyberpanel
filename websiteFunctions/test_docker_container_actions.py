@@ -7,7 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from plogical.DockerSites import COMPOSE_PROJECT_LABEL, compose_project_names
+from plogical.DockerSites import COMPOSE_DIRECTORY_LABEL, COMPOSE_PROJECT_LABEL, container_of_site
 
 try:
     from .test_wordpress_entitlements import Response
@@ -32,8 +32,7 @@ def load_views():
     services['docker'].errors.NotFound = NotFound
     namespace = dict(services, json=json, HttpResponse=Response,
                      redirect=lambda target: Response(status=302, location=target),
-                     COMPOSE_PROJECT_LABEL=COMPOSE_PROJECT_LABEL,
-                     compose_project_names=compose_project_names)
+                     container_of_site=container_of_site)
     module = ast.parse((HERE / 'dockerviews.py').read_text())
     module.body = [node for node in module.body if not isinstance(node, (ast.Import, ast.ImportFrom))]
     exec(compile(module, 'dockerviews.py', 'exec'), namespace)
@@ -130,6 +129,25 @@ class ContainerTests(unittest.TestCase):
     def test_a_site_named_before_the_lower_case_rule_still_reaches_its_containers(self):
         run = call(site_name='My Shop', labels={COMPOSE_PROJECT_LABEL: 'myshop'})
         self.assertEqual({'status': 1}, run.answer)
+
+    def test_a_container_started_from_the_sites_own_directory_is_the_sites(self):
+        for directory in ('/home/docker/shop.example', '/home/docker/shop.example/', '/home/docker/Shop.Example'):
+            with self.subTest(directory=directory):
+                run = call(labels={COMPOSE_PROJECT_LABEL: 'shop', COMPOSE_DIRECTORY_LABEL: directory})
+                self.assertEqual({'status': 1}, run.answer)
+                self.assertEqual(['stop'], acted(run))
+
+    def test_a_container_of_a_project_of_the_same_name_started_elsewhere_is_not_found(self):
+        # Somebody runs a Docker Compose project called "shop" beside the panel.
+        for directory in ('/opt/shop', '/root/shop', '/home/docker/shop.example.org', '/home/docker',
+                          '/home/docker/shop.example/sub', '/home/shop.example', ['/home/docker/shop.example'], 7):
+            for admin in (0, 1):
+                for action in ACTIONS:
+                    with self.subTest(directory=directory, admin=admin, action=action):
+                        run = call(action, admin=admin,
+                                   labels={COMPOSE_PROJECT_LABEL: 'shop', COMPOSE_DIRECTORY_LABEL: directory})
+                        self.assertEqual({'status': 0, 'error_message': 'Container not found'}, run.answer)
+                        self.assertEqual([], acted(run))
 
 
 class RequestTests(unittest.TestCase):
