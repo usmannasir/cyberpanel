@@ -1035,19 +1035,23 @@ fi
 
 Named_Components() {
 # Prints the components that an argument names (POSTFIX, POWERDNS, PUREFTPD),
-# one per line, and fails for anything else. Names may be joined with "," or
-# "/" and are not case sensitive.
-local name
-local -a names
-[[ -n "${1:-}" ]] || return 1
-IFS=',/' read -r -a names <<<"${1^^}"
+# one per line, and fails for anything else. An argument may hold several
+# names, separated by ",", "/" or blanks; a separator with no name beside it
+# names nothing. Names are whole words, in either case: "nopostfix",
+# "postfix=on" and "--postfix" are not names.
+local name allowed='^[A-Za-z,/ ]+$'
+local -a names found=()
+[[ "${1:-}" =~ $allowed ]] || return 1
+IFS=',/ ' read -r -a names <<<"${1^^}"
 for name in "${names[@]}"; do
   case "$name" in
-    POSTFIX | POWERDNS | PUREFTPD) ;;
+    "") ;;
+    POSTFIX | POWERDNS | PUREFTPD) found+=("$name") ;;
     *) return 1 ;;
   esac
 done
-printf '%s\n' "${names[@]}"
+[[ ${#found[@]} -gt 0 ]] || return 1
+printf '%s\n' "${found[@]}"
 }
 
 Check_Usage() {
