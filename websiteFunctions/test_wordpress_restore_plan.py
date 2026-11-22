@@ -7,6 +7,8 @@ from websiteFunctions.wordpressRestore import (
     address_is_on,
     backup_layout,
     backup_listing_filter,
+    database_not_replaced,
+    dump_site_address,
     other_domain_refusal,
     restore_plan,
     restored_site_address,
@@ -125,6 +127,35 @@ class OtherDomainTests(unittest.TestCase):
                         'http://evil.test/example.com', 'http://sub.example.com', '', None, 'http://'):
             self.assertFalse(address_is_on(address, 'example.com'), address)
         self.assertFalse(address_is_on('http://example.com', ''))
+
+
+class ReplacedDatabaseTests(unittest.TestCase):
+    def test_the_address_a_dump_carries_is_its_siteurl_row(self):
+        row = "INSERT INTO `wp_options` VALUES (1,'siteurl','https://source.example','yes'),(2,'home','x','yes');"
+        self.assertEqual('https://source.example', dump_site_address(row))
+        self.assertEqual('https://source.example', dump_site_address("'siteurl','https://source.example'\n"))
+        for found in ('', None, "'siteurl',''", "\\'siteurl\\',\\'https://quoted.example\\'", "'home','x'"):
+            self.assertIsNone(dump_site_address(found), found)
+
+    def test_after_the_import_the_database_says_what_the_dump_says(self):
+        self.assertIsNone(database_not_replaced('https://source.example', 'https://source.example\n', 'new.example'))
+        # A dump of a site that already was on the new domain's name is still recognised by its own address.
+        self.assertIsNone(database_not_replaced('https://new.example', 'https://new.example', 'new.example'))
+        # WordPress prints the stored address without its last slash.
+        self.assertIsNone(database_not_replaced('https://source.example/', 'https://source.example', 'new.example'))
+        self.assertIsNotNone(database_not_replaced('https://source.example/a', 'https://source.example', 'new.example'))
+
+    def test_a_database_that_still_is_the_plain_installations_is_named(self):
+        self.assertEqual('after the import the database gives "http://new.example" as the site address, the dump '
+                         'gives "https://source.example"',
+                         database_not_replaced('https://source.example', 'http://new.example', 'new.example'))
+        for address in ('', None, 'Error: no such option'):
+            self.assertIsNotNone(database_not_replaced('https://source.example', address, 'new.example'))
+
+    def test_without_an_address_from_the_dump_the_plain_databases_address_must_at_least_be_gone(self):
+        self.assertIsNone(database_not_replaced(None, 'https://source.example', 'new.example'))
+        for address in ('http://new.example', 'https://www.new.example/blog', '', None):
+            self.assertIn('as the plain installation did', database_not_replaced(None, address, 'new.example'))
 
 
 class NewWebsiteOnlyTests(unittest.TestCase):

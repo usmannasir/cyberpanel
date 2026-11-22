@@ -47,6 +47,7 @@ from plogical.wordpressInstallerUtilities import (
     wordpress_config_set_command,
     wordpress_table_prefix_command,
     brief_output,
+    database_client_error,
     out_of_quota,
     worker_failure_reason,
 )
@@ -3347,6 +3348,23 @@ class ApplicationInstaller(multi.Thread):
             raise BaseException('%s: %s' % (failure, brief_output(output) or 'the command failed'))
         return output
 
+    def importDump(self, phpPath, sitePath, user, dump, afterFailure=''):
+        """Import a database dump into a site's database, as the site's user.
+
+        The import goes on after a statement the database refuses, ends
+        with "Success" and exits with status 0. An error line of the
+        database client in what it printed therefore ends the restore, as
+        a failed command does. afterFailure is added to that message: what
+        the failure leaves behind.
+        """
+        result, output = ApplicationInstaller.siteCommand(
+            wordpress_cli_command(phpPath, sitePath, 'db', 'import', dump), user)
+        reason = database_client_error(output)
+        if reason is None and result != 0 and output.find('Error:') == -1:
+            return
+        raise BaseException('The database could not be imported: %s%s' % (
+            reason or brief_output(output) or 'the command failed', afterFailure))
+
     def siteConfigValue(self, phpPath, path, user, key):
         """One value of the wp-config.php in a folder (a database constant or the table prefix)."""
         result, output = ApplicationInstaller.siteCommand(
@@ -3558,7 +3576,8 @@ class ApplicationInstaller(multi.Thread):
     def fillNewSiteFromBackup(self, config, kind, DomainName, archive, layout, oldurl, newurl):
         """Put a backup's files, and its database when it has one, into the plain site just created for it."""
         from plogical.phpUtilities import phpUtilities
-        from websiteFunctions.wordpressRestore import address_is_on
+        from websiteFunctions.wordpressRestore import (
+            DUMP_SITE_ADDRESS_FILTER, address_is_on, database_not_replaced, dump_site_address)
 
         logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
         NewWPsite = WPSites.objects.get(owner__domain=DomainName, FinalURL=newurl)
@@ -3594,8 +3613,19 @@ class ApplicationInstaller(multi.Thread):
 
         if backupDump is not None:
             logging.statusWriter(self.tempStatusPath, 'Restoring Data Base...,80')
-            self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', backupDump),
-                             VHuser, 'The database could not be imported')
+            # What the dump says the site's address is. The database of the
+            # plain installation cannot say the same, so finding it after
+            # the import shows that the dump has replaced that database.
+            found = ApplicationInstaller.siteCommand('grep -a -o -m1 -E %s %s' % (
+                shlex.quote(DUMP_SITE_ADDRESS_FILTER), shlex.quote(backupDump)), VHuser, False)[1]
+            self.importDump(FinalPHPPath, newWPpath, VHuser, backupDump)
+            address = ApplicationInstaller.siteCommand(
+                wordpress_cli_command(FinalPHPPath, newWPpath, 'option', 'get', 'siteurl'), VHuser, False)[1]
+            answer = address.strip().splitlines()
+            notReplaced = database_not_replaced(dump_site_address(found), answer[-1] if answer else '', DomainName)
+            if notReplaced is not None:
+                raise BaseException('The database of the backup did not take the place of the new site\'s own: %s'
+                                    % notReplaced)
 
             logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
             self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'search-replace', oldurl, newurl),
@@ -6102,8 +6132,8 @@ class ApplicationInstaller(multi.Thread):
 
                     unzippathdb = self.placeBackup(layout, archive, VHuser, FinalPHPPath, newWPpath, None)
                     # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
-                    self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', unzippathdb),
-                                     VHuser, 'The database could not be imported')
+                    self.importDump(FinalPHPPath, newWPpath, VHuser, unzippathdb,
+                                    '. The database of this site may be partly imported')
 
                     logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,70')
                     # #####SetUp DataBase Settings
@@ -6363,8 +6393,8 @@ class ApplicationInstaller(multi.Thread):
                         unzippath2 = self.placeBackup(layout, archive, VHuser, FinalPHPPath, WPpath, ownSettings)
 
                         # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
-                        self.restoreStep(wordpress_cli_command(FinalPHPPath, newWPpath, 'db', 'import', unzippath2),
-                                         VHuser, 'The database could not be imported')
+                        self.importDump(FinalPHPPath, newWPpath, VHuser, unzippath2,
+                                        '. The database of this site may be partly imported')
 
                         logging.statusWriter(self.tempStatusPath, 'Restoring Database...,70')
 
