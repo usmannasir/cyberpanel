@@ -12,6 +12,7 @@ import functools
 import locale
 import os
 import re
+import shlex
 import stat
 import tempfile
 import unittest
@@ -1070,6 +1071,120 @@ class UpgradeStepTests(ServerTestCase):
         self.assertEqual([name for name, _ in calls].count('reconcileHTTPSListenerMaps'), 1)
         self.assertLess(lines['downloadAndUpgrade'], lines['reconcileHTTPSListenerMaps'])
         self.assertLess(lines['sensitiveFileProtectionMigration'], lines['reconcileHTTPSListenerMaps'])
+
+
+class LeftoverCertificateTests(unittest.TestCase):
+    """What a failed public issuance does with certificate files that are already under the name."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.live = directory.name
+        self.install = mock.Mock(return_value=1)
+        self.openssl = mock.Mock(return_value=0)
+        panel = SimpleNamespace(obtainSSLForADomain=mock.Mock(return_value=0), installSSLForDomain=self.install,
+                                isStagingCertificate=lambda certificate: False)
+
+        def here(path):
+            return path.replace('/etc/letsencrypt/live', self.live)
+
+        def under_live(check):
+            return lambda path: path.startswith('/etc/letsencrypt/live') and check(here(path))
+
+        files = SimpleNamespace(
+            path=SimpleNamespace(exists=under_live(os.path.exists), lexists=under_live(os.path.lexists),
+                                 dirname=os.path.dirname),
+            makedirs=lambda path, exist_ok=False: os.makedirs(here(path), exist_ok=exist_ok))
+        namespace = {'os': files, 'open': lambda path, *mode: open(here(path), *mode), 'shlex': shlex,
+                     'subprocess': SimpleNamespace(call=self.openssl), 'sslUtilities': panel,
+                     'logging': mock.MagicMock()}
+        self.issue = compiled(function('sslUtilities.py', 'issueSSLForDomain'), namespace)
+
+    def leave(self, pem):
+        os.makedirs(os.path.join(self.live, 'a.test'), exist_ok=True)
+        Path(self.live, 'a.test', 'privkey.pem').write_bytes(KEY_PEM)
+        Path(self.live, 'a.test', 'fullchain.pem').write_bytes(pem)
+        return self.left()
+
+    def left(self):
+        return {name: Path(self.live, 'a.test', name).read_bytes() for name in ('privkey.pem', 'fullchain.pem')}
+
+    def create(self):
+        return self.issue('a.test', 'owner@example.test', '/home/a.test/public_html', newWebsite=True)
+
+    def test_first_creation_gets_a_self_signed_certificate(self):
+        result = self.create()
+        self.assertEqual(result[:2], [2, 'Public SSL issuance failed. A self-signed certificate was installed.'])
+        self.assertEqual(result[2]['outcome'], 'self_signed')
+        self.assertEqual(self.openssl.call_count, 1)
+        self.install.assert_called_once_with('a.test')
+
+    def test_creation_over_a_self_signed_leftover_gets_the_same_answer_and_keeps_the_files(self):
+        first = self.create()
+        self.openssl.reset_mock()
+        self.install.reset_mock()
+        before = self.leave(certificate('a.test', ends=3650))
+        self.assertEqual(self.create(), first)
+        self.assertEqual(self.left(), before)
+        self.openssl.assert_not_called()
+        self.install.assert_called_once_with('a.test')
+
+    def test_creation_over_a_real_leftover_installs_it_and_never_replaces_it(self):
+        before = self.leave(certificate('a.test', issuer='Fixture CA'))
+        result = self.create()
+        self.assertEqual(result[0], 2)
+        self.assertEqual(result[2]['outcome'], 'existing_certificate')
+        self.assertIn('existing date-valid certificate remains installed', result[1])
+        self.assertEqual(self.left(), before)
+        self.openssl.assert_not_called()
+        self.install.assert_called_once_with('a.test')
+
+    def test_creation_over_an_expired_leftover_is_refused_and_keeps_the_files(self):
+        for issuer in (None, 'Fixture CA'):
+            with self.subTest(issuer=issuer):
+                self.setUp()
+                before = self.leave(certificate('a.test', starts=-400, ends=-30, issuer=issuer))
+                result = self.create()
+                self.assertEqual(result[0], 0)
+                self.assertIn('expired and has been preserved', result[1])
+                self.assertEqual(self.left(), before)
+                self.openssl.assert_not_called()
+                self.install.assert_not_called()
+
+    def test_creation_fails_when_the_leftover_cannot_be_installed(self):
+        self.leave(certificate('a.test', ends=3650))
+        self.install.return_value = 0
+        self.assertEqual(self.create()[0], 0)
+        self.openssl.assert_not_called()
+
+    def test_issue_ssl_on_an_existing_website_still_reports_the_self_signed_certificate(self):
+        before = self.leave(certificate('a.test', ends=3650))
+        for arguments in ({}, {'forceIssue': True}):
+            with self.subTest(arguments=arguments):
+                result = self.issue('a.test', 'owner@example.test', '/home/a.test/public_html', **arguments)
+                self.assertEqual(result[:2], [
+                    0, 'New SSL issuance failed. The existing self-signed certificate has been preserved.'])
+                self.assertEqual(self.left(), before)
+        self.install.assert_not_called()
+        self.openssl.assert_not_called()
+
+    def test_websites_and_child_domains_say_when_they_are_being_created(self):
+        source = ast.parse(Path(__file__).with_name('virtualHostUtilities.py').read_text())
+        owner = next(node for node in source.body
+                     if isinstance(node, ast.ClassDef) and node.name == 'virtualHostUtilities')
+        flagged = {}
+        for node in owner.body:
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            for call in ast.walk(node):
+                if (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute)
+                        and call.func.attr == 'issueSSLForDomain' and getattr(call.func.value, 'id', '') == 'sslUtilities'):
+                    flagged.setdefault(node.name, []).append(
+                        any(keyword.arg == 'newWebsite' for keyword in call.keywords))
+        self.assertEqual(flagged['createVirtualHost'], [True])
+        self.assertEqual(flagged['_createDomain'], [True])
+        self.assertEqual(sorted(name for name, flags in flagged.items() if any(flags)),
+                         ['_createDomain', 'createVirtualHost'])
 
 
 if __name__ == '__main__':
