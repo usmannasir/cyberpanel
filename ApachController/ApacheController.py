@@ -34,6 +34,7 @@ class ApacheController:
 
         serviceName = 'httpd'
         apacheBinary = '/usr/sbin/httpd'
+        apacheControl = '/usr/sbin/httpd'
 
     else:
         serverRootPath = '/etc/apache2'
@@ -60,6 +61,9 @@ class ApacheController:
 
         serviceName = 'apache2'
         apacheBinary = '/usr/sbin/apache2'
+        # Removing the apache2 package leaves the binary of apache2-bin
+        # behind; without this program Apache can be neither checked nor run.
+        apacheControl = '/usr/sbin/apache2ctl'
 
     # The PHP-FPM pool directories of the versions a website on the Apache
     # backend can use. The set-up installs every one of them that the
@@ -99,14 +103,15 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
     @staticmethod
     def checkIfApacheInstalled():
-        # Set up means that Apache itself is installed and at least one of
+        # Set up means that Apache itself (the server and the program that
+        # controls it) is installed and at least one of
         # the PHP-FPM versions has its pool directory. No single version is
         # asked for: which ones the set-up could install depends on the PHP
         # archive of the distribution (Ubuntu 20.04 is offered no PHP 8.0),
         # and an administrator may have removed one. The page checks and the
         # workers both ask here, so they agree on when the set-up runs.
         try:
-            if not os.path.exists(ApacheController.apacheBinary):
+            if not os.path.exists(ApacheController.apacheBinary) or not os.path.exists(ApacheController.apacheControl):
                 return 0
             for poolPath in ApacheController.fpmPoolPaths:
                 if os.path.isdir(poolPath):

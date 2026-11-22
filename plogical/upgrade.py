@@ -5974,11 +5974,36 @@ pm.max_spare_servers = 3
         # A website's virtual host or PHP-FPM pool that names a system account
         # which does not exist keeps Apache, or that PHP-FPM version, from
         # starting for every website on the Apache backend (see the helper).
+        # Only the files of the websites and child domains the panel knows
+        # are changed; anything else is reported.
         try:
             from ApachController.apacheConfigCheck import repair as repair_apache_backend
-            repair_apache_backend(log=Upgrade.stdOut)
+            from websiteFunctions.models import Websites, ChildDomains
+            panel_domains = list(Websites.objects.values_list('domain', flat=True)) \
+                + list(ChildDomains.objects.values_list('domain', flat=True))
+            repair_apache_backend(panel_domains, log=Upgrade.stdOut)
         except Exception as error:
             Upgrade.stdOut('WARNING: The Apache backend check did not run: ' + str(error), 0)
+
+        # Earlier releases added the two Apache backends to OpenLiteSpeed's
+        # main configuration again for every Apache website, and an earlier
+        # upgrade could write them with the two ports exchanged.
+        try:
+            from ApachController.apacheConfigCheck import with_proxy_backends
+            from plogical.vhostConfs import vhostConfs
+            main_configuration = '/usr/local/lsws/conf/httpd_config.conf'
+            if os.path.exists('/usr/local/lsws/bin/openlitespeed') and os.path.exists(main_configuration):
+                with open(main_configuration, 'r') as source:
+                    current = source.read()
+                if 'extprocessor apachebackend' in current or 'extprocessor proxyApacheBackendSSL' in current:
+                    corrected = with_proxy_backends(current, vhostConfs.proxyApacheBackend,
+                                                    vhostConfs.proxyApacheBackendSSL)
+                    if corrected != current:
+                        apply_ols_config_changes({main_configuration: (current, corrected)})
+                        Upgrade.stdOut('The Apache backends of OpenLiteSpeed are now defined once each, on the '
+                                       'ports Apache listens on.', 0)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: The Apache backends of OpenLiteSpeed were not corrected: ' + str(error), 0)
 
         ## Fix Apache configuration issues after upgrade
         Upgrade.fixApacheConfiguration()
@@ -6743,42 +6768,14 @@ pm.max_spare_servers = 3
                     lsws_content = f.read()
                 original_lsws_content = lsws_content
                 
-                modified = False
-                
-                # Check for apachebackend extprocessor
-                if 'extprocessor apachebackend' not in lsws_content:
-                    # Add apachebackend configuration
-                    backend_config = '''
-extprocessor apachebackend {
-  type                    proxy
-  address                 127.0.0.1:8082
-  maxConns                100
-  initTimeout             60
-  retryTimeout            60
-  respBuffer              0
-}
-'''
-                    lsws_content += backend_config
-                    modified = True
-                    print("Added apachebackend extprocessor configuration")
-                
-                # Check for proxyApacheBackendSSL extprocessor
-                if 'extprocessor proxyApacheBackendSSL' not in lsws_content:
-                    # Add proxyApacheBackendSSL configuration
-                    ssl_backend_config = '''
-extprocessor proxyApacheBackendSSL {
-  type                    proxy
-  address                 https://127.0.0.1:8083
-  maxConns                100
-  initTimeout             60
-  retryTimeout            60
-  respBuffer              0
-}
-'''
-                    lsws_content += ssl_backend_config
-                    modified = True
-                    print("Added proxyApacheBackendSSL extprocessor configuration")
-                
+                # The two backends as the panel defines them for a website:
+                # Apache listens on 8083 without SSL and on 8082 with it.
+                from ApachController.apacheConfigCheck import with_proxy_backends
+                from plogical.vhostConfs import vhostConfs
+                lsws_content = with_proxy_backends(lsws_content, vhostConfs.proxyApacheBackend,
+                                                   vhostConfs.proxyApacheBackendSSL)
+                modified = lsws_content != original_lsws_content
+
                 if modified:
                     if is_ols:
                         ols_changes[lsws_config] = original_lsws_content, lsws_content
@@ -7022,12 +7019,13 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
             
             # Restart Apache, unless it refuses its configuration: a running
             # Apache then keeps serving with what it loaded.
-            from ApachController.apacheConfigCheck import config_test, config_test_command, said
-            passed, output = config_test(config_test_command(serviceName == 'httpd'))
+            from ApachController.apacheConfigCheck import config_test, config_test_command, installed_family, said
+            apache_family = installed_family()
+            passed, output = (False, '') if apache_family is None else config_test(config_test_command(apache_family))
             if passed:
                 command = f'systemctl restart {serviceName}'
                 Upgrade.executioner(command, command, 0, True)
-            else:
+            elif apache_family is not None:
                 Upgrade.stdOut('WARNING: Apache was not restarted because it refuses its configuration: '
                                + said(output), 0)
 

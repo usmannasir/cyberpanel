@@ -8,6 +8,7 @@ import re
 import stat
 import subprocess
 import tempfile
+import time
 from types import SimpleNamespace as NS
 import unittest
 from unittest import mock
@@ -16,6 +17,7 @@ from ApachController import apacheConfigCheck as checks
 from managePHP import phpConfig
 from plogical.test_php_restart_marker import OLS, PHPChange, load_methods
 from plogical.test_server_switch_mail_php import method as worker_method
+from plogical import websiteAccount
 from plogical.vhostConfs import vhostConfs
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,10 +100,14 @@ class AccountTests(unittest.TestCase):
         self.assertEqual([], checks.pool_accounts('[global]\npid = /run/php-fpm.pid\n'))
         self.assertEqual([('a', 'b')], checks.vhost_accounts('  suexecusergroup "a" b\n#SuexecUserGroup c d\n'))
 
-    def test_only_names_without_an_account_are_unknown(self):
+    def test_only_literal_names_without_an_account_are_unknown(self):
+        # An id, PHP-FPM's $pool and a variable are resolved by the service.
         pairs = [('siteuser', 'siteuser'), ('gone1234', 'gone1234'), ('#1001', '#1001'), ('33', None),
-                 ('gone1234', 'siteuser'), (None, 'nogroup')]
+                 ('gone1234', 'siteuser'), (None, 'nogroup'), ('$pool', '$pool'),
+                 ('${APACHE_RUN_USER}', '${APACHE_RUN_GROUP}')]
         self.assertEqual(['gone1234'], checks.unknown_accounts(pairs, getpwnam, getgrnam))
+        self.assertEqual([], checks.unknown_accounts(
+            checks.pool_accounts('[$pool]\nuser = $pool\ngroup = ${FPM_GROUP}\n'), getpwnam, getgrnam))
         self.assertEqual(['nobody'], checks.unknown_accounts([('nobody', 'nobody')], getpwnam, getgrnam))
 
 
@@ -113,31 +119,56 @@ class ConfigTestTests(unittest.TestCase):
     def test_result_is_the_exit_status_and_what_apache_said(self):
         calls = []
 
-        def run(command, **options):
-            calls.append((command, options))
-            return NS(returncode=status, stdout=output)
+        def run(command, timeout):
+            calls.append((command, timeout))
+            return status, output
 
         for status, output, expected in ((0, 'Syntax OK\n', (True, 'Syntax OK')),
                                          (1, 'AH00543: apache2: bad user name x\n', (False, 'AH00543: apache2: bad user name x')),
-                                         (1, None, (False, ''))):
+                                         (1, '', (False, ''))):
             self.assertEqual(expected, checks.config_test(['/usr/sbin/apache2ctl', '-t'], run))
-        command, options = calls[0]
-        self.assertEqual(['/usr/sbin/apache2ctl', '-t'], command)
-        # Both streams as text; nothing that needs a newer Python than 3.6.
-        self.assertEqual({'stdin': subprocess.DEVNULL, 'stdout': subprocess.PIPE, 'stderr': subprocess.STDOUT,
-                          'universal_newlines': True, 'timeout': 120}, options)
+        self.assertEqual((['/usr/sbin/apache2ctl', '-t'], 120), calls[0])
 
     def test_a_test_that_cannot_run_has_not_passed(self):
-        def missing(command, **options):
+        def missing(command, timeout):
             raise FileNotFoundError(2, 'No such file or directory')
 
-        def slow(command, **options):
-            raise subprocess.TimeoutExpired(command, 120)
+        def slow(command, timeout):
+            raise subprocess.TimeoutExpired(command, timeout)
 
         for run in (missing, slow):
             passed, output = checks.config_test(['/usr/sbin/httpd', '-t'], run)
             self.assertFalse(passed)
             self.assertIn('/usr/sbin/httpd could not be run', output)
+
+    def test_command_output_and_status_are_returned(self):
+        self.assertEqual((3, 'out\nerr\n'),
+                         checks.bounded_run(['/bin/sh', '-c', 'echo out; echo err >&2; exit 3'], 30))
+
+    def test_time_limit_ends_what_the_command_started(self):
+        # apache2ctl is a shell that starts apache2; both hold the output.
+        marker = tempfile.NamedTemporaryFile(prefix='apache-check-test-')
+        self.addCleanup(marker.close)
+        started = time.monotonic()
+        with self.assertRaises(subprocess.TimeoutExpired):
+            checks.bounded_run(['/bin/sh', '-c', 'sleep 60 & echo $! > %s; wait' % marker.name], 1)
+        self.assertLess(time.monotonic() - started, 20)
+        child = int(Path(marker.name).read_text())
+        for unused in range(50):
+            if not Path('/proc/%d' % child).exists():
+                break
+            time.sleep(0.1)
+        self.assertFalse(Path('/proc/%d' % child).exists())
+        passed, output = checks.config_test(['/bin/sh', '-c', 'sleep 60 & wait'], timeout=1)
+        self.assertEqual(False, passed)
+        self.assertIn('could not be run', output)
+
+    def test_apache_is_installed_with_its_control_program(self):
+        for present, family in (({'/usr/sbin/httpd'}, True),
+                                ({'/usr/sbin/apache2', '/usr/sbin/apache2ctl'}, False),
+                                # What removing the apache2 package leaves.
+                                ({'/usr/sbin/apache2'}, None), ({'/usr/sbin/apache2ctl'}, None), (set(), None)):
+            self.assertIs(family, checks.installed_family(lambda path: path in present))
 
     def test_message_is_one_line_and_keeps_the_end(self):
         self.assertEqual('a b c', checks.said(' a\n b\t\tc\n'))
@@ -219,6 +250,42 @@ class ApplyChangeTests(unittest.TestCase):
         # The other website's file is not this job's to remove.
         self.assertEqual(vhost_text('gone1234', 'other.test'), self.other.read_text())
 
+    def test_an_administrators_edit_is_kept_beside_another_failure(self):
+        self.other.write_text(vhost_text('gone1234', 'other.test'))
+        status, reason = checks.apply_change([str(self.vhost)], self.write(pool=False), self.apache.test,
+                                             self.restart, keep_beside_other_failure=True)
+        self.assertEqual(2, status)
+        self.assertEqual('Apache was not restarted: it refused its configuration before this change already, '
+                         'for a reason outside this file: AH00543: apache2: bad user name gone1234', reason)
+        self.assertEqual(vhost_text('siteuser'), self.vhost.read_text())
+        self.assertEqual([], self.restarts)
+
+    def test_two_faulty_files_can_be_corrected_one_after_the_other(self):
+        first, second = self.folder / 'a.test.conf', self.folder / 'b.test.conf'
+        for path in (first, second):
+            path.write_text('NotADirective\n')
+
+        def correct(path):
+            return checks.apply_change([str(path)], lambda: path.write_text(vhost_text('siteuser', path.stem)) and None,
+                                       self.apache.test, self.restart, keep_beside_other_failure=True)
+
+        # Apache names a.test.conf first; correcting b.test.conf is kept all the same.
+        self.assertEqual(2, correct(second)[0])
+        self.assertEqual(vhost_text('siteuser', 'b.test'), second.read_text())
+        self.assertEqual([], self.restarts)
+        self.assertEqual((1, 'None'), correct(first))
+        self.assertEqual(1, len(self.restarts))
+
+    def test_an_edit_that_apache_refuses_is_not_kept_either_way(self):
+        self.other.write_text(vhost_text('gone1234', 'other.test'))
+        self.vhost.write_text(vhost_text('siteuser'))
+        status, reason = checks.apply_change(
+            [str(self.vhost)], lambda: self.vhost.write_text('NotADirective\n') and None, self.apache.test,
+            self.restart, keep_beside_other_failure=True)
+        self.assertEqual(0, status)
+        self.assertIn(str(self.vhost), reason)
+        self.assertEqual(vhost_text('siteuser'), self.vhost.read_text())
+
     def test_a_failure_that_names_the_changed_file_is_the_change(self):
         self.other.write_text(vhost_text('gone1234', 'other.test'))
         # example.test.conf is read before other.test.conf.
@@ -284,6 +351,10 @@ class ApacheWorker:
                         GenerateSelfSignedSSL=mock.Mock(), DecidePHPPath=self.pool_path,
                         configTest=self.apache.test, deletePHPPath=mock.Mock())
         self.checks = NS(account_problem=account_problem, apply_change=checks.apply_change, said=checks.said,
+                         with_proxy_backends=checks.with_proxy_backends, replace_file=checks.replace_file,
+                         vhost_accounts=checks.vhost_accounts,
+                         unknown_accounts=lambda pairs: checks.unknown_accounts(pairs, getpwnam, getgrnam),
+                         reopen_virtual_host=lambda path: checks.reopen_virtual_host(path, getpwnam, getgrnam),
                          pools_set_aside=lambda name, rpm: sorted(
                              str(path) for path in self.pools.rglob(name + checks.DISABLED_SUFFIX)))
         namespace = dict(
@@ -294,7 +365,7 @@ class ApacheWorker:
             Websites=NS(objects=NS(get=lambda domain: self.sites_table[domain])), ChildDomains=mock.Mock())
         names = ['DecideFPMServiceName', 'fpmServiceCommand', 'changePHP', 'perHostVirtualConf',
                  'perHostVirtualConfChild', 'restartApache', 'restartService', 'checkedSetup', 'setupApacheVhost',
-                 'setupApacheVhostChild', 'enableProxyInMainConf', 'DeleteApacheVhost']
+                 'setupApacheVhostChild', 'enableProxyInMainConf', 'DeleteApacheVhost', 'restoreVhost']
         for name, loaded in zip(names, load_methods('ApachController/ApacheVhosts.py', 'ApacheVhost',
                                                     names, namespace)):
             setattr(self.vhost, name, loaded)
@@ -407,9 +478,68 @@ class VirtualHostSetupTests(unittest.TestCase):
         for unused in range(3):
             self.assertEqual([1, 'None'], worker.vhost.enableProxyInMainConf())
         text = worker.main.read_text()
-        self.assertEqual(1, text.count('extprocessor apachebackend {'))
-        self.assertEqual(1, text.count('extprocessor proxyApacheBackendSSL {'))
-        self.assertTrue(text.startswith('serverName example\n'))
+        self.assertEqual('serverName example\n' + vhostConfs.proxyApacheBackend + vhostConfs.proxyApacheBackendSSL,
+                         text)
+
+    def test_backends_point_at_the_ports_of_the_virtual_hosts(self):
+        # Without SSL the virtual hosts are on 8083, with it on 8082.
+        self.assertIn('<VirtualHost *:8083>', vhostConfs.apacheConf)
+        self.assertIn('<VirtualHost *:8082>', vhostConfs.apacheConfSSL)
+        self.assertIn('SSLEngine on', vhostConfs.apacheConfSSL)
+        self.assertNotIn('SSLEngine', vhostConfs.apacheConf)
+        self.assertRegex(vhostConfs.proxyApacheBackend, r'(?m)^\s*address\s+http://127\.0\.0\.1:8083$')
+        self.assertRegex(vhostConfs.proxyApacheBackendSSL, r'(?m)^\s*address\s+https://127\.0\.0\.1:8082$')
+
+    def test_repeated_and_exchanged_backends_of_earlier_releases_are_corrected(self):
+        exchanged = ('\nextprocessor apachebackend {\n  type                    proxy\n'
+                     '  address                 127.0.0.1:8082\n  maxConns                100\n}\n'
+                     '\nextprocessor proxyApacheBackendSSL {\n  type                    proxy\n'
+                     '  address                 https://127.0.0.1:8083\n  maxConns                100\n}\n')
+        tuned = vhostConfs.proxyApacheBackend.replace('maxConns                100', 'maxConns                400')
+        other = 'extprocessor lsphp83 {\n  type lsapi\n  address uds://tmp/lshttpd/lsphp.sock\n}\n'
+        pair = (vhostConfs.proxyApacheBackend, vhostConfs.proxyApacheBackendSSL)
+        for before, after in (
+                # Once per website, as releases up to 3.0.12 wrote them.
+                ('listener x {\n}\n' + ''.join(pair) * 3 + other, 'listener x {\n}\n' + ''.join(pair) + other),
+                # The pair an earlier upgrade wrote, alone and beside a right pair.
+                ('a 1\n' + exchanged, 'a 1\n\n\n' + ''.join(pair)),
+                ('a 1\n' + exchanged + ''.join(pair), 'a 1\n\n\n' + ''.join(pair)),
+                # A right block keeps what an administrator set in it.
+                (tuned + pair[0] + pair[1], tuned + pair[1]),
+                ('no final newline', 'no final newline\n' + ''.join(pair))):
+            with self.subTest(before=before[:30]):
+                self.assertEqual(after, checks.with_proxy_backends(before, *pair))
+                # Nothing is left to do a second time.
+                self.assertEqual(after, checks.with_proxy_backends(after, *pair))
+        worker = self.worker()
+        worker.main.write_text('serverName example\n' + exchanged + ''.join(pair) * 2)
+        worker.main.chmod(0o640)
+        self.assertEqual([1, 'None'], worker.vhost.enableProxyInMainConf())
+        self.assertEqual('serverName example\n\n\n' + ''.join(pair), worker.main.read_text())
+        self.assertEqual(0o640, stat.S_IMODE(worker.main.stat().st_mode))
+
+    def test_virtual_host_of_a_backup_replaces_the_new_one_only_if_apache_accepts_it(self):
+        worker = self.worker()
+        made = vhost_text('siteuser')
+        worker.site().write_text(made)
+        backup = worker.sites.parent / 'apache.conf'
+        # The account the website had on the server the backup was made on.
+        backup.write_text(vhost_text('Examp1234'))
+        status, reason = worker.vhost.restoreVhost(str(backup), str(worker.site()))
+        self.assertEqual(0, status)
+        self.assertIn('names the system account Examp1234, which does not exist on this server', reason)
+        self.assertEqual(made, worker.site().read_text())
+        self.assertEqual([], worker.commands)
+        backup.write_text(made + 'NotADirective\n')
+        status, reason = worker.vhost.restoreVhost(str(backup), str(worker.site()))
+        self.assertEqual(0, status)
+        self.assertIn('Invalid command NotADirective', reason)
+        self.assertEqual(made, worker.site().read_text())
+        custom = made.replace('Options Indexes FollowSymLinks', 'Options FollowSymLinks')
+        backup.write_text(custom)
+        self.assertEqual([1, 'None'], worker.vhost.restoreVhost(str(backup), str(worker.site())))
+        self.assertEqual(custom, worker.site().read_text())
+        self.assertEqual(['systemctl restart apache2'], worker.commands)
 
 
 class VirtualHostRemovalTests(unittest.TestCase):
@@ -440,7 +570,7 @@ class VirtualHostRemovalTests(unittest.TestCase):
         self.worker.vhost.DeleteApacheVhost('example.test')
         self.assertFalse(self.worker.site().exists())
         self.assertEqual([], self.worker.commands)
-        self.assertIn('Apache was not restarted because it refuses its configuration: '
+        self.assertIn('Apache was not restarted because its configuration test did not pass: '
                       'AH00543: apache2: bad user name gone1234', self.worker.log.writeToFile.call_args[0][0])
 
     def test_removing_the_refused_virtual_host_lets_apache_restart(self):
@@ -467,6 +597,34 @@ class PHPChangeTests(unittest.TestCase):
                       Path(self.worker.pool_path('83', 'example.test')).read_text())
         self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php8.3-fpm'], 'systemctl restart apache2'],
                          self.worker.commands)
+
+    def test_change_reopens_a_website_an_upgrade_closed_once_its_account_exists(self):
+        # The upgrade found the account missing; it has been created since.
+        USERS.discard('siteuser')
+        self.addCleanup(USERS.add, 'siteuser')
+        checks.close_virtual_host(str(self.worker.site()), getpwnam, getgrnam)
+        self.assertIn(checks.CLOSED_BEGIN, self.worker.site().read_text())
+        aside = Path(checks.set_pool_aside(str(self.old)))
+        USERS.add('siteuser')
+        self.assertEqual(1, self.worker.vhost.changePHP('PHP 8.1', self.VHOST))
+        self.assertEqual(vhost_text('siteuser'), self.worker.site().read_text())
+        self.assertIn('user = siteuser\ngroup = siteuser\n', self.old.read_text())
+        self.assertFalse(aside.exists())
+        self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php8.1-fpm'], 'systemctl restart apache2'],
+                         self.worker.commands)
+
+    def test_a_closed_website_stays_closed_while_its_account_is_missing(self):
+        USERS.discard('siteuser')
+        self.addCleanup(USERS.add, 'siteuser')
+        checks.close_virtual_host(str(self.worker.site()), getpwnam, getgrnam)
+        closed = self.worker.site().read_text()
+        self.worker.sites_table['example.test'] = NS(externalApp='siteuser')
+        result = self.worker.vhost.changePHP('PHP 8.3', self.VHOST)
+        self.assertIn('The system user siteuser does not exist on this server.', result)
+        self.assertEqual(closed, self.worker.site().read_text())
+        self.assertFalse(checks.reopen_virtual_host(str(self.worker.site()), getpwnam, getgrnam))
+        self.assertEqual(closed, self.worker.site().read_text())
+        self.assertEqual([], self.worker.commands)
 
     def test_nothing_is_changed_for_a_website_without_its_account(self):
         self.worker.sites_table['example.test'] = NS(externalApp='gone1234')
@@ -588,6 +746,67 @@ class SavedVirtualHostTests(unittest.TestCase):
         self.assertEqual([], self.restarts)
 
 
+    def test_an_edit_is_kept_while_another_virtual_host_keeps_apache_from_starting(self):
+        (self.folder / 'other.test.conf').write_text(vhost_text('gone1234', 'other.test'))
+        edited = vhost_text('siteuser').replace('Options Indexes FollowSymLinks', 'Options FollowSymLinks')
+        output = self.submit(edited)
+        self.assertEqual('0,The virtual host was saved. Apache was not restarted: it refused its configuration '
+                         'before this change already, for a reason outside this file: '
+                         'AH00543: apache2: bad user name gone1234\n', output)
+        self.assertEqual(edited, self.site.read_text())
+        self.assertEqual([], self.restarts)
+
+
+class ChildDomainCreationTests(unittest.TestCase):
+    def create(self, setup):
+        events = []
+        master = NS(state=1, adminEmail='owner@example.test', externalApp='siteuser',
+                    package=NS(allowedDomains=0, allowFullDomain=1, memoryLimitMB=0, maxConnections=10,
+                               procSoftLimit=10, procHardLimit=10), childdomains_set=mock.MagicMock())
+        websites, children = mock.MagicMock(), mock.MagicMock()
+        websites.objects.get.return_value = master
+        for model in (websites, children):
+            model.objects.filter.return_value.count.return_value = 0
+            model.objects.count.return_value = 1
+        self.row = children.return_value
+        self.row.save.side_effect = lambda: events.append('save row')
+        self.row.delete.side_effect = lambda: events.append('delete row')
+        vhost = mock.MagicMock(Server_root='/nonexistent-lsws')
+        vhost.checkIfVirtualHostExists.return_value = 0
+        vhost.checkIfAliasExists.return_value = 0
+        vhost.createDirectoryForDomain.return_value = (1, 'None')
+        vhost.createConfigInMainDomainHostFile.return_value = (1, 'None')
+        vhost.deleteCoreConf.side_effect = lambda *args: events.append('delete configuration')
+        acl = mock.MagicMock()
+        acl.FindIfChild.return_value = 0
+        process = mock.MagicMock(OLS=0)
+        process.decideServer.return_value = 0
+        apache, controller = mock.MagicMock(), mock.MagicMock()
+        controller.checkIfApacheInstalled.return_value = 1
+        apache.setupApacheVhostChild.return_value = setup
+        inner = mock.MagicMock(redisConf='/nonexistent-lsws/redis.conf')
+        inner.dkimServicesInstalled.return_value = False
+        self.logger = mock.MagicMock()
+        create = worker_method('_createDomain', dict(
+            os=os, open=mock.MagicMock(), logging=self.logger, Administrator=mock.MagicMock(), Websites=websites,
+            ChildDomains=children, DNS=mock.MagicMock(), mailUtilities=mock.MagicMock(),
+            sslUtilities=mock.MagicMock(), ACLManager=acl, vhost=vhost, installUtilities=mock.MagicMock(),
+            ProcessUtilities=process, ApacheController=controller, ApacheVhost=apache, PHPManager=mock.MagicMock(),
+            virtualHostUtilities=inner))
+        result = create('example.test', 'shop.example.test', 'PHP 8.3', '/home/example.test/shop', 0, 0, 0, 'admin', 1)
+        return result, events
+
+    def test_a_child_domain_apache_refuses_leaves_no_row_behind(self):
+        result, events = self.create([0, 'Apache refused this configuration, so it was not put in place: x'])
+        self.assertEqual((0, 'Apache refused this configuration, so it was not put in place: x'), result)
+        self.assertEqual(['save row', 'delete configuration', 'delete row'], events)
+
+    def test_an_accepted_child_domain_keeps_its_row(self):
+        result, events = self.create([1, 'None'])
+        self.assertEqual((1, 'None'), result)
+        self.assertEqual(['save row'], events)
+
+
 class WebsiteAccountTests(unittest.TestCase):
     def create(self, problem):
         vhost = NS(Server_root='/usr/local/lsws', addUser=mock.Mock(), createDirectories=mock.Mock(return_value=[1, 'None']),
@@ -624,56 +843,162 @@ class WebsiteAccountTests(unittest.TestCase):
         self.assertEqual(5, made)
         self.assertEqual('examp', ''.join(re.findall('[a-zA-Z]+', 'Example-1.TEST'))[:5].lower())
 
+    def test_next_name_after_a_match_is_built_from_the_new_name(self):
+        # The database also matches a stored Examp1234 for examp1234.
+        text = (ROOT / 'websiteFunctions' / 'website.py').read_text()
+        self.assertIn("externalApp = '%s%s' % (baseName, str(counter))", text)
+        self.assertNotIn("externalApp = '%s%s' % (tWeb.externalApp, str(counter))", text)
+        stored = {'examp1234', 'examp12340'}
+        name = websiteAccount.new_name('Example.test', lambda name: name in stored, number=lambda low, high: 1234)
+        self.assertEqual('examp12341', name)
+        self.assertEqual('examp5678', websiteAccount.new_name('Example.test', lambda name: False,
+                                                              number=lambda low, high: 5678))
+
+    def test_a_name_the_servers_tool_refuses_is_known(self):
+        for name, debian, rpm in (('examp1234', True, True), ('nobody', True, True), ('Examp1234', False, True),
+                                  ('user.name', False, True), ('1site', False, True), ('', False, False),
+                                  (None, False, False), ('a b', False, False), ('a/b', False, False),
+                                  ('-x', False, False), ('u' * 33, False, False)):
+            with self.subTest(name=name):
+                self.assertEqual(debian, websiteAccount.acceptable(name, debian=True))
+                self.assertEqual(rpm, websiteAccount.acceptable(name, debian=False))
+
+    def test_a_restored_website_keeps_its_name_or_gets_one_this_server_takes(self):
+        taken = {'examp1234'}.__contains__
+        self.assertEqual('examp1234', websiteAccount.restored_name('examp1234', 'example.test', taken, debian=True))
+        self.assertEqual('Examp1234', websiteAccount.restored_name('Examp1234', 'Example.test', taken, debian=False))
+        name = websiteAccount.restored_name('Examp1234', 'Example.test', taken, debian=True)
+        self.assertRegex(name, r'^examp\d{4,5}$')
+        self.assertNotIn(name, ('examp1234', 'Examp1234'))
+        self.assertTrue(websiteAccount.acceptable(name, debian=True))
+
+    def test_configuration_of_a_backup_names_the_account_the_website_has_here(self):
+        site = vhostConfs.olsMasterConf.replace('{virtualHostUser}', 'Examp1234')
+        child = vhostConfs.olsChildConf.replace('{externalApp}', 'Examp12345678').replace(
+            '{externalAppMaster}', 'Examp1234') + '# MyExamp1234 and Examp1234x stay\n'
+        for text in (site, child):
+            renamed = websiteAccount.renamed_in_configuration(text, 'Examp1234', 'examp5678')
+            self.assertIn('  extUser                 examp5678\n  extGroup                examp5678\n', renamed)
+            self.assertEqual(text.count('Examp1234') - (2 if text is child else 0), renamed.count('examp5678'))
+        self.assertIn('extprocessor examp5678 {', websiteAccount.renamed_in_configuration(site, 'Examp1234', 'examp5678'))
+        renamed = websiteAccount.renamed_in_configuration(child, 'Examp1234', 'examp5678')
+        self.assertIn('extprocessor examp56785678 {', renamed)
+        self.assertIn('# MyExamp1234 and Examp1234x stay\n', renamed)
+        self.assertEqual(site, websiteAccount.renamed_in_configuration(site, 'Examp1234', 'Examp1234'))
+        self.assertEqual(site, websiteAccount.renamed_in_configuration(site, '', 'examp5678'))
+
+    def test_restore_uses_the_name_it_decided_on_and_no_other(self):
+        text = (ROOT / 'plogical' / 'backupUtilities.py').read_text()
+        # The name in the backup decides the name at creation; afterwards it
+        # only says what to replace in the configuration files of the backup.
+        self.assertEqual(1, text.count("externalApp = backupMetaData.find('externalApp').text"))
+        self.assertEqual(1, text.count("accountInBackup = backupMetaData.find('externalApp').text"))
+        self.assertEqual(2, text.count("backupMetaData.find('externalApp').text"))
+        self.assertEqual(2, text.count('\n' + ' ' * 20 + 'useAccountHere(completPathToConf)\n')
+                         + text.count('\n' + ' ' * 36 + 'useAccountHere(completPathToConf)\n'))
+        decided = text.index('externalApp = restored_name(externalApp, domain, accountNameTaken)')
+        created = text.index('result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, '
+                             'stored_php_selection(phpSelection), externalApp,')
+        self.assertLess(text.index("externalApp = backupMetaData.find('externalApp').text"), decided)
+        self.assertLess(decided, created)
+        # The virtual host of the backup never replaces the new one unchecked.
+        self.assertNotIn('copy(confPathApache, finalConfPathApache)', text)
+        self.assertNotIn('copy(childConfPathinBKUPApache, finalConfPathApache)', text)
+        self.assertEqual(2, text.count('ApacheVhost.restoreVhost('))
+
+    def test_apache_counts_as_installed_only_with_its_control_program(self):
+        source = ROOT / 'ApachController' / 'ApacheController.py'
+        owner = [node for node in ast.parse(source.read_text()).body
+                 if isinstance(node, ast.ClassDef) and node.name == 'ApacheController']
+        for distro, present, expected in (
+                ('ubuntu', {'/usr/sbin/apache2', '/usr/sbin/apache2ctl', '/etc/php/8.3/fpm/pool.d/'}, 1),
+                ('ubuntu', {'/usr/sbin/apache2', '/etc/php/8.3/fpm/pool.d/'}, 0),
+                ('ubuntu', {'/usr/sbin/apache2ctl', '/etc/php/8.3/fpm/pool.d/'}, 0),
+                ('cent8', {'/usr/sbin/httpd', '/etc/opt/remi/php83/php-fpm.d/'}, 1),
+                ('cent8', {'/etc/opt/remi/php83/php-fpm.d/'}, 0)):
+            process = mock.Mock(centos='centos', cent8='cent8')
+            process.decideDistro.return_value = distro
+            namespace = dict(ProcessUtilities=process, logging=mock.Mock(), ApacheVhost=mock.Mock(),
+                             os=NS(path=NS(exists=present.__contains__, isdir=present.__contains__)))
+            exec(compile(ast.Module(body=owner, type_ignores=[]), str(source), 'exec'), namespace)
+            with self.subTest(distro=distro, present=sorted(present)):
+                self.assertEqual(expected, namespace['ApacheController'].checkIfApacheInstalled())
+
 
 class UpgradeRepairTests(unittest.TestCase):
+    """The upgrade step, on the Debian family unless a test says otherwise."""
+    rpm_family = False
+    service = 'apache2'
+    unit = 'php8.3-fpm'
+    pool_folder = ('etc', 'php', '8.3', 'fpm', 'pool.d')
+    domains = ('example.test', 'other.test', 'shop.example.test')
+
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='apache-repair-test-')
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
-        self.sites = root / 'sites-enabled'
-        self.pools = root / 'etc' / 'php' / '8.3' / 'fpm' / 'pool.d'
+        self.sites = root / 'sites'
+        self.pools = root.joinpath(*self.pool_folder)
         for folder in (self.sites, self.pools):
             folder.mkdir(parents=True)
         self.good = self.sites / 'other.test.conf'
         self.good.write_text(vhost_text('other1234', 'other.test'))
         (self.pools / 'other.test.conf').write_text(pool_text('other1234', 'other.test'))
-        (self.pools / 'www.conf').write_text('[php83default]\nuser = www-data\ngroup = www-data\n')
+        (self.pools / 'www.conf').write_text('[default]\nuser = www-data\ngroup = www-data\n')
         self.apache = Apache(self.sites)
         self.commands = []
         self.failing = set()
+        self.disabled = set()
         self.messages = []
 
     def succeeds(self, *command):
         self.commands.append(list(command))
+        if command[1] == 'is-enabled':
+            return command[-1] not in self.disabled
         return command[-1] not in self.failing
 
     def repair(self):
-        return checks.repair(log=self.messages.append, rpm_family=False, vhost_folder=str(self.sites),
-                             pool_folders=[str(self.pools) + '/'], test=self.apache.test, succeeds=self.succeeds,
-                             getpwnam=getpwnam, getgrnam=getgrnam)
+        return checks.repair(self.domains, log=self.messages.append, rpm_family=self.rpm_family,
+                             vhost_folder=str(self.sites), pool_folders=[str(self.pools) + '/'],
+                             test=self.apache.test, succeeds=self.succeeds, getpwnam=getpwnam, getgrnam=getgrnam)
 
     def names(self, folder):
         return sorted(path.name for path in folder.iterdir())
 
+    def started(self, unit, action):
+        return [['systemctl', 'is-enabled', '--quiet', '--', unit], ['systemctl', action, '--', unit]]
+
+    def break_example(self, user='Examp1234'):
+        bad = self.sites / 'example.test.conf'
+        bad.write_text(vhost_text(user))
+        bad.chmod(0o640)
+        (self.pools / 'example.test.conf').write_text(pool_text(user))
+        return bad
+
     def test_a_healthy_server_is_left_alone(self):
+        # $pool and a variable are PHP-FPM's to resolve, not names to look up.
+        (self.pools / 'shop.example.test.conf').write_text('[shop]\nuser = $pool\ngroup = ${FPM_GROUP}\n')
         self.assertEqual('not needed', self.repair())
         self.assertEqual(['other.test.conf'], self.names(self.sites))
-        self.assertEqual(['other.test.conf', 'www.conf'], self.names(self.pools))
+        self.assertEqual(['other.test.conf', 'shop.example.test.conf', 'www.conf'], self.names(self.pools))
         self.assertEqual(([], []), (self.commands, self.messages))
 
     def test_a_missing_account_no_longer_keeps_the_services_from_starting(self):
-        bad = self.sites / 'example.test.conf'
-        bad.write_text(vhost_text('Examp1234'))
-        bad.chmod(0o640)
-        (self.pools / 'example.test.conf').write_text(pool_text('Examp1234'))
+        bad = self.break_example()
         self.assertEqual('repaired', self.repair())
         # The virtual host stays under its own name, so its domain is not
-        # answered by the virtual host of another website; only the line
-        # Apache cannot load has become a comment.
+        # answered by the virtual host of another website. Both of its
+        # blocks refuse every request: without the SuexecUserGroup line
+        # Apache would otherwise serve the website as its own user.
         self.assertEqual(['example.test.conf', 'other.test.conf'], self.names(self.sites))
-        self.assertEqual(2, bad.read_text().count(checks.DISABLED_LINE + 'SuexecUserGroup Examp1234 Examp1234\n'))
-        self.assertEqual([], checks.vhost_accounts(bad.read_text()))
-        self.assertEqual(vhost_text('Examp1234'), bad.read_text().replace(checks.DISABLED_LINE, ''))
+        closed = bad.read_text()
+        self.assertEqual([], checks.vhost_accounts(closed))
+        for port in ('8083', '8082'):
+            block = closed[closed.index('<VirtualHost *:%s>' % port):]
+            block = block[:block.index('</VirtualHost>')]
+            self.assertEqual(1, block.count(checks.DISABLED_LINE + 'SuexecUserGroup Examp1234 Examp1234\n'))
+            self.assertRegex(block, r'(?m)^\s*%s\n\s*<Location "/">\n\s*Require all denied\n\s*</Location>\n\s*%s\n'
+                             % (re.escape(checks.CLOSED_BEGIN), re.escape(checks.CLOSED_END)))
         self.assertEqual(0o640, stat.S_IMODE(bad.stat().st_mode))
         self.assertEqual(vhost_text('other1234', 'other.test'), self.good.read_text())
         # PHP-FPM cannot run a pool as a missing user: the pool is set aside
@@ -682,50 +1007,79 @@ class UpgradeRepairTests(unittest.TestCase):
                          self.names(self.pools))
         self.assertEqual(pool_text('Examp1234'),
                          (self.pools / ('example.test.conf' + checks.DISABLED_SUFFIX)).read_text())
-        self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php8.3-fpm'], ['systemctl', 'restart', 'apache2']],
+        self.assertEqual(self.started(self.unit, 'reload-or-restart') + self.started(self.service, 'restart'),
                          self.commands)
         self.assertEqual(3, len(self.messages))
         self.assertIn('names the missing system account Examp1234', self.messages[0])
         self.assertIn(str(bad), self.messages[1])
+        self.assertIn('Apache refuses every request to it', self.messages[1])
+        self.assertIn('change the PHP version of the website in the panel', self.messages[1])
         self.assertEqual('Apache accepts its configuration again and was restarted.', self.messages[2])
         # A second upgrade finds nothing to do.
         del self.commands[:], self.messages[:]
         self.assertEqual('not needed', self.repair())
         self.assertEqual(([], []), (self.commands, self.messages))
+        # Once the account exists the virtual host is what it was.
+        self.assertFalse(checks.reopen_virtual_host(str(bad), getpwnam, getgrnam))
+        USERS.add('Examp1234'), GROUPS.add('Examp1234')
+        self.addCleanup(USERS.discard, 'Examp1234'), self.addCleanup(GROUPS.discard, 'Examp1234')
+        self.assertTrue(checks.reopen_virtual_host(str(bad), getpwnam, getgrnam))
+        self.assertEqual(vhost_text('Examp1234'), bad.read_text())
+        self.assertEqual(0o640, stat.S_IMODE(bad.stat().st_mode))
+        self.assertFalse(checks.reopen_virtual_host(str(bad), getpwnam, getgrnam))
+        self.assertFalse(checks.reopen_virtual_host(str(self.sites / 'absent.test.conf'), getpwnam, getgrnam))
 
     def test_a_configuration_that_fails_for_another_reason_is_reported_and_not_changed(self):
         broken = self.sites / 'example.test.conf'
         broken.write_text(vhost_text('siteuser') + 'NotADirective\n')
         self.assertEqual('failed', self.repair())
-        self.assertEqual(['example.test.conf', 'other.test.conf'], self.names(self.sites))
+        self.assertEqual(vhost_text('siteuser') + 'NotADirective\n', broken.read_text())
         self.assertEqual([], self.commands)
         self.assertEqual(1, len(self.messages))
         self.assertTrue(self.messages[0].startswith('WARNING: Apache refuses its configuration'))
         self.assertIn('Invalid command NotADirective', self.messages[0])
 
     def test_files_that_are_not_the_panels_are_reported_and_left(self):
-        own = self.sites.parent / 'sites-available.conf'
-        own.write_text(vhost_text('gone1234', 'own.test'))
-        (self.sites / 'own.test.conf').symlink_to(own)
+        # An administrator's own virtual host and pool, as ordinary files
+        # (all there is in /etc/httpd/conf.d), a link, and PHP-FPM's www.conf.
+        own = self.sites / 'intranet.conf'
+        own.write_text(vhost_text('gone1234', 'intranet.test'))
+        linked = self.sites.parent / 'available-example.test.conf'
+        linked.write_text(vhost_text('gone1234'))
+        (self.sites / 'example.test.conf').symlink_to(linked)
+        own_pool = self.pools / 'intranet.conf'
+        own_pool.write_text(pool_text('gone1234', 'intranet.test'))
         (self.pools / 'www.conf').write_text('[www]\nuser = gone1234\ngroup = gone1234\n')
         self.assertEqual('failed', self.repair())
-        self.assertTrue((self.sites / 'own.test.conf').is_symlink())
-        self.assertEqual(['other.test.conf', 'www.conf'], self.names(self.pools))
+        self.assertEqual(vhost_text('gone1234', 'intranet.test'), own.read_text())
+        self.assertTrue((self.sites / 'example.test.conf').is_symlink())
+        self.assertEqual(vhost_text('gone1234'), linked.read_text())
+        self.assertEqual(['intranet.conf', 'other.test.conf', 'www.conf'], self.names(self.pools))
+        self.assertEqual(pool_text('gone1234', 'intranet.test'), own_pool.read_text())
         self.assertEqual([], self.commands)
-        self.assertEqual(3, len(self.messages))
+        self.assertEqual(5, len(self.messages))
         for message in self.messages:
             self.assertTrue(message.startswith('WARNING: '), message)
-        self.assertIn('It was left as it is.', self.messages[0])
-        self.assertIn('It was left as it is.', self.messages[1])
+        for message in self.messages[:4]:
+            self.assertIn('It is not a file of the panel and was left as it is.', message)
 
     def test_a_service_that_does_not_start_is_reported(self):
-        (self.sites / 'example.test.conf').write_text(vhost_text('gone1234'))
-        (self.pools / 'example.test.conf').write_text(pool_text('gone1234'))
-        self.failing = {'php8.3-fpm', 'apache2'}
+        self.break_example('gone1234')
+        self.failing = {self.unit, self.service}
         self.assertEqual('failed', self.repair())
-        self.assertIn('WARNING: php8.3-fpm did not start; see "systemctl status php8.3-fpm".', self.messages)
-        self.assertIn('WARNING: Apache accepts its configuration but did not start; '
-                      'see "systemctl status apache2".', self.messages)
+        self.assertIn('WARNING: %s did not start; see "systemctl status %s".' % (self.unit, self.unit), self.messages)
+        self.assertIn('WARNING: Apache did not start; see "systemctl status %s".' % self.service, self.messages)
+
+    def test_a_service_that_is_not_enabled_is_not_started(self):
+        bad = self.break_example('gone1234')
+        self.disabled = {self.unit, self.service}
+        self.assertEqual('repaired', self.repair())
+        self.assertIn(checks.CLOSED_BEGIN, bad.read_text())
+        self.assertEqual([['systemctl', 'is-enabled', '--quiet', '--', self.unit],
+                          ['systemctl', 'is-enabled', '--quiet', '--', self.service]], self.commands)
+        self.assertIn('%s is not enabled on this server, so it was not started.' % self.unit, self.messages)
+        self.assertIn('Apache is not enabled on this server, so it was not started.', self.messages)
+        self.assertNotIn('Apache accepts its configuration again and was restarted.', self.messages)
 
     def test_service_of_a_pool_folder(self):
         for folder, unit in (('/etc/php/8.3/fpm/pool.d/', 'php8.3-fpm'), ('/etc/php/5.6/fpm/pool.d', 'php5.6-fpm'),
@@ -734,8 +1088,10 @@ class UpgradeRepairTests(unittest.TestCase):
             self.assertEqual(unit, checks.fpm_unit(folder))
 
     def test_nothing_is_done_on_a_server_without_apache(self):
-        with mock.patch.object(checks.os.path, 'exists', return_value=False):
-            self.assertEqual('not installed', checks.repair(log=self.messages.append, succeeds=self.succeeds))
+        # Also where only the binary of a removed package is left.
+        with mock.patch.object(checks, 'installed_family', return_value=None):
+            self.assertEqual('not installed', checks.repair(self.domains, log=self.messages.append,
+                                                            succeeds=self.succeeds))
         self.assertEqual(([], []), (self.commands, self.messages))
 
     def test_a_pool_that_was_set_aside_is_found_again_by_its_name(self):
@@ -743,31 +1099,57 @@ class UpgradeRepairTests(unittest.TestCase):
         for path in (pool, self.pools / ('example.test2.conf' + checks.DISABLED_SUFFIX),
                      self.pools / 'example.test.conf'):
             path.write_text('kept\n')
-        with mock.patch.object(checks, 'DEB_POOLS', (str(self.pools.parents[2]) + '/*/fpm/pool.d/',)):
-            self.assertEqual([str(pool)], checks.pools_set_aside('example.test.conf', False))
-            self.assertEqual([], checks.pools_set_aside('*.conf', False))
+        pattern = str(self.pools.parent.parent) + '/*/' + self.pools.name + '/'
+        with mock.patch.object(checks, 'DEB_POOLS', (pattern,)), mock.patch.object(checks, 'RPM_POOLS', (pattern,)):
+            self.assertEqual([str(pool)], checks.pools_set_aside('example.test.conf', self.rpm_family))
+            self.assertEqual([], checks.pools_set_aside('*.conf', self.rpm_family))
 
-    def test_upgrade_runs_the_repair_before_its_own_apache_step(self):
-        tree = ast.parse((ROOT / 'plogical' / 'upgrade.py').read_text())
-        upgrade = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'Upgrade')
+
+class RPMUpgradeRepairTests(UpgradeRepairTests):
+    """The same on the RPM family: httpd, and the pool folders of the remi packages."""
+    rpm_family = True
+    service = 'httpd'
+    unit = 'php83-php-fpm'
+    pool_folder = ('etc', 'opt', 'remi', 'php83', 'php-fpm.d')
+
+
+class UpgradeSourceTests(unittest.TestCase):
+    def setUp(self):
+        self.text = (ROOT / 'plogical' / 'upgrade.py').read_text()
+        tree = ast.parse(self.text)
+        self.upgrade = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'Upgrade')
+
+    def test_upgrade_runs_the_repair_with_the_panels_domains_before_its_own_apache_step(self):
         found = 0
-        for function in upgrade.body:
+        for function in self.upgrade.body:
             if not isinstance(function, ast.FunctionDef):
                 continue
             called = {}
             for node in ast.walk(function):
                 if isinstance(node, ast.Call) and isinstance(node.func, (ast.Name, ast.Attribute)):
                     name = node.func.id if isinstance(node.func, ast.Name) else node.func.attr
-                    called.setdefault(name, node.lineno)
+                    called.setdefault(name, node)
             if 'repair_apache_backend' not in called:
                 continue
             found += 1
             imported = [(alias.name, alias.asname) for node in ast.walk(function)
                         if isinstance(node, ast.ImportFrom) and node.module == 'ApachController.apacheConfigCheck'
                         for alias in node.names]
-            self.assertEqual([('repair', 'repair_apache_backend')], imported)
-            self.assertLess(called['repair_apache_backend'], called['fixApacheConfiguration'])
+            self.assertIn(('repair', 'repair_apache_backend'), imported)
+            call = called['repair_apache_backend']
+            self.assertEqual('panel_domains', call.args[0].id)
+            self.assertLess(call.lineno, called['fixApacheConfiguration'].lineno)
+            self.assertLess(called['with_proxy_backends'].lineno, called['fixApacheConfiguration'].lineno)
         self.assertEqual(1, found)
+        for model in ('Websites', 'ChildDomains'):
+            self.assertIn("%s.objects.values_list('domain', flat=True)" % model, self.text)
+
+    def test_upgrade_defines_the_backends_as_the_panel_does(self):
+        # It used to write its own pair with the two ports exchanged.
+        self.assertNotRegex(self.text, r'address\s+127\.0\.0\.1:8082')
+        self.assertNotRegex(self.text, r'address\s+https://127\.0\.0\.1:8083')
+        self.assertEqual(2, self.text.count('vhostConfs.proxyApacheBackend,'))
+        self.assertEqual(2, self.text.count('vhostConfs.proxyApacheBackendSSL)'))
 
 
 if __name__ == '__main__':

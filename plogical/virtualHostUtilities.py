@@ -1111,11 +1111,17 @@ class virtualHostUtilities:
 
             # The edited virtual host stays only if Apache accepts it. Apache
             # serves every website on the Apache backend, so it is not
-            # restarted with a configuration it refuses.
+            # restarted with a configuration it refuses. An edit is also
+            # kept when Apache refused its configuration before it already
+            # because of something else: each faulty file can then be
+            # corrected in turn.
             status, reason = apacheConfigCheck.apply_change(
-                [fileName], change, ApacheVhost.configTest, ApacheVhost.restartService)
+                [fileName], change, ApacheVhost.configTest, ApacheVhost.restartService,
+                keep_beside_other_failure=True)
             if status == 0:
                 raise ValueError(reason)
+            if status == 2:
+                raise ValueError('The virtual host was saved. ' + reason)
 
             print("1,None")
 
@@ -1705,6 +1711,7 @@ class virtualHostUtilities:
     @staticmethod
     def _createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
                       tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1, alias = 0, independentState=None):
+        createdChild = None
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -1812,6 +1819,7 @@ class virtualHostUtilities:
                                        ssl=ssl, alais=alias,
                                        state=1 if independentState is None else independentState)
                 website.save()
+                createdChild = website
 
             if ssl == 1:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')
@@ -1869,6 +1877,13 @@ class virtualHostUtilities:
             if ACLManager.FindIfChild() == 0:
                 numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
                 vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+                # Its configuration is gone; the child domain this job
+                # stored goes with it.
+                if createdChild is not None:
+                    try:
+                        createdChild.delete()
+                    except BaseException as error:
+                        logging.CyberCPLogFileWriter.writeToFile(str(error) + "  [createDomain]")
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ". [404]")
             logging.CyberCPLogFileWriter.writeToFile(

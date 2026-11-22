@@ -246,26 +246,17 @@ class ApacheVhost:
     @staticmethod
     def enableProxyInMainConf():
         try:
-            # Each backend is defined once, however many websites use it.
-            data = open(ApacheVhost.lswsMainConf, 'r').read()
+            # Each backend is defined once, however many websites use it,
+            # and on the port its virtual hosts listen on: 8083 without SSL,
+            # 8082 with it. Blocks an earlier release repeated for every
+            # website, or wrote with the two ports exchanged, are removed.
+            with open(ApacheVhost.lswsMainConf, 'r') as confFile:
+                data = confFile.read()
 
-            putProxyConf = 1
-            putProxyConfSSL = 1
-
-            if data.find('extprocessor apachebackend') > -1:
-                putProxyConf = 0
-            if data.find('extprocessor proxyApacheBackendSSL') > -1:
-                putProxyConfSSL = 0
-
-            if putProxyConf:
-                confFile = open(ApacheVhost.lswsMainConf, "a")
-                confFile.write(vhostConfs.proxyApacheBackend)
-                confFile.close()
-
-            if putProxyConfSSL:
-                confFile = open(ApacheVhost.lswsMainConf, "a")
-                confFile.write(vhostConfs.proxyApacheBackendSSL)
-                confFile.close()
+            updated = apacheConfigCheck.with_proxy_backends(
+                data, vhostConfs.proxyApacheBackend, vhostConfs.proxyApacheBackendSSL)
+            if updated != data:
+                apacheConfigCheck.replace_file(ApacheVhost.lswsMainConf, updated)
 
             return [1, 'None']
         except BaseException as msg:
@@ -307,8 +298,35 @@ class ApacheVhost:
         """
         passed, output = ApacheVhost.configTest()
         if not passed:
-            return 'Apache was not restarted because it refuses its configuration: %s' % apacheConfigCheck.said(output)
+            return 'Apache was not restarted because its configuration test did not pass: %s' % apacheConfigCheck.said(output)
         return ApacheVhost.restartService()
+
+    @staticmethod
+    def restoreVhost(source, finalConfPath):
+        """Put the virtual host of a backup in place of the one just made for the restored website.
+
+        It stays only if every account it names exists here and Apache
+        accepts it; otherwise the virtual host made for the website is kept.
+        A backup names the account the website had on its old server, which
+        a restore may have had to replace. Returns [1, 'None'] or [0, reason].
+        """
+        try:
+            with open(source, 'r') as backup:
+                content = backup.read()
+
+            def change():
+                unknown = apacheConfigCheck.unknown_accounts(apacheConfigCheck.vhost_accounts(content))
+                if unknown:
+                    return 'The virtual host in the backup names the system account %s, which does not exist ' \
+                           'on this server; the virtual host made for the restored website was kept.' % ', '.join(unknown)
+                with open(finalConfPath, 'w') as vhost:
+                    vhost.write(content)
+                return None
+
+            return list(apacheConfigCheck.apply_change(
+                [finalConfPath], change, ApacheVhost.configTest, ApacheVhost.restartService))
+        except BaseException as msg:
+            return [0, str(msg)]
 
     @staticmethod
     def checkedSetup(virtualHostName, phpVersion, accounts, write):
@@ -713,6 +731,16 @@ class ApacheVhost:
             confFile.close()
 
             ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
+
+            # A website that an upgrade closed because its account was
+            # missing is open again now that the account exists and the pool
+            # is written; the pool that was set aside is not needed any more.
+            vhostPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
+            if apacheConfigCheck.reopen_virtual_host(vhostPath):
+                logging.writeToFile('The virtual host of %s was reopened. [ApacheVhost.changePHP]' % virtualHostName)
+            rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+            for leftover in apacheConfigCheck.pools_set_aside(virtualHostName + '.conf', rpmFamily):
+                os.remove(leftover)
 
             problem = ApacheVhost.restartApache()
             if problem is not None:

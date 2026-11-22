@@ -240,9 +240,10 @@ class cPanelImporter:
 
             try:
                 counter = 0
+                baseName = self.externalApp
                 while True:
                     tWeb = Websites.objects.get(externalApp=self.externalApp)
-                    self.externalApp = '%s%s' % (tWeb.externalApp, str(counter))
+                    self.externalApp = '%s%s' % (baseName, str(counter))
                     counter = counter + 1
                     print(self.externalApp)
             except BaseException as msg:

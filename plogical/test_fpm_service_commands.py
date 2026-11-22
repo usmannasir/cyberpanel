@@ -41,7 +41,9 @@ class ApacheVhostLoader:
                         sslBasePath='/etc/apache2/conf-enabled/', deletePHPPath=mock.Mock(),
                         GenerateSelfSignedSSL=mock.Mock(), DecidePHPPath=self.pool_path,
                         configTest=mock.Mock(return_value=(True, 'Syntax OK')))
-        self.checks = NS(account_problem=mock.Mock(return_value=None), said=apacheConfigCheck.said)
+        self.checks = NS(account_problem=mock.Mock(return_value=None), said=apacheConfigCheck.said,
+                         reopen_virtual_host=mock.Mock(return_value=False),
+                         pools_set_aside=mock.Mock(return_value=[]))
         namespace = dict(
             ProcessUtilities=self.process, ApacheVhost=self.vhost, vhostConfs=vhostConfs, logging=mock.Mock(),
             apacheConfigCheck=self.checks,
