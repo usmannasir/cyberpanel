@@ -173,15 +173,15 @@ class PanelStatementTests(unittest.TestCase):
 
     def test_phpmyadmin_account_is_granted_by_exact_name_with_bound_account(self):
         cursor = Cursor()
-        self.assertEqual(1, self.run_with(cursor, mysqlUtilities.addUserToDB, 'shop_db', "o'brien", 'secret', 0))
+        self.assertEqual(1, self.run_with(cursor, mysqlUtilities.addUserToDB, 'shop_db', 'cp-pma-7', 'secret', 0))
         self.assertEqual([(ASK, None),
-                          ('GRANT ALL PRIVILEGES ON `shop\\_db`.* TO %s@%s', ("o'brien", 'localhost'))],
+                          ('GRANT ALL PRIVILEGES ON `shop\\_db`.* TO %s@%s', ('cp-pma-7', 'localhost'))],
                          cursor.queries)
 
     def test_phpmyadmin_grant_quotes_the_database_name(self):
         cursor = Cursor()
-        self.run_with(cursor, mysqlUtilities.addUserToDB, 'shop`.* TO x; --', 'paneluser', 'secret', 0)
-        self.assertEqual([('GRANT ALL PRIVILEGES ON `shop``.* TO x; --`.* TO %s@%s', ('paneluser', 'localhost'))],
+        self.run_with(cursor, mysqlUtilities.addUserToDB, 'shop`.* TO x; --', 'cp-pma-7', 'secret', 0)
+        self.assertEqual([('GRANT ALL PRIVILEGES ON `shop``.* TO x; --`.* TO %s@%s', ('cp-pma-7', 'localhost'))],
                          cursor.statements('GRANT'))
 
     def test_global_user_grant_is_exact_and_bound(self):

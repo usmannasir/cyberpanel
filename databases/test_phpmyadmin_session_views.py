@@ -17,6 +17,7 @@ from databases.phpmyadmin_handoff import consume_handoff, create_handoff
 from databases.phpmyadmin_session import issue_grant, panel_ip_allowed, validate_grant
 from databases.test_phpmyadmin_session import Session
 from plogical.clientIP import get_client_ip
+from plogical.databaseAccounts import phpmyadmin_account
 
 
 class PhpMyAdminSessionViewTests(unittest.TestCase):
@@ -34,14 +35,15 @@ class PhpMyAdminSessionViewTests(unittest.TestCase):
         self.scope = dict(JsonResponse=JsonResponse, csrf_exempt=csrf_exempt, require_POST=require_POST,
                           get_client_ip=get_client_ip, json=json, Administrator=self.admin_model, GlobalUserDB=self.database_model,
                           issue_grant=issue_grant, panel_ip_allowed=panel_ip_allowed,
-                          validate_grant=validate_grant, consume_handoff=consume_handoff)
+                          validate_grant=validate_grant, consume_handoff=consume_handoff,
+                          phpmyadmin_account=phpmyadmin_account)
         exec(compile(ast.fix_missing_locations(ast.Module(body=nodes, type_ignores=[])), str(source), 'exec'), self.scope)
         self.session = Session(userID=7, ipAddr='203.0.113.10')
-        self.grant = issue_grant(self.session, 7, 'panel-user', 'authorization-token', False)
+        self.grant = issue_grant(self.session, 7, 'cp-pma-7', 'authorization-token', False)
         self.session.modified = False
 
     def request(self, endpoint='validatePHPMYAdminSession', method='post', **kwargs):
-        body = dict(username='panel-user', grant=self.grant)
+        body = dict(username='cp-pma-7', grant=self.grant)
         body.update(kwargs)
         request = getattr(RequestFactory(), method)('/', body, REMOTE_ADDR='203.0.113.10')
         request.session = self.session
@@ -85,6 +87,15 @@ class PhpMyAdminSessionViewTests(unittest.TestCase):
     def test_non_admin_cannot_validate_another_database_user(self):
         self.assertEqual(403, self.request(username='other-user').status_code)
 
+    def test_non_admin_is_bound_to_the_account_of_the_user_number_not_of_the_name(self):
+        for username in ('panel-user', 'cp-pma-8', 'CP-PMA-7', 'root'):
+            self.grant = issue_grant(self.session, 7, username, 'authorization-token', False)
+            self.assertEqual(403, self.request(username=username).status_code, username)
+        self.database_model.objects.get.assert_not_called()
+        self.grant = issue_grant(self.session, 7, 'cp-pma-7', 'authorization-token', False)
+        self.assertEqual(200, self.request().status_code)
+        self.database_model.objects.get.assert_called_once_with(username='cp-pma-7')
+
     def test_high_ip_change_rejects_even_without_middleware(self):
         self.session['ipAddr'] = '203.0.113.11'
         self.assertEqual(403, self.request().status_code)
@@ -92,7 +103,7 @@ class PhpMyAdminSessionViewTests(unittest.TestCase):
         self.assertEqual(200, self.request().status_code)
 
     def test_handoff_returns_new_bound_grant_only_once(self):
-        create_handoff(self.session, 'panel-user', 'authorization-token')
+        create_handoff(self.session, 'cp-pma-7', 'authorization-token')
         response = self.request(endpoint='consumePHPMYAdminHandoff', token='authorization-token')
         self.assertEqual(200, response.status_code)
         result = json.loads(response.content)
@@ -101,13 +112,13 @@ class PhpMyAdminSessionViewTests(unittest.TestCase):
         self.assertEqual(403, self.request(endpoint='consumePHPMYAdminHandoff', token='authorization-token').status_code)
 
     def test_refused_authorization_still_consumes_one_time_token(self):
-        create_handoff(self.session, 'panel-user', 'authorization-token')
+        create_handoff(self.session, 'cp-pma-7', 'authorization-token')
         self.admin.state = 'SUSPENDED'
         self.assertEqual(403, self.request(endpoint='consumePHPMYAdminHandoff', token='authorization-token').status_code)
         self.assertNotIn('phpmyadmin_handoff', self.session)
 
     def test_grant_is_not_created_for_rotated_handoff_authorization(self):
-        create_handoff(self.session, 'panel-user', 'old-token')
+        create_handoff(self.session, 'cp-pma-7', 'old-token')
         self.assertEqual(403, self.request(endpoint='consumePHPMYAdminHandoff', token='old-token').status_code)
 
 

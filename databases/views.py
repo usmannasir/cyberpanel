@@ -31,6 +31,9 @@ from plogical.securityUtils import get_mysql_upgrade_status_path
 from django.views.decorators.http import require_POST
 from databases.phpmyadmin_handoff import consume_handoff, create_handoff
 from databases.phpmyadmin_session import issue_grant, panel_ip_allowed, validate_grant
+from databases import phpmyadminAccess
+from plogical.databaseAccounts import phpmyadmin_account
+from plogical.panelUserNames import stored_name_is_usable
 
 
 # Create your views here.
@@ -184,6 +187,7 @@ def phpMyAdmin(request):
         return redirect(loadLoginPage)
 
 
+@require_POST
 def generateAccess(request):
     try:
 
@@ -191,68 +195,58 @@ def generateAccess(request):
         admin = Administrator.objects.get(id=userID)
         currentACL = ACLManager.loadedACL(userID)
 
-        ## if user ACL is admin login as root
+        if ACLManager.currentContextPermission(currentACL, 'listDatabases') != 1:
+            return ACLManager.loadErrorJson()
+
+        # Nothing below is named after the user, and a name that cannot be
+        # carried to the sign-in page is refused here.
+        if not stored_name_is_usable(admin.userName):
+            data_ret = {'status': 0, 'createDBStatus': 0,
+                        'error_message': 'phpMyAdmin cannot be opened for this user name. '
+                                         'Ask the administrator to create a user with a plain name.'}
+            return HttpResponse(json.dumps(data_ret))
 
         command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
         ProcessUtilities.executioner(command)
 
+        # The record and the account are named after the user's number.
+        account = phpmyadmin_account(admin.pk)
+        phpmyadminAccess.retire_earlier(admin)
+        for record in GlobalUserDB.objects.filter(username=account):
+            record.delete()
+
+        password = randomPassword.generate_pass()
+        token = randomPassword.generate_pass()
+
+        ## if user ACL is admin login as root
+
         if currentACL['admin'] == 1:
-
-            try:
-                GlobalUserDB.objects.get(username=admin.userName).delete()
-            except:
-                try:
-                    gbobs = GlobalUserDB.objects.filter(username=admin.userName)
-                    for gbobs in gbobs:
-                        gbobs.delete()
-                except:
-                    pass
-
-            password = randomPassword.generate_pass()
-            token = randomPassword.generate_pass()
-            GlobalUserDB(username=admin.userName, password=password, token=token).save()
+            GlobalUserDB(username=account, password=password, token=token).save()
 
             data_ret = {'status': 1, 'token': token, 'username': admin.userName}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
-        try:
-            GlobalUserDB.objects.get(username=admin.userName).delete()
-        except:
-            pass
-
-        command = 'rm -f %s' % (keySavePath)
-        ProcessUtilities.executioner(command)
-
         ## Create and save new key
 
         key = Fernet.generate_key()
-
-        writeToFile = open(keySavePath, 'w')
-        writeToFile.write(key.decode())
-        writeToFile.close()
-
-        command = 'chown root:root %s' % (keySavePath)
-        ProcessUtilities.executioner(command)
-
-        command = 'chmod 600 %s' % (keySavePath)
-        ProcessUtilities.executioner(command)
+        phpmyadminAccess.write_key(admin.pk, key)
 
         ##
 
-        password = randomPassword.generate_pass()
-        token = randomPassword.generate_pass()
         f = Fernet(key)
-        GlobalUserDB(username=admin.userName, password=f.encrypt(password.encode('utf-8')).decode(),
+        GlobalUserDB(username=account, password=f.encrypt(password.encode('utf-8')).decode(),
                      token=token).save()
 
         sites = ACLManager.findWebsiteObjects(currentACL, userID)
-        mysqlUtilities.addUserToDB(None, admin.userName, password, 1)
+        if mysqlUtilities.addUserToDB(None, account, password, 1) != 1:
+            for record in GlobalUserDB.objects.filter(username=account):
+                record.delete()
+            raise RuntimeError('The phpMyAdmin account could not be prepared. See the CyberPanel main log file.')
 
         for site in sites:
             for db in site.databases_set.all():
-                mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, 0)
+                mysqlUtilities.addUserToDB(db.dbName, account, password, 0)
 
         data_ret = {'status': 1, 'token': token, 'username': admin.userName}
         json_data = json.dumps(data_ret)
@@ -294,9 +288,10 @@ def _phpmyadmin_principal(request, username):
         raise ValueError('Panel session address changed')
     permissions = json.loads(admin.acl.config)
     is_admin = permissions.get('adminStatus') == 1
-    if not is_admin and (permissions.get('listDatabases') != 1 or username != admin.userName):
+    account = phpmyadmin_account(admin.pk)
+    if not is_admin and (permissions.get('listDatabases') != 1 or username != account):
         raise ValueError('Database access is no longer authorized')
-    return admin, GlobalUserDB.objects.get(username=admin.userName), is_admin
+    return admin, GlobalUserDB.objects.get(username=account), is_admin
 
 
 @csrf_exempt
@@ -311,6 +306,12 @@ def validatePHPMYAdminSession(request):
     except Exception:
         pass
     return JsonResponse({'status': 0}, status=403)
+
+
+def _not_stored(response):
+    # The sign-in page carries a database password: no cache may keep it.
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 @csrf_exempt
@@ -334,7 +335,8 @@ def fetchDetailsPHPMYAdmin(request):
 
         ## Key generation
 
-        gdb = GlobalUserDB.objects.get(username=admin.userName)
+        account = phpmyadmin_account(admin.pk)
+        gdb = GlobalUserDB.objects.get(username=account)
 
         if gdb.token == token:
 
@@ -358,7 +360,7 @@ def fetchDetailsPHPMYAdmin(request):
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
                                     data, 'admin')
-                    return proc.render()
+                    return _not_stored(proc.render())
 
                 except BaseException as msg:
 
@@ -376,14 +378,13 @@ def fetchDetailsPHPMYAdmin(request):
 
                     proc = httpProc(request, 'databases/AutoLogin.html',
                                     data, 'admin')
-                    return proc.render()
+                    return _not_stored(proc.render())
 
                     # returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
                     #     'root', password)
                     # return redirect(returnURL)
 
-            keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
-            key = ProcessUtilities.outputExecutioner('cat %s' % (keySavePath)).strip('\n').encode()
+            key = phpmyadminAccess.read_key(admin.pk)
             f = Fernet(key)
             password = f.decrypt(gdb.password.encode('utf-8'))
 
@@ -391,18 +392,18 @@ def fetchDetailsPHPMYAdmin(request):
 
             for site in sites:
                 for db in site.databases_set.all():
-                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password.decode(), 0)
+                    mysqlUtilities.addUserToDB(db.dbName, account, password.decode(), 0)
 
             data = {}
-            data['userName'] = admin.userName
+            data['userName'] = account
             data['password'] = password.decode()
             data['token'] = token
-            create_handoff(request.session, admin.userName, token)
+            create_handoff(request.session, account, token)
             # return redirect(returnURL)
 
             proc = httpProc(request, 'databases/AutoLogin.html',
                             data, 'listDatabases')
-            return proc.render()
+            return _not_stored(proc.render())
 
             # returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password.decode())
             # return redirect(returnURL)

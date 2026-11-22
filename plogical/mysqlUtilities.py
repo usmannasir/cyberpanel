@@ -1332,47 +1332,46 @@ bind-address=%s
 
     @staticmethod
     def addUserToDB(database, user, password, createUser = 0):
+        connection = None
         try:
+            from plogical import databaseAccounts
+
+            # Only the account phpMyAdmin uses for a panel user is created or granted here.
+            if not databaseAccounts.is_phpmyadmin_account(user):
+                logging.CyberCPLogFileWriter.writeToFile('Not a phpMyAdmin account. [addUserToDB]')
+                return 0
 
             connection, cursor = mysqlUtilities.setupConnection()
-            
+
             if connection == 0:
                 return 0
 
             if createUser:
-                try:
-                    cursor.execute(
-                        "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
-                except BaseException as msg:
-                    logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:937]' % (str(msg)))
-                    try:
-                        cursor.execute("DROP USER '%s'@'%s'" % (user, mysqlUtilities.LOCALHOST))
-                        cursor.execute(
-                            "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
-                    except BaseException as msg:
-                        logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:943]'  % (str(msg)))
-
-                return
+                databaseAccounts.prepare_phpmyadmin_account(cursor, user, mysqlUtilities.LOCALHOST, password)
+                return 1
 
             grantOn = mysqlUtilities.quoteIdentifier(databaseGrants.grant_name(cursor, database))
             if mysqlUtilities.RDS == 0:
                 cursor.execute(
                     "GRANT ALL PRIVILEGES ON %s.* TO %%s@%%s" % grantOn, (user, mysqlUtilities.LOCALHOST))
             else:
-                try:
-                    cursor.execute(
-                        "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % grantOn,
-                        (user, mysqlUtilities.LOCALHOST))
-                except BaseException as msg:
-                    logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:953]' % (str(msg)))
-
-            connection.close()
+                cursor.execute(
+                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON %s.* TO %%s@%%s" % grantOn,
+                    (user, mysqlUtilities.LOCALHOST))
 
             return 1
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[addUserToDB]")
+            # The message of the driver can repeat the statement, which holds the password.
+            if isinstance(msg, ValueError):
+                detail = str(msg)
+            else:
+                detail = msg.args[0] if msg.args and isinstance(msg.args[0], int) else ''
+            logging.CyberCPLogFileWriter.writeToFile('%s %s [addUserToDB]' % (type(msg).__name__, detail))
             return 0
+        finally:
+            if connection:
+                connection.close()
 
     @staticmethod
     def UpgradeMariaDB(versionToInstall, tempStatusPath):
