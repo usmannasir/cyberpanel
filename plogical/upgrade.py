@@ -5970,7 +5970,16 @@ pm.max_spare_servers = 3
         Upgrade.someDirectories()
         Upgrade.installLSCPD(branch)
         Upgrade.FixCurrentQuoatasSystem()
-        
+
+        # A website's virtual host or PHP-FPM pool that names a system account
+        # which does not exist keeps Apache, or that PHP-FPM version, from
+        # starting for every website on the Apache backend (see the helper).
+        try:
+            from ApachController.apacheConfigCheck import repair as repair_apache_backend
+            repair_apache_backend(log=Upgrade.stdOut)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: The Apache backend check did not run: ' + str(error), 0)
+
         ## Fix Apache configuration issues after upgrade
         Upgrade.fixApacheConfiguration()
 
@@ -7009,10 +7018,17 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
             # Restart services
             print("Restarting services...")
             
-            # Restart Apache
-            command = f'systemctl restart {serviceName}'
-            Upgrade.executioner(command, command, 0, True)
-            
+            # Restart Apache, unless it refuses its configuration: a running
+            # Apache then keeps serving with what it loaded.
+            from ApachController.apacheConfigCheck import config_test, config_test_command, said
+            passed, output = config_test(config_test_command(serviceName == 'httpd'))
+            if passed:
+                command = f'systemctl restart {serviceName}'
+                Upgrade.executioner(command, command, 0, True)
+            else:
+                Upgrade.stdOut('WARNING: Apache was not restarted because it refuses its configuration: '
+                               + said(output), 0)
+
             # Restart OpenLiteSpeed
             if is_ols:
                 apply_ols_config_changes(ols_changes)

@@ -236,7 +236,7 @@ class cPanelImporter:
             message = 'Calling core to create %s.' % (DomainName)
             logging.statusWriter(self.logFile, message, 1)
 
-            self.externalApp = "".join(re.findall("[a-zA-Z]+", DomainName))[:7]
+            self.externalApp = "".join(re.findall("[a-zA-Z]+", DomainName))[:7].lower()
 
             try:
                 counter = 0
