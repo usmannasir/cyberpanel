@@ -10,8 +10,10 @@ import signal
 import socket
 import stat
 import subprocess
+import tempfile
 import time
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from install.installer_test_harness import (
@@ -608,6 +610,60 @@ class HostnameCertificateTests(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertEqual(['hostname_ssl failed panel_setup', 'install failed panel_setup'],
                          machine.events()[-2:])
+
+
+@unittest.skipUnless(shutil.which('timeout'), 'timeout is needed')
+class WebTerminalStartTests(unittest.TestCase):
+    """Post_Install_Start_Web_Terminal as it is: it can warn, it cannot fail a run."""
+
+    def start(self, helper, limit=None):
+        functions, _ = script_parts()
+        begin = functions.index('\nPost_Install_Start_Web_Terminal() {\n') + 1
+        function = functions[begin:functions.index('\n}\n', begin) + 3]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            python = root / 'python'
+            python.write_text('#!/bin/sh\nprintf "%%s\\n" "$*" > "$0.called"\n%s\n' % helper)
+            python.chmod(0o755)
+            interpreter = '/usr/local/CyberPanel/bin/python'
+            self.assertEqual(1, function.count(interpreter))
+            function = function.replace(interpreter, str(python))
+            if limit is not None:
+                self.assertEqual(1, function.count('timeout 120 '))
+                function = function.replace('timeout 120 ', 'timeout %d ' % limit)
+            script = ('log_function_start() { :; }\nlog_warning() { printf "%s\\n" "$1" >> "$QA_LOG"; }\n'
+                      + function + 'Post_Install_Start_Web_Terminal\necho "status=$?"\n')
+            started = time.time()
+            result = subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    universal_newlines=True, timeout=60,
+                                    env={'PATH': os.environ['PATH'], 'QA_LOG': str(root / 'log')})
+            log = (root / 'log').read_text() if (root / 'log').exists() else ''
+            called = (root / 'python.called').read_text().strip()
+            return result, log, called, time.time() - started
+
+    def test_service_that_starts_leaves_no_warning(self):
+        result, log, called, _ = self.start('exit 0')
+        self.assertEqual(('status=0\n', '', ''), (result.stdout, result.stderr, log))
+        self.assertEqual('/usr/local/CyberCP/plogical/terminalService.py start-installed', called)
+
+    def test_helper_that_fails_is_a_warning_and_no_failure(self):
+        for status in (1, 2, 127):
+            with self.subTest(status=status):
+                result, log, _, _ = self.start('exit %d' % status)
+                self.assertEqual('status=0\n', result.stdout)
+                self.assertIn('Web Terminal service could not be started', log)
+                self.assertIn('systemctl status fastapi_ssh_server', log)
+
+    def test_helper_that_does_not_return_is_given_up_after_its_time(self):
+        result, log, _, waited = self.start('sleep 30', limit=1)
+        self.assertEqual('status=0\n', result.stdout)
+        self.assertIn('Web Terminal service could not be started', log)
+        self.assertLess(waited, 15)
+
+    def test_helper_has_two_minutes(self):
+        functions, _ = script_parts()
+        self.assertIn('if ! timeout 120 /usr/local/CyberPanel/bin/python '
+                      '/usr/local/CyberCP/plogical/terminalService.py start-installed; then', functions)
 
 
 @unittest.skipUnless(shutil.which('curl'), 'curl is needed')
