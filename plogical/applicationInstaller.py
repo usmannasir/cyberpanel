@@ -52,6 +52,7 @@ from plogical.wordpressInstallerUtilities import (
     worker_failure_reason,
 )
 from plogical.scannerFileAccess import run_as_site_user
+from plogical.backupStaging import is_job_folder
 from managePHP.phpConfig import stored_php_selection
 from random import randint
 import secrets
@@ -2879,6 +2880,11 @@ class ApplicationInstaller(multi.Thread):
                 if result == 0:
                     raise BaseException(stdout)
 
+                # The folder will hold the site's files, its database dump
+                # and its wp-config.php: closed to every other account
+                # before anything is in it.
+                ProcessUtilities.executioner('chmod 700 %s' % shlex.quote(self.tempPath))
+
                 command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -2994,6 +3000,12 @@ class ApplicationInstaller(multi.Thread):
                 if result == 0:
                     raise BaseException(stdout)
 
+                # The archive holds what the folder holds. It is made as a
+                # file only root can read, so that it is not open to other
+                # accounts for as long as it takes to write it.
+                ProcessUtilities.executioner(
+                    'install -m 600 /dev/null %s' % shlex.quote('/home/backup/%s.tar.gz' % config['name']))
+
                 command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
                 retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -3006,11 +3018,7 @@ class ApplicationInstaller(multi.Thread):
                 backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id, config=json_object)
                 backupobj.save()
 
-                command = f'rm -rf {self.tempPath}'
-                #result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if result == 0:
-                    raise BaseException(stdout)
+                self.removeJobFolder()
 
                 command = f"chmod 600 /home/backup/{config['name']}.tar.gz"
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3035,6 +3043,11 @@ class ApplicationInstaller(multi.Thread):
 
                 if result == 0:
                     raise BaseException(stdout)
+
+                # The folder will hold the site's files, its database dump
+                # and its wp-config.php: closed to every other account
+                # before anything is in it.
+                ProcessUtilities.executioner('chmod 700 %s' % shlex.quote(self.tempPath))
 
                 command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3132,6 +3145,12 @@ class ApplicationInstaller(multi.Thread):
                 if result == 0:
                     raise BaseException(stdout)
 
+                # The archive holds what the folder holds. It is made as a
+                # file only root can read, so that it is not open to other
+                # accounts for as long as it takes to write it.
+                ProcessUtilities.executioner(
+                    'install -m 600 /dev/null %s' % shlex.quote('/home/backup/%s.tar.gz' % config['name']))
+
                 command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
                 retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -3144,11 +3163,7 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
 
-                command = f'rm -rf {self.tempPath}'
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if result == 0:
-                    raise BaseException(stdout)
+                self.removeJobFolder()
 
                 command = f"chmod 600 /home/backup/{config['name']}.tar.gz"
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3194,6 +3209,11 @@ class ApplicationInstaller(multi.Thread):
 
                 if result == 0:
                     raise BaseException(stdout)
+
+                # The folder will hold the site's files, its database dump
+                # and its wp-config.php: closed to every other account
+                # before anything is in it.
+                ProcessUtilities.executioner('chmod 700 %s' % shlex.quote(self.tempPath))
 
                 command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3278,6 +3298,12 @@ class ApplicationInstaller(multi.Thread):
                 if result == 0:
                     raise BaseException(stdout)
 
+                # The archive holds what the folder holds. It is made as a
+                # file only root can read, so that it is not open to other
+                # accounts for as long as it takes to write it.
+                ProcessUtilities.executioner(
+                    'install -m 600 /dev/null %s' % shlex.quote('/home/backup/%s.tar.gz' % config['name']))
+
                 command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
                 retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -3290,11 +3316,7 @@ class ApplicationInstaller(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
 
-                command = f'rm -rf {self.tempPath}'
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if result == 0:
-                    raise BaseException(stdout)
+                self.removeJobFolder()
 
                 command = f"chmod 600 /home/backup/{config['name']}.tar.gz"
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3307,14 +3329,28 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException as msg:
             logging.writeToFile("Error WPCreateBackup ....... %s" % str(msg))
-            try:
-                command = f'rm -rf {self.tempPath}'
-                ProcessUtilities.executioner(command)
-            except:
-                pass
+            # A failed backup leaves no copy of the site behind either.
+            self.removeJobFolder()
 
             logging.statusWriter(self.tempStatusPath, f'{str(msg)}. [404]')
             return 0, str(msg), None
+
+    def removeJobFolder(self):
+        """Remove the folder this job made for its work, and never anything else.
+
+        Only a path directly under the panel's work directory with the
+        32-hex name a job gives its folder is handed to `rm -rf`; a job
+        that has made no folder, or holds any other path, removes nothing.
+        Returns 1 when the removal was asked for.
+        """
+        path = getattr(self, 'tempPath', None)
+        if not is_job_folder(path):
+            return 0
+        try:
+            ProcessUtilities.executioner('rm -rf %s' % shlex.quote(path))
+        except BaseException as error:
+            logging.writeToFile('%s [removeJobFolder]' % str(error))
+        return 1
 
     def pathPresent(self, path, kind=None):
         """Whether a path exists, asked with root's rights: True, False, or None when that is not known.
@@ -3665,7 +3701,7 @@ class ApplicationInstaller(multi.Thread):
         ApplicationInstaller.siteCommand(command, VHuser)
 
         if not os.path.exists(ProcessUtilities.debugPath):
-            ProcessUtilities.executioner('rm -rf %s' % shlex.quote(self.tempPath))
+            self.removeJobFolder()
 
         installUtilities.reStartLiteSpeed()
 
@@ -6196,11 +6232,7 @@ class ApplicationInstaller(multi.Thread):
                     ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     # ##Remove temppath
-                    command = f'rm -rf {self.tempPath}'
-                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                    if result == 0:
-                        raise BaseException(stdout)
+                    self.removeJobFolder()
 
                     ###Restart Server
 
@@ -6343,11 +6375,7 @@ class ApplicationInstaller(multi.Thread):
                         ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                         # ##Remove temppath
-                        command = f'rm -rf {self.tempPath}'
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if result == 0:
-                            raise BaseException(stdout)
+                        self.removeJobFolder()
 
                 elif (DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
                     self.restoreToNewSite(config, backupKind, userID, DomainName, archive, layout, oldurl,
@@ -6432,11 +6460,7 @@ class ApplicationInstaller(multi.Thread):
                         if not os.path.exists(ProcessUtilities.debugPath):
 
                             ### Remove temppath
-                            command = f'rm -rf {self.tempPath}'
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                            if result == 0:
-                                raise BaseException(stdout)
+                            self.removeJobFolder()
 
                         # try:
                         #     WPobj = WPSites.objects.get(FinalURL=finalurl, owner=webobj)
@@ -6716,8 +6740,7 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile("Error RestoreWPbackupNow ....... %s" % str(msg))
             try:
                 if not os.path.exists(ProcessUtilities.debugPath):
-                    command = f'rm -rf {self.tempPath}'
-                    ProcessUtilities.executioner(command)
+                    self.removeJobFolder()
 
             except:
                 pass

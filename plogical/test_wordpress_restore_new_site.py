@@ -20,6 +20,7 @@ from unittest import mock
 
 from managePHP.phpConfig import stored_php_selection
 from plogical import wordpressInstallerUtilities as utilities
+from plogical.backupStaging import is_job_folder
 from plogical.test_php_restart_marker import load_methods
 from websiteFunctions.wordpressRestore import backup_layout
 
@@ -27,7 +28,8 @@ SOURCE = (Path(__file__).resolve().parents[1] / 'plogical/applicationInstaller.p
 PHP = '/usr/local/lsws/lsphp83/bin/php'
 METHODS = ['siteCommand', 'directoryEntries', 'removeAddedEntries', 'removeCreatedWebsite', 'wordpressInstallNew',
            'pathPresent', 'restoreStep', 'importDump', 'siteConfigValue', 'siteDatabaseSettings', 'foundBeforeCreation',
-           'backupLayout', 'otherDomainRefusal', 'placeBackup', 'restoreToNewSite', 'fillNewSiteFromBackup']
+           'backupLayout', 'otherDomainRefusal', 'placeBackup', 'restoreToNewSite', 'fillNewSiteFromBackup',
+           'removeJobFolder']
 CONFIG = {'WPtitle': 'Source', 'WebVHuser': 'sourceuser', 'WebadminEmail': 'owner@example.test',
           'WPAutoUpdates': 'Disabled', 'WPPluginUpdates': 'Disabled', 'WPThemeUpdates': 'Disabled',
           'WebphpSelection': 'PHP 8.3', 'DatabaseUser': 'sourcedb'}
@@ -108,7 +110,8 @@ class Harness(unittest.TestCase):
             ACLManager=mock.Mock(), ProcessUtilities=self.process, logging=self.log, os=os, time=mock.Mock(),
             shlex=shlex, wpplugins=mock.Mock(), randomPassword=NS(generate_pass=lambda length=14: 'P' * length),
             installUtilities=self.web_server, run_as_site_user=self.run_as_site_user,
-            stored_php_selection=stored_php_selection, randint=lambda low, high: low)
+            stored_php_selection=stored_php_selection, randint=lambda low, high: low,
+            is_job_folder=is_job_folder)
         for name in ('build_directory_listing_command', 'build_entry_removal_command', 'change_php_succeeded',
                      'current_wordpress_version', 'directory_entry_names', 'entries_added_since',
                      'php_binary_for_selection', 'single_line_value', 'wordpress_cli_command',
@@ -691,6 +694,8 @@ class RealArchiveTests(Harness):
         self.write(files, 'blog/wp-config.php', 'configuration of a second site in a folder\n')
         self.write(root, 'sourcedb.sql', 'CREATE TABLE wp_posts (id int);\n')
         self.write(root, '1234', '{}\n')
+        # As a backup's own folder is: closed to every account but the site's.
+        os.chmod(root, 0o700)
         command = ['tar', '-czf', self.archive, '-C', source]
         if leading_slash:
             command += ['-P', '--transform', 's,^usr,/usr,']
