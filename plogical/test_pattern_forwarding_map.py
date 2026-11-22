@@ -20,6 +20,25 @@ from plogical import patternForwardingMap as pattern_map  # noqa: E402
 
 DOMAIN = 'example.com'
 DESTINATION = 'qa@example.com'
+WAITERS = []
+
+
+def setUpModule():
+    # No test may leave a mark under /run or start a process that reloads Postfix later.
+    directory = tempfile.TemporaryDirectory()
+    for name, value in (('STATE', os.path.join(directory.name, 'state')), ('_reload_later', WAITERS.append)):
+        patcher = mock.patch.object(pattern_map, name, value)
+        patcher.start()
+        MODULE_PATCHES.append(patcher)
+    MODULE_PATCHES.append(directory)
+
+
+def tearDownModule():
+    for item in MODULE_PATCHES:
+        item.stop() if hasattr(item, 'stop') else item.cleanup()
+
+
+MODULE_PATCHES = []
 
 
 def line(pattern, pattern_type='wildcard', domain=DOMAIN, destination=DESTINATION):
@@ -70,10 +89,10 @@ class TranslationTests(unittest.TestCase):
     def test_regular_expression_is_grouped_and_tied_to_its_domain(self):
         self.assertEqual('/^((sales|support)-[0-9]{1,4})@example\\.com$/ qa@example.com',
                          line('(sales|support)-[0-9]{1,4}', 'regex'))
-        for pattern in ('support_.*', '[^@]+', 'order\\.[[:digit:]]+', 'a\\+b', '[]()]x', '[^]]+', 'a\\(b', 'a|b',
+        for pattern in ('support_.*', '[a-z]+', 'order\\.[[:digit:]]+', 'a\\+b', '[]()]x', '[^]]+', 'a\\(b', 'a|b',
                         '\\{x\\}', 'x{3,}', '$|^.*', 'a{16}', 'a{8}b{8}', '[0-9]{4}-[0-9]{4}-[0-9]{4}',
-                        'a*b*c*d*e*f*g*h*', 'a+b+c+d+e{2,}f{0,}g*h*', '(a|b)*', '(ab?)+c*', '(a?)*',
-                        '(a*)?b', '((((a))))', 'colou?r', 'a?' * 16, 'x' * 100):
+                        'a*b*c*', 'a+b{2,}c*', '(a|b)*', '(ab?)+c*', '(a?)*', '(a*)?b', '((((a))))', 'colou?r',
+                        'a?' * 16, 'x' * 32):
             with self.subTest(pattern=pattern):
                 self.assertEqual('/^(%s)@example\\.com$/ qa@example.com' % pattern, line(pattern, 'regex'))
 
@@ -84,6 +103,12 @@ class TranslationTests(unittest.TestCase):
                         'a{1,256}', '(ab){3}', 'café', 'x' * 201, None):
             with self.subTest(pattern=pattern):
                 self.refused(pattern, 'regex')
+
+    def test_at_sign_has_no_place_in_a_pattern(self):
+        for pattern in ('a@b', 'a\\@b', '[@]', '[^@]+', 'a[x@]', '(a|@)', '@'):
+            with self.subTest(pattern=pattern):
+                self.refused(pattern, 'regex')
+                self.refused(pattern)
 
     def test_stacked_repeats_are_refused(self):
         # The C library multiplies a repeat that follows another; these were measured in minutes and
@@ -105,22 +130,42 @@ class TranslationTests(unittest.TestCase):
             with self.subTest(pattern=pattern):
                 self.refused(pattern, 'regex')
 
-    def test_total_repetition_of_a_pattern_is_bounded(self):
-        self.assertEqual(16, pattern_map.MAX_COUNTED)
-        self.assertEqual(8, pattern_map.MAX_UNBOUNDED)
-        self.assertEqual(4, pattern_map.MAX_GROUP_DEPTH)
-        self.assertEqual(100, pattern_map.MAX_PATTERN_LENGTH)
+    def test_size_of_a_pattern_is_bounded(self):
+        self.assertEqual((64, 32, 3, 4, 16, 4),
+                         (pattern_map.MAX_PATTERN_LENGTH, pattern_map.MAX_ATOMS, pattern_map.MAX_UNBOUNDED,
+                          pattern_map.MAX_AFTER_REPEAT, pattern_map.MAX_COUNTED, pattern_map.MAX_GROUP_DEPTH))
         for pattern in ('a{17}', 'a{0,17}', 'a{255}', 'a{0,255}', 'a{9}b{8}', 'a{16}b?', 'a{16}b{1}', 'a?' * 17,
-                        'a{2}' * 9, 'a{5,2}', 'a{1000}', 'a*b*c*d*e*f*g*h*i*', 'a+' * 9, 'a{1,}' * 9,
-                        'a*b*c*d*e*f*g*h*i{2,}', '(((((a)))))', 'x' * 101, '[a-z]' * 21):
+                        'a{2}' * 9, 'a{5,2}', 'a{1000}', 'a*b*c*d*', 'a+b+c+d+', 'a{1,}' * 4, 'a*b*c*d{2,}',
+                        '(((((a)))))', 'x' * 33, 'x' * 65, '[a-z]' * 13, 'x{16}y{16}z', '[0-9]{16}[a-z]{16}x'):
+            with self.subTest(pattern=pattern):
+                self.refused(pattern, 'regex')
+
+    def test_what_follows_an_open_ended_repeat_is_bounded(self):
+        # After a repeat without an end, every item that matches more than one character doubles what the
+        # matcher may have to keep; 90 of them were measured at 3 KB kept for each character of each new
+        # address. Four are allowed, which is 16 combinations at most.
+        for pattern in ('.*a....', '.*a.{4}', '.*a[xy][xy][xy][xy]', '.*(a|b|c|d|e)', '.*ab?c?d?e?', '.*ab{0,4}',
+                        '.*ab{4}cd{8}e', '(a|b|c|d|e)*', '(a.|b.)+', '.....a.*', '[0-9]{8}-.*', 'a.....|b.*',
+                        '(a|b|c|d|e|f|g)x*', '.+....', '[a-z]+-[0-9]{4}', '.*a.*b.*'):
+            with self.subTest(pattern=pattern):
+                self.assertEqual('/^(%s)@example\\.com$/ qa@example.com' % pattern, line(pattern, 'regex'))
+        for pattern in ('.*a.....', '.*a' + '.' * 90, '.*a' + '.' * 29, '.*a.{5}', '.*a[xy][xy][xy][xy][xy]',
+                        '.*(a|b|c|d|e|f)', '.*ab?c?d?e?f?', '.*ab{0,5}', '.*a[0-9]{2,5}', '(.|a.....)*',
+                        '(a|b|c|d|e|f)+', '((a|b)(c|d)(e|f)(g|h)(i|j))*', 'x|.*a.....', '.+.....', '.{2,}.....',
+                        'a+(b|c|d|e|f|g)', '.*a.*b.*c.*d', 'x*(.....)', 'x*((a|b)|(c|d)|(e|f))'):
             with self.subTest(pattern=pattern):
                 self.refused(pattern, 'regex')
 
     def test_wildcards_stay_within_the_same_bounds(self):
         self.assertEqual('/^(a[^@]*b)@example\\.com$/ qa@example.com', line('a****b'))
-        self.assertEqual(8, line('*a*b*c*d*e*f*g*').count('[^@]*'))
-        self.assertTrue(line('x' * 100))
-        for pattern in ('*a*b*c*d*e*f*g*h*', 'x' * 101, '*' * 101):
+        for pattern in ('*a*b*', '*a????', '??????*', 'a??*??', '????????', 'x' * 32, 'x' * 32 + '*',
+                        '*' * 64, 'inv-*-????'):
+            with self.subTest(pattern=pattern):
+                self.assertTrue(line(pattern))
+        self.assertEqual(3, line('*a*b*').count('[^@]*'))
+        self.assertEqual(1, line('*' * 64).count('[^@]*'))
+        for pattern in ('*a*b*c*', '*a?????', '*a' + '?' * 98, '*a' + '?' * 30, '*?*?*???', 'x' * 33,
+                        'x' * 33 + '*', '?' * 33, 'x' * 65, '*' * 65):
             with self.subTest(pattern=pattern):
                 self.refused(pattern)
 
@@ -137,7 +182,7 @@ class TranslationTests(unittest.TestCase):
                    'a@example-com', 'a@examplexcom']
         patterns = [('wildcard', item) for item in ('support_*', '*', '?', 'a.b', '*+*')]
         patterns += [('regex', item) for item in ('support_.*', '.*', 'a|.*', '(a|b)|.*', '$|^.*', 'x|', '[)]|.*',
-                                                  '[]()]|.*', '\\)|.*', '.*\\\\', '[^@]+', 'a|[^@]*')]
+                                                  '[]()]|.*', '\\)|.*', '.*\\\\', '[a-z]+', 'a|[a-z]*')]
         with tempfile.TemporaryDirectory() as directory:
             addresses = Path(directory, 'addresses')
             addresses.write_text('\n'.join(own + foreign) + '\n')
@@ -203,6 +248,7 @@ class FakePostfix:
         self.slow = ()
         self.stalled = False
         self.timeouts = []
+        self.stall_at = ()
         self.edits_left = None
 
     def __call__(self, command, timeout=None):
@@ -227,7 +273,8 @@ class FakePostfix:
             path = arguments[2][len('regexp:'):]
             self.checked.append(Path(path).read_text())
             self.timeouts.append(timeout)
-            if self.stalled or any(needle in self.checked[-1] for needle in self.slow):
+            if (self.stalled or len(self.timeouts) in self.stall_at
+                    or any(needle in self.checked[-1] for needle in self.slow)):
                 # As subprocess.run does when the time is up; the real one also ends the command.
                 raise subprocess.TimeoutExpired(command, timeout)
             if self.fatal:
@@ -260,13 +307,20 @@ class ApplyTests(unittest.TestCase):
         self.postfix = FakePostfix(self.shipped)
         self.rules = [(1, DOMAIN, 'support_*', DESTINATION, 'wildcard')]
         self.disabled = []
+        self.state = str(Path(self.directory.name, 'state'))
+        self.now = 1000000.0
+        self.waiters = []
 
-    def apply(self):
-        return pattern_map.apply(lambda: self.rules, self.postfix, str(self.map), str(self.main_cf),
-                                 self.disabled.extend)
+    def apply(self, later=120, run=None, disable=None):
+        """One run, `later` seconds after the one before; by default longer than the reload interval."""
+        self.now += later
+        return pattern_map.apply(lambda: self.rules, run or self.postfix, str(self.map), str(self.main_cf),
+                                 disable or self.disabled.extend, self.state, lambda: self.now,
+                                 self.waiters.append)
 
     def leftovers(self):
-        return sorted(name for name in os.listdir(self.directory.name) if name not in ('main.cf', 'virtual_regexp'))
+        return sorted(name for name in os.listdir(self.directory.name)
+                      if name not in ('main.cf', 'virtual_regexp', 'state.reloaded', 'state.pending'))
 
     def test_server_without_rules_is_left_untouched(self):
         self.rules = []
@@ -307,8 +361,8 @@ class ApplyTests(unittest.TestCase):
         before = self.map.stat().st_mtime_ns
         self.assertEqual({'state': 'unchanged', 'rejected': []}, self.apply())
         self.assertEqual(before, self.map.stat().st_mtime_ns)
-        self.assertEqual(0, self.postfix.count('postconf', '-e'))
-        self.assertEqual(0, self.postfix.count('postfix'))
+        # The map holds exactly these rules, so nothing is checked, set or reloaded.
+        self.assertEqual([['postconf', '-h', 'virtual_alias_maps']], self.postfix.commands)
         self.assertEqual([], self.leftovers())
 
     def test_changed_and_deleted_rules_replace_the_map(self):
@@ -411,9 +465,9 @@ class ApplyTests(unittest.TestCase):
     def test_command_that_cannot_be_run_is_an_error(self):
         def missing(command, timeout=None):
             raise FileNotFoundError(2, 'No such file or directory', command[0])
-        with self.assertRaises(pattern_map.MapError) as raised:
-            pattern_map.apply(lambda: self.rules, missing, str(self.map), str(self.main_cf))
-        self.assertTrue(raised.exception.unchanged)
+        with self.assertRaises(pattern_map.MapError):
+            self.apply(run=missing)
+        self.assertFalse(self.map.exists())
 
     # A rule can never keep the helper waiting.
 
@@ -430,21 +484,51 @@ class ApplyTests(unittest.TestCase):
         result = self.apply()
         self.assertEqual('updated', result['state'])
         self.assertEqual([20], [refused['id'] for refused in result['rejected']])
-        self.assertIn('not read within %s seconds' % pattern_map.RULE_TIMEOUT, result['rejected'][0]['reason'])
+        self.assertIn('not read within %s seconds, twice' % pattern_map.RULE_TIMEOUT,
+                      result['rejected'][0]['reason'])
         self.assertEqual([20], self.disabled)
         self.assertNotIn('poison', self.map.read_text())
         self.assertIn('support_', self.map.read_text())
         self.assertIn('sales_', self.map.read_text())
-        # The whole map, an empty one, each rule on its own, then the whole map without the slow rule.
-        self.assertEqual([pattern_map.CHECK_TIMEOUT, pattern_map.CHECK_TIMEOUT] + [pattern_map.RULE_TIMEOUT] * 3
+        # The whole map; an empty one; the slow rule, an empty map again and the slow rule again; the two
+        # other rules on their own; then the whole map without the slow rule.
+        self.assertEqual([pattern_map.CHECK_TIMEOUT, pattern_map.CHECK_TIMEOUT] + [pattern_map.RULE_TIMEOUT] * 5
                          + [pattern_map.CHECK_TIMEOUT], self.postfix.timeouts)
-        self.assertEqual(pattern_map.HEADER, self.postfix.checked[1])
+        self.assertEqual([pattern_map.HEADER, pattern_map.HEADER],
+                         [self.postfix.checked[1], self.postfix.checked[3]])
+        self.assertEqual(self.postfix.checked[2], self.postfix.checked[4])
         self.assertEqual([], self.leftovers())
         # The rule is marked, so the next run does not meet it again.
         self.rules = self.rules[1:]
         self.postfix.timeouts = []
         self.assertEqual('unchanged', self.apply()['state'])
-        self.assertEqual([pattern_map.CHECK_TIMEOUT], self.postfix.timeouts)
+        self.assertEqual([], self.postfix.timeouts)
+
+    def test_rule_that_was_slow_once_on_a_busy_server_is_kept_and_not_marked(self):
+        self.rules = [(60, DOMAIN, 'support_*', DESTINATION, 'wildcard'), (61, DOMAIN, 'sales_*', DESTINATION, 'wildcard')]
+        # The whole map and the first rule on its own time out; everything after that is read at once.
+        self.postfix.stall_at = (1, 3)
+        result = self.apply()
+        self.assertEqual({'state': 'updated', 'rejected': []}, result)
+        self.assertEqual([], self.disabled)
+        self.assertIn('support_', self.map.read_text())
+        self.assertIn('sales_', self.map.read_text())
+
+    def test_busy_server_blames_no_rule_and_changes_nothing(self):
+        self.apply()
+        installed = self.map.read_text()
+        self.rules.append((62, DOMAIN, 'sales_*', DESTINATION, 'wildcard'))
+        self.postfix.timeouts = []
+        # The whole map, then the first rule on its own, then the empty map that is tried before a rule
+        # is blamed: when that is slow too, it is the server.
+        self.postfix.stall_at = (1, 3, 4)
+        with self.assertRaises(pattern_map.MapError) as raised:
+            self.apply()
+        self.assertIn('too slow to check the pattern rules just now', str(raised.exception))
+        self.assertEqual([], self.disabled)
+        self.assertEqual(installed, self.map.read_text())
+        self.assertEqual(4, len(self.postfix.timeouts))
+        self.assertEqual([], self.leftovers())
 
     def test_rule_refused_on_its_own_after_a_stalled_check_is_left_out(self):
         self.rules = [(23, DOMAIN, 'poison*', DESTINATION, 'wildcard'), (24, DOMAIN, '[b-a]x', DESTINATION, 'regex'),
@@ -464,8 +548,7 @@ class ApplyTests(unittest.TestCase):
         self.postfix.commands = []
         with self.assertRaises(pattern_map.MapError) as raised:
             self.apply()
-        self.assertIn('empty pattern map', str(raised.exception))
-        self.assertTrue(raised.exception.unchanged)
+        self.assertIn('too slow to check the pattern rules just now', str(raised.exception))
         self.assertEqual(installed, self.map.read_text())
         self.assertEqual(value, self.postfix.value)
         self.assertEqual([], self.disabled)
@@ -480,8 +563,9 @@ class ApplyTests(unittest.TestCase):
         self.assertIn('too slow', str(raised.exception))
         self.assertFalse(self.map.exists())
         self.assertEqual([], self.disabled)
-        # The whole map, the empty one, and one more rule than is put down to the rules themselves.
-        self.assertEqual(2 + pattern_map.MAX_SLOW_RULES + 1, self.postfix.count('postmap'))
+        # The whole map, the empty one, and for one more rule than is put down to the rules themselves:
+        # the rule, an empty map, the rule again.
+        self.assertEqual(2 + 3 * (pattern_map.MAX_SLOW_RULES + 1), self.postfix.count('postmap'))
 
     def test_rules_beyond_the_limits_are_left_out_and_marked(self):
         self.rules = [(100 + number, DOMAIN, 'a%s_*' % number, DESTINATION, 'wildcard')
@@ -497,7 +581,7 @@ class ApplyTests(unittest.TestCase):
 
         def refuse(identifiers):
             raise RuntimeError('database is read only')
-        result = pattern_map.apply(lambda: self.rules, self.postfix, str(self.map), str(self.main_cf), refuse)
+        result = self.apply(disable=refuse)
         self.assertEqual('updated', result['state'])
         self.assertEqual('database is read only', result['unmarked'])
 
@@ -509,7 +593,6 @@ class ApplyTests(unittest.TestCase):
             self.apply()
         self.assertIn('did not reload', str(raised.exception))
         self.assertIn('The previous pattern map was put back.', str(raised.exception))
-        self.assertTrue(raised.exception.unchanged)
         self.assertFalse(self.map.exists())
         self.assertEqual(self.shipped, self.postfix.value)
         self.assertEqual([], self.leftovers())
@@ -523,7 +606,6 @@ class ApplyTests(unittest.TestCase):
             with self.assertRaises(pattern_map.MapError) as raised:
                 self.apply()
             self.assertIn('The previous pattern map was put back.', str(raised.exception))
-            self.assertTrue(raised.exception.unchanged)
             self.assertEqual(installed, self.map.read_text())
             self.assertEqual(0o640, stat.S_IMODE(self.map.stat().st_mode))
             self.assertEqual(value, self.postfix.value)
@@ -533,17 +615,16 @@ class ApplyTests(unittest.TestCase):
         self.postfix.edit_fails = True
         with self.assertRaises(pattern_map.MapError) as raised:
             self.apply()
-        self.assertTrue(raised.exception.unchanged)
+        self.assertIn('The previous pattern map was put back.', str(raised.exception))
         self.assertFalse(self.map.exists())
         self.assertEqual(self.shipped, self.postfix.value)
 
-    def test_map_that_could_not_be_put_back_is_reported_as_changed(self):
+    def test_map_that_could_not_be_put_back_is_reported_as_such(self):
         self.postfix.reload_fails = True
         self.postfix.edits_left = 1
         with self.assertRaises(pattern_map.MapError) as raised:
             self.apply()
         self.assertIn('could not be put back', str(raised.exception))
-        self.assertFalse(raised.exception.unchanged)
 
     def test_rules_are_marked_only_when_the_map_without_them_is_in_use(self):
         self.rules.append((52, DOMAIN, '\\d+', DESTINATION, 'regex'))
@@ -555,26 +636,210 @@ class ApplyTests(unittest.TestCase):
         self.apply()
         self.assertEqual([52], self.disabled)
 
-    def test_failure_before_the_map_is_replaced_reports_it_unchanged(self):
+    def test_failure_before_the_map_is_replaced_leaves_it_as_it_was(self):
         self.apply()
+        installed = self.map.read_text()
         self.rules.append((51, DOMAIN, 'sales_*', DESTINATION, 'wildcard'))
         self.postfix.fatal = 'unsupported dictionary type: regexp'
         with self.assertRaises(pattern_map.MapError) as raised:
             self.apply()
-        self.assertTrue(raised.exception.unchanged)
         self.assertNotIn('put back', str(raised.exception))
+        self.assertEqual(installed, self.map.read_text())
+
+    # Postfix is reloaded only when the map changed, and not more often than the interval.
+
+    def test_map_that_already_holds_the_rules_is_neither_checked_nor_reloaded(self):
+        self.apply()
+        self.postfix.commands = []
+        for _ in range(3):
+            self.assertEqual('unchanged', self.apply(later=1)['state'])
+        self.assertEqual(0, self.postfix.count('postmap'))
+        self.assertEqual(0, self.postfix.count('postfix'))
+        self.assertEqual([], self.waiters)
+
+    def test_changes_in_quick_succession_cause_one_reload_per_interval(self):
+        self.assertEqual(60, pattern_map.RELOAD_INTERVAL)
+        self.assertNotIn('reload_in', self.apply())
+        self.assertEqual(1, self.postfix.count('postfix', 'reload'))
+        # Ten seconds later a rule is added: the map is written at once, the reload is owed.
+        self.rules.append((70, DOMAIN, 'sales_*', DESTINATION, 'wildcard'))
+        result = self.apply(later=10)
+        self.assertEqual(('updated', 51), (result['state'], result['reload_in']))
+        self.assertIn('sales_', self.map.read_text())
+        self.assertEqual(1, self.postfix.count('postfix', 'reload'))
+        self.assertEqual([51], self.waiters)
+        self.assertTrue(os.path.exists(self.state + '.pending'))
+        # More changes inside the interval: written at once, still one reload owed, no second waiter.
+        for number in range(5):
+            self.rules.append((71 + number, DOMAIN, 'more%s_*' % number, DESTINATION, 'wildcard'))
+            self.assertEqual('updated', self.apply(later=1)['state'])
+            self.rules.pop()
+            self.assertEqual('updated', self.apply(later=1)['state'])
+        self.assertEqual(1, self.postfix.count('postfix', 'reload'))
+        self.assertEqual([51], self.waiters)
+        # The waiter's run, when the reload falls due: nothing changed, and the owed reload is done.
+        result = self.apply(later=41)
+        self.assertEqual({'state': 'unchanged', 'rejected': []}, result)
+        self.assertEqual(2, self.postfix.count('postfix', 'reload'))
+        self.assertFalse(os.path.exists(self.state + '.pending'))
+        # Nothing is owed any more.
+        self.apply(later=120)
+        self.assertEqual(2, self.postfix.count('postfix', 'reload'))
+
+    def test_owed_reload_is_done_by_any_later_run_when_the_waiter_was_lost(self):
+        self.apply()
+        self.rules.append((80, DOMAIN, 'sales_*', DESTINATION, 'wildcard'))
+        self.assertIn('reload_in', self.apply(later=5))
+        # The waiter never runs. Somebody deletes a website an hour later and the map is rebuilt for it.
+        self.assertNotIn('reload_in', self.apply(later=3600))
+        self.assertEqual(2, self.postfix.count('postfix', 'reload'))
+        self.assertFalse(os.path.exists(self.state + '.pending'))
+
+    def test_owed_reload_is_dropped_when_postfix_is_stopped(self):
+        self.apply()
+        self.rules.append((81, DOMAIN, 'sales_*', DESTINATION, 'wildcard'))
+        self.apply(later=5)
+        self.postfix.running = False
+        self.apply(later=120)
+        self.assertFalse(os.path.exists(self.state + '.pending'))
+        self.assertEqual(1, self.postfix.count('postfix', 'reload'))
+
+    def test_reload_is_done_at_once_where_it_cannot_be_put_off(self):
+        # No place for the marker, or no way to start the waiter: the reload is not left to chance.
+        self.state = str(Path(self.directory.name, 'missing', 'state'))
+        self.apply()
+        self.rules.append((82, DOMAIN, 'sales_*', DESTINATION, 'wildcard'))
+        self.assertNotIn('reload_in', self.apply(later=5))
+        self.assertEqual(2, self.postfix.count('postfix', 'reload'))
+        self.state = str(Path(self.directory.name, 'state'))
+        self.rules.append((83, DOMAIN, 'more_*', DESTINATION, 'wildcard'))
+        self.apply()
+        self.assertEqual(3, self.postfix.count('postfix', 'reload'))
+        self.waiters = NS(append=mock.Mock(side_effect=OSError('cannot start a process')))
+        self.rules.append((86, DOMAIN, 'other_*', DESTINATION, 'wildcard'))
+        self.assertNotIn('reload_in', self.apply(later=5))
+        self.assertEqual(4, self.postfix.count('postfix', 'reload'))
+        self.assertFalse(os.path.exists(self.state + '.pending'))
+
+    def test_failed_reload_takes_the_map_back_also_when_it_was_owed(self):
+        self.apply()
+        installed = self.map.read_text()
+        self.rules.append((84, DOMAIN, 'sales_*', DESTINATION, 'wildcard'))
+        self.apply(later=5)
+        self.rules.append((85, DOMAIN, 'more_*', DESTINATION, 'wildcard'))
+        self.postfix.reload_fails = True
+        with self.assertRaises(pattern_map.MapError) as raised:
+            self.apply(later=120)
+        self.assertIn('did not reload', str(raised.exception))
+        self.assertNotIn('more_', self.map.read_text())
+        self.assertNotEqual(installed, self.map.read_text())
+
+
+class LimitTests(unittest.TestCase):
+    """How many rules a domain, an account and the server can have, and which rule gives way."""
+
+    def rule(self, identifier, domain=DOMAIN, account=1, priority=100):
+        return (identifier, domain, 'a%s_*' % identifier, DESTINATION, 'wildcard', priority, account)
+
+    def left_out(self, rules):
+        entries, rejected = pattern_map.build(rules)
+        self.assertEqual(len(rules), len(entries) + len(rejected))
+        return [refused['id'] for refused in rejected], [refused['reason'] for refused in rejected]
+
+    def test_limits(self):
+        self.assertEqual((20, 40, 5, 200), (pattern_map.MAX_RULES_PER_DOMAIN, pattern_map.MAX_RULES_PER_ACCOUNT,
+                                            pattern_map.RESERVED_RULES_PER_ACCOUNT, pattern_map.SHARED_RULES))
+        self.assertEqual((1, 999), (pattern_map.MIN_PRIORITY, pattern_map.MAX_PRIORITY))
+
+    def test_lines_follow_priority_then_age(self):
+        rules = [self.rule(3, priority=50), self.rule(1, priority=100), self.rule(2, priority=50),
+                 self.rule(4, priority=7)]
+        self.assertEqual([4, 2, 3, 1], [identifier for identifier, _ in pattern_map.build(rules)[0]])
+
+    def test_rule_beyond_a_domain_limit_is_the_newest_whatever_its_priority(self):
+        rules = [self.rule(number) for number in range(1, 21)] + [self.rule(21, priority=1)]
+        identifiers, reasons = self.left_out(list(reversed(rules)))
+        self.assertEqual([21], identifiers)
+        self.assertIn('A domain can have 20 pattern rules', reasons[0])
+        # The stored priority cannot be used either, whatever it holds.
+        for priority in (-5, 0, None, 'first'):
+            rules[-1] = self.rule(21, priority=priority)
+            self.assertEqual([21], self.left_out(rules)[0])
+
+    def test_account_limit_spans_its_domains(self):
+        rules = [self.rule(number, domain='d%s.example' % (number % 4)) for number in range(1, 44)]
+        identifiers, reasons = self.left_out(rules)
+        self.assertEqual([41, 42, 43], identifiers)
+        self.assertIn('An account can have 40 pattern rules', reasons[0])
+
+    def test_domain_without_a_known_account_stands_for_itself(self):
+        rules = [self.rule(number, domain='d%s.example' % (number % 3), account=None) for number in range(1, 64)]
+        self.assertEqual([61, 62, 63], self.left_out(rules)[0])
+
+    def full_server(self):
+        """Five accounts with 40 rules each have used the 200 rules that are shared, and their own five."""
+        rules, identifier = [], 0
+        for account in range(1, 7):
+            for number in range(40):
+                identifier += 1
+                rules.append(self.rule(identifier, domain='a%s-%s.example' % (account, number % 2), account=account))
+        return rules
+
+    def test_server_limit_refuses_the_newest_rules_of_those_who_used_it_up(self):
+        rules = self.full_server()
+        identifiers, reasons = self.left_out(rules)
+        # Accounts 1 to 5 hold 5 reserved and 35 shared rules each (175). The sixth gets its 5 reserved
+        # rules and the 25 shared ones that are left; its last 10 are beyond the server's limit.
+        self.assertEqual(list(range(231, 241)), identifiers)
+        self.assertIn('This server has reached its limit of pattern rules', reasons[0])
+
+    def test_full_server_cannot_keep_another_account_from_its_first_rules(self):
+        rules = self.full_server()
+        newcomer = [self.rule(1000 + number, domain='new.example', account=99) for number in range(7)]
+        identifiers, _ = self.left_out(rules + newcomer)
+        self.assertEqual(list(range(231, 241)) + [1005, 1006], identifiers)
+
+    def test_many_creates_at_once_cannot_push_out_rules_of_others(self):
+        rules = self.full_server()[:230]
+        others = [rule[0] for rule in rules]
+        # The server is at its limit. One account sends ten creates at once, each with the best priority.
+        burst = [self.rule(2000 + number, domain='a6-0.example', account=6, priority=1) for number in range(10)]
+        identifiers, _ = self.left_out(burst + rules)
+        self.assertEqual([rule[0] for rule in burst], identifiers)
+        self.assertEqual(sorted(others), sorted(identifier for identifier, _ in pattern_map.build(burst + rules)[0]))
+
+    def test_priority_must_be_a_number_the_page_offers(self):
+        for priority in (1, 20, 999, '20'):
+            self.assertEqual(int(priority), pattern_map.check_priority(priority))
+        for priority in (0, -1, 1000, 10 ** 9, 1.5, True, False, None, '', 'first', '-1', [1], {}):
+            with self.subTest(priority=priority):
+                with self.assertRaises(pattern_map.RuleError):
+                    pattern_map.check_priority(priority)
 
 
 class DatabaseAndResultTests(unittest.TestCase):
-    def test_enabled_rules_are_read_in_priority_order(self):
+    def test_enabled_rules_are_read_with_their_account(self):
         cursor = mock.Mock()
-        cursor.fetchall.return_value = [[1, b'example.com', b'support_*', b'qa@example.com', b'wildcard']]
+        cursor.fetchall.return_value = [[1, b'example.com', b'support_*', b'qa@example.com', b'wildcard', 20, 7]]
         rules = pattern_map.read_rules(cursor)
+        self.assertEqual([(1, b'example.com', b'support_*', b'qa@example.com', b'wildcard', 20, 7)], rules)
         query = cursor.execute.call_args[0][0]
-        self.assertIn('FROM e_pattern_forwarding', query)
-        self.assertIn('WHERE enabled = 1', query)
-        self.assertTrue(query.endswith('ORDER BY priority, id'))
+        self.assertIn('FROM e_pattern_forwarding p', query)
+        self.assertIn('COALESCE(w.admin_id, cw.admin_id)', query)
+        self.assertIn('LEFT JOIN websiteFunctions_websites w ON w.id = d.domainOwner_id', query)
+        self.assertIn('LEFT JOIN websiteFunctions_childdomains c ON c.id = d.childOwner_id', query)
+        self.assertTrue(query.endswith('WHERE p.enabled = 1 ORDER BY p.id'))
         self.assertEqual(([(1, '/^(support_[^@]*)@example\\.com$/ qa@example.com')], []), pattern_map.build(rules))
+
+    def test_result_is_one_line_of_plain_ascii(self):
+        result = {'status': 0, 'error_message': 'Zugriff verweigert: \u00fcberf\u00fcllt \u2603 \udcff\nsecond line',
+                  'detail': RuntimeError('caf\u00e9')}
+        line_printed = pattern_map.result_line(result)
+        line_printed.encode('ascii')
+        self.assertNotIn('\n', line_printed)
+        parsed = pattern_map.parse_result('noise\n' + line_printed + '\n')
+        self.assertEqual(result['error_message'], parsed['error_message'])
+        self.assertEqual('caf\u00e9', parsed['detail'])
 
     def test_result_survives_other_output_of_the_helper(self):
         result = {'status': 1, 'state': 'updated', 'rejected': [{'id': 3, 'reason': 'x'}]}
@@ -604,6 +869,9 @@ class UpgradeTests(unittest.TestCase):
                                              (2, DOMAIN, '\\d+', DESTINATION, 'regex')]
         self.connection = mock.Mock()
         self.log = []
+        state = mock.patch.object(pattern_map, 'STATE', str(Path(self.directory.name, 'state')))
+        state.start()
+        self.addCleanup(state.stop)
 
     def upgrade(self, connect=None):
         return pattern_map.upgrade(connect or (lambda database: (self.connection, self.cursor)), self.log.append,
@@ -699,6 +967,8 @@ class FakeRules:
                     continue
                 if 'id__in' in conditions and rule.id not in conditions['id__in']:
                     continue
+                if 'id' in conditions and rule.id != conditions['id']:
+                    continue
                 if 'enabled' in conditions and rule.enabled != conditions['enabled']:
                     continue
                 found.append(rule)
@@ -710,8 +980,9 @@ class FakeRules:
 
 class PanelPageTests(unittest.TestCase):
     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mailUtilities.py applyPatternForwarding'
+    done = {'status': 1, 'state': 'unchanged', 'rejected': []}
     failed = {'status': 0, 'error_message': 'The pattern map was written, but Postfix did not reload: x. '
-                                            'The previous pattern map was put back.', 'map_unchanged': True}
+                                            'The previous pattern map was put back.'}
 
     def setUp(self):
         self.rules = FakeRules()
@@ -734,7 +1005,7 @@ class PanelPageTests(unittest.TestCase):
         self.manager = panel_methods(
             'mailServer/mailserverManager.py', 'MailServerManager',
             ('createPatternRule', 'deletePatternRule', '_applyPatternForwarding', '_patternRuleRefusal',
-             '_unusedPatternRules', '_settlePatternForwarding'), namespace)()
+             '_unusedPatternRules', '_settlePatternForwarding', '_patternReloadNote'), namespace)()
 
     def answer(self, command):
         """The helper's next answer; the last one repeats. The patterns listed at that moment are kept."""
@@ -748,7 +1019,9 @@ class PanelPageTests(unittest.TestCase):
 
     def create(self, pattern='support_*', destination=DESTINATION, pattern_type='wildcard'):
         return self.post('createPatternRule', domain=DOMAIN, pattern=pattern, destination=destination,
-                         pattern_type=pattern_type, priority=20)
+                         pattern_type=pattern_type, priority=self.priority)
+
+    priority = 20
 
     def test_created_rule_is_handed_to_the_root_helper(self):
         response = self.create(' support_* ', ' qa@example.com ')
@@ -773,30 +1046,56 @@ class PanelPageTests(unittest.TestCase):
         self.assertEqual({}, self.rules.rows)
         self.process.outputExecutioner.assert_not_called()
 
-    def test_domain_cannot_have_more_rules_than_the_limit(self):
-        for number in range(pattern_map.MAX_RULES_PER_DOMAIN):
-            self.rules.model(domain=self.domain, pattern='a%s' % number).save()
-        self.rules.model(domain=self.domain, pattern='unused', enabled=False).save()
-        response = self.create()
-        self.assertEqual(0, response['createStatus'])
-        self.assertIn('A domain can have 20 pattern forwarding rules', response['error_message'])
-        self.assertEqual(pattern_map.MAX_RULES_PER_DOMAIN + 1, len(self.rules.rows))
+    def test_priority_outside_the_range_of_the_page_is_refused(self):
+        for priority in (-1, 0, 1000, 'first', None, True, 2.5):
+            self.priority = priority
+            response = self.create()
+            self.assertEqual(0, response['createStatus'])
+            self.assertIn('priority must be a whole number from 1 to 999', response['error_message'])
+        self.assertEqual({}, self.rules.rows)
         self.process.outputExecutioner.assert_not_called()
-        # A rule that is not in use does not count.
-        self.rules.rows[1].enabled = False
+        self.priority = '7'
         self.assertEqual(1, self.create()['createStatus'])
+        self.assertEqual(7, self.rules.rows[1].priority)
 
-    def test_server_cannot_have_more_rules_than_the_limit(self):
-        for number in range(pattern_map.MAX_RULES):
-            self.rules.model(domain=NS(domain='d%s.example' % (number % 50)), pattern='a%s' % number).save()
+    def test_rule_beyond_a_limit_is_refused_by_the_helper_and_taken_back(self):
+        # The helper works on all rules under its lock; the page keeps no count of its own.
+        for reason in ('A domain can have 20 pattern rules; this one is beyond that.',
+                       'An account can have 40 pattern rules on all its domains; this one is beyond that.',
+                       'This server has reached its limit of pattern rules; an account can still have 5.'):
+            self.process.outputExecutioner.reset_mock()
+            self.answers = [{'status': 1, 'state': 'unchanged',
+                             'rejected': [{'id': self.rules.created + 1, 'reason': reason}]}]
+            response = self.create()
+            self.assertEqual(0, response['createStatus'])
+            self.assertEqual('The rule was not created. ' + reason, response['error_message'])
+            self.assertEqual({}, self.rules.rows)
+            self.process.outputExecutioner.assert_called_once_with(self.command)
+
+    def test_rule_left_out_by_a_run_for_somebody_else_is_taken_back(self):
+        # Another create ran its helper first; it found this rule beyond a limit and marked it. This
+        # request's own run no longer sees the rule and reports nothing about it.
+        def other_run_marked_it(command):
+            self.rules.rows[1].enabled = False
+            return pattern_map.result_line(self.done) + '\n'
+        self.process.outputExecutioner.side_effect = other_run_marked_it
         response = self.create()
         self.assertEqual(0, response['createStatus'])
-        self.assertIn('limit of 200 pattern forwarding rules', response['error_message'])
-        self.assertEqual(pattern_map.MAX_RULES, len(self.rules.rows))
-        self.process.outputExecutioner.assert_not_called()
+        self.assertIn('beyond a limit on the number of rules', response['error_message'])
+        self.assertEqual({}, self.rules.rows)
+
+    def test_change_that_waits_for_the_next_reload_says_so(self):
+        self.answers = [{'status': 1, 'state': 'updated', 'rejected': [], 'reload_in': 42}]
+        response = self.create()
+        self.assertEqual(1, response['createStatus'])
+        self.assertEqual('Pattern forwarding rule created successfully. It takes effect within 42 seconds',
+                         response['message'])
+        response = self.post('deletePatternRule', ruleId=1)
+        self.assertEqual('Pattern forwarding rule deleted successfully. It takes effect within 42 seconds',
+                         response['message'])
 
     def test_rule_is_taken_back_when_the_map_was_not_written(self):
-        self.answers = [self.failed]
+        self.answers = [self.failed, self.done]
         response = self.create()
         self.assertEqual((0, 0), (response['status'], response['createStatus']))
         self.assertIn('The rule was not created', response['error_message'])
@@ -804,14 +1103,13 @@ class PanelPageTests(unittest.TestCase):
         self.assertIn('put back', response['error_message'])
         self.assertNotIn('may not follow', response['error_message'])
         self.assertEqual({}, self.rules.rows)
-        # The helper left the map as it was, which is what the list says again: one run is enough.
-        self.process.outputExecutioner.assert_called_once_with(self.command)
         self.log.assert_called_once()
 
-    def test_map_is_rebuilt_for_the_corrected_list_when_its_state_is_not_known(self):
-        for unknown in ('', 'Traceback (most recent call last):', '1,None',
-                        {'status': 0, 'error_message': 'The previous pattern map could not be put back.',
-                         'map_unchanged': False}):
+    def test_map_is_rebuilt_for_the_corrected_list_after_every_failure(self):
+        # The helper may have put its own map back, and still the map can hold the rule: a run for
+        # somebody else's rule may have written it in between. Only a run for the corrected list tells.
+        for unknown in ('', 'Traceback (most recent call last):', '1,None', self.failed,
+                        {'status': 0, 'error_message': 'The previous pattern map could not be put back.'}):
             self.listed = []
             self.process.outputExecutioner.reset_mock()
             self.answers = [unknown, {'status': 1, 'state': 'updated', 'rejected': []}]
@@ -872,13 +1170,16 @@ class PanelPageTests(unittest.TestCase):
     def test_rule_stays_listed_when_the_map_was_not_rewritten(self):
         self.create()
         self.process.outputExecutioner.reset_mock()
-        self.answers = [self.failed]
+        self.listed = []
+        self.answers = [self.failed, self.done]
         response = self.post('deletePatternRule', ruleId=1)
         self.assertEqual((0, 0), (response['status'], response['deleteStatus']))
         self.assertIn('The rule was not deleted', response['error_message'])
         self.assertIn('did not reload', response['error_message'])
+        self.assertNotIn('may not follow', response['error_message'])
         self.assertEqual(('support_*', DESTINATION, 'wildcard', 20, True, self.domain), self.kept())
-        self.process.outputExecutioner.assert_called_once_with(self.command)
+        # Run again with the rule back in the list.
+        self.assertEqual([[], ['support_*']], self.listed)
 
     def test_map_is_rebuilt_with_the_kept_rule_when_its_state_is_not_known(self):
         self.create()
@@ -918,13 +1219,29 @@ class RootHelperTests(unittest.TestCase):
         self.assertIn('rule 7 is not in use: not read within 3 seconds', self.log.call_args_list[0][0][0])
         self.assertIn('could not be marked: read only', self.log.call_args_list[1][0][0])
 
-    def test_helper_reports_whether_a_failed_map_is_as_it_was(self):
-        for unchanged in (True, False):
-            self.assertEqual({'status': 0, 'error_message': 'Postfix did not reload', 'map_unchanged': unchanged},
-                             self.run_helper(side_effect=pattern_map.MapError('Postfix did not reload', unchanged)))
-        self.assertEqual(2, self.log.call_count)
+    def test_helper_reports_a_map_that_was_not_installed(self):
+        self.assertEqual({'status': 0, 'error_message': 'Postfix did not reload'},
+                         self.run_helper(side_effect=pattern_map.MapError('Postfix did not reload')))
+        self.log.assert_called_once()
 
-    def test_helper_reports_any_other_failure_without_a_map_state(self):
+    def test_result_is_printed_whatever_the_log_and_the_terminal_can_take(self):
+        # As under Python 3.6 in a C locale: a detail outside ASCII cannot be written to the log or printed.
+        self.log.side_effect = UnicodeEncodeError('ascii', 'x', 0, 1, 'ordinal not in range(128)')
+        detail = 'Zugriff verweigert: \u00fcberf\u00fcllt \u2603'
+        self.assertEqual({'status': 0, 'error_message': detail},
+                         self.run_helper(side_effect=pattern_map.MapError(detail)))
+        result = self.run_helper(return_value={'state': 'updated', 'unmarked': detail,
+                                               'rejected': [{'id': 7, 'reason': detail}]})
+        self.assertEqual((1, detail), (result['status'], result['rejected'][0]['reason']))
+        raw = io.BytesIO()
+        ascii_only = io.TextIOWrapper(raw, encoding='ascii')
+        with mock.patch.object(pattern_map, 'apply_saved_rules', side_effect=pattern_map.MapError(detail)), \
+                contextlib.redirect_stdout(ascii_only):
+            self.helper.applyPatternForwarding()
+            ascii_only.flush()
+        self.assertEqual(detail, pattern_map.parse_result(raw.getvalue())['error_message'])
+
+    def test_helper_reports_any_other_failure(self):
         self.assertEqual({'status': 0, 'error_message': 'database is gone'},
                          self.run_helper(side_effect=RuntimeError('database is gone')))
 
@@ -1087,9 +1404,17 @@ class PageTextTests(unittest.TestCase):
                      'the rule with the lowest priority number is used',
                      'A pattern comes before the catch-all of the domain.',
                      'a tagged address such as user+tag is compared with the patterns before the mailbox user',
+                     'A pattern can contain * in up to %s places, up to %s ? after its first *, and %s characters '
+                     'besides *.' % (pattern_map.MAX_UNBOUNDED, pattern_map.MAX_AFTER_REPEAT, pattern_map.MAX_ATOMS),
                      'may add up to %s at most' % pattern_map.MAX_COUNTED,
-                     'A domain can have %s rules and a pattern can be %s characters long.'
-                     % (pattern_map.MAX_RULES_PER_DOMAIN, pattern_map.MAX_PATTERN_LENGTH),
+                     'A pattern can contain * + or {n,} in up to %s places and describe %s characters. After the '
+                     'first of them, and inside a repeated group, it can contain at most %s of: . [ ] | ? and '
+                     'counted copies.' % (pattern_map.MAX_UNBOUNDED, pattern_map.MAX_ATOMS,
+                                          pattern_map.MAX_AFTER_REPEAT),
+                     'A domain can have %s rules and an account %s on all its domains. A pattern can be %s '
+                     'characters long and the priority is a number from %s to %s.'
+                     % (pattern_map.MAX_RULES_PER_DOMAIN, pattern_map.MAX_RULES_PER_ACCOUNT,
+                        pattern_map.MAX_PATTERN_LENGTH, pattern_map.MIN_PRIORITY, pattern_map.MAX_PRIORITY),
                      'ng-if="!rule.enabled"'):
             self.assertIn(text, page)
 

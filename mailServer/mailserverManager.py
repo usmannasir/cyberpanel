@@ -2387,27 +2387,13 @@ protocol sieve {
             # line that matches addresses of this domain and names one destination.
             try:
                 patternForwardingMap.rule_line(pattern_type, pattern, domain, destination)
+                priority = patternForwardingMap.check_priority(priority)
             except patternForwardingMap.RuleError as msg:
                 data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             domainObj = Domains.objects.get(domain=domain)
-
-            # Postfix tries every rule of the server for every recipient, so their number is limited.
-            if PatternForwarding.objects.filter(domain=domainObj, enabled=True).count() >= \
-                    patternForwardingMap.MAX_RULES_PER_DOMAIN:
-                data_ret = {'status': 0, 'createStatus': 0,
-                            'error_message': 'A domain can have %s pattern forwarding rules. Delete one first.'
-                                             % patternForwardingMap.MAX_RULES_PER_DOMAIN}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            if PatternForwarding.objects.filter(enabled=True).count() >= patternForwardingMap.MAX_RULES:
-                data_ret = {'status': 0, 'createStatus': 0,
-                            'error_message': 'This server has reached its limit of %s pattern forwarding rules.'
-                                             % patternForwardingMap.MAX_RULES}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
 
             # Create pattern rule
             rule = PatternForwarding(
@@ -2421,8 +2407,14 @@ protocol sieve {
             rule.save()
 
             # The rule counts as created once Postfix has it; otherwise it is taken back.
+            # The limits on the number of rules are kept by the helper, which
+            # works on all rules at once: the rule refused is this new one.
             result = self._applyPatternForwarding()
             refusal = self._patternRuleRefusal(result, rule.id)
+            if not refusal and not PatternForwarding.objects.filter(id=rule.id, enabled=True).count():
+                # A run started for another rule at the same moment left this one out and marked it.
+                refusal = ('It is beyond a limit on the number of rules, or the mail server cannot use '
+                           'its pattern.')
             if refusal:
                 rule.delete()
                 data_ret = {'status': 0, 'createStatus': 0,
@@ -2435,7 +2427,7 @@ protocol sieve {
                 'status': 1,
                 'createStatus': 1,
                 'message': 'Pattern forwarding rule created successfully'
-                           + self._unusedPatternRules(result, domainObj)
+                           + self._patternReloadNote(result) + self._unusedPatternRules(result, domainObj)
             }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2486,7 +2478,7 @@ protocol sieve {
                 'status': 1,
                 'deleteStatus': 1,
                 'message': 'Pattern forwarding rule deleted successfully'
-                           + self._unusedPatternRules(result, domainObj)
+                           + self._patternReloadNote(result) + self._unusedPatternRules(result, domainObj)
             }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2513,16 +2505,24 @@ protocol sieve {
     def _settlePatternForwarding(self, result):
         """After a failed update, once the rule list is as it was: make sure the map agrees with it.
 
-        The helper puts the previous map back when a step fails and says so.
-        Where it did not say so (it gave no answer, or could not put the map
-        back) it is run once more, now for the corrected list. Returns a
-        sentence for the error message; empty when list and map agree.
+        The helper puts the previous map back when one of its steps fails,
+        but the map may hold the change all the same: another run, started
+        for somebody else's rule, can have written it. So the helper is run
+        once more for the corrected list; where the map already agrees that
+        costs a comparison. Returns a sentence for the error message; empty
+        when list and map agree.
         """
-        if result.get('status') or result.get('map_unchanged'):
+        if result.get('status'):
             return ''
         if self._applyPatternForwarding().get('status'):
             return ''
         return ' The mail server may not follow the rules listed here until a rule is next created or deleted.'
+
+    def _patternReloadNote(self, result):
+        """Says when a change takes effect later because the mail server was reloaded a moment ago."""
+        if not result.get('reload_in'):
+            return ''
+        return '. It takes effect within %s seconds' % result['reload_in']
 
     def _patternRuleRefusal(self, result, ruleId):
         """Why Postfix does not have the rule after the helper ran, or None when it has."""

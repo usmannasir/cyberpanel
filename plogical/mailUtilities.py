@@ -1592,27 +1592,32 @@ LogFile /var/log/clamav/clamav.log
 
         The panel's web process cannot write under /etc/postfix. It saves the
         rule and runs this, which reads every enabled rule from the database
-        and prints what became of the map.
+        and prints what became of the map. The result is always printed, as
+        plain ASCII, also when a detail could not be written to the log.
         """
         from plogical import patternForwardingMap
+
+        def note(message):
+            try:
+                logging.CyberCPLogFileWriter.writeToFile(message + ' [applyPatternForwarding]')
+            except BaseException:
+                pass
+
         try:
             result = patternForwardingMap.apply_saved_rules()
             result['status'] = 1
             for refused in result['rejected']:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    'Pattern forwarding rule %s is not in use: %s [applyPatternForwarding]'
-                    % (refused['id'], refused['reason']))
+                note('Pattern forwarding rule %s is not in use: %s' % (refused['id'], refused['reason']))
             if result.get('unmarked'):
-                logging.CyberCPLogFileWriter.writeToFile(
-                    'Rules that are not in use could not be marked: %s [applyPatternForwarding]'
-                    % result['unmarked'])
-        except patternForwardingMap.MapError as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [applyPatternForwarding]')
-            result = {'status': 0, 'error_message': str(msg), 'map_unchanged': msg.unchanged}
+                note('Rules that are not in use could not be marked: %s' % result['unmarked'])
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [applyPatternForwarding]')
             result = {'status': 0, 'error_message': str(msg)}
-        print(patternForwardingMap.result_line(result))
+            note(str(msg))
+        line = patternForwardingMap.result_line(result)
+        try:
+            print(line)
+        except UnicodeError:
+            sys.stdout.buffer.write(line.encode('ascii', 'backslashreplace') + b'\n')
         return result
 
     ####### Imported below functions from mailserver/mailservermanager, need to refactor later

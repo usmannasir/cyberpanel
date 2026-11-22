@@ -29,6 +29,7 @@ import re
 import stat
 import subprocess
 import tempfile
+import time
 
 MAP_PATH = '/etc/postfix/virtual_regexp'
 MAIN_CF = '/etc/postfix/main.cf'
@@ -36,22 +37,42 @@ PARAMETER = 'virtual_alias_maps'
 HELPER_COMMAND = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mailUtilities.py applyPatternForwarding'
 
 # Every smtpd and cleanup process compiles every line of the map, and smtpd
-# runs an address through the lines for each RCPT TO, so the cost of one rule
-# is paid by all mail of the server. The C library expands a counted repeat
-# into copies, and its matching time grows with the square of the copies that
-# can be in play at once: 2,040 copies were measured at 0.25 s for a
-# 64-character address, and stacked counts multiply. The limits below leave
-# at most 16 counted or optional copies and 8 open-ended repeats in a pattern,
-# never stacked and never inside a repeated group. By the same measure that
-# is about a ten-thousandth of the measured cost, a few hundredths of a
-# millisecond per rule, and 200 rules stay within a few milliseconds per
-# recipient and a few megabytes per Postfix process.
-MAX_PATTERN_LENGTH = 100    # characters of a pattern as it is typed
-MAX_COUNTED = 16            # all {n}, {n,m} counts of a pattern added up, plus one for each "?"
-MAX_UNBOUNDED = 8           # "*", "+" and "{n,}" in a pattern; "*" in a wildcard
+# runs each recipient through the lines, so the cost of one rule is paid by
+# all mail of the server. Two things make a line costly in the C library.
+#
+# A counted repeat is expanded into copies and stacked counts multiply, so a
+# repeat never follows a repeat, a count never follows a group and a group
+# that is repeated holds no repeat.
+#
+# After an open-ended repeat (a wildcard *, or * + {n,} in an expression) the
+# matcher has to remember, for every item that can match more than one
+# character, whether it is in play: each such item doubles the states it may
+# build, and it keeps every state it has built until the process ends. A
+# line with 90 of them was measured at 26 microseconds and 3 KB kept for
+# every character of every new address. With at most 4 such items the
+# matcher has 16 combinations to build, once per process, and the 32 items a
+# pattern may have in all keep each of them small; after that an address
+# costs a table walk. Three open-ended repeats are enough for "*a*b*".
+MAX_PATTERN_LENGTH = 64     # characters as typed; a local part is no longer than that
+MAX_ATOMS = 32              # items that match one character each, counted copies included
+MAX_UNBOUNDED = 3           # "*" in a wildcard; "*", "+" and "{n,}" in an expression
+MAX_AFTER_REPEAT = 4        # "?" of a wildcard after its first "*"; in an expression the
+                            # . [ ] | ? and counted copies after its first open-ended
+                            # repeat or inside a repeated group
+MAX_COUNTED = 16            # all {n}, {n,m} counts of an expression added up, plus one for each "?"
 MAX_GROUP_DEPTH = 4         # groups inside groups
+MIN_PRIORITY, MAX_PRIORITY = 1, 999
+
+# A rule costs every recipient of the server a little, so their number is
+# limited. An account cannot use up what others may add: each account can
+# always have its first RESERVED_RULES_PER_ACCOUNT rules, and only rules
+# beyond those draw on the SHARED_RULES of the server. The map therefore
+# never holds more than SHARED_RULES plus that reserve for each account.
+# Where a limit is exceeded the newest rules are the ones left out.
 MAX_RULES_PER_DOMAIN = 20
-MAX_RULES = 200             # on the whole server
+MAX_RULES_PER_ACCOUNT = 40
+RESERVED_RULES_PER_ACCOUNT = 5
+SHARED_RULES = 200
 
 # postmap reads a map of this size in a fraction of a second. A check that
 # takes longer is given up, so that no rule can keep the helper waiting.
@@ -60,8 +81,19 @@ RULE_TIMEOUT = 3            # seconds for one rule on its own
 MAX_SLOW_RULES = 5          # more than this many slow rules means Postfix itself is slow
 COMMAND_TIMEOUT = 60        # seconds for postconf and postfix
 
-RULES_QUERY = ('SELECT id, domain_id, pattern, destination, pattern_type FROM e_pattern_forwarding '
-               'WHERE enabled = 1 ORDER BY priority, id')
+# Postfix restarts its programs on a reload, so rule changes cause one at
+# most this often. The map is written at once; see _reload().
+RELOAD_INTERVAL = 60
+STATE = '/run/cyberpanel-pattern-forwarding'
+
+RULES_QUERY = ('SELECT p.id, p.domain_id, p.pattern, p.destination, p.pattern_type, p.priority, '
+               'COALESCE(w.admin_id, cw.admin_id) '
+               'FROM e_pattern_forwarding p '
+               'LEFT JOIN e_domains d ON d.domain = p.domain_id '
+               'LEFT JOIN websiteFunctions_websites w ON w.id = d.domainOwner_id '
+               'LEFT JOIN websiteFunctions_childdomains c ON c.id = d.childOwner_id '
+               'LEFT JOIN websiteFunctions_websites cw ON cw.id = c.master_id '
+               'WHERE p.enabled = 1 ORDER BY p.id')
 HEADER = '# Written by CyberPanel from the Pattern Forwarding page. Changes made here are lost.\n'
 RESULT_MARK = 'PATTERN_FORWARDING_RESULT '
 PROBE = 'cyberpanel-map-check@invalid'
@@ -81,15 +113,7 @@ class RuleError(ValueError):
 
 
 class MapError(RuntimeError):
-    """The map was not installed, or Postfix did not take it.
-
-    `unchanged` tells whether the map and the Postfix setting are as they
-    were before the attempt.
-    """
-
-    def __init__(self, message, unchanged=True):
-        RuntimeError.__init__(self, message)
-        self.unchanged = unchanged
+    """The map was not installed, or Postfix did not take it."""
 
 
 class _TimedOut(Exception):
@@ -129,6 +153,19 @@ def check_destination(destination):
         raise RuleError('The destination must be one email address at a valid domain.')
 
 
+def check_priority(priority):
+    """The priority as a whole number in the range the page offers."""
+    if isinstance(priority, bool) or not isinstance(priority, (int, str)):
+        priority = None
+    try:
+        priority = int(priority)
+    except (TypeError, ValueError):
+        priority = None
+    if priority is None or not MIN_PRIORITY <= priority <= MAX_PRIORITY:
+        raise RuleError('The priority must be a whole number from %s to %s.' % (MIN_PRIORITY, MAX_PRIORITY))
+    return priority
+
+
 def wildcard_expression(pattern):
     """The regular expression for a wildcard: * is any run of characters, ? is one, never across @."""
     pattern = _text(pattern)
@@ -141,6 +178,11 @@ def wildcard_expression(pattern):
     pattern = re.sub(r'\*+', '*', pattern)
     if pattern.count('*') > MAX_UNBOUNDED:
         raise RuleError('A wildcard pattern may contain * in at most %s places.' % MAX_UNBOUNDED)
+    if len(pattern) - pattern.count('*') > MAX_ATOMS:
+        raise RuleError('A wildcard pattern may hold %s characters besides *.' % MAX_ATOMS)
+    first = pattern.find('*')
+    if first >= 0 and pattern.count('?', first) > MAX_AFTER_REPEAT:
+        raise RuleError('After its first * a wildcard pattern may contain at most %s ?.' % MAX_AFTER_REPEAT)
     translated = {'*': '[^@]*', '?': '[^@]', '.': '\\.', '+': '\\+'}
     return ''.join(translated.get(character, character) for character in pattern)
 
@@ -172,27 +214,38 @@ def regex_expression(pattern):
     """A POSIX extended regular expression that is safe to place between "^(" and ")@domain$".
 
     Postfix reads the table line up to the first unescaped "/", and whitespace
-    ends a field, so neither may appear. Every "(" must be closed and no ")"
-    may come first: otherwise an alternative could leave the group and match
-    addresses of other domains. Escapes of letters and digits are refused
-    because they mean something else to Postfix than to most people (\\d is a
-    plain d, \\1 is a back-reference).
+    ends a field, so neither may appear, and "@" belongs to the frame and
+    not to the pattern. Every "(" must be closed and no ")" may come first:
+    otherwise an alternative could leave the group and match addresses of
+    other domains. Escapes of letters and digits are refused because they
+    mean something else to Postfix than to most people (\\d is a plain d,
+    \\1 is a back-reference).
 
-    Repeats are limited as described at the top of this file: a repeat never
-    follows another repeat, a count never follows a group, a group that is
-    repeated holds no repeat itself, and the counts of a pattern add up to
-    little. Nothing is compiled or run here; the pattern is only read.
+    What a pattern may cost is limited as described at the top of this
+    file. Nothing is compiled or run here; the pattern is only read.
     """
     pattern = _text(pattern)
     if not isinstance(pattern, str) or not pattern or len(pattern) > MAX_PATTERN_LENGTH:
         raise RuleError('A pattern is required, up to %s characters.' % MAX_PATTERN_LENGTH)
     if not _PRINTABLE.fullmatch(pattern) or '/' in pattern:
         raise RuleError('A pattern may not contain spaces, line breaks, / or characters outside ASCII.')
-    counted = 0
-    unbounded = 0
-    groups = []             # one entry per open group: True once it holds a repeat
-    closed_holds_repeat = False
+    if '@' in pattern:
+        raise RuleError('Enter only the part of the address before @, without any @; the domain is added '
+                        'for you.')
+    tally = {'atoms': 0, 'counted': 0, 'unbounded': 0, 'after': 0}
+    groups = []             # one [holds a repeat, weight seen before any open-ended repeat] per open group
+    closed = [False, 0]     # the same for the group that closed last
     previous = 'start'      # start, atom, group or repeat
+    wide = False            # whether the last atom matches more than one character
+
+    def weigh(amount):
+        # Counts toward the limit once an open-ended repeat was seen; before that
+        # it is kept with its group, which may turn out to be repeated itself.
+        if tally['unbounded']:
+            tally['after'] += amount
+        elif groups:
+            groups[-1][1] += amount
+
     position = 0
     while position < len(pattern):
         character = pattern[position]
@@ -201,11 +254,14 @@ def regex_expression(pattern):
                 raise RuleError('A backslash may only come before a punctuation character. '
                                 'Write [0-9] or [[:alnum:]_] instead of \\d or \\w.')
             position += 2
-            previous = 'atom'
+            tally['atoms'] += 1
+            previous, wide = 'atom', False
             continue
         if character == '[':
             position = _bracket_end(pattern, position)
-            previous = 'atom'
+            tally['atoms'] += 1
+            weigh(1)
+            previous, wide = 'atom', True
             continue
         if character in '*+?{':
             if previous == 'repeat':
@@ -213,6 +269,7 @@ def regex_expression(pattern):
             if previous == 'start':
                 raise RuleError('A repeat (* + ? or a count) needs something before it to repeat. '
                                 'Write \\%s for the character itself.' % character)
+            holds_repeat = True
             if character == '{':
                 count = _COUNT.match(pattern, position)
                 if not count:
@@ -221,55 +278,73 @@ def regex_expression(pattern):
                 if previous == 'group':
                     raise RuleError('A repeat count can follow a single character or [ ], not a group.')
                 lowest = int(count.group(1))
+                open_ended = bool(count.group(2)) and not count.group(3)
                 highest = int(count.group(3)) if count.group(3) else lowest
                 if highest < lowest:
                     raise RuleError('In a repeat count {n,m} the second number cannot be the smaller one.')
-                counted += highest
-                if count.group(2) and not count.group(3):
-                    unbounded += 1
+                tally['counted'] += highest
+                tally['atoms'] += max(highest - 1, 0)
+                # Each copy of a wide atom is a wide atom; of a plain one, each copy that may be absent.
+                weigh(max(highest - 1, 0) if wide else highest - lowest)
+                if open_ended:
+                    tally['unbounded'] += 1
                 position = count.end()
-                holds_repeat = True
-            else:
-                if character == '?':
-                    counted += 1
-                else:
-                    if previous == 'group' and closed_holds_repeat:
-                        raise RuleError('A group followed by * or + cannot contain another repeat.')
-                    unbounded += 1
+            elif character == '?':
+                tally['counted'] += 1
+                weigh(1)
+                holds_repeat = False
                 position += 1
-                holds_repeat = character != '?'
+            else:
+                if previous == 'group':
+                    if closed[0]:
+                        raise RuleError('A group followed by * or + cannot contain another repeat.')
+                    # What the group holds is now inside a repeat.
+                    tally['after'] += closed[1]
+                tally['unbounded'] += 1
+                position += 1
             if holds_repeat and groups:
-                groups[-1] = True
+                groups[-1][0] = True
             previous = 'repeat'
             continue
         if character == '(':
             if pattern[position + 1:position + 2] == '?':
                 raise RuleError('Groups that begin with (? are not available.')
-            groups.append(False)
+            groups.append([False, 0])
             if len(groups) > MAX_GROUP_DEPTH:
                 raise RuleError('Groups can be placed inside groups %s deep at most.' % MAX_GROUP_DEPTH)
             previous = 'start'
         elif character == ')':
             if not groups:
                 raise RuleError('A ) has no matching (.')
-            closed_holds_repeat = groups.pop()
-            if closed_holds_repeat and groups:
-                groups[-1] = True
+            closed = groups.pop()
+            if groups:
+                groups[-1][0] = groups[-1][0] or closed[0]
+                if pattern[position + 1:position + 2] not in ('*', '+'):
+                    groups[-1][1] += closed[1]
             previous = 'group'
-        elif character == '@':
-            raise RuleError('Enter only the part of the address before @; the domain is added for you.')
-        elif character in '|^$':
+        elif character == '|':
+            weigh(1)
+            previous = 'start'
+        elif character in '^$':
             previous = 'start'
         else:
-            previous = 'atom'
+            tally['atoms'] += 1
+            if character == '.':
+                weigh(1)
+            previous, wide = 'atom', character == '.'
         position += 1
     if groups:
         raise RuleError('A ( is not closed.')
-    if counted > MAX_COUNTED:
+    if tally['atoms'] > MAX_ATOMS:
+        raise RuleError('A pattern may describe %s characters at most, counted copies included.' % MAX_ATOMS)
+    if tally['counted'] > MAX_COUNTED:
         raise RuleError('The repeat counts of a pattern, with one for each ?, may add up to %s at most. '
                         'Use + or * for longer runs.' % MAX_COUNTED)
-    if unbounded > MAX_UNBOUNDED:
+    if tally['unbounded'] > MAX_UNBOUNDED:
         raise RuleError('A pattern may contain * + and {n,} in at most %s places.' % MAX_UNBOUNDED)
+    if tally['after'] > MAX_AFTER_REPEAT:
+        raise RuleError('After its first * + or {n,}, and inside a repeated group, a pattern may contain '
+                        'at most %s of: . [ ] | ? and counted copies.' % MAX_AFTER_REPEAT)
     return pattern
 
 
@@ -286,7 +361,7 @@ def rule_line(pattern_type, pattern, domain, destination):
 
 
 def read_rules(cursor):
-    """Enabled rules in the order Postfix is to try them, from any database cursor."""
+    """Enabled rules, oldest first, each with its priority and the account that owns its domain."""
     cursor.execute(RULES_QUERY)
     return [tuple(row) for row in cursor.fetchall()]
 
@@ -299,26 +374,46 @@ def disable_rules(cursor, identifiers):
 
 
 def build(rules):
-    """Split rules of (id, domain, pattern, destination, type) into table lines and refusals.
+    """Split rules into table lines, in the order Postfix is to try them, and refusals.
 
-    Only the rule's text is read here, which costs nothing, so a rule that
-    is too long, too costly or over a limit never reaches Postfix.
+    A rule is (id, domain, pattern, destination, type, priority, account);
+    the last two may be left off. Only the rule's text is read here, which
+    costs nothing, so a rule that is too costly or over a limit never
+    reaches Postfix. Limits are applied oldest rule first: the one left out
+    is the newest, whatever its priority, and never a rule of somebody else.
     """
-    entries, rejected, per_domain = [], [], {}
-    for identifier, domain, pattern, destination, pattern_type in rules:
+    admitted, rejected, per_domain, per_account = [], [], {}, {}
+    shared = 0
+    for rule in sorted((tuple(rule) for rule in rules), key=lambda rule: rule[0]):
+        rule += (100, None)[len(rule) - 5:]
+        identifier, domain, pattern, destination, pattern_type, priority, account = rule[:7]
         try:
             entry = rule_line(_text(pattern_type), pattern, domain, destination)
             owner = check_domain(domain)
+            # A domain whose account is not known stands for itself.
+            account = ('domain', owner) if account is None else ('account', account)
+            owned = per_account.get(account, 0)
             if per_domain.get(owner, 0) >= MAX_RULES_PER_DOMAIN:
                 raise RuleError('A domain can have %s pattern rules; this one is beyond that.'
                                 % MAX_RULES_PER_DOMAIN)
-            if len(entries) >= MAX_RULES:
-                raise RuleError('A server can have %s pattern rules; this one is beyond that.' % MAX_RULES)
+            if owned >= MAX_RULES_PER_ACCOUNT:
+                raise RuleError('An account can have %s pattern rules on all its domains; this one is '
+                                'beyond that.' % MAX_RULES_PER_ACCOUNT)
+            if owned >= RESERVED_RULES_PER_ACCOUNT:
+                if shared >= SHARED_RULES:
+                    raise RuleError('This server has reached its limit of pattern rules; an account can '
+                                    'still have %s.' % RESERVED_RULES_PER_ACCOUNT)
+                shared += 1
             per_domain[owner] = per_domain.get(owner, 0) + 1
-            entries.append((identifier, entry))
+            per_account[account] = owned + 1
+            try:
+                order = int(priority)
+            except (TypeError, ValueError):
+                order = 100
+            admitted.append((order, identifier, entry))
         except RuleError as error:
             rejected.append({'id': identifier, 'reason': str(error)})
-    return entries, rejected
+    return [(identifier, entry) for _, identifier, entry in sorted(admitted)], rejected
 
 
 def alias_maps_with_reference(value, reference):
@@ -341,6 +436,13 @@ def _run(command, timeout=COMMAND_TIMEOUT):
     done = subprocess.run(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                           universal_newlines=True, timeout=timeout)
     return done.returncode, done.stdout, done.stderr
+
+
+def _reload_later(seconds):
+    """Run the helper again after `seconds`, in a process of its own that outlives this one."""
+    subprocess.Popen(['/bin/sh', '-c', 'sleep %d; exec %s' % (seconds, HELPER_COMMAND)],
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True, close_fds=True)
 
 
 def _said(output, error):
@@ -423,26 +525,39 @@ def _map_text(entries):
 
 
 def _single_out(entries, rejected, run, map_path):
-    """After the whole map was too slow to read: drop the rules that are slow or refused on their own.
+    """After the whole map was too slow to read: drop the rules that are to blame, and only those.
 
-    An empty map is tried first. If Postfix cannot read even that in time,
-    the rules are not to blame and nothing is changed.
+    A rule is dropped when Postfix refuses it on its own, or when it alone
+    is too slow twice while an empty map is read at once in between. A busy
+    server makes everything slow, the empty map included; then no rule is
+    blamed, the attempt ends and nothing is changed.
     """
-    try:
-        _refused_lines(HEADER, map_path, run, CHECK_TIMEOUT)
-    except _TimedOut:
-        raise MapError('Postfix did not finish reading an empty pattern map in %s seconds.' % CHECK_TIMEOUT)
+    busy = MapError('Postfix is too slow to check the pattern rules just now; nothing was changed.')
+
+    def alone(entry):
+        refused = _refused_lines(_map_text([entry]), map_path, run, RULE_TIMEOUT)
+        return sorted(refused.items())[0][1] if refused else None
+
+    def empty_map_within(seconds):
+        try:
+            _refused_lines(HEADER, map_path, run, seconds)
+        except _TimedOut:
+            raise busy
+
+    empty_map_within(CHECK_TIMEOUT)
     slow = 0
     for entry in list(entries):
         try:
-            refused = _refused_lines(_map_text([entry]), map_path, run, RULE_TIMEOUT)
-            reason = sorted(refused.items())[0][1] if refused else None
+            reason = alone(entry)
         except _TimedOut:
-            slow += 1
-            if slow > MAX_SLOW_RULES:
-                raise MapError('Postfix is too slow to check the pattern rules: more than %s of them each '
-                               'took over %s seconds.' % (MAX_SLOW_RULES, RULE_TIMEOUT))
-            reason = 'it was not read within %s seconds' % RULE_TIMEOUT
+            empty_map_within(RULE_TIMEOUT)
+            try:
+                reason = alone(entry)
+            except _TimedOut:
+                slow += 1
+                if slow > MAX_SLOW_RULES:
+                    raise busy
+                reason = 'it was not read within %s seconds, twice' % RULE_TIMEOUT
         if reason:
             rejected.append({'id': entry[0], 'reason': 'The mail server cannot use this pattern: %s' % reason})
             entries.remove(entry)
@@ -476,6 +591,58 @@ def _install(entries, rejected, run, map_path):
             del entries[index]
 
 
+def _stamp(path, when):
+    with open(path, 'w'):
+        pass
+    os.utime(path, (when, when))
+
+
+def _reload(changed, run, state, clock, later, result):
+    """Have Postfix read the map again, at most once in RELOAD_INTERVAL seconds.
+
+    A reload that comes too soon after the last one is owed instead: a
+    marker is left and the helper is started again for the moment it falls
+    due. That run, like any other run of apply() for whatever reason, sees
+    the marker and reloads. Should that process be lost, Postfix still
+    takes the map up by itself, because each of its programs reads it when
+    it starts and none lives long (max_idle, max_use), and a restart of
+    Postfix reads it in any case.
+    """
+    owed = state + '.pending'
+    if not changed and not os.path.exists(owed):
+        return
+    if run([_tool('postfix'), 'status'], COMMAND_TIMEOUT)[0] != 0:
+        # Postfix is not running and reads the map when it starts.
+        try:
+            os.remove(owed)
+        except OSError:
+            pass
+        return
+    try:
+        wait = os.path.getmtime(state + '.reloaded') + RELOAD_INTERVAL - clock()
+    except OSError:
+        wait = 0
+    if wait > 0:
+        try:
+            if not os.path.exists(owed):
+                _stamp(owed, clock())
+                later(int(wait) + 1)
+            result['reload_in'] = int(wait) + 1
+            return
+        except Exception:
+            # The reload cannot be put off safely, so it is done now.
+            pass
+    code, output, error = run([_tool('postfix'), 'reload'], COMMAND_TIMEOUT)
+    if code != 0:
+        raise MapError('The pattern map was written, but Postfix did not reload: %s' % _said(output, error))
+    try:
+        _stamp(state + '.reloaded', clock())
+        if os.path.exists(owed):
+            os.remove(owed)
+    except OSError:
+        pass
+
+
 def _put_back(map_path, text, value, setting_touched, reference, run, main_cf):
     """Return the map and the Postfix setting to what they were.
 
@@ -501,19 +668,22 @@ def _put_back(map_path, text, value, setting_touched, reference, run, main_cf):
         return 'failed'
 
 
-def apply(rules, run=_run, map_path=MAP_PATH, main_cf=MAIN_CF, disable=None):
+def apply(rules, run=_run, map_path=MAP_PATH, main_cf=MAIN_CF, disable=None, state=None, clock=time.time,
+          later=None):
     """Make Postfix follow the rules that `rules()` returns.
 
-    Returns {'state': ..., 'rejected': [{'id': ..., 'reason': ...}]}. A rule
+    Returns {'state': ..., 'rejected': [{'id': ..., 'reason': ...}]}, with
+    'reload_in' (seconds) when the reload is owed rather than done. A rule
     listed as rejected is not in the map, and `disable` is called with the
     ids of such rules so that they can be marked. Raises MapError when the
     map could not be written, listed for Postfix or loaded; the map and the
-    setting are then put back as they were, so that what Postfix reads and
-    what the caller keeps in its database stay the same thing. A server
-    that has no rule and never had the map is left untouched.
+    setting are then put back as they were. A server that has no rule and
+    never had the map is left untouched.
     """
     if not os.path.isfile(main_cf):
         return {'state': 'no mail server', 'rejected': []}
+    state = state or STATE
+    later = later or _reload_later
     reference = 'regexp:' + map_path
     lock = None
     try:
@@ -532,20 +702,18 @@ def apply(rules, run=_run, map_path=MAP_PATH, main_cf=MAIN_CF, disable=None):
         setting_touched = False
         try:
             entries, result['rejected'] = build(saved)
-            changed = _install(entries, result['rejected'], run, map_path)
-
-            # The map exists from here on; Postfix must never be pointed at a missing file.
             wanted = alias_maps_with_reference(value, reference)
-            if wanted != value:
-                setting_touched = True
-                _set_alias_maps(wanted, run, main_cf)
-                changed = True
-
-            if changed and run([_tool('postfix'), 'status'], COMMAND_TIMEOUT)[0] == 0:
-                code, output, error = run([_tool('postfix'), 'reload'], COMMAND_TIMEOUT)
-                if code != 0:
-                    raise MapError('The pattern map was written, but Postfix did not reload: %s'
-                                   % _said(output, error))
+            if wanted == value and before == _map_text(entries) and not os.path.islink(map_path):
+                # The map holds exactly these rules; it was checked when it was written.
+                changed = False
+            else:
+                changed = _install(entries, result['rejected'], run, map_path)
+                # The map exists from here on; Postfix must never be pointed at a missing file.
+                if wanted != value:
+                    setting_touched = True
+                    _set_alias_maps(wanted, run, main_cf)
+                    changed = True
+            _reload(changed, run, state, clock, later, result)
         except Exception as error:
             message = str(error) if isinstance(error, MapError) else (
                 'The pattern map could not be installed: %s' % error)
@@ -554,7 +722,7 @@ def apply(rules, run=_run, map_path=MAP_PATH, main_cf=MAIN_CF, disable=None):
                 message += ' The previous pattern map was put back.'
             elif outcome == 'failed':
                 message += ' The previous pattern map could not be put back.'
-            raise MapError(message, outcome != 'failed')
+            raise MapError(message)
         # Marked only now that the map without them is what Postfix uses.
         if result['rejected'] and disable is not None:
             try:
@@ -628,8 +796,8 @@ def rebuild_after_removal(map_path=MAP_PATH):
 
 
 def result_line(result):
-    """What the root helper prints for the panel."""
-    return RESULT_MARK + json.dumps(result)
+    """What the root helper prints for the panel: one line of plain ASCII, whatever the result holds."""
+    return RESULT_MARK + json.dumps(result, ensure_ascii=True, default=str)
 
 
 def parse_result(output):
