@@ -26,6 +26,7 @@ from random import randint
 from plogical.processUtilities import ProcessUtilities
 from plogical import databaseGrants
 import MySQLdb.cursors as cursors
+from plogical import databaseImport
 from math import ceil
 import argparse
 
@@ -436,52 +437,32 @@ password=%s
                 'dump', '%s:%s.sql' % (snapshotid, databaseName),
                 '--password', '',
             ]
-            mysqlCommand = [
-                'mysql', '--defaults-file=/home/cyberpanel/.my.cnf',
-                '-u', mysqluser, '--host=%s' % mysqlhost,
-                '--port', str(mysqlport), databaseName,
-            ]
 
-            if getpass.getuser() != 'root':
-                # The panel's own account may not switch to the website's
-                # account. The helper runs the dump as that account and its
-                # output goes to mysql as it arrives.
-                importProcess = subprocess.Popen(
-                    mysqlCommand, stdin=subprocess.PIPE,
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                )
-                try:
-                    dumped = ProcessUtilities.streamCommand(
+            def feed(sink):
+                if getpass.getuser() != 'root':
+                    # The panel's own account may not switch to the website's
+                    # account. The helper runs the dump as that account and its
+                    # output goes to the import as it arrives.
+                    return ProcessUtilities.streamCommand(
                         'rustic -r %s dump %s --password "" 2>/dev/null' % (
                             shlex.quote(repository[0]),
                             shlex.quote('%s:%s.sql' % (snapshotid, databaseName))),
-                        externalApp, importProcess.stdin)
+                        externalApp, sink)
+                dumpProcess = subprocess.Popen(
+                    dumpCommand, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                )
+                try:
+                    databaseImport.copy(dumpProcess.stdout, sink)
                 finally:
-                    try:
-                        importProcess.stdin.close()
-                    except OSError:
-                        pass
-                importProcess.wait()
+                    dumpProcess.stdout.close()
+                    dumpProcess.wait()
+                return dumpProcess.returncode == 0
 
-                if dumped and importProcess.returncode == 0:
-                    return 1
-                logging.CyberCPLogFileWriter.writeToFile(
-                    'Rustic database restore failed for %s.' % databaseName)
-                return 0
-
-            dumpProcess = subprocess.Popen(
-                dumpCommand, stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-            )
-            importProcess = subprocess.Popen(
-                mysqlCommand, stdin=dumpProcess.stdout,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            )
-            dumpProcess.stdout.close()
-            importProcess.communicate()
-            dumpProcess.wait()
-
-            if dumpProcess.returncode == 0 and importProcess.returncode == 0:
+            # The dump comes from a repository the website's account can write
+            # to: it is loaded by an account that may use this database only.
+            if databaseImport.import_dump(databaseName, feed, mysqlhost, mysqlport,
+                                          mysqlUtilities.registeredUser(databaseName)) == 1:
                 return 1
             logging.CyberCPLogFileWriter.writeToFile(
                 'Rustic database restore failed for %s.' % databaseName)
@@ -516,25 +497,6 @@ password=%s
                 mysqlport = '3306'
                 mysqluser = 'root'
 
-            cnfPath = '/home/cyberpanel/.my.cnf'
-
-            if not os.path.exists(cnfPath):
-                cnfContent = """[mysqldump]
-user=root
-password=%s
-max_allowed_packet=1024M
-[mysql]
-user=root
-password=%s
-""" % (password, password)
-                writeToFile = open(cnfPath, 'w')
-                writeToFile.write(cnfContent)
-                writeToFile.close()
-
-                os.chmod(cnfPath, 0o600)
-                command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
-                subprocess.call(shlex.split(command))
-
             if rustic == 0:
                 # Auto-detect backup format
                 backup_format = mysqlUtilities.detectBackupFormat(
@@ -567,41 +529,33 @@ password=%s
                     )
                     return 0
 
-                mysql_command = ['mysql', '--defaults-file=/home/cyberpanel/.my.cnf',
-                                 '-u', mysqluser, '--host=%s' % mysqlhost,
-                                 '--port', str(mysqlport), databaseName]
-                if backup_format['compressed']:
-                    decompress = subprocess.Popen(['gunzip', '-c', backup_file], stdout=subprocess.PIPE,
-                                                  stderr=subprocess.DEVNULL)
-                    importer = None
-                    try:
-                        importer = subprocess.Popen(mysql_command, stdin=decompress.stdout,
-                                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                        decompress.stdout.close()
-                        importer.communicate()
-                    finally:
-                        if decompress.stdout and not decompress.stdout.closed:
+                def feed(sink):
+                    if backup_format['compressed']:
+                        decompress = subprocess.Popen(['gunzip', '-c', backup_file], stdout=subprocess.PIPE,
+                                                      stderr=subprocess.DEVNULL)
+                        try:
+                            databaseImport.copy(decompress.stdout, sink)
+                        finally:
                             decompress.stdout.close()
-                        decompress.wait()
-                    result = 0 if importer and importer.returncode == 0 and decompress.returncode == 0 else 1
-                else:
+                            decompress.wait()
+                        return decompress.returncode == 0
                     with open(backup_file, 'rb') as stream:
-                        result = subprocess.call(mysql_command, stdin=stream)
-                if result != 0:
+                        return databaseImport.copy(stream, sink)
+
+                # The dump comes out of an archive somebody else made: it is
+                # loaded by an account that may use this database only.
+                registered = mysqlUtilities.registeredUser(databaseName)
+                if databaseImport.import_dump(databaseName, feed, mysqlhost, mysqlport, registered) != 1:
                     logging.CyberCPLogFileWriter.writeToFile('Database import failed for %s.' % databaseName)
                     return 0
 
                 if passwordCheck == None:
-
-                    connection, cursor = mysqlUtilities.setupConnection()
-
-                    if connection == 0:
+                    # An archive of the old format holds the password hash of
+                    # the database's one user, which is the registered user.
+                    if registered is None or mysqlUtilities.changePassword(registered, dbPassword, 1) != 1:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'The password of the user of %s was not restored.' % databaseName)
                         return 0
-
-                    passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "';FLUSH PRIVILEGES;"
-
-                    cursor.execute(passwordCMD)
-                    connection.close()
 
                 return 1
             else:
@@ -613,6 +567,14 @@ password=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[restoreDatabaseBackup]")
             return 0
+
+    @staticmethod
+    def registeredUser(databaseName):
+        """The user the panel registered for this database, or None."""
+        try:
+            return Databases.objects.get(dbName=databaseName).dbUser
+        except BaseException:
+            return None
 
     @staticmethod
     def databaseNamesExist(dbName, dbUsername):

@@ -138,39 +138,38 @@ class MySQLLoopbackUserTests(unittest.TestCase):
 
 class RusticDatabaseRestoreTests(unittest.TestCase):
 
-    @patch('plogical.mysqlUtilities.subprocess.Popen')
-    def test_rustic_dump_is_piped_to_mysql_with_defaults_file(self, popen):
-        dump_process = MagicMock(returncode=0)
-        dump_process.stdout = MagicMock()
-        import_process = MagicMock(returncode=0)
-        popen.side_effect = [dump_process, import_process]
+    def restore(self, imported, dump_code=0):
+        dump_process = MagicMock(returncode=dump_code)
+        dump_process.stdout.read.side_effect = [b'dump', b'']
+        fed = []
 
-        result = mysqlUtilities.restoreRusticDatabase(
-            'site_db', '/home/site/incrementalbackups', 'siteuser',
-            'snapshot-id', 'root', 'localhost', '3306',
-        )
+        def import_dump(database, feed, host, port, owner):
+            fed.append(feed(MagicMock()))
+            return imported
+
+        with patch('plogical.mysqlUtilities.subprocess.Popen', return_value=dump_process) as popen, \
+                patch('plogical.mysqlUtilities.getpass.getuser', return_value='root'), \
+                patch('plogical.mysqlUtilities.databaseImport.import_dump', side_effect=import_dump) as importer, \
+                patch.object(mysqlUtilities, 'registeredUser', return_value='site_user'):
+            result = mysqlUtilities.restoreRusticDatabase(
+                'site_db', '/home/site/incrementalbackups', 'siteuser',
+                'snapshot-id', 'root', 'localhost', '3306',
+            )
+        return result, popen, importer, fed
+
+    def test_rustic_dump_is_piped_to_the_restricted_import(self):
+        result, popen, importer, fed = self.restore(1)
 
         self.assertEqual(result, 1)
-        dump_command = popen.call_args_list[0].args[0]
-        import_command = popen.call_args_list[1].args[0]
+        dump_command, = [call[0][0] for call in popen.call_args_list]
         self.assertEqual(dump_command[:3], ['sudo', '-u', 'siteuser'])
         self.assertIn('snapshot-id:site_db.sql', dump_command)
-        self.assertIn('--defaults-file=/home/cyberpanel/.my.cnf', import_command)
-        self.assertNotIn('--defaults--file=/home/cyberpanel/.my.cnf', import_command)
+        self.assertEqual(('site_db', 'localhost', '3306', 'site_user'),
+                         importer.call_args[0][:1] + importer.call_args[0][2:])
+        self.assertEqual([True], fed)
 
-    @patch('plogical.mysqlUtilities.subprocess.Popen')
-    def test_failed_mysql_import_is_reported(self, popen):
-        dump_process = MagicMock(returncode=0)
-        dump_process.stdout = MagicMock()
-        import_process = MagicMock(returncode=1)
-        popen.side_effect = [dump_process, import_process]
-
-        result = mysqlUtilities.restoreRusticDatabase(
-            'site_db', '/home/site/incrementalbackups', 'siteuser',
-            'snapshot-id', 'root', 'localhost', '3306',
-        )
-
-        self.assertEqual(result, 0)
+    def test_failed_mysql_import_is_reported(self):
+        self.assertEqual(self.restore(0)[0], 0)
 
 
 if __name__ == '__main__':
