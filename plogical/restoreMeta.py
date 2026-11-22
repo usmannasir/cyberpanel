@@ -13,6 +13,7 @@ from xml.etree import ElementTree
 import plogical.mysqlUtilities as mysqlUtilities
 from databases.models import Databases
 import argparse
+from managePHP.phpConfig import normalized_php_selection
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
@@ -49,7 +50,7 @@ class restoreMeta():
                     savedState = childDomain.findtext('state')
                     independentState = None if savedState is None else normalize_child_state(savedState)
 
-                    result = virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0,
+                    result = virtualHostUtilities.createDomain(masterDomain, domain, normalized_php_selection(phpSelection), path, 0, 0, 0,
                                                                'admin', 0, independentState=independentState)
                     if result[0] != 1:
                         raise RuntimeError('Could not restore child domain %s: %s' % (domain, result[1]))

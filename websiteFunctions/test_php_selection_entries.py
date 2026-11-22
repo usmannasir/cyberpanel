@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
-from managePHP.test_php_selection import NOT_A_SELECTION, OFFERED
+from managePHP.test_php_selection import NOT_A_SELECTION, OFFERED, OLDER_SPELLINGS
 from websiteFunctions.test_apache_entitlements import child_data, website_data
 from websiteFunctions.test_wordpress_entitlements import Response, load_wordpress_manager
 
@@ -117,6 +117,90 @@ class PHPSelectionEntryTests(unittest.TestCase):
                     words = shlex.split(commands[0])
                     self.assertEqual(selection, words[words.index('--phpVersion') + 1])
                     self.assertEqual(1, words.count('--phpVersion'))
+
+    def php_word(self):
+        commands = self.worker_commands()
+        self.assertTrue(commands)
+        words = shlex.split(commands[0])
+        self.assertEqual(1, words.count('--phpVersion'))
+        return words[words.index('--phpVersion') + 1]
+
+    def test_cloud_website_creation_takes_an_older_spelling(self):
+        # The cloud interface passes its request on with the controller
+        # field; earlier releases created the website for these spellings.
+        for spelling, selection in OLDER_SPELLINGS.items():
+            with self.subTest(spelling=spelling):
+                self.process.reset_mock()
+                payload = json.loads(self.manager().submitWebsiteCreation(7, dict(
+                    website_data(), phpSelection=spelling, controller='submitWebsiteCreation')).content)
+                self.assertEqual(1, payload['status'], payload)
+                self.assertEqual(selection, self.php_word())
+
+    def test_a_page_request_for_a_new_website_keeps_the_strict_check(self):
+        for spelling in OLDER_SPELLINGS:
+            with self.subTest(spelling=spelling):
+                self.process.reset_mock()
+                payload = json.loads(self.manager().submitWebsiteCreation(
+                    7, dict(website_data(), phpSelection=spelling)).content)
+                self.assertEqual(0, payload['status'], payload)
+                self.assertEqual([], self.worker_commands())
+
+    def api_request(self, **changes):
+        self.ns['hashPassword'] = mock.Mock()
+        self.ns['hashPassword'].check_password.return_value = True
+        self.ns['ACL'] = mock.Mock()
+        self.ns['generate_api_token'] = lambda: 'token'
+        self.services['Administrator'].objects.get.return_value = SimpleNamespace(
+            pk=7, userName='admin', defaultSite=1, password='stored-hash')
+        self.services['Administrator'].objects.filter.return_value.exists.return_value = True
+        self.services['ACLManager'].websitesLimitCheck.return_value = 1
+        data = dict(adminUser='admin', adminPass='inert-password', ownerEmail='owner@example.test',
+                    websiteOwner='admin', ownerPassword='inert-password', packageName='Default',
+                    domainName='owned.example')
+        data.update(changes)
+        return json.loads(self.manager().createWebsiteAPI(data).content)
+
+    def test_api_website_creation_takes_an_older_spelling(self):
+        for spelling, selection in OLDER_SPELLINGS.items():
+            with self.subTest(spelling=spelling):
+                self.process.reset_mock()
+                payload = self.api_request(phpSelection=spelling)
+                self.assertEqual(1, payload['createWebSiteStatus'], payload)
+                self.assertEqual(selection, self.php_word())
+
+    def test_api_website_creation_keeps_its_default_version(self):
+        payload = self.api_request()
+        self.assertEqual(1, payload['createWebSiteStatus'], payload)
+        self.assertEqual('PHP 7.4', self.php_word())
+
+    def test_api_website_creation_refuses_text_that_is_no_version(self):
+        for value in ('PHP 7', 'latest', 'PHP 7.4 --apache 1', '', None, 74):
+            with self.subTest(value=value):
+                self.process.reset_mock()
+                payload = self.api_request(phpSelection=value)
+                self.assertEqual(0, payload['createWebSiteStatus'], payload)
+                self.assertIn('Invalid PHP version selected.', payload['error_message'])
+                self.assertEqual([], self.worker_commands())
+
+    def test_an_alias_is_created_with_the_masters_stored_version_in_the_panels_form(self):
+        for stored, selection in (('PHP 74', 'PHP 7.4'), ('php 8.1', 'PHP 8.1'), ('PHP 8.3', 'PHP 8.3')):
+            with self.subTest(stored=stored):
+                self.process.reset_mock()
+                self.existing_site()
+                self.site.phpSelection = stored
+                payload = json.loads(self.manager().submitDomainCreation(
+                    7, dict(child_data(), domainName='alias.example', alias=1)).content)
+                self.assertEqual(1, payload['status'], payload)
+                self.assertEqual(selection, self.php_word())
+
+    def test_an_alias_is_refused_when_the_masters_stored_version_is_no_version(self):
+        self.existing_site()
+        self.site.phpSelection = 'PHP seven'
+        payload = json.loads(self.manager().submitDomainCreation(
+            7, dict(child_data(), domainName='alias.example', alias=1)).content)
+        self.assertEqual(0, payload['status'], payload)
+        self.assertIn('Invalid PHP version selected.', payload['error_message'])
+        self.assertEqual([], self.worker_commands())
 
     def test_website_changes_refuse_a_version_that_is_not_installed(self):
         self.existing_site()

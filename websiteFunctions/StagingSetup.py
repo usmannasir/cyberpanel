@@ -10,6 +10,7 @@ from plogical.applicationInstaller import ApplicationInstaller
 from plogical.mysqlUtilities import mysqlUtilities
 from random import randint
 import os
+from managePHP.phpConfig import normalized_php_selection
 
 
 class StagingSetup(multi.Thread):
@@ -90,7 +91,7 @@ class StagingSetup(multi.Thread):
             path = "/home/" + masterDomain + "/" + domain
 
             logging.statusWriter(tempStatusPath, 'Creating domain for staging environment..,5')
-            phpSelection = website.phpSelection
+            phpSelection = normalized_php_selection(website.phpSelection)
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + shlex.quote(masterDomain) + " --virtualHostName " + shlex.quote(domain) + \
