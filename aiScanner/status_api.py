@@ -6,6 +6,15 @@ from django.utils import timezone
 from .models import AIScannerSettings, ScanHistory
 from .status_models import ScanStatusUpdate
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.securityUtils import constant_time_equal
+
+
+def count(data, name, highest=2147483647):
+    """A counter from a status update: a whole number between nothing and the highest the field holds."""
+    value = data.get(name, 0)
+    if isinstance(value, bool):
+        raise ValueError(name)
+    return min(max(int(value), 0), highest)
 
 
 @csrf_exempt
@@ -33,9 +42,11 @@ def receive_status_update(request):
     """
     try:
         data = json.loads(request.body)
+        if not isinstance(data, dict):
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
         
         scan_id = data.get('scan_id')
-        if not scan_id:
+        if not scan_id or not isinstance(scan_id, str):
             logging.writeToFile('[Status API] Missing scan_id in status update')
             return JsonResponse({'error': 'scan_id required'}, status=400)
 
@@ -51,7 +62,7 @@ def receive_status_update(request):
             logging.writeToFile(f'[Status API] Status update rejected: scan not found or missing scanner settings for {scan_id}')
             return JsonResponse({'error': 'Scan not found'}, status=404)
 
-        if provided_key != scanner_settings.api_key:
+        if not scanner_settings.api_key or not constant_time_equal(provided_key, scanner_settings.api_key):
             logging.writeToFile(f'[Status API] Status update rejected: invalid key for scan {scan_id}')
             return JsonResponse({'error': 'Invalid API key'}, status=403)
 
@@ -59,59 +70,35 @@ def receive_status_update(request):
         status_update, created = ScanStatusUpdate.objects.update_or_create(
             scan_id=scan_id,
             defaults={
-                'phase': data.get('phase', ''),
-                'progress': int(data.get('progress', 0)),
-                'current_file': data.get('current_file', ''),
-                'files_discovered': int(data.get('files_discovered', 0)),
-                'files_scanned': int(data.get('files_scanned', 0)),
-                'files_remaining': int(data.get('files_remaining', 0)),
-                'threats_found': int(data.get('threats_found', 0)),
-                'critical_threats': int(data.get('critical_threats', 0)),
-                'high_threats': int(data.get('high_threats', 0)),
-                'activity_description': data.get('activity_description', ''),
+                'phase': str(data.get('phase', ''))[:50],
+                'progress': count(data, 'progress', 100),
+                'current_file': str(data.get('current_file', ''))[:1000],
+                'files_discovered': count(data, 'files_discovered'),
+                'files_scanned': count(data, 'files_scanned'),
+                'files_remaining': count(data, 'files_remaining'),
+                'threats_found': count(data, 'threats_found'),
+                'critical_threats': count(data, 'critical_threats'),
+                'high_threats': count(data, 'high_threats'),
+                'activity_description': str(data.get('activity_description', ''))[:1000],
                 'last_updated': timezone.now()
             }
         )
 
-        action = "Created" if created else "Updated"
-        
-        # Extended logging for debugging
-        logging.writeToFile(f'[Status API] ✅ {action} status update for scan {scan_id}')
-        
-        # Track phase transitions
-        old_phase = status_update.phase if not created else 'none'
-        new_phase = data.get("phase")
-        if old_phase != new_phase:
-            logging.writeToFile(f'[Status API]    📊 Phase transition: {old_phase} → {new_phase}')
-        
-        logging.writeToFile(f'[Status API]    Phase: {data.get("phase")} → Progress: {data.get("progress", 0)}%')
-        logging.writeToFile(f'[Status API]    Files: {data.get("files_scanned", 0)}/{data.get("files_discovered", 0)} ({data.get("files_remaining", 0)} remaining)')
-        logging.writeToFile(f'[Status API]    Threats: {data.get("threats_found", 0)} total (Critical: {data.get("critical_threats", 0)}, High: {data.get("high_threats", 0)})')
-        if data.get('current_file'):
-            logging.writeToFile(f'[Status API]    Current File: {data.get("current_file")}')
-        if data.get('activity_description'):
-            logging.writeToFile(f'[Status API]    Activity: {data.get("activity_description")}')
-        
-        # Log specific phase milestones
-        phase = data.get('phase', '')
-        if phase == 'discovering_files' and data.get('files_discovered', 0) > 0:
-            logging.writeToFile(f'[Status API]    ✅ File discovery complete: {data.get("files_discovered")} files found')
-        elif phase == 'scanning_files' and data.get('files_scanned', 0) > 0:
-            percentage = (data.get('files_scanned', 0) / data.get('files_discovered', 1)) * 100
-            logging.writeToFile(f'[Status API]    📈 Scan progress: {percentage:.1f}% of files scanned')
-        elif phase == 'ai_analysis':
-            logging.writeToFile(f'[Status API]    🤖 AI Analysis phase - suspicious files being analyzed')
-        
+        logging.writeToFile(
+            f'[Status API] Status of scan {scan_id}: {status_update.phase} {status_update.progress}%, '
+            f'{status_update.files_scanned}/{status_update.files_discovered} files, '
+            f'{status_update.threats_found} threats')
+
         return JsonResponse({'success': True})
 
     except json.JSONDecodeError:
         logging.writeToFile('[Status API] Invalid JSON in status update')
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    except ValueError as e:
-        logging.writeToFile(f'[Status API] Value error in status update: {str(e)}')
+    except (TypeError, ValueError):
+        logging.writeToFile('[Status API] Invalid values in status update')
         return JsonResponse({'error': 'Invalid data types'}, status=400)
     except Exception as e:
-        logging.writeToFile(f'[Status API] Status update error: {str(e)}')
+        logging.writeToFile(f'[Status API] Status update error: {type(e).__name__}')
         return JsonResponse({'error': 'Internal server error'}, status=500)
 
 
