@@ -11,6 +11,17 @@ INSTALLER = Path(__file__).with_name('install.py')
 BOOTSTRAP = INSTALLER.parents[1] / 'cyberpanel.sh'
 
 
+def method_source(text, cls, method):
+    """The lines of a method of a class, up to the next statement of the class.
+
+    ast.get_source_segment gives them from Python 3.8 on; the interpreter of
+    the panel on AlmaLinux 8, which also runs these tests, is 3.6.
+    """
+    lines = text.splitlines(True)
+    later = [node.lineno for node in cls.body if node.lineno > method.lineno]
+    return ''.join(lines[method.lineno - 1:min(later) - 1 if later else len(lines)])
+
+
 def load_key_helpers():
     tree = ast.parse(INSTALLER.read_text())
     selected = []
@@ -76,7 +87,7 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
             if isinstance(node, ast.FunctionDef)
             and node.name == 'install_postfix_dovecot'
         )
-        source = ast.get_source_segment(INSTALLER.read_text(), method)
+        source = method_source(INSTALLER.read_text(), installer_class, method)
 
         self.assertIn('if is_el10_release()', source)
         self.assertIn('dnf install -y postfix postfix-mysql cyrus-sasl-plain', source)
@@ -94,8 +105,8 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
             node for node in installer_class.body
             if isinstance(node, ast.FunctionDef) and node.name == 'installMySQL'
         )
-        source = ast.get_source_segment(
-            INSTALLER.with_name('installCyberPanel.py').read_text(), method
+        source = method_source(
+            INSTALLER.with_name('installCyberPanel.py').read_text(), installer_class, method
         )
 
         self.assertIn("if self.detectPlatform() != 'rhel10':", source)
@@ -127,7 +138,7 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
             node for node in installer_class.body
             if isinstance(node, ast.FunctionDef) and node.name == 'installOpenDKIM'
         )
-        source = ast.get_source_segment(INSTALLER.read_text(), method)
+        source = method_source(INSTALLER.read_text(), installer_class, method)
 
         self.assertIn('if is_el10_release():', source)
         self.assertIn("shutil.chown(table_path, user='root', group='opendkim')", source)
