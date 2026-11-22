@@ -104,6 +104,9 @@ def site_directory_name(domain):
 ## firstRun   -> optional Docker_Sites method that completes the application's own
 ##               first-run setup after its containers are up and before the website
 ##               is pointed at them
+## dataOwner  -> optional "uid:gid" of the user the application's image runs as, for
+##               an image that does not run as root: its data directory is created
+##               for that user before the containers start
 
 DOCKER_APPS = {
     'WordPress': {
@@ -120,6 +123,7 @@ DOCKER_APPS = {
         'compose': 'generate_compose_config',
         'minSiteRam': 256,
         'firstRun': 'create_n8n_owner',
+        'dataOwner': '1000:1000',
     },
     'Hermes': {
         'siteType': 4,
@@ -561,6 +565,30 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
         return json.dumps(escape(config), indent=2)
 
+    def create_site_directory(self, data_owner=None):
+        """
+        Create /home/docker/<domain> for root alone, and return (1, None) or (0, the error).
+
+        The containers of a site write into this directory as whatever user they
+        run as inside, root included. No other account of the server can enter
+        it, so nothing a container leaves there can be opened or run from the
+        host. An application whose image runs as its own user gets its data
+        directory created for that user; Docker would create it for root.
+        """
+        directory = '/home/docker/' + self.data['finalURL']
+        commands = [f"install -d -m 700 -o root -g root {shlex.quote(directory)}"]
+
+        if data_owner:
+            owner, group = data_owner.split(':')
+            commands.append(f"install -d -m 700 -o {int(owner)} -g {int(group)} {shlex.quote(directory + '/data')}")
+
+        for command in commands:
+            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+            if result == 0:
+                return 0, message
+
+        return 1, None
+
     def wait_for_wordpress(self, attempts=60, delay=5):
         client = docker.from_env()
         for _ in range(attempts):
@@ -604,8 +632,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
             ### WriteConfig to compose-file
 
-            command = f"mkdir -p /home/docker/{self.data['finalURL']}"
-            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+            result, message = self.create_site_directory()
 
             if result == 0:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
@@ -1420,8 +1447,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 logging.statusWriter(self.JobID, 'System resources verified...,10')
 
                 # Create directories
-                command = f"mkdir -p /home/docker/{self.data['finalURL']}"
-                result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                result, message = self.create_site_directory(meta.get('dataOwner'))
                 if result == 0:
                     raise DockerDeploymentError(f"Failed to create directories: {message}")
                 logging.statusWriter(self.JobID, 'Directories created...,30')
@@ -1581,7 +1607,6 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
         n8n_config = {
             'image': 'docker.n8n.io/n8nio/n8n',
-            'user': 'root',
             'healthcheck': {
                 'test': ["CMD", "wget", "--spider", "http://localhost:5678"],
                 'interval': '20s',
@@ -1646,7 +1671,6 @@ services:
 
   '{self.data['ServiceName']}':
     image: {n8n_config['image']}
-    user: {n8n_config['user']}
     restart: always
     healthcheck:
       test: {n8n_config['healthcheck']['test']}

@@ -62,7 +62,7 @@ class WordPressComposeTests(TestCase):
                 mock.patch('plogical.DockerSites.logging.statusWriter') as status, \
                 mock.patch('plogical.DockerSites.logging.writeToFile'):
             site.DeployWPContainer()
-        messages = [call.args[1] for call in status.call_args_list]
+        messages = [call[0][1] for call in status.call_args_list]
         self.assertTrue(any('[404]' in message for message in messages))
         self.assertFalse(any('[200]' in message for message in messages))
 
@@ -110,6 +110,10 @@ elif command == 'core install':
             tool = self.bin / name
             tool.write_text('#!/bin/sh\nexit 0\n')
             tool.chmod(0o755)
+        # Stands in for the change of user: notes who wp-cli was to run as, then runs it.
+        setpriv = self.bin / 'setpriv'
+        setpriv.write_text('#!/bin/sh\necho "$1 $2 $3 HOME=$HOME" >> "$FIXTURE_ROOT/identity"\nshift 3\nexec "$@"\n')
+        setpriv.chmod(0o755)
         server = self.bin / 'lswsctrl'
         server.write_text('#!/bin/sh\necho "$1" >> "$FIXTURE_ROOT/server"\n')
         server.chmod(0o755)
@@ -123,9 +127,14 @@ elif command == 'core install':
 
     def test_restart_preserves_installation_configuration_and_content(self):
         for _ in range(2):
-            result = subprocess.run(['bash', str(self.script)], env=self.env, capture_output=True, timeout=10)
+            result = subprocess.run(['bash', str(self.script)], env=self.env, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr.decode())
         commands = (self.root / 'commands').read_text().splitlines()
+        # Every wp-cli call was made as the web server's user, none as root.
+        identities = (self.root / 'identity').read_text().splitlines()
+        self.assertEqual(len(commands), len(identities))
+        self.assertEqual({'--reuid=nobody --regid=nogroup --clear-groups HOME=/tmp'}, set(identities))
         self.assertEqual(commands.count('core download'), 1)
         self.assertEqual(commands.count('config create'), 1)
         self.assertEqual(commands.count('core install'), 1)
@@ -136,7 +145,8 @@ elif command == 'core install':
 
     def test_failed_download_never_publishes_readiness_or_starts_web_server(self):
         self.env['FAIL_DOWNLOAD'] = '1'
-        result = subprocess.run(['bash', str(self.script)], env=self.env, capture_output=True, timeout=10)
+        result = subprocess.run(['bash', str(self.script)], env=self.env, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, timeout=10)
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.root / 'ready').exists())
         self.assertFalse((self.root / 'server').exists())
