@@ -172,8 +172,8 @@ class NewWebsiteOnlyTests(unittest.TestCase):
         data.update(extra)
         response = json.loads(manager().submitWorpressCreation(7, data).content)
         self.assertEqual(1, response['status'], response)
-        self.assertEqual('wordpressInstallNew', services['ApplicationInstaller'].call_args.args[0])
-        return services['ApplicationInstaller'].call_args.args[1]
+        self.assertEqual('wordpressInstallNew', services['ApplicationInstaller'].call_args[0][0])
+        return services['ApplicationInstaller'].call_args[0][1]
 
     def test_a_restore_marks_its_site_as_one_that_must_not_exist_yet(self):
         self.assertEqual(1, self.create(newWebsiteOnly=1)['newWebsiteOnly'])
