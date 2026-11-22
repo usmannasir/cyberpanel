@@ -33,7 +33,7 @@ REAL_FUNCTIONS = (
     'Set_Default_Variables', 'Check_Root', 'Check_Server_IP',
     'Check_OS', 'Check_Virtualization', 'Check_Panel', 'Check_Process', 'Check_Provider',
     'Check_Argument', 'Argument_Mode', 'Interactive_Mode', 'Validate_Remote_MySQL',
-    'Fail_Install', 'Install_Step', 'Pre_Install_Setup_Git_URL',
+    'Fail_Install', 'Install_Step', 'Pre_Install_Setup_Git_URL', 'Hold_Panel',
     'Post_Install_Display_Final_Info',
 )
 
@@ -124,6 +124,8 @@ cyberpanel() {
 }
 phase() {
   printf '%s\n' "$1" >> "$QA_PHASES"
+  # QA_SIGNAL_AT: the script is sent QA_SIGNAL when this phase starts.
+  if [ -n "$QA_SIGNAL_AT" ] && [ "$QA_SIGNAL_AT" = "$1" ]; then kill -s "$QA_SIGNAL" "$$"; fi
   [ "$QA_FAIL_AT" = "$1" ]
 }
 panel_tree() {
@@ -301,12 +303,18 @@ class Installer:
 
     def harness(self):
         functions, top_level = script_parts()
-        # Of Post_Install_Tweak, the two parts that decide how a run ends are
-        # the real ones: setting the admin password, and the hostname step.
-        password = functions[functions.index('\nif ! Set_Admin_Password; then\n'):]
-        password = password[:password.index('\nfi\n') + len('\nfi\n')]
-        tweak = functions[functions.index('\nInstall_Step hostname_ssl\n'):]
-        tweak = tweak[:tweak.index('\n}\n')]
+        # Of Post_Install_Tweak, the parts that decide how a run ends are the
+        # real ones, in their order: setting and confirming the admin password,
+        # starting the panel, and the hostname step.
+        start = functions.index('\nPost_Install_Tweak() {\n')
+        body = functions[start:functions.index('\n}\n', start)]
+        password = body[body.index('\nif ! Set_Admin_Password; then\n'):
+                        body.index('\nConfigure_Default_PHP_CLI || return 1\n') + 1]
+        rest = body[body.index('\nConfigure_Default_PHP_CLI || return 1\n'):]
+        password += rest[rest.index('\nStart_Panel\n'):][:len('\nStart_Panel\n')]
+        tweak = rest[rest.index('\nInstall_Step hostname_ssl\n'):]
+        if rest.index('\nStart_Panel\n') > rest.index('\nInstall_Step hostname_ssl\n'):
+            raise AssertionError('the panel is started after the hostname step')
         stubs = [COMMAND_STUBS]
         for name, failure in sorted(STUBBED_PHASES.items()):
             stubs.append('%s() { phase %s && { %s; }; return 0; }\n' % (name, name, failure))
@@ -347,6 +355,8 @@ class Installer:
             'QA_TLS_OUTPUT': options.pop('tls_output', CLI_OK),
             'QA_TLS_SIGNAL': options.pop('tls_signal', ''),
             'QA_FAIL_AT': options.pop('fail_at', ''),
+            'QA_SIGNAL_AT': options.pop('signal_at', ''),
+            'QA_SIGNAL': options.pop('signal', 'TERM'),
             'QA_PYTHON_STEPS': options.pop('python_steps', DEFAULT_PYTHON_STEPS),
             'QA_ROOT': str(self.root),
             'QA_STAND_INS': str(self.root / 'stand-ins'),
@@ -380,6 +390,12 @@ class Installer:
 
     def recorded(self, record):
         return record.read_text().splitlines() if record.exists() else []
+
+    def panel_service_calls(self):
+        """What was done to the panel's service, and when the panel was asked
+        whether its administrator has the password, in order."""
+        return [call for call in self.recorded(self.calls)
+                if call == 'password-check' or (call.startswith('systemctl ') and call.endswith(' lscpd'))]
 
     def everything_written(self):
         """All text the run left in files, for searches for a secret. The one
