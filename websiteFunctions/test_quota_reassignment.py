@@ -13,7 +13,8 @@ from plogical import storageQuota
 class WebsiteQuotaReassignmentTests(unittest.TestCase):
     def setUp(self):
         self.admin = NS(pk=1)
-        self.site = NS(pk=1, domain='owned.test', externalApp='owned', save=Mock(), admin=self.admin)
+        self.site = NS(pk=1, domain='owned.test', externalApp='owned', save=Mock(), admin=self.admin,
+                       phpSelection='PHP 8.3')
         self.package = NS(pk=3, diskSpace=50, inodeLimit=70, enforceDiskLimits=1)
         self.site.package = NS(pk=2, diskSpace=10, inodeLimit=20, enforceDiskLimits=1)
         self.project_prepare = Mock(return_value=None)
