@@ -713,7 +713,9 @@ do
   if [[ "$i" = "50" ]] ; then
     echo "command $1 failed for 50 times, exit..."
     log_error "Command failed after 50 retries: $1"
-    exit 2
+    # A failed installation like any other: status 1, the reason of the step
+    # it happened in. Status 2 is for a command line that cannot be used.
+    Fail_Install
   else
     eval "$1"  && break || {
       echo -e "\n$1 has failed for $i times\nWait and try again...\n"

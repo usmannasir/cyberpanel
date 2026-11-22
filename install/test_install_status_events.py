@@ -360,6 +360,22 @@ class FailedRunTests(unittest.TestCase):
             with self.subTest(phase=phase):
                 self.failed(fail_at=phase, step=step, status=status, reason=reason)
 
+    def test_command_that_fails_fifty_times_is_a_failed_run_like_any_other(self):
+        # It used to end the script with status 2, which is what a command line
+        # that cannot be read ends with.
+        machine = Installer(self)
+        harness = machine.harness()
+        self.assertEqual(1, harness.count('Pre_Install_Get_Panel_Source() { phase'))
+        harness = harness.replace('Pre_Install_Get_Panel_Source() { phase',
+                                  'Pre_Install_Get_Panel_Source() { Retry_Command "note attempt; false"; phase')
+        with patch.object(machine, 'harness', return_value=harness):
+            result = machine.run('-v', 'ols')
+        self.assertEqual(1, result.returncode, result.stderr)
+        self.assertEqual(49, machine.recorded(machine.calls).count('attempt'))
+        self.assertEqual(up_to('download_panel') + ['download_panel failed download_failed',
+                                                    'install failed download_failed'], machine.events())
+        self.assertIn('failed for 50 times', result.stdout)
+
     def test_installer_failure_keeps_its_status_and_names_the_step(self):
         self.failed(python_steps='exit:23', step='web_server', status=23, reason='panel_setup')
         self.failed(python_steps='step:php step:database exit:70', step='database', status=70,
