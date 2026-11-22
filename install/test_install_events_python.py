@@ -17,6 +17,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from install import install_events, install_utils
+from install.installer_test_harness import parse_as_python_36
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -113,7 +114,26 @@ class PythonEventWriterTests(unittest.TestCase):
         for name in ('install/install_events.py', 'install/installLog.py', 'install/install_utils.py',
                      'install/install.py', 'install/installCyberPanel.py'):
             with self.subTest(name=name):
-                ast.parse((ROOT / name).read_text(), feature_version=(3, 6))
+                parse_as_python_36((ROOT / name).read_text())
+
+    def test_python_36_parser_refuses_what_python_36_does_not_have(self):
+        self.assertIsInstance(parse_as_python_36('value = "%s" % 1\n'), ast.Module)
+        with self.assertRaises(SyntaxError):
+            parse_as_python_36('value = (\n')
+        if sys.version_info >= (3, 8):
+            # Where the parser has the switch, newer syntax is refused as well.
+            for newer in ('if (count := 1):\n    pass\n', 'def call(first, /):\n    pass\n'):
+                with self.subTest(newer=newer):
+                    with self.assertRaises(SyntaxError):
+                        parse_as_python_36(newer)
+
+    def test_interpreter_without_the_parser_switch_is_not_given_it(self):
+        # ast.parse of Python 3.6 and 3.7 has no feature_version; passing it there is a TypeError.
+        for interpreter in ((3, 6, 8), (3, 7, 0)):
+            with self.subTest(interpreter=interpreter):
+                with patch('ast.parse', side_effect=lambda source: 'parsed') as parse:
+                    self.assertEqual('parsed', parse_as_python_36('value = 1\n', interpreter))
+                parse.assert_called_once_with('value = 1\n')
 
 
 class InstallerEntryPointTests(unittest.TestCase):

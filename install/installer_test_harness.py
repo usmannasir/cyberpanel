@@ -13,10 +13,12 @@ things keep a mistake here from touching the machine the tests run on:
 3. every absolute system path in the script text points into a temporary
    directory.
 """
+import ast
 from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -141,6 +143,19 @@ for directive in sys.argv[3:]:
 '''
 
 DEFAULT_PYTHON_STEPS = 'step:php step:database step:ftp step:dns step:email step:panel finish'
+
+
+def parse_as_python_36(source, interpreter=None):
+    """Parse Python source as the interpreter of AlmaLinux 8 (3.6) would.
+
+    From Python 3.8 on the parser can be told to refuse syntax that 3.6 does
+    not have. Python 3.6 and 3.7 have no such switch, and there the proof is
+    that the running interpreter parses the source. ``interpreter`` is the
+    version to behave as; it is the running one unless a test says otherwise.
+    """
+    if (interpreter or sys.version_info) >= (3, 8):
+        return ast.parse(source, feature_version=(3, 6))
+    return ast.parse(source)
 
 
 def script_parts(source=None):
