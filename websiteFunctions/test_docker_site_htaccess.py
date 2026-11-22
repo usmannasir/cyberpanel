@@ -78,6 +78,47 @@ class RulesTests(unittest.TestCase):
         self.assertEqual(0, Docker_Sites.RemoveHTAccess(self.path, 'shop.example'))
         self.assertFalse(os.path.exists(self.path))
 
+    def test_a_file_in_another_encoding_loses_the_panels_rules_and_nothing_else(self):
+        # Latin-1 and Windows-1252 bytes that are not UTF-8, as an editor on the customer's computer saves them.
+        customer = (b'# Weiterleitung f\xfcr die alte Adresse \x96 nicht l\xf6schen\n'
+                    b'Options -Indexes\nErrorDocument 404 /nicht-gefunden.html\n')
+        with self.assertRaises(UnicodeDecodeError):
+            customer.decode('utf-8')
+        for domain in ('shop.example', None):
+            with self.subTest(domain=domain):
+                with open(self.path, 'wb') as handle:
+                    handle.write(customer)
+                self.setup_rules(domain=domain)
+                with open(self.path, 'rb') as handle:
+                    self.assertIn(b'HTTP://docker11007/$1 [P]', handle.read())
+                self.assertEqual(1, Docker_Sites.RemoveHTAccess(self.path, 'shop.example'))
+                with open(self.path, 'rb') as handle:
+                    self.assertEqual(customer, handle.read())
+
+    def test_a_file_in_another_encoding_loses_the_rule_where_the_lines_around_it_were_changed(self):
+        customer = b'# gepr\xfcft\nRewriteEngine on\n'
+        with open(self.path, 'wb') as handle:
+            handle.write(customer + b'  REWRITERULE ^(.*)$ HTTP://docker11007/$1 [P]\n# Ende \xa7\n')
+        self.assertEqual(1, Docker_Sites.RemoveHTAccess(self.path, 'shop.example'))
+        with open(self.path, 'rb') as handle:
+            self.assertEqual(customer + b'# Ende \xa7\n', handle.read())
+
+    def test_the_line_ends_of_the_customers_file_are_kept(self):
+        customer = b'# kept by the customer\r\nOptions -Indexes\r\nErrorDocument 404 /e.html\r\n'
+        with open(self.path, 'wb') as handle:
+            handle.write(customer)
+        self.setup_rules()
+        self.assertEqual(1, Docker_Sites.RemoveHTAccess(self.path, 'shop.example'))
+        with open(self.path, 'rb') as handle:
+            self.assertEqual(customer, handle.read())
+        # The whole file, the panel's rule included, saved with the other line ends afterwards.
+        with open(self.path, 'wb') as handle:
+            handle.write(customer + b'RewriteEngine On\r\nREWRITERULE ^(.*)$ HTTP://docker11007/$1 [P]\r\n'
+                         + b'Header set X-Later "1"\r\n')
+        self.assertEqual(1, Docker_Sites.RemoveHTAccess(self.path, 'shop.example'))
+        with open(self.path, 'rb') as handle:
+            self.assertEqual(customer + b'RewriteEngine On\r\nHeader set X-Later "1"\r\n', handle.read())
+
     def test_setup_still_writes_the_same_rules_once(self):
         self.setup_rules()
         self.setup_rules()
