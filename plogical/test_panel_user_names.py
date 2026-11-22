@@ -1,7 +1,7 @@
 """The name of a new panel user follows one written rule; earlier names stay usable where they can be carried."""
 import unittest
 
-from plogical.panelUserNames import NAME_RULE, new_name_refusal, stored_name_is_usable
+from plogical.panelUserNames import NAME_RULE, name_from, new_name_refusal, stored_name_is_usable
 
 
 class NewNameTests(unittest.TestCase):
@@ -10,12 +10,31 @@ class NewNameTests(unittest.TestCase):
                      'site-owner', 'example_com', 'x' * 50):
             self.assertIsNone(new_name_refusal(name), name)
 
+    def test_letters_and_numbers_of_every_alphabet_are_accepted(self):
+        for name in ('jöhn', 'JoséGarcía', 'jürgen', 'Łukasz', 'ЮрийГагарин', 'Ελένη', '李雷', '山田太郎', 'محمد',
+                     'דוד', '김철수', '٣ali', 'renée.dupont@example.com', 'ö' * 50,
+                     # Letters written with marks that follow them.
+                     'हिंदी', 'สมชาย', 'Jose\u0301'):
+            self.assertIsNone(new_name_refusal(name), name)
+
     def test_names_with_other_characters_are_refused(self):
         for name in ('', ' john', 'john ', 'john smith', 'john;id', 'john&id', "john'", 'john"', 'john/..', '../x',
-                     '-rf', '.hidden', '_x', '@x', 'john\n', 'john\tx', 'jöhn', 'john$', 'john`id`', 'john|x',
+                     '-rf', '.hidden', '_x', '@x', 'john\n', 'john\tx', 'john$', 'john`id`', 'john|x',
                      'john>x', 'john<x', 'john\\', 'john%', 'john*', 'john+x', 'john(x)', 'john=x', 'john,x',
-                     'john:x', 'john#x', 'john!', 'x' * 51):
+                     'john:x', 'john#x', 'john!', 'x' * 51, 'ö' * 51,
+                     # Spaces, quotes and separators of other alphabets, and characters that are not shown.
+                     'josé garcía', 'josé\u00a0garcía', 'josé\u3000garcía', 'josé\u2019s', 'josé\u201cx\u201d',
+                     'josé\u2215x', 'josé\uff0fx', 'josé\u200bx', 'josé\u202ex', 'josé\u0000', 'josé\x7f',
+                     'josé\u2028x', '\u0301jose', '\ud800'):
             self.assertEqual(NAME_RULE, new_name_refusal(name), repr(name))
+
+    def test_name_made_from_what_somebody_wrote_keeps_what_the_rule_allows(self):
+        for written, name in (("O'Brien", 'OBrien'), ('JoséGarcía', 'JoséGarcía'), ('John Smith', 'JohnSmith'),
+                              ('Anne-Marie (Jr.)', 'Anne-MarieJr.'), ('.-_@x', 'x'), ('\u0301é', 'é'),
+                              ('a/b;c|d`e$f', 'abcdef'), ("'!!'", ''), ('...', ''), ('', ''), (None, ''), (7, '')):
+            self.assertEqual(name, name_from(written), repr(written))
+            if name:
+                self.assertIsNone(new_name_refusal(name), name)
 
     def test_values_that_are_not_text_are_refused(self):
         for name in (None, 7, 7.5, True, ['john'], {'a': 1}, b'john'):
