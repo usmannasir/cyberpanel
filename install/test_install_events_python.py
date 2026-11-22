@@ -274,16 +274,94 @@ class PythonExitStatusTests(unittest.TestCase):
             install_utils.call('false', install_utils.ubuntu, '', 'fixture', 0, 1)
         self.assertEqual(os.EX_SOFTWARE, stopped.exception.code)
 
-    def test_no_failure_path_of_the_installer_ends_with_status_zero(self):
-        for name in ('install/install.py', 'install/installCyberPanel.py', 'install/install_utils.py'):
-            tree = ast.parse((ROOT / name).read_text())
-            for node in ast.walk(tree):
-                if not isinstance(node, ast.Call):
-                    continue
-                target = ast.unparse(node.func) if hasattr(ast, 'unparse') else ''
-                if target in ('os._exit', 'sys.exit', 'exit'):
-                    argument = ast.unparse(node.args[0]) if node.args else ''
-                    self.assertNotIn(argument, ('', '0', 'os.EX_OK'), '%s:%s' % (name, node.lineno))
+    def test_no_exit_of_the_installer_reports_success_outright(self):
+        files = installer_files()
+        # The installer itself, its own modules and what it imports of the panel.
+        for name in ('install/install.py', 'install/installCyberPanel.py', 'install/install_utils.py',
+                     'install/installLog.py', 'install/install_events.py', 'install/mysqlUtilities.py',
+                     'install/env_generator.py', 'plogical/terminalService.py', 'cyberpanel_version.py'):
+            self.assertIn(ROOT / name, files)
+        self.assertGreater(len(files), 20)
+        for path in files:
+            with self.subTest(file=str(path.relative_to(ROOT))):
+                self.assertEqual([], exits(path.read_text(), successful=True))
+        # The exits are seen, with the statuses they have now.
+        self.assertEqual(4, len(exits((ROOT / 'install/install.py').read_text(), successful=False)))
+
+    def test_exit_scan_sees_every_way_to_end_with_status_zero(self):
+        # Proof that the scan above is not blind, on Python 3.6 as on newer ones.
+        source = ('import os\nimport sys\n'
+                  'os._exit(0)\nsys.exit()\nsys.exit(0)\nexit(0)\nsys.exit(os.EX_OK)\nsys.exit(None)\n'
+                  'sys.exit(1)\nos._exit(os.EX_SOFTWARE)\nsys.exit("usage")\nsys.exit(0 if done else 1)\n'
+                  'sys.exit(code or os.EX_SOFTWARE)\nmain.exit(0)\n')
+        self.assertEqual([3, 4, 5, 6, 7, 8], exits(source, successful=True))
+        self.assertEqual([9, 10, 11, 12, 13], exits(source, successful=False))
+
+
+def imported_files(path):
+    """The files of this repository that a Python file imports, wherever in it."""
+    found = set()
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.Import):
+            modules = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+            modules = [node.module]
+        else:
+            continue
+        for module in modules:
+            # install.py is run from its own directory, with the tree behind it.
+            for base in (ROOT / 'install', ROOT):
+                candidate = base / (module.replace('.', '/') + '.py')
+                if candidate.exists():
+                    found.add(candidate)
+                    break
+    return found
+
+
+def installer_files():
+    """Every Python file that a fresh installation runs code of: install.py,
+    the installer's own modules as far as their imports lead, and the files of
+    the panel that those import."""
+    files = {ROOT / 'install/install.py'}
+    queue = [ROOT / 'install/install.py']
+    while queue:
+        for found in imported_files(queue.pop()):
+            if found not in files:
+                files.add(found)
+                if found.parent == ROOT / 'install':
+                    queue.append(found)
+    return sorted(files)
+
+
+def dotted_name(node):
+    parts = []
+    while isinstance(node, ast.Attribute):
+        parts.append(node.attr)
+        node = node.value
+    if isinstance(node, ast.Name):
+        return '.'.join(reversed(parts + [node.id]))
+    return ''
+
+
+def exits(source, successful):
+    """Line numbers of the calls that end the process: the ones that report
+    success whatever happened (no status, 0, None, os.EX_OK), or the others.
+    Written without ast.unparse, which Python 3.6 does not have."""
+    lines = []
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.Call) or dotted_name(node.func) not in ('os._exit', 'sys.exit', 'exit', 'quit'):
+            continue
+        if not node.args:
+            success = True
+        else:
+            try:
+                value = ast.literal_eval(node.args[0])
+                success = value is None or value is False or value == 0
+            except ValueError:
+                success = dotted_name(node.args[0]) == 'os.EX_OK'
+        if success == successful:
+            lines.append(node.lineno)
+    return sorted(lines)
 
 
 if __name__ == '__main__':
