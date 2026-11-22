@@ -1064,35 +1064,54 @@ Read_Admin_Password_File() {
 # the server is changed, and before the command line is checked, which then
 # knows that a value of -p is not used. What is wrong with the file is kept in
 # Admin_Pass_File_Problem and said after a request for help was answered.
-local opened="No" details="" owner mode kind first_line=""
+local opened="No" details="" owner mode kind first_line="" problem=""
 Admin_Pass_From_File=""
 Admin_Pass_File_Problem=""
 if [[ -z "${CP_ADMIN_PASSWORD_FILE:-}" ]]; then
   return 0
 fi
-# The file is opened once. What is checked is the opened file, and the
-# password is read from the same opened file, whatever the name leads to a
-# moment later.
+# By the name first, and only to refuse: what is not there, cannot be read or
+# is no regular file is never opened. Opening a pipe would wait for a writer,
+# and a device has no end.
+if [[ ! -r "$CP_ADMIN_PASSWORD_FILE" ]]; then
+  Admin_Pass_File_Problem="The file named in CP_ADMIN_PASSWORD_FILE cannot be read."
+  return 1
+fi
+if [[ ! -f "$CP_ADMIN_PASSWORD_FILE" ]]; then
+  Admin_Pass_File_Problem="CP_ADMIN_PASSWORD_FILE does not name a regular file."
+  return 1
+fi
+# Then the file is opened once. What is judged is the opened file, whatever
+# the name leads to a moment later, and nothing is read before its kind, owner
+# and mode were found right. The password is read from the same opened file,
+# and no more of a line than a password can be long plus one character and a
+# carriage return: a line without an end is not read whole.
 {
   opened="Yes"
   details=$(stat -L -c '%u %a %F' /dev/stdin)
-  IFS= read -r first_line
+  read -r owner mode kind <<<"$details"
+  if [[ "$kind" != regular* ]]; then
+    problem="CP_ADMIN_PASSWORD_FILE does not name a regular file."
+  elif [[ "$owner" != "0" || ! "$mode" =~ ^[0-7]+$ ]] || (( (8#$mode & 8#77) != 0 )); then
+    problem="The file named in CP_ADMIN_PASSWORD_FILE must belong to root and be readable by root only (chmod 600)."
+  else
+    IFS= read -r -n 1026 first_line
+  fi
 } 2>/dev/null < "$CP_ADMIN_PASSWORD_FILE"
 if [[ "$opened" != "Yes" ]]; then
   Admin_Pass_File_Problem="The file named in CP_ADMIN_PASSWORD_FILE cannot be read."
   return 1
 fi
-read -r owner mode kind <<<"$details"
-if [[ "$kind" != regular* ]]; then
-  Admin_Pass_File_Problem="CP_ADMIN_PASSWORD_FILE does not name a regular file."
-  return 1
-fi
-if [[ "$owner" != "0" || ! "$mode" =~ ^[0-7]+$ ]] || (( (8#$mode & 8#77) != 0 )); then
-  Admin_Pass_File_Problem="The file named in CP_ADMIN_PASSWORD_FILE must belong to root and be readable by root only (chmod 600)."
+if [[ -n "$problem" ]]; then
+  Admin_Pass_File_Problem="$problem"
   return 1
 fi
 # A file written on Windows ends its lines with a carriage return as well.
 first_line=${first_line%$'\r'}
+if [[ ${#first_line} -gt 1024 ]]; then
+  Admin_Pass_File_Problem="The password in the file named in CP_ADMIN_PASSWORD_FILE has more than 1024 characters."
+  return 1
+fi
 if [[ ${#first_line} -lt 8 ]]; then
   Admin_Pass_File_Problem="The password in the file named in CP_ADMIN_PASSWORD_FILE has less than 8 characters."
   return 1
