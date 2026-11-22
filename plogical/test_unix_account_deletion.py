@@ -94,6 +94,7 @@ class UnixAccountDeletionTests(unittest.TestCase):
             'subprocess': NS(call=lambda argv: self.events.append('mail-directory-delete') or 0),
             'shlex': NS(split=lambda command: command.split()),
             'logging': NS(CyberCPLogFileWriter=NS(writeToFile=self.logs.append)),
+            'patternForwardingMap': NS(rebuild_after_removal=mock.Mock()),
         }
         source = Path(os.environ.get('VHOST_FIXTURE_SOURCE', str(HERE / 'vhost.py')))
         tree = ast.parse(source.read_text())
@@ -209,6 +210,8 @@ class UnixAccountDeletionTests(unittest.TestCase):
         self.assertTrue(self.user_exists)
         self.assertNotIn('groupdel ' + self.username, self.events)
         self.assertTrue(any('Unix user' in line for line in self.logs))
+        # The website's pattern forwarding rules left with its row, so Postfix's map is rebuilt.
+        self.scope['patternForwardingMap'].rebuild_after_removal.assert_called_once_with()
 
     def test_lsws_residual_user_cannot_report_complete(self):
         self.server = 2

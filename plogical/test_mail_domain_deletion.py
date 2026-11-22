@@ -17,6 +17,7 @@ from mailServer.models import (Domains, EUsers, CatchAllEmail, PlusAddressingOve
 from packages.models import Package
 from websiteFunctions.models import Websites, ChildDomains
 from plogical import storageQuota
+from plogical import patternForwardingMap
 from plogical.mailUtilities import mailUtilities
 
 
@@ -63,6 +64,9 @@ class MailDomainDeletionTests(unittest.TestCase):
         enrollment_patch = patch.object(storageQuota, 'has_enrollment', return_value=False)
         self.enrollment = enrollment_patch.start()
         self.addCleanup(enrollment_patch.stop)
+        rebuild_patch = patch.object(patternForwardingMap, 'rebuild_after_removal')
+        self.rebuild = rebuild_patch.start()
+        self.addCleanup(rebuild_patch.stop)
         logging_patch = patch('plogical.CyberCPLogFileWriter.CyberCPLogFileWriter.writeToFile')
         logging_patch.start()
         self.addCleanup(logging_patch.stop)
@@ -85,6 +89,8 @@ class MailDomainDeletionTests(unittest.TestCase):
         self.assertFalse(Domains.objects.exists())
         self.assertFalse(DomainLimits.objects.exists())
         self.assertFalse(EmailLimits.objects.exists())
+        # The domain's pattern forwarding rules went with it, so Postfix's map is rebuilt.
+        self.rebuild.assert_called_once_with()
         self.assertTrue(Websites.objects.filter(pk=self.site.pk).exists())
         self.assertTrue(DNSDomains.objects.filter(pk=self.zone.pk).exists())
         self.assertTrue(Records.objects.filter(pk=self.record.pk).exists())
@@ -110,6 +116,7 @@ class MailDomainDeletionTests(unittest.TestCase):
         self.assertEqual((1, 'None'), self.delete())
         self.assertTrue(EUsers.objects.filter(pk=other.pk).exists())
         self.assertTrue(Domains.objects.filter(pk=self.domain.pk).exists())
+        self.rebuild.assert_not_called()
         self.assertTrue(DomainLimits.objects.filter(pk=self.domain_limit.pk).exists())
         self.assertFalse(EmailLimits.objects.filter(pk=self.email_limit.pk).exists())
 
