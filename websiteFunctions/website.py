@@ -7841,6 +7841,13 @@ StrictHostKeyChecking no
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
+            ## Docker reads a limit of 0 CPUs as no limit at all.
+
+            if SiteCPU < 1 or (AppMeta['requiresDB'] and MysqlCPU < 1):
+                final_dic = {'status': 0, 'error_message': 'Minimum CPU cores should be 1.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             ## The email and password become the n8n owner account, which the panel
             ## creates itself, so n8n has to be able to accept them.
 
