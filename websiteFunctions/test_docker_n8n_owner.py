@@ -146,7 +146,8 @@ def deploy(app, first_run=None):
             mock.patch.object(docker_sites.ProcessUtilities, 'executioner', side_effect=execute), \
             mock.patch.object(docker_sites.ProcessUtilities, 'decideDistro', return_value=0), \
             mock.patch('plogical.DockerSites.os.path.exists', return_value=False), \
-            mock.patch('builtins.open', mock.mock_open()), \
+            mock.patch.object(site, 'install_compose_file',
+                              side_effect=lambda content: events.append('COMPOSE FILE') or (1, None)), \
             mock.patch.dict(sys.modules, {'plogical.installUtilities': utilities}), \
             mock.patch.object(site, 'verify_system_resources'), \
             mock.patch.object(site, 'check_container_health', return_value=True), \

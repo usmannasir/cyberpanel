@@ -57,7 +57,7 @@ class WordPressComposeTests(TestCase):
         with mock.patch('plogical.DockerSites.ProcessUtilities.outputExecutioner', side_effect=output), \
                 mock.patch('plogical.DockerSites.ProcessUtilities.executioner', return_value=1), \
                 mock.patch('plogical.DockerSites.os.path.exists', return_value=False), \
-                mock.patch('builtins.open', mock.mock_open()), \
+                mock.patch.object(site, 'install_compose_file', return_value=(1, None)), \
                 mock.patch.object(site, 'wait_for_wordpress', side_effect=DockerDeploymentError('WordPress files missing')), \
                 mock.patch('plogical.DockerSites.logging.statusWriter') as status, \
                 mock.patch('plogical.DockerSites.logging.writeToFile'):
