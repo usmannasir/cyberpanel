@@ -1060,7 +1060,10 @@ done
 Read_Admin_Password_File() {
 # CP_ADMIN_PASSWORD_FILE names a file that only root can read, with the admin
 # password on its first line. A password given this way takes the place of -p
-# and is never shown, logged or put on a command line. Read before anything on
+# and is never shown or logged, and it is no part of this script's command
+# line. A panel tree whose adminPass.py can read a file is given the file;
+# with a tree up to 3.0.12 the password is on the command line of adminPass.py
+# for that one call (Set_Admin_Password). Read before anything on
 # the server is changed, and before the command line is checked, which then
 # knows that a value of -p is not used. What is wrong with the file is kept in
 # Admin_Pass_File_Problem and said after a request for help was answered.
@@ -3126,14 +3129,17 @@ Set_Admin_Password() {
 # The panel tree is the version that was asked for (version.txt, -b), which can
 # be older than this script. Its adminPass.py reads the password from the file
 # when it knows how to, so that the password is not part of a command line
-# other accounts on the server can see; an older one gets it the only way it
-# takes it. The status is that of adminPass.py.
+# other accounts on the server can see; an older one (up to 3.0.12) gets it
+# the only way it takes it, on its command line for that one call, as
+# --password=<password>: written as two arguments, a password that begins
+# with "-" would be taken for an option and refused. The status is that of
+# adminPass.py.
 ( umask 077; printf '%s\n' "$Admin_Pass" > /etc/cyberpanel/adminPass )
 chmod 600 /etc/cyberpanel/adminPass
 if grep -q -- '--password-file' /usr/local/CyberCP/plogical/adminPass.py 2>/dev/null; then
   /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password-file /etc/cyberpanel/adminPass
 else
-  /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$Admin_Pass"
+  /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password="$Admin_Pass"
 fi
 }
 

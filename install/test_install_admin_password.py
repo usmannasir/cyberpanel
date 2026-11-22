@@ -439,18 +439,21 @@ class PanelAccountTests(unittest.TestCase):
     def test_older_tree_gets_the_password_the_way_it_takes_it(self):
         # adminPass.py of 3.0.12 and before knows --password only; given the new
         # option it ends with status 2 and sets nothing.
-        status, arguments, mode_when_read = self.set_password(SECRET, tree='old')
-        self.assertEqual(0, status)
-        self.assertEqual([str(self.tool), '--password', SECRET], arguments)
-        self.assertEqual(SECRET + '\n', self.stored.read_text())
-        self.assertEqual('600', mode_when_read)
+        # One argument, so that a password that begins with "-" is no option.
+        for password in (SECRET, '-starts-with-a-dash', '--password-file'):
+            with self.subTest(password=password):
+                status, arguments, mode_when_read = self.set_password(password, tree='old')
+                self.assertEqual(0, status)
+                self.assertEqual([str(self.tool), '--password=' + password], arguments)
+                self.assertEqual(password + '\n', self.stored.read_text())
+                self.assertEqual('600', mode_when_read)
 
     def test_tool_that_is_not_there_is_called_the_old_way_and_its_failure_is_the_status(self):
         # Nothing is printed for the missing file; the interpreter's failure to
         # run it is what ends the run.
         status, arguments, _ = self.set_password(SECRET, tree='missing', status=2)
         self.assertEqual(2, status)
-        self.assertEqual([str(self.tool), '--password', SECRET], arguments)
+        self.assertEqual([str(self.tool), '--password=' + SECRET], arguments)
 
     def test_status_is_that_of_the_tool(self):
         for tree in ('new', 'old'):
@@ -468,10 +471,10 @@ class PanelAccountTests(unittest.TestCase):
         carrying = [line.strip() for line in source.splitlines()
                     if 'Admin_Pass' in line and re.match(r'\s*(/|python|cyberpanel |curl|wget)', line)]
         self.assertEqual(['/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py '
-                          '--password "$Admin_Pass"'], carrying)
+                          '--password="$Admin_Pass"'], carrying)
         fallback = function('Set_Admin_Password')
         self.assertLess(fallback.index("grep -q -- '--password-file'"), fallback.index('--password-file /etc'))
-        self.assertLess(fallback.index('\nelse\n'), fallback.index('--password "$Admin_Pass"'))
+        self.assertLess(fallback.index('\nelse\n'), fallback.index('--password="$Admin_Pass"'))
 
 
 # The password is written in ASCII, so that it can be part of a command line in any locale.
@@ -677,8 +680,8 @@ class PasswordOutcomeTests(unittest.TestCase):
         result = machine.run('-v', 'ols', '-p', 'Typed-Secret-99', tree='old')
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual('install complete', machine.events()[-1])
-        self.assertEqual([str(machine.path('/usr/local/CyberCP/plogical/adminPass.py')), '--password',
-                          'Typed-Secret-99'], machine.recorded(machine.adminpass_call))
+        self.assertEqual([str(machine.path('/usr/local/CyberCP/plogical/adminPass.py')),
+                          '--password=Typed-Secret-99'], machine.recorded(machine.adminpass_call))
 
     def test_the_panel_is_asked_for_the_password_before_it_gets_its_first_request(self):
         machine = Installer(self)
@@ -984,6 +987,28 @@ class AdminPassScriptTests(unittest.TestCase):
     def test_password_option_still_works(self):
         hashing = self.change('--password', 'typed-by-hand')
         hashing.hash_password.assert_called_once_with('typed-by-hand')
+
+    def test_password_that_begins_with_a_dash_needs_the_form_with_the_equals_sign(self):
+        # The way the installer gives the password to a tree that cannot read a file.
+        for password in ('-starts-with-a-dash', '--password-file', '-p', '--api'):
+            with self.subTest(password=password):
+                hashing = self.change('--password=' + password)
+                hashing.hash_password.assert_called_once_with(password)
+        with patch('sys.stderr'), self.assertRaises(SystemExit) as stopped:
+            self.change('--password', '-starts-with-a-dash')
+        self.assertEqual(2, stopped.exception.code)
+
+    def test_parser_of_the_older_tree_takes_the_form_with_the_equals_sign(self):
+        # The options of adminPass.py as 3.0.12 has them.
+        parser = argparse.ArgumentParser(description='Reset admin user password!')
+        parser.add_argument('--password', help='New Password')
+        parser.add_argument('--api', help='Enable/Disable API')
+        parser.add_argument('--api-token', help='Set a pre-generated versioned API token while enabling API access')
+        for password in ('-starts-with-a-dash', '--api', SECRET):
+            with self.subTest(password=password):
+                self.assertEqual(password, parser.parse_args(['--password=' + password]).password)
+        with patch('sys.stderr'), self.assertRaises(SystemExit):
+            parser.parse_args(['--password', '-starts-with-a-dash'])
 
     def test_file_without_a_password_is_refused(self):
         with patch('sys.stderr'), self.assertRaises(SystemExit) as stopped:
