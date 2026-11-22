@@ -11,7 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from install.installer_test_harness import (
-    CLI_FAILED, REAL_FUNCTIONS, ROOT, SPECIAL_STUBS, STUBBED_PHASES,
+    CLI_FAILED, DEBIAN_12, REAL_FUNCTIONS, ROOT, SPECIAL_STUBS, STUBBED_PHASES,
     Installer, script_parts, top_level_functions,
 )
 
@@ -148,6 +148,74 @@ class FailedRunTests(unittest.TestCase):
                          machine.events())
         self.assertNotIn('CyberPanel Successfully Installed', result.stdout)
         return machine, result
+
+    def test_version_pointer_cannot_be_read(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', version='<html>busy</html>')
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(['install started unknown', 'preflight running',
+                          'preflight failed download_failed', 'install failed download_failed'],
+                         machine.events())
+
+    def test_not_root(self):
+        self.failed(uid=1000, reason='not_root')
+        self.failed(environment={'SUDO_USER': 'someone'}, reason='not_root')
+
+    def test_no_public_address_is_reported_where_it_can_be_read(self):
+        _, result = self.failed(ip='', reason='no_public_ip')
+        self.assertIn('Can not detect IP', result.stdout)
+
+    def test_unsupported_operating_system(self):
+        machine = Installer(self)
+        machine.os_release(DEBIAN_12)
+        self.failed(machine=machine, reason='unsupported_os')
+        machine = Installer(self)
+        (machine.root / 'etc/os-release').unlink()
+        self.failed(machine=machine, reason='unsupported_os')
+        self.failed(environment={'XDG_CURRENT_DESKTOP': 'GNOME'}, reason='unsupported_os')
+
+    def test_another_panel(self):
+        for directory in ('/usr/local/cpanel', '/usr/local/directadmin', '/etc/apache2/plesk.conf.d',
+                          '/usr/local/panel'):
+            with self.subTest(directory=directory):
+                machine = Installer(self)
+                machine.path(directory).mkdir(parents=True)
+                self.failed(machine=machine, reason='other_panel', active_service='apache2')
+                self.assertEqual([], [call for call in machine.recorded(machine.calls)
+                                      if call.startswith('systemctl')])
+
+    def test_already_installed_is_found_before_a_service_is_stopped(self):
+        machine = Installer(self)
+        machine.path('/usr/local/CyberCP').mkdir(parents=True)
+        _, result = self.failed(machine=machine, reason='already_installed', active_service='apache2')
+        self.assertIn('CyberPanel already installed', result.stdout)
+        self.assertEqual([], [call for call in machine.recorded(machine.calls)
+                              if call.startswith('systemctl')])
+        self.assertEqual([], machine.recorded(machine.phases))
+
+    def test_a_running_web_server_is_still_stopped_on_a_fresh_server(self):
+        machine = Installer(self)
+        machine.run('-v', 'ols', active_service='apache2')
+        self.assertEqual(['systemctl stop apache2', 'systemctl disable apache2', 'systemctl mask apache2'],
+                         [call for call in machine.recorded(machine.calls)
+                          if call.startswith('systemctl') and 'is-active' not in call])
+
+    def test_value_that_cannot_be_used(self):
+        self.failed('-v', 'ols', '-p', 'short', status=2, reason='invalid_input')
+        self.failed('-v', 'ols', '-b', 'junk', status=2, reason='invalid_input')
+        self.failed('-v', 'ols', '-b', '1.0.0', status=2, reason='invalid_input')
+        self.failed('-v', 'not-a-license-key', status=2, reason='invalid_input')
+
+    def test_wrong_answer_at_the_menu(self):
+        self.failed('--debug', stdin='7\n', reason='invalid_input')
+
+    def test_leaving_at_the_menu_is_not_an_error_and_not_an_installation(self):
+        machine = Installer(self)
+        result = machine.run('--debug', stdin='2\n')
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(['install started 3.0.11', 'preflight running', 'preflight failed cancelled',
+                          'install failed cancelled'], machine.events())
+        self.assertEqual([], machine.recorded(machine.phases))
 
     def test_each_step_before_the_installer_names_its_reason(self):
         for phase, step, status, reason in (

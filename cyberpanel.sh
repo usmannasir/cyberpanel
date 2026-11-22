@@ -172,6 +172,12 @@ Install_Fail_Code="${1:-}"
 exit "${2:-1}"
 }
 
+Leave_Install() {
+# The person at the keyboard chose not to install. That is not an error.
+Install_Fail_Code="cancelled"
+exit 0
+}
+
 Install_On_Exit() {
 # Runs whenever the script ends. A run that was started and did not reach
 # "install complete" is recorded as failed and never ends with status 0,
@@ -187,7 +193,7 @@ if [[ -n "$step" ]]; then
   Install_Event "$step" failed "$reason"
 fi
 Install_Event install failed "$reason"
-if [[ "$status" -eq 0 ]]; then
+if [[ "$status" -eq 0 && "$reason" != "cancelled" ]]; then
   status=1
 fi
 exit "$status"
@@ -284,11 +290,12 @@ if parse_panel_version "$Temp_Value"; then
   log_info "Branch name fetched: $Branch_Name"
   Install_Run_Start "${Panel_Version}.${Panel_Build}"
 else
+  Install_Run_Start "unknown"
   echo -e "\nUnable to fetch Branch name..."
   echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
   log_error "Unable to fetch branch name from version.txt"
   log_function_end "Set_Default_Variables" 1
-  exit
+  Fail_Install download_failed
 fi
 
 Base_Number="1.9.3"
@@ -508,7 +515,10 @@ echo -e "\n${1}=${2}\n" >> "/var/log/cyberpanel_debug_$(date +"%Y-%m-%d")_${Rand
 
 Debug_Log2() {
 if [[ -z "${Server_IP:-}" ]]; then
-  Check_Server_IP "$@" >/dev/null 2>&1
+  # Only the address is wanted here. Check_Server_IP stops the installation
+  # for a missing one where the person installing can read why.
+  Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
+  [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || Server_IP=""
 fi
 echo -e "\n${1}" >> /var/log/installLogs.txt
 curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
@@ -564,14 +574,14 @@ if [[ "$1" = *.*.* ]]; then
   ')
   if [[ $Output = *">="* ]]; then
     echo -e "\nYou must use version number higher than 1.9.4"
-    exit
+    Fail_Install invalid_input 2
   else
     Branch_Name="v${1//[[:space:]]/}"
     echo -e "\nSet branch name to $Branch_Name..."
   fi
 else
   echo -e "\nPlease input a valid format version number."
-  exit
+  Fail_Install invalid_input 2
 fi
 }
 
@@ -586,7 +596,7 @@ elif [[ ${License_Key,,} = "trial" ]] ; then
 else
   echo -e "\nLicense key seems incorrect, please verify"
   echo -e "\nIf you are copying/pasting, please make sure you didn't paste blank space...\n"
-  exit
+  Fail_Install invalid_input 2
 fi
 }
 
@@ -604,7 +614,7 @@ if [[ $exit_code != "0" ]]; then
   if [[ "$2" = "no_exit" ]] ; then
     echo -e"\nRetrying..."
   else
-    exit
+    Fail_Install
   fi
 fi
 }
@@ -644,7 +654,7 @@ log_info "Checking root privileges"
     echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
     log_error "Not running as root user - SUDO detected"
     log_function_end "Check_Root" 1
-    exit
+    Fail_Install not_root
   fi
 
   if [[ $(id -u) != 0 ]] >/dev/null; then
@@ -653,7 +663,7 @@ log_info "Checking root privileges"
     echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
     log_error "Not running as root user - UID is not 0"
     log_function_end "Check_Root" 1
-    exit 1
+    Fail_Install not_root
   else
     echo -e "\nYou are runing as root...\n"
     log_info "Root user verified"
@@ -673,7 +683,7 @@ Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
     Debug_Log2 "Can not detect IP. [404]"
     log_error "Failed to detect valid server IP address"
     log_function_end "Check_Server_IP" 1
-    exit
+    Fail_Install no_public_ip
   fi
 
 echo -e "\nChecking server location...\n"
@@ -711,7 +721,7 @@ if [[ ! -f /etc/os-release ]] ; then
   log_error "Unable to detect the operating system - /etc/os-release not found"
   echo -e "Unable to detect the operating system...\n"
   log_function_end "Check_OS" 1
-  exit
+  Fail_Install unsupported_os
 fi
 
 # Reference: https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
@@ -720,12 +730,12 @@ if [ -z "$XDG_CURRENT_DESKTOP" ]; then
 else
     echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
     echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, Ubuntu 24.04 x86_64, Ubuntu 24.04.3 x86_64, Ubuntu 26.04 x86_64, CentOS 8.x, AlmaLinux 8.x, AlmaLinux 9.x, AlmaLinux 10.x and CloudLinux 7.x...\n"
-    exit
+    Fail_Install unsupported_os
 fi
 
 if ! uname -m | grep -qE 'x86_64|aarch64' ; then
   echo -e "x86_64 or ARM system is required...\n"
-  exit
+  Fail_Install unsupported_os
 fi
 
 if grep -q -E "CentOS Linux 7|CentOS Linux 8|CentOS Stream" /etc/os-release ; then
@@ -750,7 +760,7 @@ else
   echo -e "Unable to detect your system..."
   echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
   Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, Ubuntu 24.04, Ubuntu 24.04.3, Ubuntu 26.04, CentOS 7, CentOS 8, CentOS 9, RHEL 8, RHEL 9, AlmaLinux 8, AlmaLinux 9, AlmaLinux 10, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
-  exit
+  Fail_Install unsupported_os
 fi
 
 Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
@@ -822,19 +832,26 @@ log_info "Checking for existing control panels"
 if [[ -d /usr/local/cpanel ]]; then
   echo -e "\ncPanel detected...\n"
   Debug_Log2 "cPanel detected...exit... [404]"
-  exit
+  Fail_Install other_panel
 elif [[ -d /usr/local/directadmin ]]; then
   echo -e "\nDirectAdmin detected...\n"
   Debug_Log2 "DirectAdmin detected...exit... [404]"
-  exit
+  Fail_Install other_panel
 elif [[ -d /etc/httpd/conf/plesk.conf.d/ ]] || [[ -d /etc/apache2/plesk.conf.d/ ]]; then
   echo -e "\nPlesk detected...\n"
   Debug_Log2 "Plesk detected...exit... [404]"
-  exit
+  Fail_Install other_panel
 elif [[ -d /usr/local/panel/ ]]; then
   echo -e "\nOpenPanel detected...\n"
   Debug_Log2 "OpenPanel detected...exit... [404]"
-  exit
+  Fail_Install other_panel
+fi
+
+# Found here, before any service is stopped or any package is touched.
+if [[ -d /usr/local/CyberCP ]] ; then
+  echo -e "\n CyberPanel already installed, exiting..."
+  Debug_Log2 "CyberPanel already installed, exiting... [404]"
+  Fail_Install already_installed
 fi
 }
 
@@ -919,7 +936,7 @@ if  [[ "$#" = "0" ]] || [[ "$#" = "1" && "$1" = "--debug" ]] || [[ "$#" = "1" &&
 else
   if [[ $1 = "help" ]]; then
     Show_Help
-    exit
+    Leave_Install
   elif [[ $1 = "default" ]]; then
     echo -e "\nThis will start default installation...\n"
     Silent="On"
@@ -937,7 +954,7 @@ else
       shift
       if [[ "${1}" = "" ]]; then
         Show_Help
-        exit
+        Fail_Install invalid_input 2
       elif [[ "${1^^}" = "OLS" ]] ; then
         Server_Edition="OLS"
         Silent="On"
@@ -964,7 +981,7 @@ else
       else
         if [[ ${#1} -lt 8 ]]; then
           echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
-          exit
+          Fail_Install invalid_input 2
         fi
         Admin_Pass="${1}"
       fi
@@ -1002,7 +1019,7 @@ else
       ;;
       -h | --help)
         Show_Help
-        exit
+        Leave_Install
       ;;
       --debug)
         echo -e "\nEnable Debug log...\n"
@@ -1017,7 +1034,7 @@ else
         else
           echo -e "\nUnknown argument...\n"
           Show_Help
-          exit
+          Fail_Install invalid_input 2
         fi
       ;;
     esac
@@ -1072,11 +1089,11 @@ case "$Input_Number" in
   Interactive_Mode_Set_Parameter
   ;;
   2)
-  exit
+  Leave_Install
   ;;
   *)
   echo -e "  Please enter the right number [1-2]\n"
-  exit
+  Fail_Install invalid_input
   ;;
 esac
 }
@@ -1106,11 +1123,11 @@ case "$Input_Number" in
   Interactive_Mode_License_Input
   ;;
   3)
-  exit
+  Leave_Install
   ;;
   *)
   echo -e "  Please enter the right number [1-3]\n"
-  exit
+  Fail_Install invalid_input
   ;;
 esac
 
@@ -1213,23 +1230,23 @@ elif [[ $Tmp_Input =~ ^(s|S) ]]; then
   read -r -s -p "Password: " Tmp_Input
   if [[ -z "$Tmp_Input" ]]; then
     echo -e "\nPlease do not use empty string...\n"
-    exit
+    Fail_Install invalid_input
   fi
   if [[ ${#Tmp_Input} -lt 8 ]]; then
     echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
-    exit
+    Fail_Install invalid_input
   fi
   Tmp_Input1=$Tmp_Input
   read -r -s -p "Confirm Password:" Tmp_Input
   if [[ -z "$Tmp_Input" ]]; then
     echo -e "\nPlease do not use empty string...\n"
-    exit
+    Fail_Install invalid_input
   fi
   if [[ "$Tmp_Input" = "$Tmp_Input1" ]]; then
     Admin_Pass=$Tmp_Input
   else
     echo -e "\nRepeated password didn't match , please check...\n"
-    exit
+    Fail_Install invalid_input
   fi
 else
   Admin_Pass="1234567"
@@ -1279,7 +1296,7 @@ printf "%s" "Please input your serial number for LiteSpeed WebServer Enterprise:
 read -r License_Key
 if [[ -z "$License_Key" ]]; then
   echo -e "\nPlease provide license key\n"
-  exit
+  Fail_Install invalid_input
 fi
 
 echo -e "The serial number you input is: \e[31m$License_Key\e[39m\n"
@@ -1287,7 +1304,7 @@ printf "%s" "Please verify it is correct. [y/N]: "
 read -r Tmp_Input
 if [[ -z "$Tmp_Input" ]]; then
   echo -e "\nPlease type \e[31my\e[39m\n"
-  exit
+  Fail_Install invalid_input
 fi
 
 License_Check "$License_Key"
@@ -1309,7 +1326,7 @@ if [[ $Server_OS = "CentOS" ]] ; then
   log_debug "Importing LiteSpeed GPG key"
   if ! import_litespeed_gpg_key; then
     log_error "Unable to import the verified LiteSpeed signing key"
-    exit 1
+    Fail_Install package_manager
   fi
   #import the LiteSpeed GPG key
 
@@ -1959,7 +1976,7 @@ if ./lshttpd -V |& grep "ERROR" || ./lshttpd -V |& grep "expire in 0 days" ; the
   Debug_Log2 "There appears to be an issue with LiteSpeed License, make sure you are using correct serial key. [404]"
   log_error "LiteSpeed license validation failed"
   log_function_end "License_Validation" 1
-  exit
+  Fail_Install license_invalid
 fi
 
 echo -e "\nLicense seems valid..."
@@ -2031,11 +2048,6 @@ Main_Installation() {
 log_function_start "Main_Installation"
 Debug_Log2 "Starting main installation..,30"
 log_info "Starting main CyberPanel installation"
-if [[ -d /usr/local/CyberCP ]] ; then
-  echo -e "\n CyberPanel already installed, exiting..."
-  Debug_Log2 "CyberPanel already installed, exiting... [404]"
-  exit
-fi
 
 if [[ $Server_Edition = "Enterprise" ]] ; then
   echo -e "\nValidating the license..."
@@ -2960,7 +2972,10 @@ else
   Interactive_Mode
 fi
 
+# Answers that cannot be used are the only reason for a failure here.
+Install_Fail_Code="invalid_input"
 Validate_Remote_MySQL || exit 1
+Install_Fail_Code=""
 
 Time_Count="0"
 
