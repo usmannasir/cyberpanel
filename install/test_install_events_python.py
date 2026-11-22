@@ -5,6 +5,7 @@ with what they install replaced; install_events is used as it is.
 """
 import argparse
 import ast
+import importlib
 import io
 import os
 from pathlib import Path
@@ -134,6 +135,67 @@ class PythonEventWriterTests(unittest.TestCase):
                 with patch('ast.parse', side_effect=lambda source: 'parsed') as parse:
                     self.assertEqual('parsed', parse_as_python_36('value = 1\n', interpreter))
                 parse.assert_called_once_with('value = 1\n')
+
+
+class InstallLogStepTests(unittest.TestCase):
+    """installLog as install.py loads it: its steps are written to the status file."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.file = Path(directory.name) / 'install_events.log'
+        self.progress = Path(directory.name) / 'installLogs.txt'
+        # install.py runs in its own directory, where installLog finds
+        # install_events beside it. requests is what posts the progress lines.
+        self.requests = ModuleType('requests')
+        self.requests.post = Mock()
+        modules = patch.dict(sys.modules, {'requests': self.requests})
+        modules.start()
+        self.addCleanup(modules.stop)
+        for name in ('installLog', 'install_events'):
+            sys.modules.pop(name, None)
+        sys.path.insert(0, str(ROOT / 'install'))
+        self.addCleanup(sys.path.remove, str(ROOT / 'install'))
+        self.module = importlib.import_module('installLog')
+        writer = self.module.install_events
+        self.assertEqual(str(ROOT / 'install/install_events.py'), writer.__file__)
+        for target, name, replacement in ((writer, 'EVENTS_FILE', str(self.file)), (writer, '_running', 'web_server'),
+                                          (self.module.InstallLog, 'fileName', str(self.progress))):
+            patcher = patch.object(target, name, replacement)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        environment = patch.dict(os.environ, {writer.RUN_ID_VARIABLE: 'b' * 32})
+        environment.start()
+        self.addCleanup(environment.stop)
+
+    def test_steps_of_the_install_log_reach_the_status_file(self):
+        log = self.module.InstallLog
+        log.step('php')
+        log.step('database')
+        log.step('ftp', False)
+        log.step('dns')
+        log.step('email', enabled=False)
+        log.step('panel')
+        log.stepsFinished()
+        lines = self.file.read_text().splitlines()
+        self.assertEqual(['web_server done', 'php running', 'php done', 'database running', 'database done',
+                          'ftp skipped', 'dns running', 'dns done', 'email skipped', 'panel running', 'panel done'],
+                         [' '.join(line.split()[2:]) for line in lines])
+        for line in lines:
+            self.assertRegex(line, '^%s$' % EVENT_LINE.pattern)
+            self.assertEqual('b' * 32, line.split()[1])
+        self.assertEqual(0o600, stat.S_IMODE(self.file.stat().st_mode))
+
+    def test_progress_lines_are_written_and_posted_as_before(self):
+        log = self.module.InstallLog
+        log.step('database')
+        log.writeToFile('Installing MySQL,60')
+        self.assertRegex(self.progress.read_text(), r'^\[[0-9._-]+\] Installing MySQL,60\n$')
+        self.requests.post.assert_called_once()
+        self.assertEqual(log.LogURL, self.requests.post.call_args[0][0])
+        self.assertIn('Installing MySQL,60', self.requests.post.call_args[1]['data'])
+        # A step is no progress line: it is not written there and not posted.
+        self.assertNotIn('database', self.progress.read_text())
 
 
 class InstallerEntryPointTests(unittest.TestCase):
