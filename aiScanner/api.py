@@ -2,8 +2,10 @@ import json
 import os
 import mimetypes
 import base64
+import re
 from datetime import timedelta
 from decimal import Decimal
+from django.db import transaction
 from django.db.models import F
 from django.http import JsonResponse
 from django.utils import timezone
@@ -445,26 +447,46 @@ def get_file_content(request):
         return JsonResponse({'error': 'Internal server error'}, status=500)
 
 
+# A count as text: digits only, and no more of them than a count needs.
+DIGITS = re.compile(r'[0-9]{1,10}\Z')
+# An amount as text: digits with an optional fraction, nothing else.
+AMOUNT = re.compile(r'[0-9]{1,6}(?:\.[0-9]{1,12})?\Z')
+
+
 def whole_number(value):
-    """A count from a callback: a whole number that is never negative."""
-    try:
-        if isinstance(value, bool):
-            return 0
-        number = int(Decimal(str(value).strip()))
-    except (ArithmeticError, ValueError):
+    """A count from a callback: a whole number that is never negative.
+
+    Taken from a number, or from text that is nothing but a few digits;
+    anything else counts as nothing. Text is never turned into a number
+    before it is known to be short.
+    """
+    if isinstance(value, str):
+        value = value.strip()
+        value = int(value) if DIGITS.match(value) else 0
+    if isinstance(value, bool) or not isinstance(value, int):
         return 0
-    return min(max(number, 0), 2147483647)
+    return min(max(value, 0), 2147483647)
 
 
 def money(value):
-    """An amount of money from a callback, as a decimal that is never negative."""
-    try:
-        amount = Decimal(str(value).replace('$', '').replace(',', '').strip())
-        if not amount.is_finite() or amount <= 0 or amount >= 10000:
-            return Decimal('0')
-        return amount.quantize(Decimal('0.000001'))
-    except (ArithmeticError, ValueError):
+    """An amount of money from a callback, as a decimal that is never negative.
+
+    Written as digits with an optional fraction, after a `$` and thousands
+    separators are taken away; an exponent or anything else is no amount.
+    """
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
         return Decimal('0')
+    if isinstance(value, int) and not 0 < value < 10000:
+        return Decimal('0')
+    if isinstance(value, str) and len(value) > 40:
+        return Decimal('0')
+    text = str(value).replace('$', '').replace(',', '').strip()
+    if AMOUNT.match(text) is None:
+        return Decimal('0')
+    amount = Decimal(text)
+    if amount <= 0 or amount >= 10000:
+        return Decimal('0')
+    return amount.quantize(Decimal('0.000001'))
 
 
 # What a scan can become when the platform reports its end.
@@ -548,9 +570,51 @@ def scan_callback(request):
         files_scanned = whole_number(summary.get('files_scanned', 0))
         cost = money(summary.get('cost', 0)) if status == 'completed' else Decimal('0')
 
-        # Only a scan that is still under way can end, and only the first
-        # callback gets to end it.
-        if ScanHistory.objects.filter(pk=scan_record.pk, status__in=('pending', 'running')).update(status=status) != 1:
+        # A scan ends once: only one that has no result yet can end, and only the
+        # first callback gets to end it. A scan that this panel marked as failed
+        # because the platform was slow to accept it has no result yet either.
+        # Ending it and storing its result is one step: if the result cannot
+        # be stored the scan has not ended, and the platform can report again.
+        try:
+            with transaction.atomic():
+                ended = ScanHistory.objects.filter(
+                    pk=scan_record.pk, completed_at__isnull=True
+                ).exclude(status__in=('completed', 'cancelled')).update(
+                    status=status, completed_at=timezone.now())
+                if ended == 1:
+                    scan_record.status = status
+                    scan_record.issues_found = total_findings
+                    scan_record.files_scanned = files_scanned
+                    scan_record.cost_usd = cost
+
+                    # Store findings and AI analysis
+                    scan_record.set_findings(findings)
+                    scan_record.set_summary({
+                        'threat_level': str(summary.get('threat_level', 'UNKNOWN'))[:20],
+                        'total_findings': total_findings,
+                        'files_scanned': files_scanned,
+                        'ai_analysis': ai_analysis if isinstance(ai_analysis, str) else ''
+                    })
+
+                    # Set completion time
+                    scan_record.completed_at = timezone.now()
+                    if isinstance(completed_at, str):
+                        try:
+                            from plogical.isoTime import parse_iso_datetime
+                            scan_record.completed_at = parse_iso_datetime(completed_at.replace('Z', '+00:00'))
+                        except (TypeError, ValueError):
+                            pass
+
+                    scan_record.save()
+        except Exception as e:
+            logging.writeToFile(f"[API] Failed to update scan record: {type(e).__name__}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Failed to update scan record',
+                'scan_id': scan_id
+            }, status=500)
+
+        if ended != 1:
             logging.writeToFile(f"[API] Callback for scan {scan_id} ignored: the scan has already ended")
             return JsonResponse({
                 'status': 'success',
@@ -561,32 +625,6 @@ def scan_callback(request):
         logging.writeToFile(f"[API] Received callback for scan {scan_id}: {status}")
 
         try:
-            # Update scan record
-            scan_record.status = status
-            scan_record.issues_found = total_findings
-            scan_record.files_scanned = files_scanned
-            scan_record.cost_usd = cost
-
-            # Store findings and AI analysis
-            scan_record.set_findings(findings)
-            scan_record.set_summary({
-                'threat_level': str(summary.get('threat_level', 'UNKNOWN'))[:20],
-                'total_findings': total_findings,
-                'files_scanned': files_scanned,
-                'ai_analysis': ai_analysis if isinstance(ai_analysis, str) else ''
-            })
-
-            # Set completion time
-            scan_record.completed_at = timezone.now()
-            if isinstance(completed_at, str):
-                try:
-                    from plogical.isoTime import parse_iso_datetime
-                    scan_record.completed_at = parse_iso_datetime(completed_at.replace('Z', '+00:00'))
-                except (TypeError, ValueError):
-                    pass
-
-            scan_record.save()
-
             # Also update the ScanStatusUpdate record with final statistics
             try:
                 from .status_models import ScanStatusUpdate
