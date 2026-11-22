@@ -120,6 +120,34 @@ class ScannerFileApiTests(SimpleTestCase):
         self.assertEqual(('wp-content/plugins/demo.php', 14, 'utf-8'),
                          (content['path'], content['size'], content['encoding']))
 
+    def test_names_with_quotes_and_shell_characters_are_listed_and_read(self):
+        names = ["it's.php", 'say "x".php', '$(touch %s).php' % os.path.basename(self.marker), 'a&b;c|d.php']
+        for name in names:
+            write(os.path.join(self.root, 'odd', name), b'<?php // odd\n')
+        with mock.patch('aiScanner.api.logging') as log:
+            status, listing = self.get(api.list_files, path='odd')
+        self.assertEqual((200, sorted(names)), (status, sorted(item['name'] for item in listing['items'])))
+        self.assertEqual([], [call for call in log.writeToFile.call_args_list if 'left out' in call[0][0]])
+        for name in names:
+            status, content = self.get(api.get_file_content, path='odd/' + name)
+            self.assertEqual((200, b'<?php // odd\n'), (status, base64.b64decode(content['content'])), name)
+            status, found = self.get(api.scanner_get_file, file_path='odd/' + name)
+            self.assertEqual((200, '<?php // odd\n'), (status, found['content']), name)
+        self.assertFalse(os.path.exists(os.path.basename(self.marker)))
+        self.assertFalse(os.path.exists(self.marker))
+
+    def test_a_listing_says_in_the_log_how_many_entries_it_left_out_for_their_names(self):
+        write(os.path.join(self.root, 'odd', 'tab\there.php'), b'')
+        write(os.path.join(self.root, 'odd', 'line\nbreak.php'), b'')
+        write(os.path.join(self.root, 'odd', 'plain.php'), b'')
+        with mock.patch('aiScanner.api.logging') as log:
+            status, listing = self.get(api.list_files, path='odd')
+        self.assertEqual((200, ['plain.php']), (status, [item['name'] for item in listing['items']]))
+        lines = [call[0][0] for call in log.writeToFile.call_args_list if 'left out' in call[0][0]]
+        self.assertEqual(1, len(lines))
+        self.assertIn('left out 2 entries', lines[0])
+        self.assertNotIn('tab', lines[0])
+
     def test_the_fixer_reads_text_with_its_digest(self):
         status, found = self.get(api.scanner_get_file, file_path='readme.txt')
         self.assertEqual(200, status)
