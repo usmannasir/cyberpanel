@@ -71,21 +71,38 @@ class PhpMyAdminViewTests(SimpleTestCase):
                          self.account.call_args_list)
         self.records.objects.filter.assert_called_with(username='cp-pma-7')
 
-    def test_no_command_carries_the_user_name(self):
-        for name in ('reseller1', 'John Smith', 'john.doe', 'john@example.com', 'jürgen', 'root', 'cyberpanel'):
+    # Names earlier releases stored as typed; their users open phpMyAdmin like everybody else.
+    EARLIER_NAMES = ('reseller1', 'John Smith', 'john.doe', 'john@example.com', 'jürgen', 'root', 'cyberpanel',
+                     "o'brien", 'a!b', 'a#b', 'a,b', 'a:b', 'a=b', 'a~b', '.hidden', '-dash', 'trailing ',
+                     'x & y', 'a/../../b', 'x;y', 'x|y', '$(x)', '`x`', 'x>y', 'new\nline')
+
+    def test_every_existing_user_can_open_it_and_no_command_carries_the_user_name(self):
+        for name in self.EARLIER_NAMES:
             self.admin.userName = name
             self.command.reset_mock()
             self.account.reset_mock()
-            self.assertEqual(1, self.answer(views.generateAccess)['status'], name)
+            self.write_key.reset_mock()
+            answer = self.answer(views.generateAccess)
+            self.assertEqual(1, answer['status'], repr(name))
+            self.assertEqual(name, answer['username'])
             self.assertEqual([mock.call('chmod 640 /usr/local/lscp/cyberpanel/logs/access.log')],
                              self.command.call_args_list, name)
             for call in self.account.call_args_list:
                 self.assertEqual('cp-pma-7', call[0][1])
+            self.assertEqual(7, self.write_key.call_args[0][0])
+            self.records.objects.filter.assert_called_with(username='cp-pma-7')
         self.output.assert_not_called()
 
-    def test_name_that_cannot_be_carried_is_refused_before_anything_is_done(self):
-        for name in ('x /etc/shadow', 'x & id', "x' OR '1", 'a/../../b', 'x\nid', ' x', 'x;id', 'x|id', '$(id)',
-                     '`id`', 'x>y', '-rf', ''):
+    def test_administrator_with_such_a_name_can_open_it_too(self):
+        self.acl = {'admin': 1}
+        for name in self.EARLIER_NAMES:
+            self.admin.userName = name
+            self.assertEqual(1, self.answer(views.generateAccess)['status'], repr(name))
+        self.account.assert_not_called()
+        self.write_key.assert_not_called()
+
+    def test_user_without_a_name_is_refused_before_anything_is_done(self):
+        for name in ('', None, 7, b'john'):
             self.admin.userName = name
             answer = self.answer(views.generateAccess)
             self.assertEqual(0, answer['status'], repr(name))
