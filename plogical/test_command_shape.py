@@ -130,7 +130,9 @@ class TemplateTests(unittest.TestCase):
                 covered.update(id(child) for child in ast.walk(node))
                 checked += 1
                 self.assertTrue(runs_one_command(text), '%s:%s %s' % (relative, node.lineno, text))
-        self.assertGreater(checked, 80)
+        # Fewer than before 3.0.13: the WordPress restore steps go through the runner that reports the
+        # real exit status and are no longer `sudo -u` templates.
+        self.assertGreater(checked, 60)
 
 
 if __name__ == '__main__':
