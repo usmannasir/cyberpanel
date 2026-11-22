@@ -21,7 +21,7 @@ class DockerSiteAccessTests(unittest.TestCase):
 
         self.assertIs(expected, cls().CreateDockersite(request=object(), userID=7))
         self.assertEqual('websiteFunctions/CreateDockerSite.html',
-                         services['httpProc'].call_args.args[1])
+                         services['httpProc'].call_args[0][1])
         services['ACLManager'].CheckForPremFeature.assert_not_called()
 
     def test_free_access_does_not_override_package_admin_acl(self):

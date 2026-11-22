@@ -1,4 +1,4 @@
-"""A Docker site always gets a CPU limit: none of its containers is started without one."""
+"""The creation page of Docker sites refuses what it cannot use: no CPU limit, an odd site name, a visitor without the right."""
 import json
 import unittest
 from types import SimpleNamespace
@@ -73,6 +73,53 @@ class CpuTests(unittest.TestCase):
         reply, env = submit(SiteCPU=4, MysqlCPU=1)
         self.assertEqual(0, reply['status'])
         self.assertIn('CPUs', reply['error_message'])
+
+
+class SiteNameTests(unittest.TestCase):
+    def test_a_site_name_is_lower_case_letters_and_digits_to_its_very_end(self):
+        for name in ('shop\n', 'shop\nx', 'Shop', 'my-shop', 'my shop', '', None, 7, ['shop']):
+            with self.subTest(name=name):
+                reply, env = submit(sitename=name)
+                self.assertEqual(0, reply['status'])
+                self.assertIn('invalid site name', reply['error_message'])
+                env['Docker_Sites'].assert_not_called()
+
+    def test_ordinary_site_names_are_accepted(self):
+        for name in ('shop', 'n8n', '9lives', 'a'):
+            reply, env = submit(sitename=name)
+            self.assertEqual(1, reply['status'], reply)
+
+
+def open_creation_page(permitted, assignments=0):
+    cls, env, services = load_wordpress_manager()
+    acl = services['ACLManager']
+    acl.currentContextPermission.return_value = permitted
+    env['PackageAssignment'] = mock.Mock()
+    env['PackageAssignment'].objects.all.return_value.count.return_value = assignments
+    env['DockerPackages'] = mock.Mock()
+    cls().CreateDockersite(request=mock.Mock(), userID=7)
+    return env, services
+
+
+class CreationPageTests(unittest.TestCase):
+    def test_a_user_who_may_not_open_the_page_creates_nothing_by_asking_for_it(self):
+        env, services = open_creation_page(permitted=0)
+        env['DockerPackages'].assert_not_called()
+        env['PackageAssignment'].assert_not_called()
+        services['ACLManager'].currentContextPermission.assert_called_once_with(
+            services['ACLManager'].loadedACL.return_value, 'createWebsite')
+        services['ACLManager'].loadedACL.assert_called_once_with(7)
+
+    def test_the_first_package_is_still_made_for_a_user_who_may(self):
+        env, services = open_creation_page(permitted=1)
+        self.assertEqual('Default', env['DockerPackages'].call_args[1]['Name'])
+        env['DockerPackages'].return_value.save.assert_called_once_with()
+        services['Administrator'].objects.get.assert_called_once_with(pk=1)
+        env['PackageAssignment'].return_value.save.assert_called_once_with()
+
+    def test_an_existing_assignment_is_left_alone(self):
+        env, services = open_creation_page(permitted=1, assignments=3)
+        env['DockerPackages'].assert_not_called()
 
 
 if __name__ == '__main__':

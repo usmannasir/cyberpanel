@@ -1364,50 +1364,6 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
         except Exception as e:
             raise DockerDeploymentError(f"Resource verification failed: {str(e)}")
 
-    def setup_docker_environment(self):
-        try:
-            # Create docker directory with root
-            command = f"mkdir -p /home/docker/{self.data['finalURL']}"
-            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-            # Set proper permissions
-            command = f"chown -R {self.data['externalApp']}:docker /home/docker/{self.data['finalURL']}"
-            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-            # Create docker network if doesn't exist
-            command = "docker network ls | grep cyberpanel"
-            network_exists = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-            if not network_exists:
-                command = "docker network create cyberpanel"
-                ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-            return True
-
-        except Exception as e:
-            raise DockerDeploymentError(f"Environment setup failed: {str(e)}")
-
-    def deploy_containers(self):
-        try:
-            # Write docker-compose file
-            command = f"cat > {self.data['ComposePath']} << 'EOF'\n{self.data['ComposeContent']}\nEOF"
-            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-            # Set proper permissions on compose file
-            command = f"chmod 600 {self.data['ComposePath']} && chown root:root {self.data['ComposePath']}"
-            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-            # Deploy with docker-compose
-            command = f"cd {os.path.dirname(self.data['ComposePath'])} && docker-compose up -d"
-            result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-            if "error" in result.lower():
-                raise DockerDeploymentError(f"Container deployment failed: {result}")
-
-            return True
-
-        except Exception as e:
-            raise DockerDeploymentError(f"Deployment failed: {str(e)}")
-
     def cleanup_failed_deployment(self):
         try:
             # Stop and remove the containers of this site's project, and nothing else
