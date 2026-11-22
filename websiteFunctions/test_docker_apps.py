@@ -164,11 +164,21 @@ class TestN8NComposeUnchanged(unittest.TestCase):
         self.assertIn('testapp-db', self.compose['services'])
         self.assertEqual(self.compose['services']['testapp-db']['image'], 'postgres:16-alpine')
 
-    def test_still_publishes_the_editor_port(self):
-        self.assertEqual(self.compose['services']['testapp']['ports'], ['11007:5678'])
+    def test_publishes_the_editor_port_on_loopback_only(self):
+        ## OpenLiteSpeed proxies to 127.0.0.1:port; a port published on every
+        ## interface is reachable from the internet past the host firewall.
+        self.assertEqual(self.compose['services']['testapp']['ports'], ['127.0.0.1:11007:5678'])
 
 
 class TestAppVhost(unittest.TestCase):
+
+    def setUp(self):
+        ## These tests answer "exists" for every path and hand out one fake file.
+        ## The real log writer would take that for its mail settings and call
+        ## itself until the interpreter runs out of stack.
+        patcher = mock.patch('plogical.DockerSites.logging.writeToFile')
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_n8n_helper_delegates_to_the_shared_one(self):
         with mock.patch.object(Docker_Sites, 'SetupAppVhost', return_value=True) as shared:
