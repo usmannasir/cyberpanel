@@ -47,6 +47,7 @@ from plogical.securityUtils import generate_api_token
 from managePHP.phpManager import PHPManager
 from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name, php_selection_digits
 from ApachController.ApacheVhosts import ApacheVhost
+from ApachController.ApacheController import ApacheController
 from plogical.vhostConfs import vhostConfs
 from plogical.cronUtil import CronUtil
 from .StagingSetup import StagingSetup
@@ -67,7 +68,7 @@ from plogical.cyberedge import (
 )
 from websiteFunctions.wordpressEntitlements import wordpress_entitlement_required
 from websiteFunctions.apacheEntitlements import (
-    apache_manager_available, apache_entitlement_required,
+    apache_first_setup_error, apache_manager_available, apache_entitlement_required,
     apache_backend_entitlement_error, normalize_apache_backend,
 )
 
@@ -2341,6 +2342,11 @@ Require valid-user
                 return entitlement_error
             currentACL = ACLManager.loadedACL(userID)
 
+            if normalize_apache_backend(data.get('apacheBackend', 0)):
+                first_setup_error = apache_first_setup_error(currentACL, ApacheController.checkIfApacheInstalled())
+                if first_setup_error is not None:
+                    return first_setup_error
+
             domain = data['domainName']
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
@@ -2482,6 +2488,11 @@ Require valid-user
 
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
+
+            if normalize_apache_backend(data.get('apacheBackend', 0)):
+                first_setup_error = apache_first_setup_error(currentACL, ApacheController.checkIfApacheInstalled())
+                if first_setup_error is not None:
+                    return first_setup_error
 
             try:
                 alias = data['alias']
@@ -5543,8 +5554,14 @@ StrictHostKeyChecking no
         try:
             domainName = WebsiteManager.storedDomainName(domainName)
             php_selection_digits(phpVersion)
-        except ValueError as error:
+            server = int(server)
+        except (TypeError, ValueError) as error:
             return HttpResponse(json.dumps({'status': 0, 'error_message': str(error)}))
+
+        if server == WebsiteManager.apache:
+            first_setup_error = apache_first_setup_error(currentACL, ApacheController.checkIfApacheInstalled())
+            if first_setup_error is not None:
+                return first_setup_error
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"

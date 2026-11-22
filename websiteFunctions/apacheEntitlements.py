@@ -44,6 +44,24 @@ def apache_backend_entitlement_error(data):
     return None
 
 
+def apache_first_setup_error(currentACL, apache_installed):
+    """Refuse the first Apache website of a server to anyone but an administrator.
+
+    The first website on the Apache backend installs Apache and PHP-FPM for
+    the whole server and restarts the web server. Returns None when the
+    request may go on.
+    """
+    try:
+        administrator = currentACL['admin'] == 1
+    except (KeyError, TypeError):
+        administrator = False
+    if administrator or apache_installed:
+        return None
+    return apache_entitlement_error(
+        'Apache is not set up on this server yet. The first website on the Apache backend installs '
+        'Apache and PHP-FPM for the whole server, so an administrator has to create or convert it.')
+
+
 def apache_entitlement_required(page=False):
     def decorate(method):
         @wraps(method)
