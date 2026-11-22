@@ -178,6 +178,24 @@ class WebsiteManager:
         self.childDomain = childDomain
 
     @staticmethod
+    def storedDomainName(domain):
+        """Return the name under which a website or child domain is stored.
+
+        The database compares names more loosely than the file system does
+        (letter case, trailing spaces). After the ownership check, paths and
+        command lines are therefore built from the stored name, never from
+        the spelling a request used.
+        """
+        from plogical.websiteSuspension import validate_domain
+        validate_domain(domain)
+        row = ChildDomains.objects.filter(domain=domain).first()
+        if row is None:
+            row = Websites.objects.filter(domain=domain).first()
+        if row is None:
+            raise ValueError('Invalid domain name.')
+        return row.domain
+
+    @staticmethod
     def gitCloneURL(host, username, repository):
         if ':' in host:
             domain, port = host.rsplit(':', 1)
@@ -4013,6 +4031,13 @@ Require valid-user
         else:
             return ACLManager.loadErrorJson('changePHP', 0)
 
+        try:
+            self.domain = WebsiteManager.storedDomainName(self.domain)
+        except ValueError as msg:
+            return HttpResponse(json.dumps({
+                'status': 0, 'changePHP': 0, 'error_message': str(msg),
+            }))
+
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + self.domain
         completePathToConfigFile = confPath + "/vhost.conf"
 
@@ -4030,7 +4055,7 @@ Require valid-user
             }))
 
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
+        execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + shlex.quote(completePathToConfigFile)
         output = ProcessUtilities.outputExecutioner(execPath)
         if not change_php_succeeded(output):
             logging.CyberCPLogFileWriter.writeToFile(
@@ -4056,7 +4081,7 @@ Require valid-user
                     confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + alias.domain
                     completePathToConfigFile = confPath + "/vhost.conf"
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
+                    execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + shlex.quote(completePathToConfigFile)
                     alias_output = ProcessUtilities.outputExecutioner(execPath)
                     if not change_php_succeeded(alias_output):
                         raise RuntimeError(alias_output or 'PHP change command failed.')
@@ -5458,13 +5483,15 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 0)
 
+            self.domain = WebsiteManager.storedDomainName(self.domain)
+
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 finalConfPath = ApacheVhost.configBasePath + self.domain + '.conf'
 
                 if os.path.exists(finalConfPath):
 
                     phpPath = ApacheVhost.whichPHPExists(self.domain)
-                    command = 'sudo cat ' + phpPath
+                    command = 'sudo cat ' + shlex.quote(phpPath)
                     phpConf = ProcessUtilities.outputExecutioner(command).splitlines()
                     pmMaxChildren = phpConf[8].split(' ')[2]
                     pmStartServers = phpConf[9].split(' ')[2]
@@ -5480,7 +5507,7 @@ StrictHostKeyChecking no
                     data['pmMinSpareServers'] = pmMinSpareServers
                     data['pmMaxSpareServers'] = pmMaxSpareServers
                     data['phpPath'] = phpPath
-                    data['configData'] = ProcessUtilities.outputExecutioner(f'cat {finalConfPath}')
+                    data['configData'] = ProcessUtilities.outputExecutioner('cat ' + shlex.quote(finalConfPath))
                 else:
                     data = {}
                     data['status'] = 1
@@ -5514,6 +5541,7 @@ StrictHostKeyChecking no
             return ACLManager.loadErrorJson()
 
         try:
+            domainName = WebsiteManager.storedDomainName(domainName)
             php_selection_digits(phpVersion)
         except ValueError as error:
             return HttpResponse(json.dumps({'status': 0, 'error_message': str(error)}))
@@ -5521,7 +5549,7 @@ StrictHostKeyChecking no
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " switchServer --phpVersion " + shlex.quote(phpVersion) + " --server " + shlex.quote(str(
-            server)) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
+            server)) + " --virtualHostName " + shlex.quote(domainName) + " --tempStatusPath " + tempStatusPath
         ProcessUtilities.popenExecutioner(execPath)
 
         time.sleep(3)
@@ -5547,6 +5575,10 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            # The pool file is named after the stored domain, not after the
+            # spelling this request used.
+            domainName = WebsiteManager.storedDomainName(domainName)
 
             # Security: phpPath is client-supplied and is later `sudo mv`'d as root
             # (see below). Without containment an attacker could overwrite any file

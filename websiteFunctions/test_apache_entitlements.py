@@ -42,6 +42,11 @@ class ApacheEntitlementTests(unittest.TestCase):
         self.acl.loadErrorJson.return_value = Response(json.dumps({'status': 0, 'error_message': 'ACL denied'}))
         self.services['Administrator'].objects.get.return_value = SimpleNamespace(pk=7, userName='admin', defaultSite=1)
         self.services['Websites'].objects.get.side_effect = LookupError('No username collision')
+        # The stored name of the website the switch and tuning requests act on.
+        self.services['Websites'].objects.filter.return_value.first.return_value = SimpleNamespace(
+            domain='owned.example')
+        self.ns['ChildDomains'] = mock.Mock()
+        self.ns['ChildDomains'].objects.filter.return_value.first.return_value = None
         self.services['validators'].domain.return_value = True
         self.services['validators'].email.return_value = True
         self.services['virtualHostUtilities'].cyberPanel = '/usr/local/CyberCP'
