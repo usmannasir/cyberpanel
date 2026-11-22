@@ -1,11 +1,16 @@
 """The admin password given in a file stays out of sight, and -p out of the logs."""
+import argparse
+import ast
 import os
 from pathlib import Path
+import stat
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
-from install.installer_test_harness import Installer, script_parts
+from install.installer_test_harness import ROOT, Installer, script_parts
 
 SECRET = 'Tr0ub4dor&3 -e \\n $HOME `id` "quoted"'
 AS_ROOT = unittest.skipUnless(os.geteuid() == 0, 'a file owned by root is needed')
@@ -173,6 +178,101 @@ class InstallationTests(unittest.TestCase):
     def test_help_names_the_file(self):
         machine = Installer(self)
         self.assertIn('CP_ADMIN_PASSWORD_FILE', machine.run('--help').stdout)
+
+
+class PanelAccountTests(unittest.TestCase):
+    """The lines of Post_Install_Tweak that store the password and set it."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        source = function('Post_Install_Tweak')
+        start = source.index('( umask 077; printf')
+        end = source.index('\n', source.index('adminPass.py --password-file')) + 1
+        self.lines = source[start:end]
+
+    def run_lines(self, password, umask='022'):
+        stored = self.root / 'adminPass'
+        python = self.root / 'python'
+        python.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$0.arguments"\n'
+                          'stat -c %a "$3" > "$0.mode"\n')
+        python.chmod(0o755)
+        lines = self.lines.replace('/etc/cyberpanel/adminPass', str(stored))
+        lines = lines.replace('/usr/local/CyberPanel/bin/python', str(python))
+        self.assertNotIn('/etc/', lines)
+        result = subprocess.run(['bash', '-c', 'umask %s\n%s' % (umask, lines)], stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, universal_newlines=True, timeout=20,
+                                env={'PATH': os.environ['PATH'], 'Admin_Pass': password})
+        self.assertEqual((0, '', ''), (result.returncode, result.stdout, result.stderr))
+        return stored, (self.root / 'python.arguments').read_text().splitlines(), \
+            (self.root / 'python.mode').read_text().strip()
+
+    def test_password_is_handed_over_in_the_file_not_on_the_command_line(self):
+        for password in (SECRET, '-eEnnEEnn', '1234567'):
+            with self.subTest(password=password):
+                stored, arguments, mode_when_read = self.run_lines(password)
+                self.assertEqual(password + '\n', stored.read_text())
+                self.assertEqual(['/usr/local/CyberCP/plogical/adminPass.py', '--password-file', str(stored)], arguments)
+                self.assertEqual('600', mode_when_read)
+                self.assertEqual(0o600, stat.S_IMODE(stored.stat().st_mode))
+
+    def test_stored_password_is_never_readable_by_others(self):
+        self.assertEqual(1, self.lines.count('umask 077'))
+        stored, _, mode_when_read = self.run_lines(SECRET, umask='000')
+        self.assertEqual('600', mode_when_read)
+
+    def test_no_command_of_the_installer_carries_the_password(self):
+        source = (ROOT / 'cyberpanel.sh').read_text()
+        self.assertNotIn('--password "$Admin_Pass"', source)
+        for line in source.splitlines():
+            if 'Admin_Pass' in line and 'printf' not in line:
+                self.assertNotRegex(line, r'^\s*(/|python|cyberpanel |curl|wget)', line)
+
+
+class AdminPassScriptTests(unittest.TestCase):
+    def setUp(self):
+        self.tree = ast.parse((ROOT / 'plogical/adminPass.py').read_text(), feature_version=(3, 6))
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.directory = directory.name
+
+    def functions(self, scope):
+        body = [node for node in self.tree.body if isinstance(node, ast.FunctionDef)]
+        exec(compile(ast.fix_missing_locations(ast.Module(body=body, type_ignores=[])), 'adminPass', 'exec'), scope)
+        return scope
+
+    def test_first_line_is_the_password(self):
+        read = self.functions({})['password_from_file']
+        for content, expected in ((SECRET + '\n', SECRET), (SECRET, SECRET), (SECRET + '\r\n', SECRET),
+                                  (' padded \nsecond\n', ' padded '), ('', ''),
+                                  ('p\u00e4ssw\u00f6rd-1234\n', 'p\u00e4ssw\u00f6rd-1234')):
+            with self.subTest(content=content):
+                self.assertEqual(expected, read(str(password_file(self.directory, content))))
+
+    def change(self, *arguments):
+        hashing = Mock()
+        administrators = Mock()
+        administrators.objects.count.return_value = 1
+        scope = self.functions(dict(argparse=argparse, Administrator=administrators, hashPassword=hashing,
+                                    print=Mock()))
+        with patch.object(sys, 'argv', ['adminPass.py'] + list(arguments)):
+            scope['main']()
+        return hashing
+
+    def test_password_file_sets_the_admin_password(self):
+        hashing = self.change('--password-file', str(password_file(self.directory)))
+        hashing.hash_password.assert_called_once_with(SECRET)
+        hashing.generateToken.assert_called_once_with('admin', SECRET)
+
+    def test_password_option_still_works(self):
+        hashing = self.change('--password', 'typed-by-hand')
+        hashing.hash_password.assert_called_once_with('typed-by-hand')
+
+    def test_file_without_a_password_is_refused(self):
+        with patch('sys.stderr'), self.assertRaises(SystemExit) as stopped:
+            self.change('--password-file', str(password_file(self.directory, '\n')))
+        self.assertEqual(2, stopped.exception.code)
 
 
 if __name__ == '__main__':
