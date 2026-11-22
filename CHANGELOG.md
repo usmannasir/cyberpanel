@@ -4,6 +4,90 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.12 (build 12) — 2026-11-22
+
+Security and reliability release. It hardens databases, Docker sites, the PHP
+manager, the AI Scanner and the way the panel takes requests, and adds a link
+to where a Multi-Server Manager licence is bought. Upgrading is recommended for
+every server, especially servers with more than one panel user.
+
+### Databases
+- A database user is granted its own database and nothing else, whatever the
+  database is called. An upgrade gives the grants of earlier releases the same
+  exact form, keeps every account's access to its own database, and lists in
+  the upgrade log any pattern grant it did not make itself.
+- The prefix of a new database name comes from the website, not from the
+  browser.
+- A database dump (restore, Backup V2, incremental backup, cPanel import) is
+  loaded by a temporary account that can use the target database only. Views,
+  triggers and routines of the dump are handed to the database's own user.
+- A restore re-creates only the accounts that belong to the database, and the
+  site's own user wherever the backup lists it. Deleting a database removes
+  only its own accounts. Backups no longer record phpMyAdmin sign-in accounts.
+- Database dumps are private files from the moment they exist, and an
+  incremental backup fails when its fresh dump cannot be saved.
+- A user who is not an administrator signs in to phpMyAdmin with an account
+  named after the user's number. It is rebuilt at every visit from what the
+  user manages then and removed when that changes (suspension, deletion, role
+  change, a website moving to another owner).
+- Changing a database user's password or remote access acts on the user
+  registered for one's own websites only, never on an account of the server.
+- The name of a new panel user starts with a letter or number and may contain
+  letters and numbers of any alphabet, dots, dashes, underscores and @, 50
+  characters at most. Existing users keep their names.
+
+### Docker sites
+- An application is put on an existing website, and a site's containers are
+  started, stopped, restarted and deleted, only for the owner of that website.
+  A site's containers are found by its Compose project and directory, never by
+  part of a name.
+- A new n8n site is published on the loopback address only, gets its owner
+  account from the creation form before it goes online, an encryption key of
+  its own, and at least 768 MB. A failed deployment says why and can be tried
+  again.
+- An upgrade lists n8n sites that earlier releases deployed and that still
+  publish their port on every address or have no owner account yet, and
+  changes nothing on them. Review the sites it names; the list can be printed
+  again with `python /usr/local/CyberCP/plogical/DockerSites.py CheckN8NSites`.
+- Deleting a Docker site takes only the panel's own rules out of the
+  website's `.htaccess`, and a port is never given to a second site.
+- Compose files are written with every value quoted and are private from the
+  start; a site's directory is private to root.
+- The Docker and container package installers start from the panel's own page
+  only, and a command run from the container page has the container's own
+  privileges.
+
+### PHP
+- A PHP version is accepted only as one of the panel's selections, in every
+  request and again in the workers. Older spellings from the command line, the
+  API and backups (`PHP 74`, `7.4`) are still understood.
+- A PHP change for one website on the Apache backend reloads PHP-FPM instead
+  of stopping it, and every PHP-FPM pool has a name of its own.
+- The PHP settings pages write only the php.ini files the panel manages, from
+  checked values, and replace a file in one step.
+- The extension pages install and remove PHP packages only. Tuning and
+  open_basedir values are checked before the worker runs.
+- The first website on the Apache backend, which installs Apache and PHP-FPM
+  for the whole server, is created by an administrator.
+
+### AI Scanner
+- The scanner reads and changes a website's files as the website's own user
+  and only inside the site. The access token of a scan can only read; the
+  scanner key reaches only the website its scan was started for, for a week.
+- Backups made before a fix are kept in the website's home, outside every
+  served folder, and an upgrade moves the backups of earlier releases there.
+- A scan result is stored once, scheduled scans are checked and escaped, live
+  progress is shown to the signed-in owner only, and tokens and keys stay out
+  of the panel log.
+
+### Requests
+- The panel reads every request body to its end before it answers, so nothing
+  of one request is left for the next one on the same connection.
+
+### Multi-Server Manager
+- The role page, the Nodes page and the combined lists link to where a
+  licence for this controller is bought.
+
 ## v3.0.11 (build 11) — 2026-11-22
 
 Multi-Server Manager. One CyberPanel server, the controller, manages your other
