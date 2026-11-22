@@ -3320,15 +3320,17 @@ class ApplicationInstaller(multi.Thread):
         """Whether a path exists, asked with root's rights: True, False, or None when that is not known.
 
         kind narrows it to a directory ('d') or a regular file ('f'). The
-        answer is read from what the command prints, because the helper's
-        plain reply ends the same way whether the command failed or not.
+        command prints one word for each answer, and only that word counts:
+        the helper's plain reply ends the same way whether the command
+        failed or not, and a reply without either word (the helper did not
+        answer, or could not run the command) is no answer at all.
         """
-        test = '' if kind is None else ' -type %s' % kind
-        command = 'sudo find %s -maxdepth 0%s -printf present 2>/dev/null' % (shlex.quote(path), test)
-        output = str(ProcessUtilities.outputExecutioner(command)).strip()
-        if output == 'present':
+        check = 'test -%s "$1" && echo present || echo absent' % (kind or 'e')
+        command = 'sudo sh -c %s sh %s 2>/dev/null' % (shlex.quote(check), shlex.quote(path))
+        answer = [line.strip() for line in str(ProcessUtilities.outputExecutioner(command)).splitlines()]
+        if 'present' in answer and 'absent' not in answer:
             return True
-        if output == '':
+        if 'absent' in answer and 'present' not in answer:
             return False
         return None
 
@@ -3412,7 +3414,10 @@ class ApplicationInstaller(multi.Thread):
         """
         from websiteFunctions.wordpressRestore import backup_layout, backup_listing_filter
         try:
-            command = 'sudo cat %s | sudo -u nobody tar -tzf - 2>/dev/null | grep -E %s' % (
+            # The archive is the customer's: however many names in it fit
+            # the filter, only the first few and a few thousand bytes of
+            # them are read.
+            command = 'sudo cat %s | sudo -u nobody tar -tzf - 2>/dev/null | grep -m 64 -E %s | head -c 16384' % (
                 shlex.quote(archive), shlex.quote(backup_listing_filter(oldtemppath)))
             return backup_layout(kind, ProcessUtilities.outputExecutioner(command, None, True), oldtemppath,
                                  DumpFileName)
@@ -3426,15 +3431,16 @@ class ApplicationInstaller(multi.Thread):
             return None
         # The backup's wp-config.php is printed by an account without any
         # rights and only its lines about the site's address are kept.
-        command = 'sudo cat %s | sudo -u nobody tar -xzOf - %s 2>/dev/null | grep -E %s' % (
+        command = 'sudo cat %s | sudo -u nobody tar -xzOf - %s 2>/dev/null | grep -m 64 -E %s | head -c 16384' % (
             shlex.quote(archive), shlex.quote(layout['config']), shlex.quote(ADDRESS_FILTER))
         return other_domain_refusal(ProcessUtilities.outputExecutioner(command, None, True))
 
     def placeBackup(self, layout, archive, user, phpPath, sitePath, settings):
         """Put what a backup holds into a site, as the site's own account, and return where its dump lies.
 
-        The archive stays root's file and is only opened for reading to the
-        site's group, so it is not counted against the site's disk quota,
+        The archive stays root's file in root's folder, both opened to the
+        site's group and to nobody else, so it is not counted against the
+        site's disk quota,
         and the site's files are unpacked straight into the site: no second
         copy of them exists at any time. Unpacked by the site's account they
         belong to that account, and a file cannot keep an owner or a setuid
@@ -3449,9 +3455,16 @@ class ApplicationInstaller(multi.Thread):
         """
         import pwd
         work = self.tempPath + '/site'
-        ProcessUtilities.executioner('chown -h root:%d %s' % (pwd.getpwnam(user).pw_gid, shlex.quote(archive)))
+        # The job's folder and the archive in it stay root's and are opened
+        # to the site's group alone. The work folder below is the site
+        # account's and closed to everyone else: it holds the database dump
+        # and a wp-config.php with the site's database password, and its
+        # path can be seen in the list of running commands.
+        ProcessUtilities.executioner('chown -h root:%d %s %s' % (
+            pwd.getpwnam(user).pw_gid, shlex.quote(self.tempPath), shlex.quote(archive)))
+        ProcessUtilities.executioner('chmod 750 %s' % shlex.quote(self.tempPath))
         ProcessUtilities.executioner('chmod 640 %s' % shlex.quote(archive))
-        ProcessUtilities.executioner('mkdir %s' % shlex.quote(work))
+        ProcessUtilities.executioner('mkdir -m 700 %s' % shlex.quote(work))
         ProcessUtilities.executioner('chown -h %s %s' % (shlex.quote(user), shlex.quote(work)))
 
         unpack = 'tar -xzf %s --no-same-owner --no-same-permissions' % shlex.quote(archive)
@@ -3577,7 +3590,7 @@ class ApplicationInstaller(multi.Thread):
         """Put a backup's files, and its database when it has one, into the plain site just created for it."""
         from plogical.phpUtilities import phpUtilities
         from websiteFunctions.wordpressRestore import (
-            DUMP_SITE_ADDRESS_FILTER, address_is_on, database_not_replaced, dump_site_address)
+            address_is_on, database_not_replaced, dump_site_address_command, dump_site_addresses)
 
         logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
         NewWPsite = WPSites.objects.get(owner__domain=DomainName, FinalURL=newurl)
@@ -3613,16 +3626,16 @@ class ApplicationInstaller(multi.Thread):
 
         if backupDump is not None:
             logging.statusWriter(self.tempStatusPath, 'Restoring Data Base...,80')
-            # What the dump says the site's address is. The database of the
-            # plain installation cannot say the same, so finding it after
-            # the import shows that the dump has replaced that database.
-            found = ApplicationInstaller.siteCommand('grep -a -o -m1 -E %s %s' % (
-                shlex.quote(DUMP_SITE_ADDRESS_FILTER), shlex.quote(backupDump)), VHuser, False)[1]
+            # What the dump's own options rows say the site's address is.
+            # The database of the plain installation cannot say the same, so
+            # finding it after the import shows that the dump has replaced
+            # that database.
+            found = ApplicationInstaller.siteCommand(dump_site_address_command(backupDump), VHuser, False)[1]
             self.importDump(FinalPHPPath, newWPpath, VHuser, backupDump)
             address = ApplicationInstaller.siteCommand(
                 wordpress_cli_command(FinalPHPPath, newWPpath, 'option', 'get', 'siteurl'), VHuser, False)[1]
             answer = address.strip().splitlines()
-            notReplaced = database_not_replaced(dump_site_address(found), answer[-1] if answer else '', DomainName)
+            notReplaced = database_not_replaced(dump_site_addresses(found), answer[-1] if answer else '', DomainName)
             if notReplaced is not None:
                 raise BaseException('The database of the backup did not take the place of the new site\'s own: %s'
                                     % notReplaced)
@@ -6055,6 +6068,10 @@ class ApplicationInstaller(multi.Thread):
 
             if result == 0:
                 raise BaseException(stdout)
+
+            # Nobody but root looks into the job's folder until the
+            # destination's account is known.
+            ProcessUtilities.executioner('chmod 700 %s' % shlex.quote(self.tempPath))
 
             ### copy backup file to tempdir and then change permissions of tempdir to user
             command = "cp -R /home/backup/%s* %s" % (BackUpFileName, self.tempPath)

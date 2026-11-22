@@ -1,6 +1,7 @@
 """Decide what a WordPress restore may do before it creates or changes anything."""
 import os
 import re
+import shlex
 from urllib.parse import urlsplit
 
 
@@ -168,33 +169,43 @@ def restored_site_address(domain, path):
     return domain if not path else '%s/%s' % (domain, path)
 
 
-# The row of the options table that holds a site's address, as a dump writes it.
-DUMP_SITE_ADDRESS = re.compile(r"'siteurl','([^']*)'")
-DUMP_SITE_ADDRESS_FILTER = "'siteurl','[^']*'"
+# The row of the options table that holds a site's address, as a dump writes
+# it: (2,'siteurl','https://example.com','on') with the row's number first
+# and its autoload word last ('yes', 'on', 'auto' and the like). mysqldump
+# writes all rows of a table on one line, mariadb-dump one row per line; the
+# row looks the same in both. Text a visitor can leave in another table
+# (a comment's author, say) never takes this shape: its quotes are escaped
+# inside a value, and no other core table has such a row of four.
+DUMP_SITE_ADDRESS = re.compile(r"\([0-9]+,'siteurl','([^']*)','[a-z-]+'\)")
+DUMP_SITE_ADDRESS_FILTER = r"\([0-9]+,'siteurl','[^']*','[a-z-]+'\)"
 
 
-def dump_site_address(found):
-    """The site address a dump carries, from the lines of it that hold the siteurl row; None when it has none."""
-    match = DUMP_SITE_ADDRESS.search(str(found or ''))
-    return match.group(1) if match is not None and match.group(1) else None
+def dump_site_address_command(dump):
+    """The command that prints the siteurl rows of a dump: the first few of them, and a bounded amount."""
+    return 'grep -a -o -m 20 -E %s %s | head -c 8192' % (shlex.quote(DUMP_SITE_ADDRESS_FILTER), shlex.quote(dump))
 
 
-def database_not_replaced(dump_address, address, new_domain):
+def dump_site_addresses(found):
+    """The site addresses a dump's siteurl rows carry, in the order found; empty when it shows none."""
+    return [address for address in DUMP_SITE_ADDRESS.findall(str(found or '')) if address]
+
+
+def database_not_replaced(dump_addresses, address, new_domain):
     """Why the database of a new site is not the one from the dump after the import, or None when it is.
 
     A new site starts with the database of a plain installation, whose
-    address is on the new domain. dump_address is what the dump says the
-    site's address is (None when it could not be read from the dump),
-    address what the database says after the import and before any
-    address is rewritten. The two must be the same; without an address
+    address is on the new domain. dump_addresses is what the dump's siteurl
+    rows say the site's address is (empty when none could be read), address
+    what the database says after the import and before any address is
+    rewritten. One of the dump's must be the database's; without an address
     from the dump, the database must at least no longer be the plain one.
     """
     address = str(address or '').strip()
-    if dump_address is not None:
+    if dump_addresses:
         # WordPress gives its address without a slash at the end, whatever is stored.
-        if address.rstrip('/') != dump_address.rstrip('/'):
+        if address.rstrip('/') not in [candidate.rstrip('/') for candidate in dump_addresses]:
             return ('after the import the database gives "%s" as the site address, the dump gives "%s"'
-                    % (address[:120], dump_address[:120]))
+                    % (address[:120], dump_addresses[0][:120]))
         return None
     if not address or address_is_on(address, new_domain):
         return ('after the import the database still gives "%s" as the site address, as the plain '

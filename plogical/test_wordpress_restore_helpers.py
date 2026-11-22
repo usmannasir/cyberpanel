@@ -281,5 +281,22 @@ class UndoneCreationTests(unittest.TestCase):
         self.assertEqual(1, body.count('vhost.deleteVirtualHostConfigurations('))
 
 
+class ImportedAccountTests(unittest.TestCase):
+    """plogical/cPanelImporter.py: the website an import creates is removed by the same rule."""
+
+    SOURCE = (ROOT / 'plogical/cPanelImporter.py').read_text()
+
+    def test_what_was_there_is_noted_before_the_website_is_created(self):
+        noted = self.SOURCE.index('self.foundBeforeCreation = found_before_creation(')
+        self.assertLess(noted, self.SOURCE.index('result = virtualHostUtilities.createVirtualHost(DomainName'))
+        self.assertIn("DNS.zoneExists(DomainName), os.path.exists('/home/vmail/' + DomainName),\n"
+                      "                os.path.exists('/root/.acme.sh/' + DomainName))", self.SOURCE)
+
+    def test_the_removal_keeps_it_and_keeps_everything_when_nothing_was_noted(self):
+        self.assertIn("vhost.deleteVirtualHostConfigurations(self.mainDomain, getattr(self, 'foundBeforeCreation', "
+                      "REUSABLE))", self.SOURCE)
+        self.assertEqual(1, self.SOURCE.count('vhost.deleteVirtualHostConfigurations('))
+
+
 if __name__ == '__main__':
     unittest.main()

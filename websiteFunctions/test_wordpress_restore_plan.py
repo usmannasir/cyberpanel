@@ -1,5 +1,8 @@
 """What a WordPress restore request asks for is decided before anything is downloaded or created."""
 import json
+import os
+import subprocess
+import tempfile
 import unittest
 
 from websiteFunctions.test_wordpress_entitlements import load_wordpress_manager
@@ -8,7 +11,8 @@ from websiteFunctions.wordpressRestore import (
     backup_layout,
     backup_listing_filter,
     database_not_replaced,
-    dump_site_address,
+    dump_site_address_command,
+    dump_site_addresses,
     other_domain_refusal,
     restore_plan,
     restored_site_address,
@@ -129,33 +133,88 @@ class OtherDomainTests(unittest.TestCase):
         self.assertFalse(address_is_on('http://example.com', ''))
 
 
+# Dumps as `wp db export` writes them. mariadb-dump puts every row on a line
+# of its own (taken from a real dump of MariaDB 10.11: "(2,'siteurl','https://…','on'),");
+# mysqldump puts all rows of a table on one line. In both, wp_comments comes
+# before wp_options, and here a visitor has left a comment under the name "siteurl".
+MARIADB_DUMP = """-- MariaDB dump 10.19  Distrib 10.11.15-MariaDB, for debian-linux-gnu (x86_64)
+LOCK TABLES `wp_comments` WRITE;
+INSERT INTO `wp_comments` VALUES
+(3,5271,'siteurl','spam@example.test','https://spam.example/','198.51.100.7','2026-01-25 08:11:10','2026-01-25 08:11:10','(1,\\'siteurl\\',\\'https://quoted.example\\',\\'yes\\')',0,'0','agent','comment',0,0);
+UNLOCK TABLES;
+LOCK TABLES `wp_options` WRITE;
+INSERT INTO `wp_options` VALUES
+(1,'cron','a:1:{i:1770064397;a:0:{}}','on'),
+(2,'siteurl','https://source.example','on'),
+(3,'home','https://source.example','on');
+UNLOCK TABLES;
+"""
+MYSQL_DUMP = ("-- MySQL dump 10.13  Distrib 8.0.36\n"
+              "INSERT INTO `wp_comments` VALUES (3,5271,'siteurl','spam@example.test','https://spam.example/',"
+              "'198.51.100.7','2026-01-25 08:11:10','2026-01-25 08:11:10','text',0,'0','agent','comment',0,0);\n"
+              "INSERT INTO `wp_options` VALUES (1,'siteurl','http://source.example/','yes'),"
+              "(2,'home','http://source.example/','yes'),(3,'blogname','Source','yes');\n")
+
+
 class ReplacedDatabaseTests(unittest.TestCase):
-    def test_the_address_a_dump_carries_is_its_siteurl_row(self):
-        row = "INSERT INTO `wp_options` VALUES (1,'siteurl','https://source.example','yes'),(2,'home','x','yes');"
-        self.assertEqual('https://source.example', dump_site_address(row))
-        self.assertEqual('https://source.example', dump_site_address("'siteurl','https://source.example'\n"))
-        for found in ('', None, "'siteurl',''", "\\'siteurl\\',\\'https://quoted.example\\'", "'home','x'"):
-            self.assertIsNone(dump_site_address(found), found)
+    def found_in(self, dump):
+        with tempfile.TemporaryDirectory(prefix='wp-dump-test-') as folder:
+            path = os.path.join(folder, "source db's.sql")
+            with open(path, 'w') as handle:
+                handle.write(dump)
+            return subprocess.run(['sh', '-c', dump_site_address_command(path)], stdout=subprocess.PIPE,
+                                  universal_newlines=True).stdout
+
+    def test_the_command_finds_the_options_row_in_both_forms_of_dump_and_not_a_visitors_comment(self):
+        self.assertEqual("(2,'siteurl','https://source.example','on')\n", self.found_in(MARIADB_DUMP))
+        self.assertEqual(['https://source.example'], dump_site_addresses(self.found_in(MARIADB_DUMP)))
+        self.assertEqual(['http://source.example/'], dump_site_addresses(self.found_in(MYSQL_DUMP)))
+        self.assertEqual([], dump_site_addresses(self.found_in('NOT SQL;\n')))
+
+    def test_what_the_command_prints_is_bounded_whatever_the_dump_holds(self):
+        row = "(%d,'siteurl','https://flood.example/" + 'x' * 500 + "','on'),\n"
+        found = self.found_in(''.join(row % number for number in range(5000)))
+        self.assertLessEqual(len(found), 8192)
+        self.assertLessEqual(len(dump_site_addresses(found)), 20)
+        self.assertIn(" -m 20 -E ", dump_site_address_command('/x'))
+        self.assertTrue(dump_site_address_command('/x').endswith(' /x | head -c 8192'))
+
+    def test_only_a_row_of_the_options_shape_carries_an_address(self):
+        self.assertEqual(['https://a.example', 'http://b.example'], dump_site_addresses(
+            "(1,'siteurl','https://a.example','yes')\n(22,'siteurl','http://b.example','auto-on')\n"))
+        for found in ('', None, "'siteurl','spam@example.test'", "(3,5271,'siteurl','spam@example.test','x')",
+                      "(1,'siteurl','','yes')", "(1,\\'siteurl\\',\\'https://quoted.example\\',\\'yes\\')",
+                      "(1,'home','https://a.example','yes')", "('siteurl','https://a.example','yes')"):
+            self.assertEqual([], dump_site_addresses(found), found)
 
     def test_after_the_import_the_database_says_what_the_dump_says(self):
-        self.assertIsNone(database_not_replaced('https://source.example', 'https://source.example\n', 'new.example'))
+        self.assertIsNone(database_not_replaced(['https://source.example'], 'https://source.example\n',
+                                                'new.example'))
         # A dump of a site that already was on the new domain's name is still recognised by its own address.
-        self.assertIsNone(database_not_replaced('https://new.example', 'https://new.example', 'new.example'))
+        self.assertIsNone(database_not_replaced(['https://new.example'], 'https://new.example', 'new.example'))
         # WordPress prints the stored address without its last slash.
-        self.assertIsNone(database_not_replaced('https://source.example/', 'https://source.example', 'new.example'))
-        self.assertIsNotNone(database_not_replaced('https://source.example/a', 'https://source.example', 'new.example'))
+        self.assertIsNone(database_not_replaced(['https://source.example/'], 'https://source.example',
+                                                'new.example'))
+        self.assertIsNotNone(database_not_replaced(['https://source.example/a'], 'https://source.example',
+                                                   'new.example'))
+
+    def test_any_of_the_dumps_rows_may_be_the_one_the_database_holds(self):
+        rows = ['spam@example.test', 'https://source.example', 'https://other.example']
+        self.assertIsNone(database_not_replaced(rows, 'https://source.example', 'new.example'))
+        self.assertIsNotNone(database_not_replaced(rows, 'http://new.example', 'new.example'))
 
     def test_a_database_that_still_is_the_plain_installations_is_named(self):
         self.assertEqual('after the import the database gives "http://new.example" as the site address, the dump '
                          'gives "https://source.example"',
-                         database_not_replaced('https://source.example', 'http://new.example', 'new.example'))
+                         database_not_replaced(['https://source.example'], 'http://new.example', 'new.example'))
         for address in ('', None, 'Error: no such option'):
-            self.assertIsNotNone(database_not_replaced('https://source.example', address, 'new.example'))
+            self.assertIsNotNone(database_not_replaced(['https://source.example'], address, 'new.example'))
 
     def test_without_an_address_from_the_dump_the_plain_databases_address_must_at_least_be_gone(self):
-        self.assertIsNone(database_not_replaced(None, 'https://source.example', 'new.example'))
-        for address in ('http://new.example', 'https://www.new.example/blog', '', None):
-            self.assertIn('as the plain installation did', database_not_replaced(None, address, 'new.example'))
+        for none in ([], None):
+            self.assertIsNone(database_not_replaced(none, 'https://source.example', 'new.example'))
+            for address in ('http://new.example', 'https://www.new.example/blog', '', None):
+                self.assertIn('as the plain installation did', database_not_replaced(none, address, 'new.example'))
 
 
 class NewWebsiteOnlyTests(unittest.TestCase):
