@@ -7,7 +7,8 @@ from loginSystem.views import loadLoginPage
 from plogical.DockerSites import Docker_Sites
 from plogical.httpProc import httpProc
 from .container import ContainerManager
-from .decorators import preDockerRun
+from .decorators import preDockerRun, dockerIsReady
+from django.views.decorators.http import require_POST
 from plogical.acl import ACLManager
 import json
 
@@ -35,6 +36,7 @@ def loadDockerHome(request):
     proc = httpProc(request, template, {"type": admin.type}, 'admin')
     return proc.render()
 
+@require_POST
 def installDocker(request):
     try:
 
@@ -45,6 +47,15 @@ def installDocker(request):
             pass
         else:
             return ACLManager.loadErrorJson()
+
+        ## The installer removes Podman together with its containers and installs
+        ## the Docker packages again, so it runs only where the panel offers it:
+        ## Docker is missing or its daemon does not answer.
+
+        if dockerIsReady():
+            data_ret = {'status': 0, 'error_message': 'Docker is already installed.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
         cm = ContainerManager(userID, 'submitInstallDocker')
         cm.start()

@@ -14,6 +14,7 @@ import subprocess
 import multiprocessing
 from plogical.httpProc import httpProc
 from plogical.acl import ACLManager
+from django.views.decorators.http import require_POST
 # Create your views here.
 
 def cHome(request):
@@ -24,6 +25,7 @@ def cHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+@require_POST
 def submitContainerInstall(request):
     try:
 
