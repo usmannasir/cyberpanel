@@ -12,6 +12,7 @@ from plogical import databaseAccounts as accounts
 from plogical.backupMetadata import backup_includes_mail_domain
 from plogical.panelUserNames import new_name_refusal, restored_name_refusal
 from plogical.test_backup_restore_ssl import load_method
+from managePHP.phpConfig import stored_php_selection
 
 
 class RestoredNameTests(unittest.TestCase):
@@ -84,6 +85,7 @@ class RestoredOwnerTests(unittest.TestCase):
         self.hosts.createVirtualHost.return_value = (1, 'None')
         self.log = mock.Mock()
         namespace = dict(os=os, ElementTree=ElementTree, generate_pass=lambda length: 'starting-password',
+                         stored_php_selection=stored_php_selection,
                          Administrator=self.users.model, databaseAccounts=accounts,
                          Websites=SimpleNamespace(objects=mock.Mock()),
                          ChildDomains=SimpleNamespace(objects=mock.Mock()),
