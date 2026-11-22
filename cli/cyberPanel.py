@@ -1413,7 +1413,7 @@ def main():
 
     elif args.function == "deleteUser":
 
-        completeCommandExample = 'cyberpanel deleteUser --userName cyberpanel'
+        completeCommandExample = 'cyberpanel deleteUser --userName cyberuser'
 
         if not args.userName:
             print("\n\nPlease enter User Name. For example:\n\n" + completeCommandExample + "\n\n")
@@ -1440,7 +1440,7 @@ def main():
 
     elif args.function == "suspendUser":
 
-        completeCommandExample = 'cyberpanel suspendUser --userName cyberpanel --state SUSPEND'
+        completeCommandExample = 'cyberpanel suspendUser --userName cyberuser --state SUSPEND'
 
         if not args.userName:
             print("\n\nPlease enter User Name. For example:\n\n" + completeCommandExample + "\n\n")
@@ -1463,7 +1463,7 @@ def main():
 
     elif args.function == "editUser":
 
-        completeCommandExample = 'cyberpanel editUser --userName cyberpanel --firstName Cyber --lastName Panel --email email@cyberpanel.net --password securepassword --securityLevel HIGH'
+        completeCommandExample = 'cyberpanel editUser --userName cyberuser --firstName Cyber --lastName Panel --email email@cyberpanel.net --password securepassword --securityLevel HIGH'
 
         if not args.firstName:
             print("\n\nPlease enter First Name. For example:\n\n" + completeCommandExample + "\n\n")

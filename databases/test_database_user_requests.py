@@ -171,7 +171,9 @@ class RemoteAccessTests(RequestTests):
         self.connect.return_value = (connection, cursor)
         self.assertEqual(0, self.ask()['status'])
         cursor.execute.assert_called_once_with('DROP USER IF EXISTS %s@%s', ('exam_user', '203.0.113.5'))
-        connection.close.assert_called_once_with()
+        # One connection tells the host the panel's accounts are made at, one removes the account.
+        self.assertEqual(2, self.connect.call_count)
+        self.assertEqual(2, connection.close.call_count)
         self.meta_new.assert_not_called()
 
     def test_new_remote_host_replaces_the_previous_one(self):
