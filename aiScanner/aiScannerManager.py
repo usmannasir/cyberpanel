@@ -119,7 +119,7 @@ class AIScannerManager:
             self.logger.writeToFile(f'[AIScannerManager.scannerHome] Traceback: {traceback.format_exc()}')
             
             return render(request, 'aiScanner/scanner.html', {
-                'error': f'Failed to load AI Scanner page: {str(e)}',
+                'error': 'Failed to load AI Scanner page. Please check the panel log.',
                 'is_payment_configured': False,
                 'websites': [],
                 'recent_scans': [],
@@ -306,8 +306,10 @@ class AIScannerManager:
             domain = data.get('domain')
             scan_type = data.get('scan_type', 'full')
             
-            if not domain:
+            if not domain or not isinstance(domain, str):
                 return JsonResponse({'success': False, 'error': 'Domain is required'})
+            if scan_type not in [choice[0] for choice in ScanHistory.SCAN_TYPE_CHOICES]:
+                return JsonResponse({'success': False, 'error': 'Invalid scan type'})
             
             # Validate domain belongs to user using ACL-aware method
             from websiteFunctions.models import Websites

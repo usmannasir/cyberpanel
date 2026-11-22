@@ -285,6 +285,10 @@ class ACLManager:
             finalResponse['hostnameSSL'] = config['hostnameSSL']
             finalResponse['mailServerSSL'] = config['mailServerSSL']
 
+            ## AI Scanner: ACLs made before this switch existed do not carry it and keep access
+
+            finalResponse['aiScannerAccess'] = config.get('aiScannerAccess', 1)
+
         return finalResponse
 
     @staticmethod
