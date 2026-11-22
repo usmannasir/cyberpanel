@@ -379,6 +379,11 @@ def holds_original(changes):
     return True
 
 
+# After this many single-website changes are refused one after the other the
+# upgrade's repair ends: the fault is then not with any one website.
+REFUSALS_IN_A_ROW = 3
+
+
 def repair_https_listeners(apply, report, server_root=SERVER_ROOT, certificate_root=CERTIFICATE_ROOT):
     """Complete the HTTPS listeners of an existing server during an upgrade.
 
@@ -387,39 +392,92 @@ def repair_https_listeners(apply, report, server_root=SERVER_ROOT, certificate_r
     not made and files and service are as before, and anything else when
     they could not be put back, which ends the repair with that error.
 
-    The vhssl block of each lacking website is a change of its own, so a
-    website whose file cannot be changed is reported and left as it is while
-    the others are repaired. The listener maps follow as one change.
+    The vhssl blocks of all lacking websites and the listener maps are one
+    change, so the server is tested and reloaded once. Only when that is
+    refused are they taken apart: first the blocks of all websites as one
+    change, and if that is refused too, one website at a time to find the
+    one to leave out. Once a website was left out and the next was accepted,
+    the remaining blocks are one change again. The maps follow as a change
+    of their own. REFUSALS_IN_A_ROW single-website refusals without one
+    accepted in between end the repair with ChangeRefused: the fault is then
+    not with any one website and trying the others would only repeat it.
 
     Returns (completed (listener, virtual host) pairs, websites given a vhssl block).
     """
     main = os.path.join(server_root, MAIN_CONFIG)
     certified, lacking = classify_listener_vhosts(read_config(main), server_root, certificate_root, report)
-    blocks = []
-    for vhost in lacking:
-        path = _vhost_config_path(server_root, vhost)
-        try:
-            change = _validated_change(
-                path, lambda text, vhost=vhost: ensure_vhost_certificate(text, vhost, certificate_root))
-        except ValueError as error:
-            change = error
-        if isinstance(change, tuple):
+    completed, blocks = [], []
+
+    def left_out(vhost, reason):
+        report('%s was left without its own certificate block: %s' % (vhost, reason))
+
+    def changes_for(vhosts, maps):
+        """The change for these websites' blocks, with the maps if wanted, and the websites it covers."""
+        changes, covered = OrderedDict(), []
+        for vhost in vhosts:
+            path = _vhost_config_path(server_root, vhost)
             try:
-                apply({path: change})
-                blocks.append(vhost)
+                change = _validated_change(
+                    path, lambda text, vhost=vhost: ensure_vhost_certificate(text, vhost, certificate_root))
+            except ValueError as error:
+                left_out(vhost, error)
+                continue
+            covered.append(vhost)
+            if change is not None:
+                changes[path] = change
+        if maps:
+            def reconciled(text):
+                updated, completed[:] = reconcile_https_listener_maps(text, certified.union(covered))
+                return updated
+            change = _validated_change(main, reconciled)
+            if change is not None:
+                changes[main] = change
+        return changes, covered
+
+    def accepted(changes, covered):
+        blocks.extend(vhost for vhost in covered if _vhost_config_path(server_root, vhost) in changes)
+        certified.update(covered)
+
+    changes, covered = changes_for(lacking, True)
+    if changes:
+        try:
+            apply(changes)
+        except ChangeRefused as error:
+            if not covered:
+                raise    # Nothing but the maps was in it: no website can be left out.
+            report('The repair as one change was refused, so the %s website(s) without a certificate '
+                   'block and the listener maps are changed separately: %s' % (len(covered), error))
+        else:
+            accepted(changes, covered)
+            return completed, blocks
+    else:
+        accepted(changes, covered)
+        return completed, blocks
+
+    pending, together, refused = covered, True, 0
+    while pending:
+        group, pending = (pending, []) if together else (pending[:1], pending[1:])
+        changes, covered = changes_for(group, False)
+        if changes:
+            try:
+                apply(changes)
             except ChangeRefused as error:
-                change = error
-        if isinstance(change, Exception):
-            report('%s was left without its own certificate block: %s' % (vhost, change))
-            continue
-        certified.add(vhost)
-    completed = []
-
-    def reconciled(text):
-        updated, completed[:] = reconcile_https_listener_maps(text, certified)
-        return updated
-
-    change = _validated_change(main, reconciled)
-    if change is not None:
-        apply({main: change})
+                if together and len(covered) > 1:
+                    pending, together = covered, False
+                    continue
+                left_out(covered[0], error)
+                refused += 1
+                if refused >= REFUSALS_IN_A_ROW:
+                    raise ChangeRefused(
+                        'stopped after %s website changes in a row were refused; %s more website(s) '
+                        'and the listener maps were not tried' % (refused, len(pending)))
+                together = False
+                continue
+        accepted(changes, covered)
+        if changes and not together:
+            # The server takes changes, so a website left out just before was the reason.
+            together, refused = refused > 0, 0
+    changes, _ = changes_for([], True)
+    if changes:
+        apply(changes)
     return completed, blocks
