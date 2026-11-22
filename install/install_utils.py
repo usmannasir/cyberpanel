@@ -152,7 +152,7 @@ def get_message_color(message):
         return Colors.HEADER
 
 
-def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
+def stdOut(message, log=0, do_exit=0, code=os.EX_SOFTWARE):
     """
     Standard output function with timestamps, coloring, and logging
     
@@ -160,7 +160,8 @@ def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
         message: Message to output
         log: If 1, write to log file
         do_exit: If 1, exit after outputting
-        code: Exit code to use if do_exit is 1
+        code: Exit code to use if do_exit is 1. An exit asked for here always
+              reports a failure, so it is never 0.
     """
     # Get appropriate color for the message
     color = get_message_color(message)
@@ -190,7 +191,7 @@ def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
     if do_exit:
         if hasattr(logging, 'InstallLog'):
             logging.InstallLog.writeToFile(message)
-        sys.exit(code)
+        sys.exit(code or os.EX_SOFTWARE)
 
 
 def format_restart_litespeed_command(server_root_path):
@@ -337,7 +338,7 @@ def resFailed(distro, res):
     return False
 
 
-def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_OK, shell=False):
+def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_SOFTWARE, shell=False):
     """
     Execute a shell command with retry logic and error handling
     
