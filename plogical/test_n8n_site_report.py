@@ -9,7 +9,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 COMMAND = ['/usr/local/CyberCP/bin/python', '/usr/local/CyberCP/plogical/DockerSites.py', 'CheckN8NSites']
-OPEN = 'n8n site flows.example (flows): HAS NO OWNER ACCOUNT: whoever opens it first becomes its owner'
+OPEN = 'n8n site flows.example (flows): HAS NO OWNER ACCOUNT: open the site and finish its set-up, or delete the site'
 PORT = 'n8n site flows.example (flows): port 11000 is published on every address of the server'
 
 
