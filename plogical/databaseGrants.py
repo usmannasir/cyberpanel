@@ -105,3 +105,11 @@ def account_is_granted(cursor, name, user, host):
     cursor.execute('SELECT Db FROM mysql.db WHERE User = %s AND Host = %s', (user, host))
     held = set(text(row[0]) for row in cursor.fetchall())
     return bool(held.intersection(stored_names(name)))
+
+
+def holder(user, host):
+    """(placeholder text, values) that name the holder of a grant in a statement; a role has no host."""
+    if host == '':
+        return '%s', (user,)
+    return '%s@%s', (user, host)
+
