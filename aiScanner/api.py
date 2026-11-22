@@ -697,9 +697,29 @@ def scan_callback(request):
 # File Operation Helper Functions
 # =============================================================================
 
+def shortened(text, length, plain=False):
+    """Text made to fit a column: its beginning and its end when it is longer.
+
+    With plain, every character outside ASCII is written out as its number,
+    for a table that cannot hold it.
+    """
+    if text is None:
+        return None
+    text = str(text)
+    if plain:
+        text = text.encode('ascii', 'backslashreplace').decode('ascii')
+    if len(text) > length:
+        text = text[:length // 2 - 2] + '...' + text[-(length - length // 2 - 1):]
+    return text
+
+
 def log_file_operation(scan_id, operation, file_path, success, error_message=None, backup_path=None, request=None):
     """
     Log file operations to the audit log
+
+    The record of an operation is kept whatever its path looks like: a path
+    longer than the column is shortened, and one the table cannot hold is
+    stored with those characters written out.
     """
     try:
         from .models import ScannerFileOperation
@@ -711,16 +731,22 @@ def log_file_operation(scan_id, operation, file_path, success, error_message=Non
             ip_address = request.META.get('REMOTE_ADDR', '')[:45]
             user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
 
-        ScannerFileOperation.objects.create(
-            scan_id=scan_id,
-            operation=operation,
-            file_path=file_path,
-            backup_path=backup_path,
-            success=success,
-            error_message=error_message,
-            ip_address=ip_address,
-            user_agent=user_agent
-        )
+        for plain in (False, True):
+            try:
+                ScannerFileOperation.objects.create(
+                    scan_id=shortened(scan_id, 255, plain),
+                    operation=operation,
+                    file_path=shortened(file_path, 500, plain),
+                    backup_path=shortened(backup_path, 500, plain),
+                    success=success,
+                    error_message=shortened(error_message, 2000, plain),
+                    ip_address=ip_address,
+                    user_agent=shortened(user_agent, 255, plain)
+                )
+                break
+            except Exception:
+                if plain:
+                    raise
 
         logging.writeToFile(f'[API] Logged {operation} operation for {file_path}: {"success" if success else "failed"}')
     except Exception as e:
