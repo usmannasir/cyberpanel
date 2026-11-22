@@ -90,6 +90,24 @@ class TemplateTests(unittest.TestCase):
                 self.assertNotIn('value=', field, name)
         self.assertEqual(0, (TEMPLATES / 'code.html').read_text().count('<form'))
 
+    def test_where_a_licence_is_missing_or_needed_the_page_links_to_where_it_is_bought(self):
+        link = re.compile(r'<a href="{{ buy_url }}" target="_blank" rel="noopener">Get a licence for this '
+                          r'(?:server|controller)</a>')
+        directory = TEMPLATES.parent.parent
+        for name, view in (('role.html', 'role.py'), ('nodes.html', 'nodes.py'), ('inventory.html', 'lists.py')):
+            source = (TEMPLATES / name).read_text()
+            self.assertEqual(1, len(link.findall(source)), name)
+            self.assertEqual(1, source.count('buy_url'), name)
+            self.assertIn("'buy_url'", (directory / view).read_text(), view)
+            self.assertIn('entitlement.purchase_url()', (directory / view).read_text(), view)
+        # Only a controller without a licence is offered one on the lists of its servers.
+        for name in ('nodes.html', 'inventory.html'):
+            source = (TEMPLATES / name).read_text()
+            self.assertLess(source.index('{% else %}'), source.index('buy_url'), name)
+        # The price is the platform's to say, not the panel's.
+        for name in ('role.html', 'nodes.html', 'inventory.html'):
+            self.assertNotIn('$', (TEMPLATES / name).read_text(), name)
+
     def test_the_base_template_includes_the_selector_only_when_there_is_one(self):
         source = (TEMPLATES.parent.parent.parent / 'baseTemplate' / 'templates' / 'baseTemplate' / 'index.html'
                   ).read_text()
@@ -255,6 +273,8 @@ class RolePageTests(Pages):
             self.assertIn('name="role" value="%s"' % role, page)
         self.assertIn('no-cache', response['Cache-Control'])
         self.assertIn('href="/multiserver/role"', page)  # the sidebar entry
+        self.assertIn('<a href="%s" target="_blank" rel="noopener">Get a licence for this server</a>'
+                      % entitlement.purchase_url().replace('&', '&amp;'), page)
         for address in ROUTES[1:] + ('/multiserver/status', '/multiserver/', '/multiserver'):
             self.assertEqual(404, self.client.get(address).status_code, address)
             self.assertEqual(404, self.post(address, action='allow', controller_ip=CALLER).status_code, address)

@@ -70,6 +70,7 @@ def index(request, category):
     context = {'category': category, 'inventory_title': title, 'name_heading': name_heading,
                'detail_heading': detail_heading, 'row_limit': inventory.ROW_LIMIT, 'licensed': entitlement.allowed()}
     if not context['licensed']:
+        context['buy_url'] = entitlement.purchase_url()
         response = httpProc(request, 'multiServer/inventory.html', context).render()
         response.status_code = 403
         return response
