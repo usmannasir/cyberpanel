@@ -860,6 +860,21 @@ class backupUtilities:
             return 0, str(msg)
 
     @staticmethod
+    def noteKeptObjects(result, dbName, status, progress=''):
+        """Say so when a database was restored but its views, triggers or routines have no owner of their own.
+
+        The data is loaded and those objects keep working under the locked
+        account of the import, so the restore of the website goes on.
+        """
+        from plogical import databaseImport
+        if result != databaseImport.LOADED_OBJECTS_KEPT:
+            return
+        notice = ('Database %s was restored. Its views, triggers or routines could not be given to the database '
+                  'user and belong to a locked import account; see the CyberPanel main log.' % dbName)
+        logging.CyberCPLogFileWriter.writeToFile(notice + ' [restore]')
+        logging.CyberCPLogFileWriter.statusWriter(status, notice + progress)
+
+    @staticmethod
     def startRestore(backupName, dir):
         from plogical.remoteRestoreBatch import archive_stem
         try:
@@ -1180,6 +1195,7 @@ class backupUtilities:
                             res = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1)
                             if res == 0:
                                 raise RuntimeError('Database import failed: %s' % dbName)
+                            backupUtilities.noteKeptObjects(res, dbName, status)
 
 
                         ### This function will not create database, only database user is created as third value is 0 for createDB
@@ -1193,8 +1209,10 @@ class backupUtilities:
 
                 else:
                     password = database.find('password').text
-                    if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password) == 0:
+                    res = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password)
+                    if res == 0:
                         raise BaseException
+                    backupUtilities.noteKeptObjects(res, dbName, status)
 
             ## Databases restored
 
@@ -2203,8 +2221,10 @@ class backupUtilities:
                 result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(db['databaseName'], db['databaseUser'], self.website)
                 if result[0] != 1:
                     raise RuntimeError(result[1])
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password']) != 1:
+                res = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password'])
+                if res == 0:
                     raise RuntimeError('Database import failed: %s' % db['databaseName'])
+                backupUtilities.noteKeptObjects(res, db['databaseName'], self.extraArgs['tempStatusPath'], ',70')
 
             if self.extraArgs['sourceDomain'] != 'None':
                 if self.extraArgs['sourceDomain'] != self.extraArgs['domain']:
@@ -2414,8 +2434,10 @@ class backupUtilities:
                 result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(db['databaseName'], db['databaseUser'], self.website)
                 if result[0] != 1:
                     raise RuntimeError(result[1])
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password']) != 1:
+                res = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password'])
+                if res == 0:
                     raise RuntimeError('Database import failed: %s' % db['databaseName'])
+                backupUtilities.noteKeptObjects(res, db['databaseName'], self.extraArgs['tempStatusPath'], ',70')
 
 
             command = 'rm -rf %s' % (self.extractedPath)

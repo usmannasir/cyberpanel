@@ -1016,6 +1016,12 @@ class CPBackupsV2(multi.Thread):
                             'Failed to restore the database.',
                             CPBackupsV2.FAILED)
                         return 0
+                    if restoreStatus == 2:
+                        # The data is loaded; the objects keep working under the locked import account.
+                        self.UpdateStatus(
+                            'The database was restored. Its views, triggers or routines could not be given to the '
+                            'database user and belong to a locked import account; see the CyberPanel main log.',
+                            CPBackupsV2.RUNNING)
 
                 else:
 

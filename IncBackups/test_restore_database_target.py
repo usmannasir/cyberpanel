@@ -15,7 +15,7 @@ REGISTERED = Rows([{'dbName': 'shop_db', 'website': 'example.com'}, {'dbName': '
 
 class RestoreTargetTests(unittest.TestCase):
     def job(self, **attributes):
-        self.restore = mock.Mock(return_value=1)
+        self.restore = mock.Mock(return_value=getattr(self, 'restore_result', 1))
         self.commands = []
         namespace = dict(
             os=os, dump_database_name=dump_database_name, mysqlUtilities=SimpleNamespace(mysqlUtilities=SimpleNamespace(restoreDatabaseBackup=self.restore)),
@@ -27,6 +27,9 @@ class RestoreTargetTests(unittest.TestCase):
                               awsFunction=mock.Mock(return_value=1), sftpFunction=mock.Mock(return_value=1),
                               localFunction=mock.Mock(return_value=1), **attributes)
         job.databaseOfDump = lambda name: name_of(job, name)
+        note = load_method(SOURCE, 'IncJobs', 'noteKeptObjects', dict(namespace))
+        job.noteKeptObjects = lambda restored, database: note(job, restored, database)
+        self.status = namespace['logging'].statusWriter
         with mock.patch('databases.models.Databases', REGISTERED):
             return run(job), job
 
@@ -61,6 +64,16 @@ class RestoreTargetTests(unittest.TestCase):
         result, job = self.job(reconstruct='local', jobid=snapshot)
         self.assertEqual(1, result)
         self.assertEqual('orders', self.restore.call_args[0][0])
+
+    def test_restore_whose_objects_stay_with_the_import_account_is_done_and_says_so(self):
+        snapshot = SimpleNamespace(type='database:orders', destination='local', snapshotid='abc')
+        self.restore_result = 2
+        with mock.patch('os.remove'):
+            result, job = self.job(reconstruct='local', jobid=snapshot)
+        self.assertEqual(1, result)
+        message = self.status.call_args[0][1]
+        self.assertIn('orders', message)
+        self.assertIn('locked import account', message)
 
 
 if __name__ == '__main__':
