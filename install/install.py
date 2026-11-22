@@ -3057,6 +3057,12 @@ def main():
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
                                remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser)
 
+    # Email comes next. When it is left out, the panel set-up starts here.
+    email_wanted = args.postfix is None or args.postfix == 'ON'
+    logging.InstallLog.step('email', email_wanted)
+    if not email_wanted:
+        logging.InstallLog.step('panel')
+
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
     checks.install_psmisc()
@@ -3074,6 +3080,7 @@ def main():
             checks.setup_postfix_dovecot_config(mysql)
             installCyberPanel.InstallCyberPanel.setupWebmail()
 
+    logging.InstallLog.step('panel')
     checks.install_unzip()
     checks.install_zip()
     checks.install_rsync()
@@ -3150,6 +3157,7 @@ def main():
     checks.startDeferredServices()
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!,80")
+    logging.InstallLog.stepsFinished()
 
 
 if __name__ == "__main__":

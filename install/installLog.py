@@ -3,6 +3,8 @@ import time
 
 import requests
 
+import install_events
+
 
 class InstallLog:
     fileName = "/var/log/installLogs.txt"
@@ -33,3 +35,13 @@ class InstallLog:
             requests.post(InstallLog.LogURL, data=finalData, timeout=10)
         except:
             pass
+
+    @staticmethod
+    def step(name, enabled=True):
+        """Record that an installation step starts, or that it is left out."""
+        install_events.step(name, enabled)
+
+    @staticmethod
+    def stepsFinished():
+        """Record that the last installation step is done."""
+        install_events.finish()
