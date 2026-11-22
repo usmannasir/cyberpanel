@@ -284,12 +284,30 @@ class mysqlUtilities:
             databaseUsers = databaseGrants.accounts_granted(cursor, dbname)
             ownAccounts = mysqlUtilities.accountsOfDatabaseAlone(dbname, dbuser)
 
+            # Each account is dealt with on its own: one that cannot be changed
+            # must not keep the others, or the registration, from going.
+            notDropped = []
             for databaseUser in databaseUsers:
-                if databaseUser[0] in ownAccounts:
-                    cursor.execute("DROP USER IF EXISTS %s@%s", (databaseUser[0], databaseUser[1]))
-                else:
-                    databaseGrants.revoke_database(cursor, mysqlUtilities.quoteIdentifier, dbname,
-                                                   databaseUser[0], databaseUser[1])
+                own = databaseUser[0] in ownAccounts
+                try:
+                    if own:
+                        cursor.execute("DROP USER IF EXISTS %s@%s", (databaseUser[0], databaseUser[1]))
+                    else:
+                        databaseGrants.revoke_database(cursor, mysqlUtilities.quoteIdentifier, dbname,
+                                                       databaseUser[0], databaseUser[1])
+                except BaseException as msg:
+                    if own:
+                        notDropped.append('%s@%s' % (databaseUser[0], databaseUser[1]))
+                    elif mysqlUtilities.dropGrantRowWithoutAccount(cursor, msg, databaseUser[0], databaseUser[1]):
+                        continue
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        'After the deletion of database %s the account %s@%s could not be %s: %s [deleteDatabase]'
+                        % (dbname, databaseUser[0], databaseUser[1], 'dropped' if own else 'taken its grant',
+                           str(msg)))
+
+            if notDropped:
+                # The database is gone, its own accounts are not: the deletion is tried again.
+                return 'The database was dropped, but not its account(s) %s.' % ', '.join(notDropped)
 
             return 1
 
@@ -299,6 +317,26 @@ class mysqlUtilities:
         finally:
             if connection:
                 connection.close()
+
+    @staticmethod
+    def dropGrantRowWithoutAccount(cursor, error, user, host):
+        """Remove a grant row that belongs to no account; True when that was the case and it is gone.
+
+        The server answers a revoke for such a row with error 1141, at every
+        attempt. It has no account under that name and host, so dropping the
+        name removes what is left of it and can take nothing from anybody.
+        """
+        code = error.args[0] if getattr(error, 'args', None) and isinstance(error.args[0], int) else None
+        if code != 1141:
+            return False
+        try:
+            cursor.execute('SELECT 1 FROM mysql.user WHERE User = %s AND Host = %s', (user, host))
+            if cursor.fetchall():
+                return False
+            cursor.execute("DROP USER IF EXISTS %s@%s", (user, host))
+            return True
+        except BaseException:
+            return False
 
     @staticmethod
     def accountsOfDatabaseAlone(dbname, dbuser):
