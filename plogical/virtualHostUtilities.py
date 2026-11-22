@@ -1096,19 +1096,26 @@ class virtualHostUtilities:
 
     @staticmethod
     def saveApacheConfigsToFile(fileName, tempPath):
+        from ApachController import apacheConfigCheck
         try:
 
-            vhost = open(fileName, "w")
-
-            vhost.write(open(tempPath, "r").read())
-
-            vhost.close()
+            with open(tempPath, "r") as source:
+                configData = source.read()
 
             if os.path.exists(tempPath):
                 os.remove(tempPath)
 
-            command = f"systemctl restart {ApacheVhost.serviceName}"
-            ProcessUtilities.normalExecutioner(command)
+            def change():
+                with open(fileName, "w") as vhost:
+                    vhost.write(configData)
+
+            # The edited virtual host stays only if Apache accepts it. Apache
+            # serves every website on the Apache backend, so it is not
+            # restarted with a configuration it refuses.
+            status, reason = apacheConfigCheck.apply_change(
+                [fileName], change, ApacheVhost.configTest, ApacheVhost.restartService)
+            if status == 0:
+                raise ValueError(reason)
 
             print("1,None")
 
@@ -1929,27 +1936,33 @@ class virtualHostUtilities:
 
             if server == virtualHostUtilities.apache:
 
-                if os.path.exists(completePathToConfigFile):
-                    os.remove(completePathToConfigFile)
-
                 if ApacheController.checkIfApacheInstalled() == 0:
                     result = ApacheController.setupApache(tempStatusPath)
                     if result[0] == 0:
                         raise BaseException(result[1])
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating apache configurations..,90')
+
+                # The website stays on OpenLiteSpeed until Apache runs with
+                # its virtual host. When Apache refuses it, nothing of the
+                # website has changed and the reason is reported.
+                if child:
+                    result = ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp,
+                                                               website.master.externalApp,
+                                                               phpVersion, virtualHostName, website.path)
+                else:
+                    result = ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp,
+                                                          phpVersion, virtualHostName)
+                if result[0] == 0:
+                    raise BaseException(result[1])
+
+                if os.path.exists(completePathToConfigFile):
+                    os.remove(completePathToConfigFile)
+
                 if child:
                     ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.master.adminEmail)
                 else:
                     ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, website.adminEmail)
-
-                if child:
-                    ApacheVhost.setupApacheVhostChild(website.master.adminEmail, website.master.externalApp,
-                                                      website.master.externalApp,
-                                                      phpVersion, virtualHostName, website.path)
-                else:
-                    ApacheVhost.setupApacheVhost(website.adminEmail, website.externalApp, website.externalApp,
-                                                 phpVersion, virtualHostName)
 
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting servers and phps..,90')
 
@@ -1957,10 +1970,9 @@ class virtualHostUtilities:
 
                 ##
 
+                # Apache was restarted with the virtual host above; the
+                # PHP-FPM service now takes up the website's pool.
                 ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
-
-                command = f"systemctl restart {ApacheVhost.serviceName}"
-                ProcessUtilities.normalExecutioner(command)
 
                 ###
 

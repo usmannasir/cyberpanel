@@ -13,6 +13,7 @@ from managePHP.phpManager import PHPManager
 from managePHP.phpConfig import fpm_pool_name, fpm_service_for_selection, managed_ini_path
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
+from ApachController import apacheConfigCheck
 import re
 
 class ApacheVhost:
@@ -232,12 +233,12 @@ class ApacheVhost:
             currentConf = currentConf.replace('{group}', group)
 
             confFile.write(currentConf)
+            # The pool is complete on disk before anything reads it.
+            confFile.close()
 
             ApacheVhost.GenerateSelfSignedSSL(virtualHostName)
 
-            command = f"systemctl restart {ApacheVhost.serviceName}"
-            ProcessUtilities.normalExecutioner(command)
-
+            # Apache is restarted by the caller, once it accepts these files.
             return [1, 'None']
         except BaseException as msg:
             return [0, str(msg)]
@@ -245,16 +246,16 @@ class ApacheVhost:
     @staticmethod
     def enableProxyInMainConf():
         try:
-            data = open(ApacheVhost.lswsMainConf, 'r').readline()
+            # Each backend is defined once, however many websites use it.
+            data = open(ApacheVhost.lswsMainConf, 'r').read()
 
             putProxyConf = 1
             putProxyConfSSL = 1
 
-            for items in data:
-                if items.find('apachebackend') > -1:
-                    putProxyConf = 0
-                if items.find('proxyApacheBackendSSL') > -1:
-                    putProxyConfSSL = 0
+            if data.find('extprocessor apachebackend') > -1:
+                putProxyConf = 0
+            if data.find('extprocessor proxyApacheBackendSSL') > -1:
+                putProxyConfSSL = 0
 
             if putProxyConf:
                 confFile = open(ApacheVhost.lswsMainConf, "a")
@@ -282,16 +283,78 @@ class ApacheVhost:
             return [0, str(msg)]
 
     @staticmethod
+    def configTest():
+        """Apache's own check of its whole configuration, as (passed, what Apache said)."""
+        rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+        return apacheConfigCheck.config_test(apacheConfigCheck.config_test_command(rpmFamily))
+
+    @staticmethod
+    def restartService():
+        """Restart Apache. Returns None, or a text saying that it did not come up."""
+        command = f"systemctl restart {ApacheVhost.serviceName}"
+        if ProcessUtilities.normalExecutioner(command) == 1:
+            return None
+        return 'Apache did not start; see "systemctl status %s".' % ApacheVhost.serviceName
+
+    @staticmethod
+    def restartApache():
+        """Restart Apache unless it refuses its configuration.
+
+        A running Apache keeps serving with the configuration it loaded.
+        Restarting it with one it refuses would stop every website on the
+        Apache backend, so it is then left running. Returns None, or a text
+        saying why Apache was not restarted or did not come up.
+        """
+        passed, output = ApacheVhost.configTest()
+        if not passed:
+            return 'Apache was not restarted because it refuses its configuration: %s' % apacheConfigCheck.said(output)
+        return ApacheVhost.restartService()
+
+    @staticmethod
+    def checkedSetup(virtualHostName, phpVersion, accounts, write):
+        """Put a website on the Apache backend, or change nothing and say why.
+
+        write creates the virtual host and the PHP-FPM pool. They stay only
+        if the system account they name exists, Apache accepts its
+        configuration with them and comes up; otherwise the files are what
+        they were, Apache keeps serving the other websites, and the reason
+        is returned as [0, reason].
+        """
+        try:
+            for account in accounts:
+                problem = apacheConfigCheck.account_problem(account)
+                if problem is not None:
+                    return [0, '%s Apache and PHP-FPM cannot run this website without it.' % problem]
+
+            vhostPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
+            poolPath = ApacheVhost.DecidePHPPath(PHPManager.getPHPString(phpVersion), virtualHostName)
+            if not os.path.isdir(os.path.dirname(poolPath)):
+                return [0, 'PHP-FPM for %s is not installed on this server (%s does not exist), so Apache '
+                           'cannot run PHP for this website.' % (phpVersion, os.path.dirname(poolPath))]
+
+            def change():
+                result = write()
+                return None if result[0] == 1 else result[1]
+
+            status, reason = apacheConfigCheck.apply_change(
+                [vhostPath, poolPath], change, ApacheVhost.configTest, ApacheVhost.restartService)
+            if status == 0:
+                return [0, reason]
+
+            result = ApacheVhost.enableProxyInMainConf()
+            if result[0] == 0:
+                return [0, result[1]]
+
+            return [1, 'None']
+        except BaseException as msg:
+            return [0, str(msg)]
+
+    @staticmethod
     def setupApacheVhost(administratorEmail,externalApp, virtualHostUser, phpVersion, virtualHostName):
-        result = ApacheVhost.perHostVirtualConf(administratorEmail,externalApp, virtualHostUser, phpVersion, virtualHostName)
-        if result[0] == 0:
-            return [0, result[1]]
-
-        result = ApacheVhost.enableProxyInMainConf()
-        if result[0] == 0:
-            return [0, result[1]]
-
-        return [1, 'None']
+        return ApacheVhost.checkedSetup(
+            virtualHostName, phpVersion, (externalApp, virtualHostUser),
+            lambda: ApacheVhost.perHostVirtualConf(administratorEmail, externalApp, virtualHostUser, phpVersion,
+                                                   virtualHostName))
 
     @staticmethod
     def perHostVirtualConfChild(administratorEmail, externalApp, virtualHostUser, phpVersion, virtualHostName, path):
@@ -356,42 +419,44 @@ class ApacheVhost:
             currentConf = currentConf.replace('{group}', group)
 
             confFile.write(currentConf)
+            # The pool is complete on disk before anything reads it.
+            confFile.close()
 
             ApacheVhost.GenerateSelfSignedSSL(virtualHostName)
 
-            command = f"systemctl restart {ApacheVhost.serviceName}"
-            ProcessUtilities.normalExecutioner(command)
-
+            # Apache is restarted by the caller, once it accepts these files.
             return [1, 'None']
         except BaseException as msg:
             return [0, str(msg)]
 
     @staticmethod
     def setupApacheVhostChild(administratorEmail, externalApp, virtualHostUser, phpVersion, virtualHostName, path):
-
-        result = ApacheVhost.perHostVirtualConfChild(administratorEmail, externalApp, virtualHostUser, phpVersion,
-                                                virtualHostName, path)
-        if result[0] == 0:
-            return [0, result[1]]
-
-        result = ApacheVhost.enableProxyInMainConf()
-        if result[0] == 0:
-            return [0, result[1]]
-
-        return [1, 'None']
+        return ApacheVhost.checkedSetup(
+            virtualHostName, phpVersion, (externalApp, virtualHostUser),
+            lambda: ApacheVhost.perHostVirtualConfChild(administratorEmail, externalApp, virtualHostUser,
+                                                        phpVersion, virtualHostName, path))
 
     @staticmethod
     def DeleteApacheVhost(virtualHostName):
         try:
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
+            onApache = os.path.exists(finalConfPath)
 
-            if os.path.exists(finalConfPath):
+            if onApache:
                 os.remove(finalConfPath)
 
             ApacheVhost.deletePHPPath(virtualHostName)
 
-            command = f"systemctl restart {ApacheVhost.serviceName}"
-            ProcessUtilities.normalExecutioner(command)
+            # A pool that an upgrade set aside goes with the website.
+            rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+            for leftover in apacheConfigCheck.pools_set_aside(virtualHostName + '.conf', rpmFamily):
+                os.remove(leftover)
+
+            # Apache is restarted only for a website it was serving.
+            if onApache:
+                problem = ApacheVhost.restartApache()
+                if problem is not None:
+                    logging.writeToFile('%s [DeleteApacheVhost]' % problem)
 
         except BaseException as msg:
             logging.writeToFile(str(msg))
@@ -576,6 +641,9 @@ class ApacheVhost:
 
     @staticmethod
     def changePHP(phpVersion, vhFile):
+        # Returns 0 for a website that is not on the Apache backend, 1 when
+        # its PHP was changed, and otherwise a text saying why nothing was
+        # changed.
         try:
             logging.writeToFile(f"PHP version passed to Apache function: {phpVersion}")
 
@@ -594,8 +662,6 @@ class ApacheVhost:
                 logging.writeToFile(f'Config path: {finalConfPath}')
                 return 0
 
-            ApacheVhost.deletePHPPath(virtualHostName)
-
             try:
                 website = Websites.objects.get(domain=virtualHostName)
                 externalApp = website.externalApp
@@ -611,6 +677,19 @@ class ApacheVhost:
             finalConfPath = ApacheVhost.DecidePHPPath(php, virtualHostName)
 
             logging.writeToFile(f'apache php final path: {finalConfPath}')
+
+            # The pool the website has is removed only when the new one can
+            # work: PHP-FPM stops for every website of a version when one
+            # pool names an account that does not exist.
+            problem = apacheConfigCheck.account_problem(externalApp)
+            if problem is None and not os.path.isdir(os.path.dirname(finalConfPath)):
+                problem = 'PHP-FPM for %s is not installed on this server (%s does not exist).' % (
+                    phpVersion, os.path.dirname(finalConfPath))
+            if problem is not None:
+                logging.writeToFile('%s [ApacheVhost.changePHP]' % problem)
+                return '%s The PHP version of %s was not changed.' % (problem, virtualHostName)
+
+            ApacheVhost.deletePHPPath(virtualHostName)
 
             confFile = open(finalConfPath, "w+")
             currentConf = vhostConfs.phpFpmPool
@@ -635,8 +714,9 @@ class ApacheVhost:
 
             ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand(ApacheVhost.fpmReload, phpVersion))
 
-            command = f"systemctl restart {ApacheVhost.serviceName}"
-            ProcessUtilities.normalExecutioner(command)
+            problem = ApacheVhost.restartApache()
+            if problem is not None:
+                logging.writeToFile('%s [ApacheVhost.changePHP]' % problem)
 
             return 1
         except BaseException as msg:

@@ -211,6 +211,15 @@ class vhost:
 
         vhost.addUser(virtualHostUser, path)
 
+        # Everything below is given to this account, and the web server and
+        # PHP run the website as it. Without it there is no website to
+        # create: Apache does not even start with a virtual host that names
+        # a missing account.
+        from ApachController.apacheConfigCheck import account_problem
+        problem = account_problem(virtualHostUser)
+        if problem is not None:
+            return [0, 'The system account of the website could not be created. %s' % problem]
+
         ## Creating Directories
 
         result = vhost.createDirectories(path, virtualHostUser, pathHTML, pathLogs, confPath, completePathToConfigFile)
@@ -838,7 +847,8 @@ class vhost:
         phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (homeDomain)
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-                if ApacheVhost.changePHP(phpVersion, vhFile) == 0:
+                apacheResult = ApacheVhost.changePHP(phpVersion, vhFile)
+                if apacheResult == 0:
                     data = open(vhFile, "r").readlines()
 
                     php = PHPManager.getPHPString(phpVersion)
@@ -868,6 +878,9 @@ class vhost:
                         vhost.phpRestartMarker('rm', virtualHostUser, phpDetachUpdatePath)
                     except:
                         pass
+                elif apacheResult != 1:
+                    # The Apache worker changed nothing and says why.
+                    raise ValueError(apacheResult)
                 else:
                     # ApacheVhost.changePHP wrote the pool, closed the file,
                     # asked the PHP-FPM service to re-read its pools and

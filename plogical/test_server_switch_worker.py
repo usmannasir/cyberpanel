@@ -20,6 +20,9 @@ class ServerSwitchWorkerTests(unittest.TestCase):
         else:
             websites.objects.get.return_value = website
         self.apache = Mock(fpmReload='reload-or-restart', serviceName='apache2')
+        # Apache accepted the website's virtual host and was restarted with it.
+        self.apache.setupApacheVhost.return_value = [1, 'None']
+        self.apache.setupApacheVhostChild.return_value = [1, 'None']
         self.apache.fpmServiceCommand.side_effect = lambda action, selection: ['systemctl', action, '--', 'php-unit']
         self.process, self.logger = Mock(), Mock()
         controller = Mock()
@@ -38,7 +41,9 @@ class ServerSwitchWorkerTests(unittest.TestCase):
                 self.run_switch(child)
                 self.assertEqual([('reload-or-restart', 'PHP 8.3')],
                                  [call[0] for call in self.apache.fpmServiceCommand.call_args_list])
-                self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php-unit'], 'systemctl restart apache2'],
+                # Apache is restarted where its virtual host is checked, not
+                # a second time here.
+                self.assertEqual([['systemctl', 'reload-or-restart', '--', 'php-unit']],
                                  [call[0][0] for call in self.process.normalExecutioner.call_args_list])
 
 

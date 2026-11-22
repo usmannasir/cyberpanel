@@ -1688,7 +1688,7 @@ class ApplicationInstaller(multi.Thread):
                 import re
                 from plogical.virtualHostUtilities import virtualHostUtilities
                 tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-                externalApp = "".join(re.findall("[a-zA-Z]+", self.extraArgs['domain']))[:5] + str(randint(1000, 9999))
+                externalApp = "".join(re.findall("[a-zA-Z]+", self.extraArgs['domain']))[:5].lower() + str(randint(1000, 9999))
 
                 virtualHostUtilities.createVirtualHost(self.extraArgs['domain'], self.extraArgs['email'], 'PHP 8.1',
                                                        externalApp, 1, 1, 0,

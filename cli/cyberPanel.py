@@ -50,7 +50,7 @@ class cyberPanel:
     def createWebsite(self, package, owner, domainName, email, php, ssl, dkim, openBasedir):
         try:
             from random import randint
-            externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999))
+            externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:5].lower() + str(randint(1000, 9999))
             phpSelection = normalized_php_selection(php)
 
             try:

@@ -2,6 +2,7 @@
 import builtins
 import contextlib
 import io
+import os
 from pathlib import Path
 import re
 import tempfile
@@ -9,6 +10,7 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest import mock
 
+from ApachController import apacheConfigCheck
 from managePHP import phpConfig
 from managePHP.test_php_selection import NOT_A_SELECTION, OFFERED
 from plogical.test_php_restart_marker import OLS, PHPChange, load_methods
@@ -32,19 +34,25 @@ class ApacheVhostLoader:
         self.process.normalExecutioner.return_value = 1
         self.temp = tempfile.TemporaryDirectory(prefix='fpm-service-test-')
         self.files = {}
+        # Apache accepts its configuration and the website's account exists,
+        # unless a test says otherwise.
         self.vhost = NS(configBasePath='/etc/apache2/sites-enabled/', serviceName='apache2',
                         fpmReload='reload-or-restart',
                         sslBasePath='/etc/apache2/conf-enabled/', deletePHPPath=mock.Mock(),
-                        GenerateSelfSignedSSL=mock.Mock(), DecidePHPPath=self.pool_path)
+                        GenerateSelfSignedSSL=mock.Mock(), DecidePHPPath=self.pool_path,
+                        configTest=mock.Mock(return_value=(True, 'Syntax OK')))
+        self.checks = NS(account_problem=mock.Mock(return_value=None), said=apacheConfigCheck.said)
         namespace = dict(
             ProcessUtilities=self.process, ApacheVhost=self.vhost, vhostConfs=vhostConfs, logging=mock.Mock(),
+            apacheConfigCheck=self.checks,
             fpm_service_for_selection=phpConfig.fpm_service_for_selection,
             fpm_pool_name=phpConfig.fpm_pool_name, re=re,
             PHPManager=NS(getPHPString=lambda text: text.split()[1].replace('.', '')),
             Websites=NS(objects=NS(get=lambda domain: NS(externalApp='siteuser'))), ChildDomains=mock.Mock(),
-            os=NS(path=NS(exists=lambda path: path.startswith('/etc/apache2/'))), open=self.open)
+            os=NS(path=NS(exists=lambda path: path.startswith('/etc/apache2/'), isdir=lambda path: True,
+                          dirname=os.path.dirname)), open=self.open)
         names = ['DecideFPMServiceName', 'fpmServiceCommand', 'changePHP', 'perHostVirtualConf',
-                 'perHostVirtualConfChild']
+                 'perHostVirtualConfChild', 'restartApache', 'restartService']
         for name, loaded in zip(names, load_methods('ApachController/ApacheVhosts.py', 'ApacheVhost',
                                                     names, namespace)):
             setattr(self.vhost, name, loaded)

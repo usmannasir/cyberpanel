@@ -2434,7 +2434,9 @@ Require valid-user
                 HA = data['HA']
                 externalApp = 'nobody'
             except:
-                externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:5] + str(randint(1000, 9999))
+                # Lower case: Debian's adduser refuses a name with a capital
+                # letter, and the website would be left without its account.
+                externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:5].lower() + str(randint(1000, 9999))
 
             try:
                 counter = 0
@@ -8066,7 +8068,7 @@ StrictHostKeyChecking no
             data['sitename'] = sitename
             data['WPusername'] = WPusername
             data['WPpasswd'] = WPpasswd
-            data['externalApp'] = "".join(re.findall("[a-zA-Z]+", Domain))[:5] + str(randint(1000, 9999))
+            data['externalApp'] = "".join(re.findall("[a-zA-Z]+", Domain))[:5].lower() + str(randint(1000, 9999))
             data['App'] = App
 
             background = Docker_Sites('SubmitDockersiteCreation', data)
