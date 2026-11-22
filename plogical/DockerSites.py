@@ -266,7 +266,9 @@ DOCKER_APPS = {
         'requiresDB': True,
         'deploy': 'DeployN8NContainer',
         'compose': 'generate_compose_config',
-        'minSiteRam': 256,
+        # With 512 MB n8n runs out of memory when requests reach it while it starts,
+        # and is then restarted for ever; with 768 MB it was measured to start every time.
+        'minSiteRam': 768,
         'firstRun': 'create_n8n_owner',
         'dataOwner': '1000:1000',
     },
@@ -1193,6 +1195,9 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             )
             dockersiteobj.save()
 
+            ## A deployment that fails and removes what it made also removes this entry.
+            f_data['DockerSiteID'] = dockersiteobj.pk
+
             background = Docker_Sites(AppMeta['deploy'], f_data)
             background.start()
 
@@ -1677,7 +1682,7 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             logging.writeToFile(f'Deployment failed: {str(error)}')
             
             if cleanup:
-                self.cleanup_failed_deployment()
+                self.cleaned_up = self.cleanup_failed_deployment() is True
             
             if isinstance(error, DockerDeploymentError):
                 if error.error_code == self.ERROR_DOCKER_NOT_INSTALLED:
@@ -1882,19 +1887,87 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                     current_try += 1
                     continue
                 else:
+                    self.forget_failed_site()
                     logging.statusWriter(self.JobID, f'Deployment failed: {str(e)} [404]')
                     return False
                     
             except Exception as e:
                 logging.writeToFile(f'Unexpected error: {str(e)}')
                 self.handle_deployment_failure(e)
+                self.forget_failed_site()
                 logging.statusWriter(self.JobID, f'Deployment failed: {str(e)} [404]')
                 return False
                 
+        self.forget_failed_site()
         logging.statusWriter(self.JobID, f'Deployment failed after {max_retries} attempts [404]')
         return False
 
-    def create_n8n_owner(self, attempts=150, delay=2):
+    def forget_failed_site(self):
+        """
+        Remove the entry of a Docker site whose deployment failed, so that its
+        name and its website are free for another attempt.
+
+        The entry is the one the creation job made for this deployment, known
+        by its number. It goes only after the containers, the network and the
+        directory of the failed deployment were removed; when that did not
+        work the entry stays, and deleting the site removes what is left. The
+        website is not touched.
+        """
+        site_id = self.data.get('DockerSiteID')
+
+        if site_id is None or getattr(self, 'cleaned_up', False) is not True:
+            return False
+
+        try:
+            from websiteFunctions.models import DockerSites
+            DockerSites.objects.filter(pk=site_id, SiteName=self.data['SiteName']).delete()
+            return True
+        except BaseException as msg:
+            logging.writeToFile('The entry of the failed Docker site %s was not removed: %s' % (
+                self.data.get('SiteName'), str(msg)))
+            return False
+
+    def container_trouble(self, service_name):
+        """
+        What the container of one service of this site shows about why it does
+        not work, as one line for the customer, or an empty text: whether it
+        ran out of memory, how often Docker restarted it, and the last lines
+        of its log.
+        """
+        try:
+            container = self.find_container_by_service(service_name)
+
+            if container is None:
+                return ''
+
+            state = container.attrs.get('State') or {}
+            restarts = container.attrs.get('RestartCount') or 0
+            lines = [' '.join(line.split()) for line in
+                     container.logs(tail=400).decode('utf-8', 'replace').splitlines() if line.strip()]
+            memory = [line for line in lines if 'heap out of memory' in line or 'Out of memory' in line]
+            found = []
+
+            if memory or state.get('OOMKilled'):
+                found.append('It ran out of memory with its limit of %s MB%s; give the application more RAM.' % (
+                    self.data.get('MemorySite'), ' and was restarted %s times' % restarts if restarts else ''))
+            elif restarts:
+                found.append('It was restarted %s times.' % restarts)
+
+            shown = memory[-1:] + [line for line in lines[-3:] if line not in memory[-1:]]
+
+            if shown:
+                # One line, and nothing in it that the creation page reads as the end of the job.
+                text = ' | '.join(line[:200] for line in shown).replace('[', '(').replace(']', ')')
+                found.append('Last lines of its log: ' + ''.join(
+                    character for character in text if character.isprintable()))
+
+            return ' '.join(found)
+
+        except BaseException as msg:
+            logging.writeToFile('Error reading the state of the container: %s' % str(msg))
+            return ''
+
+    def create_n8n_owner(self, wait=360, delay=2):
         """
         Create the n8n owner account with the credentials from the creation page.
 
@@ -1903,6 +1976,11 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
         website does not proxy to it yet, so that caller is the panel. Anything
         but a created owner fails the deployment, and a failed deployment is
         removed: an instance that somebody else has claimed is never published.
+
+        n8n is given ``wait`` seconds in all to start and answer, however it
+        fails to: not listening, answering with its start page, or accepting
+        a request and never answering it. When it does not get there, the
+        failure says what its container shows.
         """
         import requests
 
@@ -1921,14 +1999,21 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
         session = requests.Session()
         session.trust_env = False
 
-        for _ in range(attempts):
+        deadline = time.time() + wait
+
+        while True:
+            remaining = deadline - time.time()
+
+            if remaining <= 0:
+                break
+
             try:
-                response = session.post(url, json=owner, timeout=30)
+                response = session.post(url, json=owner, timeout=max(1, min(30, remaining)))
                 answer = response.json()
             except (requests.RequestException, ValueError):
                 # Not listening yet, or still answering every address with its
                 # "n8n is starting up" page.
-                time.sleep(delay)
+                time.sleep(max(0, min(delay, deadline - time.time())))
                 continue
 
             if response.status_code == 200 and isinstance(answer, dict) and isinstance(answer.get('data'), dict):
@@ -1939,7 +2024,9 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             raise DockerDeploymentError('n8n did not accept the administrator account: %s' % (
                 reason or 'HTTP %s' % response.status_code))
 
-        raise DockerDeploymentError('n8n did not become ready to create its administrator account.')
+        trouble = self.container_trouble(self.data.get('ServiceName') or self.data['SiteName'].replace(' ', '-'))
+        raise DockerDeploymentError(('n8n did not become ready to create its administrator account within '
+                                     '%s minutes. %s' % (int(wait // 60), trouble)).strip())
 
     @staticmethod
     def CheckN8NSites(time_limit=90):

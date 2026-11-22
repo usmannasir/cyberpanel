@@ -40,24 +40,52 @@ STARTING = Reply(200, 'n8n is starting up. Please wait')
 CREATED = Reply(200, {'data': {'id': 'fixture', 'email': 'admin@example.com', 'isOwner': True}})
 
 
-def create_owner(replies, **data):
+class Clock:
+    """Time that passes only while n8n is waited for: in a request and in the pause after it."""
+
+    def __init__(self, seconds_per_request=0):
+        self.now = 1000.0
+        self.seconds_per_request = seconds_per_request
+
+    def time(self):
+        return self.now
+
+    def sleep(self, seconds):
+        self.now += seconds
+
+
+def create_owner(replies, wait=8, seconds_per_request=0, trouble='', **data):
     site = make_site('n8n')
     site.data.update(data)
+    clock = Clock(seconds_per_request)
     session = mock.Mock()
-    session.post.side_effect = replies
+
+    def post(*args, **kwargs):
+        clock.now += clock.seconds_per_request
+        reply = replies(clock) if callable(replies) else replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+    session.post.side_effect = post
     with mock.patch('requests.Session', return_value=session), \
-            mock.patch.object(docker_sites.time, 'sleep') as sleep, \
+            mock.patch.object(docker_sites.time, 'sleep', side_effect=clock.sleep) as sleep, \
+            mock.patch.object(docker_sites.time, 'time', side_effect=clock.time), \
+            mock.patch.object(site, 'container_trouble', return_value=trouble) as site.trouble, \
             mock.patch.object(docker_sites.logging, 'writeToFile'):
         try:
-            return site.create_n8n_owner(attempts=4, delay=2), session, sleep
+            result = site.create_n8n_owner(wait=wait, delay=2)
         except DockerDeploymentError as error:
-            return error, session, sleep
+            result = error
+    session.elapsed = clock.now - 1000.0
+    session.site = site
+    return result, session, sleep
 
 
 @unittest.skipIf(requests is None, 'requests not installed')
 class OwnerCreationTests(unittest.TestCase):
     def test_the_owner_is_created_on_loopback_with_the_values_from_the_form(self):
-        result, session, sleep = create_owner([CREATED])
+        result, session, sleep = create_owner([CREATED], wait=360)
         self.assertIs(True, result)
         session.post.assert_called_once_with(
             'http://127.0.0.1:11007/rest/owner/setup',
@@ -73,6 +101,7 @@ class OwnerCreationTests(unittest.TestCase):
         self.assertIs(True, result)
         self.assertEqual(4, session.post.call_count)
         self.assertEqual([mock.call(2)] * 3, sleep.call_args_list)
+        session.site.trouble.assert_not_called()
 
     def test_an_instance_somebody_else_claimed_fails_the_deployment(self):
         result, session, sleep = create_owner(
@@ -96,9 +125,43 @@ class OwnerCreationTests(unittest.TestCase):
                 self.assertIsInstance(result, DockerDeploymentError)
 
     def test_an_instance_that_never_becomes_ready_fails_the_deployment(self):
-        result, session, sleep = create_owner([STARTING] * 4)
+        result, session, sleep = create_owner(lambda clock: STARTING, wait=8)
         self.assertIsInstance(result, DockerDeploymentError)
         self.assertEqual(4, session.post.call_count)
+        self.assertEqual(8, session.elapsed)
+
+    def test_the_whole_wait_has_one_limit_of_six_minutes(self):
+        import inspect
+        self.assertEqual(360, inspect.signature(docker_sites.Docker_Sites.create_n8n_owner).parameters['wait'].default)
+
+    def test_the_limit_holds_when_n8n_takes_requests_and_never_answers_them(self):
+        # Every request runs into its own time limit; the pauses between them are short.
+        result, session, sleep = create_owner(lambda clock: requests.Timeout('no answer'), wait=360,
+                                              seconds_per_request=30)
+        self.assertIsInstance(result, DockerDeploymentError)
+        self.assertLessEqual(session.elapsed, 360 + 30)
+        self.assertLessEqual(session.post.call_count, 12)
+        self.assertIn('within 6 minutes', str(result))
+
+    def test_a_request_is_given_no_more_time_than_is_left(self):
+        result, session, sleep = create_owner(lambda clock: requests.ConnectionError('refused'), wait=45,
+                                              seconds_per_request=20)
+        limits = [call[1]['timeout'] for call in session.post.call_args_list]
+        self.assertEqual([30, 23, 1], limits)
+        self.assertLessEqual(session.elapsed, 45 + 20)
+
+    def test_the_failure_says_what_the_container_shows(self):
+        trouble = ('It ran out of memory with its limit of 512 MB and was restarted 15 times; give the application '
+                   'more RAM. Last lines of its log: FATAL ERROR: JavaScript heap out of memory')
+        result, session, sleep = create_owner(lambda clock: STARTING, trouble=trouble)
+        self.assertEqual('n8n did not become ready to create its administrator account within 0 minutes. ' + trouble,
+                         str(result))
+        session.site.trouble.assert_called_once_with('testapp')
+
+    def test_a_container_that_shows_nothing_leaves_a_plain_failure(self):
+        result, session, sleep = create_owner(lambda clock: STARTING, wait=360, seconds_per_request=10)
+        self.assertEqual('n8n did not become ready to create its administrator account within 6 minutes.',
+                         str(result))
 
     def test_the_name_is_one_n8n_accepts_and_is_never_empty(self):
         for given, sent in (('u' * 40, 'u' * 32), ('john.doe_1', 'johndoe_1'), ('<b>admin</b>', 'badminb'),
@@ -213,7 +276,7 @@ class ComposeTests(unittest.TestCase):
 
 REQUEST = {
     'sitename': 'flows', 'Owner': 'reseller', 'Domain': 'flows.example',
-    'MysqlCPU': 1, 'MYsqlRam': 256, 'SiteCPU': 1, 'SiteRam': 512, 'App': 'n8n',
+    'MysqlCPU': 1, 'MYsqlRam': 256, 'SiteCPU': 1, 'SiteRam': 768, 'App': 'n8n',
     'WPusername': 'admin', 'WPemal': 'admin@example.test', 'WPpasswd': 'AdminPass123',
 }
 

@@ -17683,16 +17683,27 @@ app.controller('createDockerSite', function ($scope, $http, $timeout) {
     $scope.success = true;
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
+    // The RAM (MB) each application is offered with. The application value is never
+    // below the minimum the panel accepts for it (minSiteRam in plogical/DockerSites.py).
+    // n8n needs 768MB to start every time. With 256MB for its database the two
+    // together are the 1024MB of the package the panel creates first.
+    // Hermes runs Python and Node inside one container and keeps long lived sessions.
+    var dockerAppRam = {
+        'WordPress': {site: 512, database: 512},
+        'n8n': {site: 768, database: 256},
+        'Hermes': {site: 2048, database: 512}
+    };
+
     $scope.App = 'n8n';
     $scope.CPUMysql = 1;
-    $scope.rammysql = 512;
+    $scope.rammysql = dockerAppRam['n8n'].database;
     $scope.CPUSite = 1;
-    $scope.RamSite = 512;
+    $scope.RamSite = dockerAppRam['n8n'].site;
 
-    // Hermes runs Python and Node inside one container and keeps long lived sessions,
-    // 512MB is not enough for it, so raise the default when it is picked.
     $scope.appChanged = function () {
-        $scope.RamSite = $scope.App === 'Hermes' ? 2048 : 512;
+        var ram = dockerAppRam[$scope.App] || dockerAppRam['WordPress'];
+        $scope.RamSite = ram.site;
+        $scope.rammysql = ram.database;
     };
 
     var statusFile;
