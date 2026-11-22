@@ -4606,8 +4606,15 @@ Require valid-user
             else:
                 return ACLManager.loadErrorJson('changeOpenBasedir', 0)
 
+            # The worker rewrites the configuration of the named website: it
+            # must be a website or child domain of this server, written as it
+            # is stored, and the value one of the page's two words.
+            self.domain = WebsiteManager.storedDomainName(self.domain)
+            if openBasedirValue not in ('Enable', 'Disable') or not isinstance(openBasedirValue, str):
+                raise ValueError('Invalid open_basedir selection.')
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " changeOpenBasedir --virtualHostName '" + self.domain + "' --openBasedirValue " + openBasedirValue
+            execPath = execPath + " changeOpenBasedir --virtualHostName " + shlex.quote(self.domain) + " --openBasedirValue " + shlex.quote(openBasedirValue)
             output = ProcessUtilities.popenExecutioner(execPath)
 
             data_ret = {'status': 1, 'changeOpenBasedir': 1, 'error_message': "None"}
