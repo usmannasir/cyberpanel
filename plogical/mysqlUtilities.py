@@ -14,6 +14,7 @@ from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import getpass
+import re
 try:
     from websiteFunctions.models import Websites
     from databases.models import Databases
@@ -25,6 +26,7 @@ import json
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 from plogical import databaseGrants
+from plogical import randomPassword
 import MySQLdb.cursors as cursors
 from plogical import databaseImport
 from math import ceil
@@ -35,6 +37,10 @@ class mysqlUtilities:
     LOCALHOST = 'localhost'
     RDS = 0
     REMOTEHOST = ''
+
+    # The host of a database account as the panel writes it: an address, a
+    # name or a pattern with `%`.
+    ACCOUNT_HOST = re.compile(r'[A-Za-z0-9_.:%/-]{1,255}')
 
     @staticmethod
     def quoteIdentifier(identifier):
@@ -267,13 +273,22 @@ class mysqlUtilities:
 
             cursor.execute("DROP DATABASE IF EXISTS " + mysqlUtilities.quoteIdentifier(dbname))
 
-            ## Try deleting all user who had priviliges on db
+            ## The accounts that exist for this database alone go with it. Any
+            ## other account that was granted this database (the phpMyAdmin
+            ## account of a panel user, a user shared with another database)
+            ## stays and only loses its grant on the name, so that it has no
+            ## access when a database of this name is made again.
 
             # A grant is stored under the plain name or under its escaped form.
             databaseUsers = databaseGrants.accounts_granted(cursor, dbname)
+            ownAccounts = mysqlUtilities.accountsOfDatabaseAlone(dbname, dbuser)
 
             for databaseUser in databaseUsers:
-                cursor.execute("DROP USER IF EXISTS %s@%s", (databaseUser[0], databaseUser[1]))
+                if databaseUser[0] in ownAccounts:
+                    cursor.execute("DROP USER IF EXISTS %s@%s", (databaseUser[0], databaseUser[1]))
+                else:
+                    databaseGrants.revoke_database(cursor, mysqlUtilities.quoteIdentifier, dbname,
+                                                   databaseUser[0], databaseUser[1])
 
             return 1
 
@@ -283,6 +298,34 @@ class mysqlUtilities:
         finally:
             if connection:
                 connection.close()
+
+    @staticmethod
+    def accountsOfDatabaseAlone(dbname, dbuser):
+        """Names of the database accounts that belong to this database and to nothing else.
+
+        They are the user the panel registered for the database (`dbuser`,
+        as the caller read it) and its additional registered users, without
+        any name that another database is registered with or that a panel
+        user signs in to phpMyAdmin with.
+        """
+        names = set()
+        if isinstance(dbuser, str) and dbuser:
+            names.add(dbuser)
+        try:
+            from databases.models import DatabasesUsers, GlobalUserDB
+        except BaseException:
+            return names
+        row = Databases.objects.filter(dbName=dbname).first()
+        if row is not None:
+            names.add(row.dbUser)
+            names.update(DatabasesUsers.objects.filter(owner=row).values_list('username', flat=True))
+        others = set(Databases.objects.filter(dbUser__in=names).exclude(dbName=dbname).values_list('dbUser', flat=True))
+        additional = DatabasesUsers.objects.filter(username__in=names)
+        if row is not None:
+            additional = additional.exclude(owner=row)
+        others.update(additional.values_list('username', flat=True))
+        others.update(GlobalUserDB.objects.filter(username__in=names).values_list('username', flat=True))
+        return names - others
 
     @staticmethod
     def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None,
@@ -593,7 +636,10 @@ password=%s
     def prepareDatabaseForRestore(dbName, dbUsername, website):
         existing = Databases.objects.filter(dbName=dbName).first()
         if existing is None:
-            return mysqlUtilities.createDatabaseAndRegister(dbName, dbUsername, 'cyberpanel', website)
+            # The password of the restored user is set from the backup right
+            # after; until then nobody knows the one the account starts with.
+            return mysqlUtilities.createDatabaseAndRegister(dbName, dbUsername, randomPassword.generate_pass(32),
+                                                            website)
         if existing.website_id != website.pk or existing.dbUser != dbUsername:
             return 0, 'Database registration belongs to another website or user; existing data was preserved.'
         connection, cursor = mysqlUtilities.setupConnection()
@@ -608,7 +654,38 @@ password=%s
             connection.close()
 
     @staticmethod
+    def isRegisteredAccount(dbName, dbUser):
+        """True when the panel registered this account name for this database and for nothing else.
+
+        The account a panel user signs in to phpMyAdmin with is granted many
+        databases and is never one database's own account.
+        """
+        try:
+            from databases.models import DatabasesUsers, GlobalUserDB
+            database = Databases.objects.get(dbName=dbName)
+            names = set([database.dbUser])
+            names.update(DatabasesUsers.objects.filter(owner=database).values_list('username', flat=True))
+            if dbUser not in names:
+                return False
+            return not GlobalUserDB.objects.filter(username__iexact=dbUser).exists()
+        except BaseException:
+            return False
+
+    @staticmethod
     def restoreDatabaseUser(dbName, dbUser, password, dbHost):
+        # A backup lists every account that had a grant on the database when it
+        # was made. Only the accounts registered for this database are restored;
+        # any other account is left exactly as it is on this server.
+        if not isinstance(dbUser, str) or not isinstance(dbHost, str) \
+                or not mysqlUtilities.ACCOUNT_HOST.fullmatch(dbHost):
+            logging.CyberCPLogFileWriter.writeToFile(
+                'A database account of %s was not restored: its host is not valid.' % dbName)
+            return 0
+        if not mysqlUtilities.isRegisteredAccount(dbName, dbUser):
+            logging.CyberCPLogFileWriter.writeToFile(
+                'The account %s listed in the backup of %s is not a registered user of that database and was '
+                'left as it is.' % (dbUser, dbName))
+            return 1
         # Reuse an existing account only when it already has this database grant.
         connection, cursor = mysqlUtilities.setupConnection()
         if connection == 0:
@@ -620,7 +697,10 @@ password=%s
                 return 0
         finally:
             connection.close()
-        if not exists and mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost) != 1:
+        # A new account starts with a password nobody knows; the one from the
+        # backup is set in the next step.
+        if not exists and mysqlUtilities.createDatabase(dbName, dbUser, randomPassword.generate_pass(32), 0,
+                                                        dbHost) != 1:
             return 0
         return mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
 
