@@ -33,6 +33,7 @@ class CloudPHPSettingsTests(unittest.TestCase):
         namespace = dict(
             PHPManager=self.manager, ProcessUtilities=self.process, json=json, re=re, shlex=shlex, os=os,
             tempfile=NS(mkstemp=self.mkstemp), HttpResponse=lambda text: NS(content=text),
+            open=self.no_file_by_name, randint=lambda lower, upper: lower,
             matches_directive=phpConfig.matches_directive,
             apply_basic_php_settings=phpConfig.apply_basic_php_settings,
             checked_basic_php_settings=phpConfig.checked_basic_php_settings)
@@ -42,6 +43,12 @@ class CloudPHPSettingsTests(unittest.TestCase):
     def mkstemp(self, dir=None, prefix=None):
         self.assertEqual(('/home/cyberpanel', 'phpini.'), (dir, prefix))
         return tempfile.mkstemp(dir=self.temp.name, prefix=prefix)
+
+    @staticmethod
+    def no_file_by_name(path, *args, **kwargs):
+        # The staged copy comes from mkstemp; no file is opened by a name
+        # the code made up.
+        raise AssertionError('opened %s by name' % path)
 
     def helper(self, command):
         self.commands.append(command)
