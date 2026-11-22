@@ -24,6 +24,7 @@ import shlex
 from shutil import make_archive, rmtree
 from plogical import mysqlUtilities
 from plogical import databaseGrants
+from plogical import databaseAccounts
 import tarfile
 from multiprocessing import Process
 import signal
@@ -267,7 +268,10 @@ class backupUtilities:
                 child.text = str(items.dbName)
 
                 # A grant is stored under the plain name or under its escaped form.
-                databaseUsers = databaseGrants.accounts_granted(cursor, items.dbName)
+                # Only the database's own accounts are recorded: not the account
+                # a panel user signs in to phpMyAdmin with, nor one of the server.
+                databaseUsers = databaseAccounts.backed_up_accounts(
+                    databaseGrants.accounts_granted(cursor, items.dbName), items.dbUser)
 
                 for databaseUser in databaseUsers:
 
@@ -811,9 +815,12 @@ class backupUtilities:
                 dbName = database.find('dbName').text
                 if backup_uses_database_users_schema(backup_version, backup_build):
                     databaseUsers = database.findall('databaseUsers')
-                    if not databaseUsers:
+                    # The first listed account can be one of the server or a
+                    # phpMyAdmin account: the database is registered with its own user.
+                    dbUser = databaseAccounts.restored_database_user(
+                        [databaseUser.findtext('dbUser') for databaseUser in databaseUsers])
+                    if dbUser is None:
                         raise RuntimeError('Backup database has no account metadata: %s' % dbName)
-                    dbUser = databaseUsers[0].find('dbUser').text
                 else:
                     dbUser = database.find('dbUser').text
                 # The user's password comes from the backup when the dump is

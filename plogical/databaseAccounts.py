@@ -111,6 +111,51 @@ def registered_databases(name):
     return [database for database in Databases.objects.filter(dbUser=name) if database.dbUser == name]
 
 
+def may_be_database_user(name):
+    """True when a customer's database user may have this name on this server."""
+    return account_refusal(name) is None
+
+
+def backed_up_accounts(accounts, registered_user):
+    """Of the (user, host) accounts granted a database, those a backup records for it.
+
+    The account phpMyAdmin signs a panel user in with is granted every
+    database the user manages and is built again on the user's next visit. It
+    is not an account of the database, and neither is an account of the
+    server. Earlier releases named that account after the panel user: such a
+    name is left out as well, unless the database itself is registered with it.
+
+    The registered user comes first, at each of its hosts: a restore registers
+    the database with the first user listed.
+    """
+    from databases.models import GlobalUserDB
+    recorded = set(GlobalUserDB.objects.values_list('username', flat=True))
+    kept = [(user, host) for user, host in accounts
+            if not is_reserved(user) and (user == registered_user or user not in recorded)]
+    return ([account for account in kept if account[0] == registered_user]
+            + [account for account in kept if account[0] != registered_user])
+
+
+def restored_database_user(listed):
+    """The user a restored database is registered with, out of the users its backup lists; None when there is none.
+
+    Backups of earlier releases list every account that held a grant, in the
+    order of the database server, so a phpMyAdmin account or an account named
+    after a panel user can come first. The first user a customer's database
+    user may be called is taken. When no listed user may, the first that is
+    not an account of the server is returned, and creating the database with
+    it says why it is refused.
+    """
+    names = []
+    for name in listed:
+        if isinstance(name, str) and not is_reserved(name) and name not in names:
+            names.append(name)
+    for name in names:
+        if may_be_database_user(name):
+            return name
+    return names[0] if names else None
+
+
 def registrations_needing_review():
     """(database, registered user, website, reason) of each database whose registered user the panel will not act on.
 

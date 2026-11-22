@@ -11,6 +11,7 @@ from websiteFunctions.models import Websites
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from xml.etree import ElementTree
 import plogical.mysqlUtilities as mysqlUtilities
+from plogical import databaseAccounts
 from databases.models import Databases
 import argparse
 from managePHP.phpConfig import normalized_php_selection
@@ -123,6 +124,11 @@ class restoreMeta():
 
                 databaseUsers = database.findall('databaseUsers')
 
+                # The first listed account can be one of the server or a
+                # phpMyAdmin account: the database is registered with its own user.
+                registeredUser = databaseAccounts.restored_database_user(
+                    [databaseUser.findtext('dbUser') for databaseUser in databaseUsers])
+
                 for databaseUser in databaseUsers:
 
                     dbUser = databaseUser.find('dbUser').text
@@ -137,7 +143,10 @@ class restoreMeta():
 
                         first = 0
 
-                        result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(dbName, dbUser, website)
+                        if registeredUser is None:
+                            raise RuntimeError('Backup database has no account metadata: %s' % dbName)
+                        result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(dbName, registeredUser,
+                                                                                         website)
                         if result[0] != 1:
                             raise RuntimeError(result[1])
 

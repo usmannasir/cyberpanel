@@ -16,6 +16,7 @@ import django
 import plogical.CyberCPLogFileWriter as logging
 
 import plogical.mysqlUtilities as mysqlUtilities
+from plogical import databaseAccounts
 from plogical import databaseGrants
 from plogical.backupV2Repository import (
     database_name_from_snapshot_path,
@@ -451,8 +452,10 @@ class CPBackupsV2(multi.Thread):
                     for db in dataBases:
 
                         # A grant is stored under the plain name or under its escaped form.
-                        DBUsers = [(host, user) for user, host in
-                                   databaseGrants.accounts_granted(cursor, db.dbName)]
+                        # Only the database's own accounts are recorded: not the account
+                        # a panel user signs in to phpMyAdmin with, nor one of the server.
+                        DBUsers = [(host, user) for user, host in databaseAccounts.backed_up_accounts(
+                            databaseGrants.accounts_granted(cursor, db.dbName), db.dbUser)]
 
                         UserList = []
 
@@ -879,6 +882,11 @@ class CPBackupsV2(multi.Thread):
 
                     databaseUsers = database[dbName]
 
+                    # The first listed account can be one of the server or a
+                    # phpMyAdmin account: the database is registered with its own user.
+                    registeredUser = databaseAccounts.restored_database_user(
+                        [databaseUser['user'] for databaseUser in databaseUsers])
+
                     for databaseUser in databaseUsers:
 
                         dbUser = databaseUser['user']
@@ -893,7 +901,9 @@ class CPBackupsV2(multi.Thread):
 
                             first = 0
 
-                            result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(dbName, dbUser, self.website)
+                            if registeredUser is None:
+                                raise RuntimeError('Backup database has no account metadata: %s' % dbName)
+                            result = mysqlUtilities.mysqlUtilities.prepareDatabaseForRestore(dbName, registeredUser, self.website)
                             if result[0] != 1:
                                 raise RuntimeError(result[1])
 
