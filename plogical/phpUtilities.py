@@ -13,6 +13,7 @@ from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpConfig import is_php_package
 from managePHP.phpConfig import fpm_service_for_ini, matches_directive
+from managePHP.phpConfig import apply_basic_php_settings, checked_basic_php_settings, is_managed_ini
 
 import json
 from django.urls import reverse
@@ -132,98 +133,80 @@ class phpUtilities:
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
 
+    # Where the panel's web process leaves the text of a php.ini for the
+    # worker, and the form of the file names it uses there.
+    stagingDirectory = '/home/cyberpanel'
+    stagedIniName = re.compile(r'phpini\.[A-Za-z0-9_]{1,40}')
+
+    @staticmethod
+    def managedIniPath(path):
+        """Return the path when it is a php.ini the PHP settings pages manage, else raise ValueError.
+
+        The path must have one of the managed forms and must be the file
+        itself: a link anywhere on the way to another place is refused.
+        """
+        if not is_managed_ini(path) or os.path.realpath(path) != path:
+            raise ValueError('This is not a PHP configuration file that the panel manages.')
+        return path
+
+    @staticmethod
+    def readStagedIni(tempPath):
+        """Return the bytes the web process staged for a php.ini; a link is not followed."""
+        directory, name = os.path.split(str(tempPath))
+        if directory != phpUtilities.stagingDirectory or phpUtilities.stagedIniName.fullmatch(name) is None:
+            raise ValueError('Invalid staged PHP configuration.')
+        descriptor = os.open(tempPath, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, 'rb') as staged:
+            return staged.read()
+
+    @staticmethod
+    def readIniFile(path):
+        with open(path, 'rb') as current:
+            return current.read()
+
+    @staticmethod
+    def replaceIniFile(path, content):
+        """Put new content in place of a php.ini in one step.
+
+        The content is written to a new file beside it, given the owner and
+        mode of the present file, and renamed over it; PHP never reads a
+        half-written file and a failed write leaves the present one.
+        """
+        from pathlib import Path
+        from plogical.websiteSuspension import atomic_write
+        atomic_write(Path(path), content, os.stat(path))
+
     @staticmethod
     def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size, apache):
         try:
-            serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
+            # Everything is checked again here, before anything is touched:
+            # the nine values, the Apache switch and the PHP version, from
+            # whose digits the path of the php.ini is built.
+            settings = checked_basic_php_settings({
+                'allow_url_fopen': allow_url_fopen, 'display_errors': display_errors,
+                'file_uploads': file_uploads, 'allow_url_include': allow_url_include,
+                'memory_limit': memory_limit, 'max_execution_time': max_execution_time,
+                'upload_max_filesize': upload_max_filesize, 'max_input_time': max_input_time,
+                'post_max_size': post_max_size})
 
+            if str(apache) not in ('0', '1'):
+                raise ValueError('Invalid Apache selection.')
+            apache = int(apache)
+
+            path = phpUtilities.managedIniPath(ApacheVhost.DecidePHPPathforManager(apache, phpVers))
+
+            serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
 
             command = 'touch %s' % (serverLevelPHPRestart)
             ProcessUtilities.executioner(command)
 
-            from ApachController.ApacheVhosts import ApacheVhost
-            path = ApacheVhost.DecidePHPPathforManager(int(apache), phpVers)
-
-            data = open(path, 'r').readlines()
-
-            writeToFile = open(path, 'w')
-
-            # Track which directives we've found and replaced
-            found_directives = {
-                'allow_url_fopen': False,
-                'display_errors': False,
-                'file_uploads': False,
-                'allow_url_include': False,
-                'memory_limit': False,
-                'max_execution_time': False,
-                'upload_max_filesize': False,
-                'max_input_time': False,
-                'post_max_size': False
-            }
-
-            for items in data:
-                if items.find("allow_url_fopen") > -1 and items.find("=") > -1:
-                    writeToFile.writelines(allow_url_fopen + "\n")
-                    found_directives['allow_url_fopen'] = True
-                elif items.find("display_errors") > -1 and items.find("=") > -1:
-                    writeToFile.writelines(display_errors + "\n")
-                    found_directives['display_errors'] = True
-                elif items.find("file_uploads") > -1 and items.find("=") > -1 and not items.find(
-                        "max_file_uploads") > -1:
-                    writeToFile.writelines(file_uploads + "\n")
-                    found_directives['file_uploads'] = True
-                elif items.find("allow_url_include") > -1 and items.find("=") > -1:
-                    writeToFile.writelines(allow_url_include + "\n")
-                    found_directives['allow_url_include'] = True
-                elif matches_directive(items, "memory_limit"):
-                    writeToFile.writelines("memory_limit = " + memory_limit + "\n")
-                    found_directives['memory_limit'] = True
-                elif items.find("max_execution_time") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("max_execution_time = " + max_execution_time + "\n")
-                    found_directives['max_execution_time'] = True
-                elif items.find("upload_max_filesize") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("upload_max_filesize = " + upload_max_filesize + "\n")
-                    found_directives['upload_max_filesize'] = True
-                elif items.find("max_input_time") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("max_input_time = " + max_input_time + "\n")
-                    found_directives['max_input_time'] = True
-                elif items.find("post_max_size") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("post_max_size = " + post_max_size + "\n")
-                    found_directives['post_max_size'] = True
-                else:
-                    writeToFile.writelines(items)
-
-            # Add any missing directives at the end of the file
-            missing_directives = []
-            if not found_directives['allow_url_fopen']:
-                missing_directives.append(allow_url_fopen)
-            if not found_directives['display_errors']:
-                missing_directives.append(display_errors)
-            if not found_directives['file_uploads']:
-                missing_directives.append(file_uploads)
-            if not found_directives['allow_url_include']:
-                missing_directives.append(allow_url_include)
-            if not found_directives['memory_limit']:
-                missing_directives.append("memory_limit = " + memory_limit)
-            if not found_directives['max_execution_time']:
-                missing_directives.append("max_execution_time = " + max_execution_time)
-            if not found_directives['upload_max_filesize']:
-                missing_directives.append("upload_max_filesize = " + upload_max_filesize)
-            if not found_directives['max_input_time']:
-                missing_directives.append("max_input_time = " + max_input_time)
-            if not found_directives['post_max_size']:
-                missing_directives.append("post_max_size = " + post_max_size)
-
-            if missing_directives:
-                writeToFile.writelines("\n; Added by CyberPanel PHP Config Manager\n")
-                for directive in missing_directives:
-                    writeToFile.writelines(directive + "\n")
-
-            writeToFile.close()
+            current = phpUtilities.readIniFile(path).decode('utf-8', 'surrogateescape')
+            phpUtilities.replaceIniFile(
+                path, apply_basic_php_settings(current, settings).encode('utf-8', 'surrogateescape'))
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            if int(apache) == 1:
+            if apache == 1:
 
                 ProcessUtilities.normalExecutioner(ApacheVhost.fpmServiceCommand('restart', phpVers))
 
@@ -237,14 +220,16 @@ class phpUtilities:
     @staticmethod
     def savePHPConfigAdvance(phpVers,tempPath):
         try:
+            # phpVers is the path of the php.ini. Only a file the PHP settings
+            # pages manage is written, and only from the staging directory.
+            phpVers = phpUtilities.managedIniPath(phpVers)
+            content = phpUtilities.readStagedIni(tempPath)
 
             serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
             command = 'touch %s' % (serverLevelPHPRestart)
             ProcessUtilities.executioner(command)
 
-            phpINI = open(phpVers, 'w')
-            phpINI.write(open(tempPath, "r").read())
-            phpINI.close()
+            phpUtilities.replaceIniFile(phpVers, content)
 
             if os.path.exists(serverLevelPHPRestart):
                 os.remove(serverLevelPHPRestart)

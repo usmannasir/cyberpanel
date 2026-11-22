@@ -105,6 +105,107 @@ def matches_directive(line, directive):
     return re.match(pattern, line, re.IGNORECASE) is not None
 
 
+# The nine directives of the basic PHP settings page, in the order it saves them.
+PHP_FLAGS = ('allow_url_fopen', 'display_errors', 'file_uploads', 'allow_url_include')
+PHP_SIZES = ('memory_limit', 'upload_max_filesize', 'post_max_size')
+PHP_SECONDS = ('max_execution_time', 'max_input_time')
+BASIC_PHP_SETTINGS = ('allow_url_fopen', 'display_errors', 'file_uploads', 'allow_url_include', 'memory_limit',
+                      'max_execution_time', 'upload_max_filesize', 'max_input_time', 'post_max_size')
+PHP_SIZE_VALUE = re.compile(r'[+-]?[0-9]{1,10}[KMGkmg]?')
+PHP_SECONDS_VALUE = re.compile(r'[+-]?[0-9]{1,6}')
+
+
+def php_flag(value):
+    """Return '1' or '0' for a switch of the basic PHP settings page.
+
+    The page sends true or false; the worker is handed the result.
+    """
+    if value is True or (type(value) in (int, str) and str(value) == '1'):
+        return '1'
+    if value is False or (type(value) in (int, str) and str(value) == '0'):
+        return '0'
+    raise ValueError('Invalid value for a PHP switch.')
+
+
+def checked_basic_php_settings(values):
+    """Return the nine basic PHP settings as (directive, value) pairs, or raise ValueError.
+
+    Switches become On or Off. A size is digits with an optional sign and
+    K, M or G; a time is digits with an optional sign. A value is therefore
+    one word that can neither end its line nor start another directive.
+    """
+    settings = []
+    for directive in BASIC_PHP_SETTINGS:
+        value = values[directive]
+        if directive in PHP_FLAGS:
+            value = 'On' if php_flag(value) == '1' else 'Off'
+        else:
+            if type(value) is int:
+                value = str(value)
+            shape = PHP_SIZE_VALUE if directive in PHP_SIZES else PHP_SECONDS_VALUE
+            if not isinstance(value, str) or shape.fullmatch(value) is None:
+                raise ValueError('Invalid value for %s.' % directive)
+        settings.append((directive, value))
+    return settings
+
+
+def apply_basic_php_settings(text, settings):
+    """Return php.ini text with each setting assigned once per existing assignment.
+
+    Only a line that assigns the directive is replaced; comments that merely
+    mention it are kept. A directive the file does not assign is added at
+    the end. Line endings of untouched lines are kept as they are.
+    """
+    found = set()
+    lines = []
+    for line in text.splitlines(True):
+        for directive, value in settings:
+            if matches_directive(line, directive):
+                lines.append('%s = %s\n' % (directive, value))
+                found.add(directive)
+                break
+        else:
+            lines.append(line)
+    missing = [(directive, value) for directive, value in settings if directive not in found]
+    if missing:
+        if lines and not lines[-1].endswith('\n'):
+            lines.append('\n')
+        lines.append('\n; Added by CyberPanel PHP Config Manager\n')
+        for directive, value in missing:
+            lines.append('%s = %s\n' % (directive, value))
+    return ''.join(lines)
+
+
+# The php.ini files the PHP settings pages manage: LiteSpeed PHP on the RPM
+# family and on Debian or Ubuntu, Remi PHP-FPM, Debian or Ubuntu PHP-FPM.
+MANAGED_INI = (
+    re.compile(r'/usr/local/lsws/lsphp[0-9]{2,3}/etc/php\.ini'),
+    re.compile(r'/usr/local/lsws/lsphp[0-9]{2,3}/etc/php/[0-9]\.[0-9]{1,2}/litespeed/php\.ini'),
+    re.compile(r'/etc/opt/remi/php[0-9]{2,3}/php\.ini'),
+    re.compile(r'/etc/php/[0-9]\.[0-9]{1,2}/fpm/php\.ini'),
+)
+
+
+def is_managed_ini(path):
+    """True when the path has exactly the form of a php.ini the PHP settings pages manage."""
+    return isinstance(path, str) and any(shape.fullmatch(path) is not None for shape in MANAGED_INI)
+
+
+def managed_ini_path(selection, apache, rpm_family):
+    """Return the php.ini of a PHP selection, built from the selection's digits.
+
+    apache selects the PHP-FPM of the Apache backend instead of LiteSpeed PHP.
+    """
+    major, minor = php_selection_digits(selection)
+    if not apache:
+        if rpm_family:
+            return '/usr/local/lsws/lsphp%s%s/etc/php.ini' % (major, minor)
+        return '/usr/local/lsws/lsphp%s%s/etc/php/%s.%s/litespeed/php.ini' % (major, minor, major, minor)
+    if rpm_family:
+        return '/etc/opt/remi/php%s%s/php.ini' % (major, minor)
+    return '/etc/php/%s.%s/fpm/php.ini' % (major, minor)
+
+
 def fpm_service_for_ini(path):
     """Return the FPM service for a managed FPM ini; LSAPI needs no FPM restart."""
     remi = re.fullmatch(r'/etc/opt/remi/php([0-9]+)/php\.ini', path)
