@@ -3,10 +3,67 @@ sys.path.append('/usr/local/CyberCP')
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.installUtilities import installUtilities
 import argparse
+import re
+import shlex
 from plogical.processUtilities import ProcessUtilities
 from xml.etree import ElementTree
 
 class tuning:
+
+    # The checks below are used by the pages before the privileged worker is
+    # started and by the worker again. Each value becomes one word of a
+    # configuration line, so it is a whole number, a size, or one of two
+    # fixed words; nothing else is written.
+
+    @staticmethod
+    def wholeNumber(value, name):
+        if type(value) is int or (isinstance(value, str) and re.fullmatch(r'[0-9]{1,12}', value)):
+            if int(value) >= 0:
+                return str(int(value))
+        raise ValueError('Invalid value for %s.' % name)
+
+    @staticmethod
+    def memorySize(value, name):
+        if type(value) is int and value >= 0:
+            return str(value)
+        if isinstance(value, str) and re.fullmatch(r'[0-9]{1,12}[KMGkmg]?', value):
+            return value
+        raise ValueError('Invalid value for %s.' % name)
+
+    @staticmethod
+    def enableOrDisable(value, name):
+        if value in ('Enable', 'Disable') and isinstance(value, str):
+            return value
+        raise ValueError('Invalid value for %s.' % name)
+
+    @staticmethod
+    def phpTuningTarget(virtualHost):
+        """What PHP tuning acts on: a website on OpenLiteSpeed, a LiteSpeed PHP on Enterprise."""
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            from plogical.websiteSuspension import validate_domain
+            return validate_domain(virtualHost)
+        if isinstance(virtualHost, str) and re.fullmatch(r'lsphp[0-9]{2,3}', virtualHost):
+            return virtualHost
+        raise ValueError('Invalid PHP version selected.')
+
+    @staticmethod
+    def checkedServerTuning(maxConn, maxSSLConn, connTime, keepAlive, inMemCache, gzipCompression):
+        return (tuning.wholeNumber(maxConn, 'Max Connections'),
+                tuning.wholeNumber(maxSSLConn, 'Max SSL Connections'),
+                tuning.wholeNumber(connTime, 'Connection Timeout'),
+                tuning.wholeNumber(keepAlive, 'Keep Alive'),
+                tuning.memorySize(inMemCache, 'Cache Size in memory'),
+                tuning.enableOrDisable(gzipCompression, 'GZIP Compression'))
+
+    @staticmethod
+    def checkedPHPTuning(maxConns, initTimeout, persistConn, memSoftLimit, memHardLimit, procSoftLimit, procHardLimit):
+        return (tuning.wholeNumber(maxConns, 'Max Connections'),
+                tuning.wholeNumber(initTimeout, 'Initial Request Timeout'),
+                tuning.enableOrDisable(persistConn, 'Persistent Connection'),
+                tuning.memorySize(memSoftLimit, 'Memory Soft Limit'),
+                tuning.memorySize(memHardLimit, 'Memory Hard Limit'),
+                tuning.wholeNumber(procSoftLimit, 'Process Soft Limit'),
+                tuning.wholeNumber(procHardLimit, 'Process Hard Limit'))
 
 
     @staticmethod
@@ -79,6 +136,15 @@ class tuning:
 
     @staticmethod
     def saveTuningDetails(maxConnections,maxSSLConnections,connectionTimeOut,keepAliveTimeOut,cacheSizeInMemory,gzipCompression):
+        try:
+            maxConnections, maxSSLConnections, connectionTimeOut, keepAliveTimeOut, cacheSizeInMemory, gzipCompression = \
+                tuning.checkedServerTuning(maxConnections, maxSSLConnections, connectionTimeOut, keepAliveTimeOut,
+                                           cacheSizeInMemory, gzipCompression)
+        except ValueError as msg:
+            logging.writeToFile(str(msg) + " [saveTuningDetails]")
+            print("0," + str(msg))
+            return
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 datas = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
@@ -182,11 +248,17 @@ class tuning:
 
     @staticmethod
     def fetchPHPDetails(virtualHost):
+        try:
+            virtualHost = tuning.phpTuningTarget(virtualHost)
+        except ValueError as msg:
+            logging.writeToFile(str(msg) + " [fetchPHPDetails]")
+            return 0
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 path = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
 
-                command = "sudo cat "+path
+                command = "sudo cat "+shlex.quote(path)
                 datas = ProcessUtilities.outputExecutioner(command).split("\n")
 
                 dataToReturn = {}
@@ -255,6 +327,16 @@ class tuning:
 
     @staticmethod
     def tunePHP(virtualHost,maxConns,initTimeout,persistConn,memSoftLimit,memHardLimit,procSoftLimit,procHardLimit):
+        try:
+            virtualHost = tuning.phpTuningTarget(virtualHost)
+            maxConns, initTimeout, persistConn, memSoftLimit, memHardLimit, procSoftLimit, procHardLimit = \
+                tuning.checkedPHPTuning(maxConns, initTimeout, persistConn, memSoftLimit, memHardLimit,
+                                        procSoftLimit, procHardLimit)
+        except ValueError as msg:
+            logging.writeToFile(str(msg) + " [tunePHP]")
+            print("0," + str(msg))
+            return
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 path = installUtilities.Server_root_path + "/conf/vhosts/" + virtualHost + "/vhost.conf"

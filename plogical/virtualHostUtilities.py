@@ -1471,6 +1471,18 @@ class virtualHostUtilities:
 
     @staticmethod
     def changeOpenBasedir(domainName, openBasedirValue):
+        # Checked again here: the name becomes the path of the configuration
+        # that is rewritten, and only the page's two words are acted on.
+        from plogical.websiteSuspension import validate_domain
+        try:
+            validate_domain(domainName)
+            if openBasedirValue not in ('Enable', 'Disable'):
+                raise ValueError('Invalid open_basedir selection.')
+        except ValueError as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir]")
+            print("0," + str(msg))
+            return
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domainName

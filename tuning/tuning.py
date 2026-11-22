@@ -10,12 +10,14 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from django.http import HttpResponse
 import json
+import shlex
 import plogical.CyberCPLogFileWriter as logging
 from plogical.tuning import tuning
 from loginSystem.views import loadLoginPage
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
+from websiteFunctions.models import Websites, ChildDomains
 
 
 class tuningManager:
@@ -93,15 +95,16 @@ class tuningManager:
                     final_json = json.dumps(data_ret)
                     return HttpResponse(final_json)
 
-                maxConn = str(data['maxConn'])
-                maxSSLConn = str(data['maxSSLConn'])
-                connTime = str(data['connTime'])
-                keepAlive = str(data['keepAlive'])
-                inMemCache = str(data['inMemCache'])
-                gzipCompression = data['gzipCompression']
+                # Whole numbers, a size and one of two words; the worker
+                # checks the same again.
+                maxConn, maxSSLConn, connTime, keepAlive, inMemCache, gzipCompression = tuning.checkedServerTuning(
+                    data['maxConn'], data['maxSSLConn'], data['connTime'], data['keepAlive'],
+                    data['inMemCache'], data['gzipCompression'])
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
-                execPath = execPath + " saveTuningDetails --maxConn " + maxConn + " --maxSSLConn " + maxSSLConn + " --connTime " + connTime + " --keepAlive " + keepAlive + " --inMemCache '" + inMemCache + "' --gzipCompression " + gzipCompression
+                execPath = execPath + " saveTuningDetails --maxConn " + shlex.quote(maxConn) + " --maxSSLConn " + shlex.quote(maxSSLConn) \
+                           + " --connTime " + shlex.quote(connTime) + " --keepAlive " + shlex.quote(keepAlive) \
+                           + " --inMemCache " + shlex.quote(inMemCache) + " --gzipCompression " + shlex.quote(gzipCompression)
                 output = ProcessUtilities.outputExecutioner(execPath)
 
                 if output.find("1,None") > -1:
@@ -137,7 +140,16 @@ class tuningManager:
                 final_json = json.dumps(data_ret)
                 return HttpResponse(final_json)
             
-            domainSelection = str(domainSelection)
+            # The selection becomes part of a path and of the worker's command
+            # line: on OpenLiteSpeed it is a website of this server, written
+            # as it is stored; on LiteSpeed Enterprise a LiteSpeed PHP.
+            domainSelection = tuning.phpTuningTarget(domainSelection)
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                site = Websites.objects.filter(domain=domainSelection).first() or \
+                    ChildDomains.objects.filter(domain=domainSelection).first()
+                if site is None:
+                    raise ValueError('Invalid domain name.')
+                domainSelection = site.domain
 
             if status == "fetch":
 
@@ -151,16 +163,16 @@ class tuningManager:
                 return HttpResponse(final_json)
 
             else:
-                initTimeout = str(data['initTimeout'])
-                maxConns = str(data['maxConns'])
-                memSoftLimit = data['memSoftLimit']
-                memHardLimit = data['memHardLimit']
-                procSoftLimit = str(data['procSoftLimit'])
-                procHardLimit = str(data['procHardLimit'])
-                persistConn = data['persistConn']
+                maxConns, initTimeout, persistConn, memSoftLimit, memHardLimit, procSoftLimit, procHardLimit = \
+                    tuning.checkedPHPTuning(data['maxConns'], data['initTimeout'], data['persistConn'],
+                                            data['memSoftLimit'], data['memHardLimit'],
+                                            data['procSoftLimit'], data['procHardLimit'])
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
-                execPath = execPath + " tunePHP --virtualHost " + domainSelection + " --initTimeout " + initTimeout + " --maxConns " + maxConns + " --memSoftLimit " + memSoftLimit + " --memHardLimit '" + memHardLimit + "' --procSoftLimit " + procSoftLimit + " --procHardLimit " + procHardLimit + " --persistConn " + persistConn
+                execPath = execPath + " tunePHP --virtualHost " + shlex.quote(domainSelection) + " --initTimeout " + shlex.quote(initTimeout) \
+                           + " --maxConns " + shlex.quote(maxConns) + " --memSoftLimit " + shlex.quote(memSoftLimit) \
+                           + " --memHardLimit " + shlex.quote(memHardLimit) + " --procSoftLimit " + shlex.quote(procSoftLimit) \
+                           + " --procHardLimit " + shlex.quote(procHardLimit) + " --persistConn " + shlex.quote(persistConn)
 
                 output = ProcessUtilities.outputExecutioner(execPath)
 
