@@ -1673,7 +1673,8 @@ setuid=pdns
 
 
 def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, publicip=None, remotemysql=None,
-         mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None, appdb=None, appuser=None):
+         mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None, appdb=None, appuser=None,
+         postfix=None):
     database_config = build_database_config(remote=(remotemysql == 'ON'), host=mysqlhost,
         port=mysqlport, root_db=mysqldb, root_user=mysqluser, app_db=appdb, app_user=appuser)
     require_fresh_application_installation(appdb)
@@ -1740,8 +1741,11 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
     if ent == 0:
         installer.fix_ols_configs()
 
-    logging.InstallLog.writeToFile('Installing Sieve for email filtering..,55')
-    installer.installSieve()
+    # Sieve filters the mail that Dovecot delivers. Without the mail server its
+    # packages would install Dovecot on their own.
+    if postfix is None or postfix == 'ON':
+        logging.InstallLog.writeToFile('Installing Sieve for email filtering..,55')
+        installer.installSieve()
 
     ## setupWebmail is called later, after Dovecot is installed (see install.py)
 

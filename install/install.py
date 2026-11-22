@@ -3052,10 +3052,12 @@ def main():
 
     if ent == 0:
         installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql,
-                               mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser)
+                               mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser,
+                               args.postfix)
     else:
         installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
-                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser)
+                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport, args.appdb, args.appuser,
+                               args.postfix)
 
     # Email comes next. When it is left out, the panel set-up starts here.
     email_wanted = args.postfix is None or args.postfix == 'ON'
