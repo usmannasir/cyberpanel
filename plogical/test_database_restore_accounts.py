@@ -54,6 +54,9 @@ class Rows:
     def exists(self):
         return bool(self.rows)
 
+    def __iter__(self):
+        return iter([SimpleNamespace(**row) for row in self.rows])
+
     def values_list(self, field, flat=True):
         return [row[field] for row in self.rows]
 

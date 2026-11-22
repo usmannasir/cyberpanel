@@ -21,7 +21,8 @@ class ProvisioningError(Exception):
 
 class ProvisioningJournal:
     def __init__(self, database, username, website, directory=JOURNAL_DIRECTORY, owner_user='cyberpanel'):
-        if not is_safe_sql_identifier(database) or not is_safe_sql_identifier(username):
+        # `username` is None for a database that is created without a user of its own.
+        if not is_safe_sql_identifier(database) or not (username is None or is_safe_sql_identifier(username)):
             raise ProvisioningError('Invalid database name or username.')
         self.database, self.username, self.website = database, username, str(website)
         self.directory, self.owner_user = directory, owner_user
@@ -47,7 +48,9 @@ class ProvisioningJournal:
         try:
             self.directory_fd = _open_private_directory(self.directory, self.owner_user)
             self.resources.callback(os.close, self.directory_fd)
-            names = [self.name, hashlib.sha256(('user:' + self.username).encode()).hexdigest()]
+            names = [self.name]
+            if self.username is not None:
+                names.append(hashlib.sha256(('user:' + self.username).encode()).hexdigest())
             for name in sorted(names):
                 descriptor = self._open(name + '.lock', os.O_RDWR | os.O_CREAT)
                 self.resources.callback(os.close, descriptor)
@@ -136,19 +139,59 @@ def create_and_register(database, username, password, website, utilities, databa
     except ProvisioningError as error:
         return 0, str(error)
     except Exception as error:
-        # Driver messages, SQL statements and traceback locals can contain passwords.
-        # Correlate a safe diagnostic without recording any of those values.
-        reference = secrets.token_hex(8)
-        code = getattr(error, 'errno', None)
-        if not isinstance(code, int):
-            code = error.args[0] if error.args and isinstance(error.args[0], int) else None
-        diagnostic = {'reference': reference, 'stage': stage,
-                      'exception': type(error).__name__, 'code': code}
-        try:
-            CyberCPLogFileWriter.writeToFile(
-                'Database provisioning failure ' + json.dumps(diagnostic, sort_keys=True), email=0)
-        except Exception:
-            pass
-        return 0, ('Database creation stopped at %s (reference %s). Existing data and any provisioning '
-                   'record were preserved. Ask the administrator to check the CyberPanel error log.'
-                   % (stage, reference))
+        return _stopped(stage, error)
+
+
+def create_without_user(database, website, utilities, database_model,
+                        directory=JOURNAL_DIRECTORY, owner_user='cyberpanel'):
+    """Create and register a database that has no user of its own.
+
+    Only a restore does this, for a database its backup recorded without a
+    user. No account is made; the database is registered with the mark of a
+    database without a user. An existing database or registration of the name
+    is never adopted.
+    """
+    stage = 'opening_journal'
+    try:
+        with ProvisioningJournal(database, None, website.domain, directory, owner_user) as journal:
+            stage = 'checking_panel_namespace'
+            if database_model.objects.filter(dbName=database).exists():
+                raise ProvisioningError('This database is already registered.')
+            stage = 'checking_sql_namespace'
+            if utilities.databaseExists(database):
+                raise ProvisioningError('An SQL database already uses this name. Existing data was preserved; administrator review is required.')
+            stage = 'reserving_journal'
+            journal.begin()
+            stage = 'creating_sql'
+            if utilities.createEmptyDatabase(database, progress=journal.record) != 1:
+                raise ProvisioningError('Database creation stopped at %s. Existing data and the provisioning record were preserved for administrator review.' % journal.data['stage'])
+            stage = 'registering_panel'
+            journal.record('registering_panel')
+            database_model.objects.create(website=website, dbName=database, dbUser=databaseAccounts.NO_DATABASE_USER)
+            stage = 'completing_journal'
+            journal.record('completed')
+            return 1, 'None'
+    except ProvisioningError as error:
+        return 0, str(error)
+    except Exception as error:
+        return _stopped(stage, error)
+
+
+def _stopped(stage, error):
+    """The answer for a creation that an unexpected error stopped, with a reference into the panel log."""
+    # Driver messages, SQL statements and traceback locals can contain passwords.
+    # Correlate a safe diagnostic without recording any of those values.
+    reference = secrets.token_hex(8)
+    code = getattr(error, 'errno', None)
+    if not isinstance(code, int):
+        code = error.args[0] if error.args and isinstance(error.args[0], int) else None
+    diagnostic = {'reference': reference, 'stage': stage,
+                  'exception': type(error).__name__, 'code': code}
+    try:
+        CyberCPLogFileWriter.writeToFile(
+            'Database provisioning failure ' + json.dumps(diagnostic, sort_keys=True), email=0)
+    except Exception:
+        pass
+    return 0, ('Database creation stopped at %s (reference %s). Existing data and any provisioning '
+               'record were preserved. Ask the administrator to check the CyberPanel error log.'
+               % (stage, reference))
