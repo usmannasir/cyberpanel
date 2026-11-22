@@ -44,6 +44,7 @@ CANNOT_BE_READ = 'The file named in CP_ADMIN_PASSWORD_FILE cannot be read.'
 NOT_A_FILE = 'CP_ADMIN_PASSWORD_FILE does not name a regular file.'
 NOT_ROOT_ONLY = 'must belong to root and be readable by root only (chmod 600).'
 TOO_SHORT = 'has less than 8 characters.'
+TOO_LONG = 'The password in the file named in CP_ADMIN_PASSWORD_FILE has more than 1024 characters.'
 
 
 class PasswordFileReaderTests(unittest.TestCase):
@@ -52,7 +53,7 @@ class PasswordFileReaderTests(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         self.directory = directory.name
 
-    def read(self, path, search_path=None):
+    def read(self, path, search_path=None, seconds=20):
         script = function('Read_Admin_Password_File') + (
             'Read_Admin_Password_File\nstatus=$?\nprintf "%s" "$Admin_Pass_From_File"\n'
             'printf "%s" "$Admin_Pass_File_Problem" >&2\nexit $status\n')
@@ -60,10 +61,10 @@ class PasswordFileReaderTests(unittest.TestCase):
         if path is not None:
             environment['CP_ADMIN_PASSWORD_FILE'] = str(path)
         return subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              encoding='utf-8', env=environment, timeout=20)
+                              encoding='utf-8', env=environment, timeout=seconds)
 
-    def assert_refused(self, path, saying, *secrets):
-        result = self.read(path)
+    def assert_refused(self, path, saying, *secrets, **options):
+        result = self.read(path, **options)
         self.assertEqual(1, result.returncode)
         self.assertEqual('', result.stdout)
         self.assertIn(saying, result.stderr)
@@ -130,10 +131,64 @@ class PasswordFileReaderTests(unittest.TestCase):
             with self.subTest(content=content):
                 self.assert_refused(password_file(self.directory, content), TOO_SHORT, 'short7!')
 
-    def test_name_of_the_file_is_followed_once(self):
+    def test_name_is_followed_to_refuse_and_then_once_to_open(self):
         source = function('Read_Admin_Password_File')
-        self.assertEqual(1, source.count('"$CP_ADMIN_PASSWORD_FILE"'))
-        self.assertIn('< "$CP_ADMIN_PASSWORD_FILE"', source)
+        # Twice in tests that can only refuse, before anything is opened.
+        refusals = source[:source.index('\n{\n')]
+        self.assertEqual(2, refusals.count('"$CP_ADMIN_PASSWORD_FILE"'))
+        for test in ('if [[ ! -r "$CP_ADMIN_PASSWORD_FILE" ]]; then\n  Admin_Pass_File_Problem=',
+                     'if [[ ! -f "$CP_ADMIN_PASSWORD_FILE" ]]; then\n  Admin_Pass_File_Problem='):
+            self.assertEqual(1, refusals.count(test))
+            after = refusals[refusals.index(test):].splitlines()
+            self.assertEqual(['  return 1', 'fi'], after[2:4])
+        # Once in the open. What is judged and read is the opened file.
+        self.assertEqual(3, source.count('$CP_ADMIN_PASSWORD_FILE'))
+        closing = '\n} 2>/dev/null < "$CP_ADMIN_PASSWORD_FILE"\n'
+        self.assertEqual(1, source.count(closing))
+        opened = source[source.index('\n{\n'):source.index(closing)]
+        self.assertIn("details=$(stat -L -c '%u %a %F' /dev/stdin)", opened)
+        self.assertEqual(1, opened.count('IFS= read -r -n 1026 first_line'))
+        self.assertNotIn('$CP_ADMIN_PASSWORD_FILE', opened)
+        # Nothing is read before kind, owner and mode were judged.
+        self.assertLess(opened.index('regular'), opened.index('IFS= read'))
+        self.assertLess(opened.index('8#77'), opened.index('IFS= read'))
+        self.assertEqual(1, source.count('IFS= read'))
+
+    def test_device_without_an_end_is_refused_at_once(self):
+        for device in ('/dev/zero', '/dev/urandom', '/dev/null'):
+            with self.subTest(device=device):
+                self.assert_refused(device, NOT_A_FILE, seconds=5)
+
+    def test_pipe_without_a_writer_is_refused_at_once(self):
+        pipe = Path(self.directory) / 'pipe'
+        os.mkfifo(str(pipe), 0o600)
+        self.assert_refused(pipe, NOT_A_FILE, seconds=5)
+        link = Path(self.directory) / 'link-to-pipe'
+        link.symlink_to(pipe)
+        self.assert_refused(link, NOT_A_FILE, seconds=5)
+
+    def test_link_that_leads_nowhere_cannot_be_read(self):
+        link = Path(self.directory) / 'dangling'
+        link.symlink_to(Path(self.directory) / 'missing')
+        self.assert_refused(link, CANNOT_BE_READ)
+
+    @AS_ROOT
+    def test_line_without_an_end_is_not_read_whole(self):
+        megabyte = 'x' * (1024 * 1024)
+        self.assert_refused(password_file(self.directory, megabyte), TOO_LONG, 'xxxxxxxx', seconds=5)
+        self.assert_refused(password_file(self.directory, megabyte + '\n'), TOO_LONG, 'xxxxxxxx', seconds=5)
+
+    @AS_ROOT
+    def test_longest_password_has_1024_characters(self):
+        longest = 'p' * 1024
+        for content in (longest, longest + '\n', longest + '\r\n', longest + '\r'):
+            with self.subTest(content=content[-3:]):
+                result = self.read(password_file(self.directory, content))
+                self.assertEqual((0, longest, ''), (result.returncode, result.stdout, result.stderr))
+        for content in (longest + 'p', longest + 'p\n', longest + 'p\r\n', longest + '\rp', longest + '\r\r\n',
+                        'p\u00e4' * 513 + '\n'):
+            with self.subTest(content=content[-3:]):
+                self.assert_refused(password_file(self.directory, content), TOO_LONG, 'pppppppp')
 
     @AS_ROOT
     def test_file_that_was_opened_is_the_one_checked_and_read(self):
@@ -154,6 +209,61 @@ class PasswordFileReaderTests(unittest.TestCase):
         result = self.read(link, search_path='%s:%s' % (tools, os.environ['PATH']))
         self.assertEqual(str(other), os.readlink(str(link)))
         self.assertEqual((0, SECRET, ''), (result.returncode, result.stdout, result.stderr))
+
+
+class UnusableFileWholeScriptTests(unittest.TestCase):
+    """The whole script with a name that is no password file: help is still
+    answered, a run is refused before it starts, and neither waits for a file
+    that has no end or no writer."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.pipe = Path(directory.name) / 'pipe'
+        os.mkfifo(str(self.pipe), 0o600)
+        self.endless = Path(directory.name) / 'endless'
+        self.endless.write_text('x' * (1024 * 1024))
+        self.endless.chmod(0o600)
+
+    def finished(self, machine, *arguments, **options):
+        process = machine.start(*arguments, **options)
+        try:
+            output, errors = process.communicate('', timeout=15)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.communicate()
+            self.fail('the installer waited for the file')
+        return process.returncode, output, errors
+
+    def names(self):
+        return ('/dev/zero', str(self.pipe), str(self.endless))
+
+    def test_help_is_answered(self):
+        for name in self.names():
+            for arguments in (('--help',), ('-v', 'ols', '-h')):
+                with self.subTest(name=name, arguments=arguments):
+                    machine = Installer(self)
+                    status, output, errors = self.finished(
+                        machine, *arguments, environment={'CP_ADMIN_PASSWORD_FILE': name})
+                    self.assertEqual((0, ''), (status, errors))
+                    self.assertIn('will do minimal install', output)
+                    self.assertEqual([], machine.events())
+
+    def test_run_is_refused_before_it_starts(self):
+        for name in self.names():
+            with self.subTest(name=name):
+                machine = Installer(self)
+                status, output, errors = self.finished(
+                    machine, '-v', 'ols', environment={'CP_ADMIN_PASSWORD_FILE': name})
+                self.assertEqual(2, status)
+                if name == str(self.endless) and os.geteuid() == 0:
+                    self.assertIn(TOO_LONG, errors)
+                elif name == str(self.endless):
+                    self.assertIn(NOT_ROOT_ONLY, errors)
+                else:
+                    self.assertIn(NOT_A_FILE, errors)
+                self.assertEqual([], machine.events())
+                self.assertEqual([], machine.recorded(machine.phases))
 
 
 class RootOnlyTestsAreMarkedTests(unittest.TestCase):
