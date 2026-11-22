@@ -132,7 +132,7 @@ class WorkerTests(unittest.TestCase):
         models = SimpleNamespace(DockerSites=mock.Mock(), Websites=mock.Mock())
         models.Websites.objects.filter.return_value.count.return_value = exists
         models.Websites.objects.get.return_value = row
-        models.DockerSites.objects.count.return_value = 0
+        models.DockerSites.objects.values_list.return_value = []
         website = SimpleNamespace(WebsiteManager=manager or mock.Mock())
         login = SimpleNamespace(Administrator=mock.Mock())
         acl = mock.Mock()
@@ -145,6 +145,7 @@ class WorkerTests(unittest.TestCase):
                 mock.patch.object(docker_sites, 'randomPassword', mock.Mock(), create=True), \
                 mock.patch.object(docker_sites.logging, 'writeToFile'), \
                 mock.patch.object(docker_sites, 'Docker_Sites') as deployment:
+            deployment.web_server_config.return_value = ''
             result = real.SubmitDockersiteCreation(site)
         with open(status) as handle:
             written = handle.read()
