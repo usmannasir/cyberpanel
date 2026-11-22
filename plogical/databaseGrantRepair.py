@@ -71,6 +71,12 @@ def _move(cursor, stored, user, host):
         cursor.execute('REVOKE GRANT OPTION ON %s.* FROM %s' % (plain, holder), values)
     if _held(cursor, stored, user, host):
         raise RepairError('the plain grant is still there after the revoke')
+    if not _held(cursor, escaped, user, host):
+        # A server that read the revoke as a pattern took the exact grant with it: it is given again.
+        cursor.execute('GRANT %s ON %s.* TO %s%s' % (privileges, exact, holder, ' WITH GRANT OPTION' if option else ''),
+                       values)
+        if not _held(cursor, escaped, user, host):
+            raise RepairError('the exact grant did not stay after the revoke')
 
 
 def repair(cursor, registered):

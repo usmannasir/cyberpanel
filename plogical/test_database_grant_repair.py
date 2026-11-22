@@ -15,12 +15,12 @@ class Server:
     """Just enough of a database server: its grant table and the statements the repair sends."""
 
     def __init__(self, grants, schemas=(), registered=(), literal=False, hidden=(), stuck=(), refuse=None,
-                 folds=0, unstored=False):
+                 folds=0, unstored=False, sweeping=False):
         # grants: {(stored database, user, host): [privileges, with grant option]}
         self.grants = dict((key, list(value)) for key, value in grants.items())
         self.schemas, self.registered, self.literal = list(schemas), list(registered), literal
         self.hidden, self.stuck, self.refuse = set(hidden), set(stuck), refuse
-        self.folds, self.unstored = folds, unstored
+        self.folds, self.unstored, self.sweeping = folds, unstored, sweeping
         self.statements, self.rows = [], []
         self.lowest_cover = {}
 
@@ -64,6 +64,11 @@ class Server:
                     del self.grants[key]
                 else:
                     self.grants[key][0] = 'USAGE'
+                if self.sweeping:
+                    # A server that reads the name of a revoke as a pattern.
+                    for other in [other for other in self.grants if other[1:] == key[1:]
+                                  and databaseGrants.pattern_matches(key[0], other[0].replace('\\', ''))]:
+                        del self.grants[other]
             self.note_cover(holder)
 
     def note_cover(self, account):
@@ -182,6 +187,14 @@ class RepairTests(unittest.TestCase):
         result = repair(server, ['shop_db'])
         self.assertEqual([['shop_db', 'shop_user', 'localhost',
                            'RepairError: the plain grant is still there after the revoke']], result['failed'])
+
+    def test_exact_grant_that_a_revoke_took_along_is_given_again(self):
+        server = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False]}, sweeping=True)
+        result = repair(server, ['shop_db'])
+        self.assertEqual({('shop\\_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False]}, server.grants)
+        self.assertEqual([['shop_db', 'shop_user', 'localhost']], result['moved'])
+        self.assertEqual([], result['failed'])
+        self.assertEqual('GRANT ALL PRIVILEGES ON `shop\\_db`.* TO %s@%s', server.changes()[-1][0])
 
     def test_server_that_reads_names_literally_is_left_alone(self):
         server = Server({('shop_db', 'shop_user', 'localhost'): ['ALL PRIVILEGES', False]}, literal=True)

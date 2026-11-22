@@ -683,8 +683,10 @@ class IncJobs(multi.Thread):
                 command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
                 ProcessUtilities.executioner(command)
 
-                # Only the panel's account and root go in here.
-                command = 'chmod 700 %s' % (UploadPath)
+                # Website accounts read their own temporary files in this
+                # directory by name; nobody but the panel creates or lists
+                # files in it, and the dump itself is private.
+                command = 'chmod 711 %s' % (UploadPath)
                 ProcessUtilities.executioner(command)
 
                 ###
