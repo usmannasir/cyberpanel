@@ -163,6 +163,31 @@ class ConfigTestTests(unittest.TestCase):
         self.assertEqual(False, passed)
         self.assertIn('could not be run', output)
 
+    def test_time_limit_holds_when_something_left_the_group_with_the_output(self):
+        marker = tempfile.NamedTemporaryFile(prefix='apache-check-test-')
+        self.addCleanup(marker.close)
+        started = time.monotonic()
+        with mock.patch.object(checks, 'AFTER_END', 1), self.assertRaises(subprocess.TimeoutExpired):
+            checks.bounded_run(['/bin/sh', '-c', 'setsid sleep 20 & echo $! > %s; wait' % marker.name], 1)
+        elapsed = time.monotonic() - started
+        survivor = int(Path(marker.name).read_text())
+        try:
+            os.kill(survivor, 9)
+        except ProcessLookupError:
+            pass
+        self.assertLess(elapsed, 10)
+
+    def test_output_is_text_whatever_bytes_it_holds(self):
+        status, output = checks.bounded_run(['/bin/sh', '-c', r"printf 'caf\351 \303\251\n'"], 30)
+        self.assertEqual((0, 'caf\ufffd \u00e9\n'), (status, output))
+
+        def undecodable(command, timeout):
+            raise UnicodeDecodeError('ascii', b'\xe9', 0, 1, 'ordinal not in range(128)')
+
+        passed, output = checks.config_test(['/usr/sbin/httpd', '-t'], undecodable)
+        self.assertFalse(passed)
+        self.assertIn('/usr/sbin/httpd could not be run', output)
+
     def test_apache_is_installed_with_its_control_program(self):
         for present, family in (({'/usr/sbin/httpd'}, True),
                                 ({'/usr/sbin/apache2', '/usr/sbin/apache2ctl'}, False),
@@ -351,7 +376,7 @@ class ApacheWorker:
                         GenerateSelfSignedSSL=mock.Mock(), DecidePHPPath=self.pool_path,
                         configTest=self.apache.test, deletePHPPath=mock.Mock())
         self.checks = NS(account_problem=account_problem, apply_change=checks.apply_change, said=checks.said,
-                         with_proxy_backends=checks.with_proxy_backends, replace_file=checks.replace_file,
+                         correct_proxy_backends=checks.correct_proxy_backends,
                          vhost_accounts=checks.vhost_accounts,
                          unknown_accounts=lambda pairs: checks.unknown_accounts(pairs, getpwnam, getgrnam),
                          reopen_virtual_host=lambda path: checks.reopen_virtual_host(path, getpwnam, getgrnam),
@@ -480,6 +505,7 @@ class VirtualHostSetupTests(unittest.TestCase):
         text = worker.main.read_text()
         self.assertEqual('serverName example\n' + vhostConfs.proxyApacheBackend + vhostConfs.proxyApacheBackendSSL,
                          text)
+        worker.log.writeToFile.assert_not_called()
 
     def test_backends_point_at_the_ports_of_the_virtual_hosts(self):
         # Without SSL the virtual hosts are on 8083, with it on 8082.
@@ -490,33 +516,169 @@ class VirtualHostSetupTests(unittest.TestCase):
         self.assertRegex(vhostConfs.proxyApacheBackend, r'(?m)^\s*address\s+http://127\.0\.0\.1:8083$')
         self.assertRegex(vhostConfs.proxyApacheBackendSSL, r'(?m)^\s*address\s+https://127\.0\.0\.1:8082$')
 
+
+PAIR = (vhostConfs.proxyApacheBackend, vhostConfs.proxyApacheBackendSSL)
+BOTH = ''.join(PAIR).encode()
+# The pair an earlier upgrade wrote: the two ports exchanged.
+EXCHANGED = (b'\nextprocessor apachebackend {\n  type                    proxy\n'
+             b'  address                 127.0.0.1:8082\n  maxConns                100\n}\n'
+             b'\nextprocessor proxyApacheBackendSSL {\n  type                    proxy\n'
+             b'  address                 https://127.0.0.1:8083\n  maxConns                100\n}\n')
+EXCHANGED_REMOVED = [('apachebackend', '127.0.0.1:8082'), ('proxyApacheBackendSSL', 'https://127.0.0.1:8083')]
+
+
+class ProxyBackendTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(prefix='apache-backend-test-')
+        self.addCleanup(temp.cleanup)
+        self.main = Path(temp.name) / 'httpd_config.conf'
+        self.messages = []
+
     def test_repeated_and_exchanged_backends_of_earlier_releases_are_corrected(self):
-        exchanged = ('\nextprocessor apachebackend {\n  type                    proxy\n'
-                     '  address                 127.0.0.1:8082\n  maxConns                100\n}\n'
-                     '\nextprocessor proxyApacheBackendSSL {\n  type                    proxy\n'
-                     '  address                 https://127.0.0.1:8083\n  maxConns                100\n}\n')
-        tuned = vhostConfs.proxyApacheBackend.replace('maxConns                100', 'maxConns                400')
-        other = 'extprocessor lsphp83 {\n  type lsapi\n  address uds://tmp/lshttpd/lsphp.sock\n}\n'
-        pair = (vhostConfs.proxyApacheBackend, vhostConfs.proxyApacheBackendSSL)
-        for before, after in (
+        tuned = PAIR[0].replace('maxConns                100', 'maxConns                400').encode()
+        other = b'extprocessor lsphp83 {\n  type lsapi\n  address uds://tmp/lshttpd/lsphp.sock\n}\n'
+        for before, after, removed in (
                 # Once per website, as releases up to 3.0.12 wrote them.
-                ('listener x {\n}\n' + ''.join(pair) * 3 + other, 'listener x {\n}\n' + ''.join(pair) + other),
-                # The pair an earlier upgrade wrote, alone and beside a right pair.
-                ('a 1\n' + exchanged, 'a 1\n\n\n' + ''.join(pair)),
-                ('a 1\n' + exchanged + ''.join(pair), 'a 1\n\n\n' + ''.join(pair)),
+                (b'listener x {\n}\n' + BOTH * 3 + other, b'listener x {\n}\n' + BOTH + other, []),
+                # The exchanged pair, alone and beside a right pair.
+                (b'a 1\n' + EXCHANGED, b'a 1\n\n\n' + BOTH, EXCHANGED_REMOVED),
+                (b'a 1\n' + EXCHANGED + BOTH, b'a 1\n\n\n' + BOTH, EXCHANGED_REMOVED),
                 # A right block keeps what an administrator set in it.
-                (tuned + pair[0] + pair[1], tuned + pair[1]),
-                ('no final newline', 'no final newline\n' + ''.join(pair))):
+                (tuned + BOTH, tuned + PAIR[1].encode(), []),
+                (b'no final newline', b'no final newline\n' + BOTH, []),
+                (b'', BOTH, []),
+                # Names that only begin alike, and a comment, are other things.
+                (b'extprocessor apachebackend2 {\n  address 1.2.3.4:1\n}\n# extprocessor apachebackend {\n' + BOTH,
+                 b'extprocessor apachebackend2 {\n  address 1.2.3.4:1\n}\n# extprocessor apachebackend {\n' + BOTH,
+                 [])):
             with self.subTest(before=before[:30]):
-                self.assertEqual(after, checks.with_proxy_backends(before, *pair))
+                self.assertEqual((after, removed), checks.with_proxy_backends(before, *PAIR))
                 # Nothing is left to do a second time.
-                self.assertEqual(after, checks.with_proxy_backends(after, *pair))
-        worker = self.worker()
-        worker.main.write_text('serverName example\n' + exchanged + ''.join(pair) * 2)
-        worker.main.chmod(0o640)
-        self.assertEqual([1, 'None'], worker.vhost.enableProxyInMainConf())
-        self.assertEqual('serverName example\n\n\n' + ''.join(pair), worker.main.read_text())
-        self.assertEqual(0o640, stat.S_IMODE(worker.main.stat().st_mode))
+                self.assertEqual((after, []), checks.with_proxy_backends(after, *PAIR))
+
+    def test_a_brace_in_a_comment_or_value_does_not_end_a_block(self):
+        odd = (b'extprocessor apachebackend {\n  # was { 8082 } before\n  type proxy\n'
+               b'  address 127.0.0.1:8082\n  env X={a}\n}\n')
+        self.assertEqual((b'top 1\nend 2\n' + BOTH, [('apachebackend', '127.0.0.1:8082')]),
+                         checks.with_proxy_backends(b'top 1\n' + odd + b'end 2\n', *PAIR))
+
+    def test_every_other_byte_stays_as_it_is(self):
+        # Carriage returns, and bytes that are text in no encoding.
+        before = b'serverName caf\xe9\r\n' + EXCHANGED.replace(b'\n', b'\r\n') + b'tail \xff\xfe\r\n'
+        after = b'serverName caf\xe9\r\n\r\n\r\ntail \xff\xfe\r\n' + BOTH.replace(b'\n', b'\r\n')
+        self.assertEqual((after, EXCHANGED_REMOVED), checks.with_proxy_backends(before, *PAIR))
+        self.main.write_bytes(before)
+        self.main.chmod(0o640)
+        self.assertTrue(checks.correct_proxy_backends(str(self.main), PAIR, self.messages.append))
+        self.assertEqual(after, self.main.read_bytes())
+        self.assertEqual(0o640, stat.S_IMODE(self.main.stat().st_mode))
+        # The administrator is told which blocks went and why.
+        self.assertEqual(2, len(self.messages))
+        self.assertIn('Removed the extprocessor apachebackend block with the address 127.0.0.1:8082', self.messages[0])
+        self.assertIn('Apache listens for that backend on another port', self.messages[0])
+        self.assertFalse(checks.correct_proxy_backends(str(self.main), PAIR, self.messages.append))
+        self.assertEqual(2, len(self.messages))
+
+    def test_a_block_that_cannot_be_told_apart_leaves_the_file_as_it_is(self):
+        for text in (b'extprocessor apachebackend { type proxy }\n',
+                     b'extprocessor apachebackend {\n  type proxy\n',
+                     b'extprocessor apachebackend\n{\n  type proxy\n}\n',
+                     b'extprocessor proxyApacheBackendSSL {\n  sub {\n  type proxy\n}\n'):
+            with self.subTest(text=text):
+                with self.assertRaises(checks.UnreadableBackends):
+                    checks.with_proxy_backends(b'a 1\n' + text, *PAIR)
+                self.main.write_bytes(b'a 1\n' + text)
+                del self.messages[:]
+                self.assertFalse(checks.correct_proxy_backends(str(self.main), PAIR, self.messages.append))
+                self.assertEqual(b'a 1\n' + text, self.main.read_bytes())
+                self.assertEqual(1, len(self.messages))
+                self.assertIn('were left as they are', self.messages[0])
+
+    def upgrade(self, apply, running=lambda: True):
+        return checks.correct_proxy_backends_on_upgrade(str(self.main), PAIR, apply, running, self.messages.append)
+
+    def applying(self, calls):
+        def apply(changes):
+            (path, (before, after)), = changes.items()
+            calls.append(path)
+            self.assertEqual(Path(path).read_text(), before)
+            Path(path).write_text(after)
+        return apply
+
+    def test_upgrade_corrects_through_its_checked_change(self):
+        self.main.write_bytes(b'serverName example\n' + EXCHANGED + BOTH * 2)
+        calls = []
+        self.assertEqual('corrected', self.upgrade(self.applying(calls)))
+        self.assertEqual([str(self.main)], calls)
+        self.assertEqual(b'serverName example\n\n\n' + BOTH, self.main.read_bytes())
+        self.assertEqual(3, len(self.messages))
+        self.assertIn('Removed the extprocessor apachebackend block', self.messages[0])
+        self.assertIn('defined once each', self.messages[2])
+        del self.messages[:]
+        self.assertEqual('not needed', self.upgrade(self.applying(calls)))
+        self.assertEqual(([str(self.main)], []), (calls, self.messages))
+
+    def test_upgrade_leaves_a_server_without_the_backends_alone(self):
+        self.main.write_bytes(b'serverName example\n')
+        self.assertEqual('not needed', self.upgrade(lambda changes: self.fail('nothing to apply')))
+        self.assertEqual(b'serverName example\n', self.main.read_bytes())
+
+    def test_upgrade_goes_on_after_a_change_that_was_refused_and_undone(self):
+        before = b'serverName example\n' + BOTH * 2
+        self.main.write_bytes(before)
+
+        def refused(changes):
+            # Written, refused by OpenLiteSpeed, put back.
+            raise RuntimeError('OpenLiteSpeed configuration migration failed: validation failed')
+
+        self.assertEqual('refused', self.upgrade(refused))
+        self.assertEqual(before, self.main.read_bytes())
+        self.assertEqual(1, len(self.messages))
+        self.assertTrue(self.messages[0].startswith('WARNING: The Apache backends of OpenLiteSpeed were not '
+                                                    'corrected; the configuration is as it was: '))
+
+    def test_upgrade_stops_when_the_change_was_not_undone(self):
+        before = b'serverName example\n' + BOTH * 2
+        self.main.write_bytes(before)
+
+        def half(changes):
+            self.main.write_bytes(b'half written')
+            raise RuntimeError('OLS configuration restoration incomplete: x')
+
+        with self.assertRaisesRegex(RuntimeError, 'restoration incomplete'):
+            self.upgrade(half)
+        self.assertEqual([], self.messages)
+
+    def test_upgrade_stops_when_openlitespeed_was_left_stopped(self):
+        self.main.write_bytes(b'serverName example\n' + BOTH * 2)
+        states = iter([True, False])
+
+        def refused(changes):
+            raise RuntimeError('could not start OpenLiteSpeed again')
+
+        with self.assertRaisesRegex(RuntimeError, 'could not start'):
+            self.upgrade(refused, lambda: next(states))
+        self.assertEqual([], self.messages)
+
+    def test_upgrade_leaves_a_file_its_checked_change_would_not_keep_exactly(self):
+        for before in (b'serverName example\r\n' + BOTH * 2, b'serverName caf\xff\n' + BOTH * 2):
+            with self.subTest(before=before[:24]):
+                self.main.write_bytes(before)
+                del self.messages[:]
+                self.assertEqual('left', self.upgrade(lambda changes: self.fail('not to be applied')))
+                self.assertEqual(before, self.main.read_bytes())
+                self.assertEqual(1, len(self.messages))
+                self.assertIn('corrected when the next website is put on the Apache backend', self.messages[0])
+                # The worker keeps every byte and does correct it.
+                self.assertTrue(checks.correct_proxy_backends(str(self.main), PAIR))
+                self.assertEqual(before[:before.index(b'extprocessor')] + BOTH, self.main.read_bytes())
+
+
+class RestoredVirtualHostTests(unittest.TestCase):
+    def worker(self, distro='ubuntu'):
+        worker = ApacheWorker(distro)
+        self.addCleanup(worker.close)
+        return worker
 
     def test_virtual_host_of_a_backup_replaces_the_new_one_only_if_apache_accepts_it(self):
         worker = self.worker()
@@ -995,10 +1157,20 @@ class UpgradeRepairTests(unittest.TestCase):
         self.assertEqual([], checks.vhost_accounts(closed))
         for port in ('8083', '8082'):
             block = closed[closed.index('<VirtualHost *:%s>' % port):]
-            block = block[:block.index('</VirtualHost>')]
-            self.assertEqual(1, block.count(checks.DISABLED_LINE + 'SuexecUserGroup Examp1234 Examp1234\n'))
-            self.assertRegex(block, r'(?m)^\s*%s\n\s*<Location "/">\n\s*Require all denied\n\s*</Location>\n\s*%s\n'
-                             % (re.escape(checks.CLOSED_BEGIN), re.escape(checks.CLOSED_END)))
+            block = block[:block.index('</VirtualHost>')].splitlines()
+            lines = [line.strip() for line in block]
+            # The first thing in the block forbids every request where the
+            # URL is mapped, before any directory or .htaccess is looked at.
+            self.assertEqual([checks.CLOSED_BEGIN, '<IfModule mod_rewrite.c>', 'RewriteEngine On',
+                              'RewriteRule ^ - [F]', '</IfModule>', '<Location "/">', 'Require all denied',
+                              '</Location>', checks.CLOSED_END], lines[1:10])
+            self.assertEqual(1, lines.count(checks.DISABLED_LINE + 'SuexecUserGroup Examp1234 Examp1234'))
+            # No .htaccess is read: an <If> or a handler in one could
+            # otherwise lift a denial that only a <Location> made.
+            at = lines.index(checks.CLOSED_LINE + 'AllowOverride all')
+            self.assertEqual([checks.CLOSED_BEGIN, 'AllowOverride None', checks.CLOSED_END], lines[at + 1:at + 4])
+            self.assertEqual(['AllowOverride None'], [line for line in lines if line.startswith('AllowOverride')])
+            self.assertEqual([], [line for line in lines if line.lower().startswith('suexecusergroup')])
         self.assertEqual(0o640, stat.S_IMODE(bad.stat().st_mode))
         self.assertEqual(vhost_text('other1234', 'other.test'), self.good.read_text())
         # PHP-FPM cannot run a pool as a missing user: the pool is set aside
@@ -1139,7 +1311,8 @@ class UpgradeSourceTests(unittest.TestCase):
             call = called['repair_apache_backend']
             self.assertEqual('panel_domains', call.args[0].id)
             self.assertLess(call.lineno, called['fixApacheConfiguration'].lineno)
-            self.assertLess(called['with_proxy_backends'].lineno, called['fixApacheConfiguration'].lineno)
+            self.assertLess(called['correct_proxy_backends_on_upgrade'].lineno,
+                            called['fixApacheConfiguration'].lineno)
         self.assertEqual(1, found)
         for model in ('Websites', 'ChildDomains'):
             self.assertIn("%s.objects.values_list('domain', flat=True)" % model, self.text)
@@ -1150,6 +1323,12 @@ class UpgradeSourceTests(unittest.TestCase):
         self.assertNotRegex(self.text, r'address\s+https://127\.0\.0\.1:8083')
         self.assertEqual(2, self.text.count('vhostConfs.proxyApacheBackend,'))
         self.assertEqual(2, self.text.count('vhostConfs.proxyApacheBackendSSL)'))
+
+    def test_upgrade_does_not_go_on_after_a_failed_recovery_of_openlitespeed(self):
+        step = self.text[self.text.index('correct_proxy_backends_on_upgrade('):]
+        self.assertTrue(step[step.index('        except '):].startswith(
+            "        except OLSUpgradeFailure:\n            raise\n        except Exception as error:\n"
+            "            Upgrade.stdOut('WARNING: The Apache backends of OpenLiteSpeed were not corrected: '"))
 
 
 if __name__ == '__main__':

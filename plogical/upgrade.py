@@ -6019,20 +6019,19 @@ pm.max_spare_servers = 3
         # Earlier releases added the two Apache backends to OpenLiteSpeed's
         # main configuration again for every Apache website, and an earlier
         # upgrade could write them with the two ports exchanged.
+        # A change OpenLiteSpeed refuses is undone and only logged; a failure
+        # that left the configuration changed or OpenLiteSpeed stopped ends
+        # the upgrade, as in the other steps that change its configuration.
         try:
-            from ApachController.apacheConfigCheck import with_proxy_backends
+            from ApachController.apacheConfigCheck import correct_proxy_backends_on_upgrade, ols_running
             from plogical.vhostConfs import vhostConfs
             main_configuration = '/usr/local/lsws/conf/httpd_config.conf'
             if os.path.exists('/usr/local/lsws/bin/openlitespeed') and os.path.exists(main_configuration):
-                with open(main_configuration, 'r') as source:
-                    current = source.read()
-                if 'extprocessor apachebackend' in current or 'extprocessor proxyApacheBackendSSL' in current:
-                    corrected = with_proxy_backends(current, vhostConfs.proxyApacheBackend,
-                                                    vhostConfs.proxyApacheBackendSSL)
-                    if corrected != current:
-                        apply_ols_config_changes({main_configuration: (current, corrected)})
-                        Upgrade.stdOut('The Apache backends of OpenLiteSpeed are now defined once each, on the '
-                                       'ports Apache listens on.', 0)
+                correct_proxy_backends_on_upgrade(
+                    main_configuration, (vhostConfs.proxyApacheBackend, vhostConfs.proxyApacheBackendSSL),
+                    apply_ols_config_changes, ols_running, log=Upgrade.stdOut)
+        except OLSUpgradeFailure:
+            raise
         except Exception as error:
             Upgrade.stdOut('WARNING: The Apache backends of OpenLiteSpeed were not corrected: ' + str(error), 0)
 
@@ -6801,10 +6800,21 @@ pm.max_spare_servers = 3
                 
                 # The two backends as the panel defines them for a website:
                 # Apache listens on 8083 without SSL and on 8082 with it.
-                from ApachController.apacheConfigCheck import with_proxy_backends
+                import locale
+                from ApachController.apacheConfigCheck import with_proxy_backends, UnreadableBackends
                 from plogical.vhostConfs import vhostConfs
-                lsws_content = with_proxy_backends(lsws_content, vhostConfs.proxyApacheBackend,
-                                                   vhostConfs.proxyApacheBackendSSL)
+                config_encoding = locale.getpreferredencoding(False)
+                try:
+                    corrected_content, removed_backends = with_proxy_backends(
+                        lsws_content.encode(config_encoding), vhostConfs.proxyApacheBackend,
+                        vhostConfs.proxyApacheBackendSSL)
+                    lsws_content = corrected_content.decode(config_encoding)
+                    for backend_name, backend_address in removed_backends:
+                        print('Removing the extprocessor %s block with the address %s: Apache listens for '
+                              'that backend on another port.' % (backend_name, backend_address or 'none'))
+                except UnreadableBackends as error:
+                    print('The Apache backends were left as they are: the extprocessor block %s is not '
+                          'laid out as expected.' % error)
                 modified = lsws_content != original_lsws_content
 
                 if modified:
