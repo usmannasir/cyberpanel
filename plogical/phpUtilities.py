@@ -1,6 +1,7 @@
 import sys
 sys.path.append('/usr/local/CyberCP')
 from plogical import CyberCPLogFileWriter as logging
+import re
 import subprocess
 import shlex
 import _thread
@@ -427,32 +428,49 @@ class phpUtilities:
         if os.path.exists('/usr/local/CyberCP/debug'):
             logging.CyberCPLogFileWriter.writeToFile(f'VHFile in GetPHPVersion {vhFile}')
 
+        # The file is read with a fixed pattern and only the digits of its
+        # first match are used: the returned path is built here, whatever
+        # else the file holds.
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            command = f'grep -Eo "/usr/local/lsws/lsphp[0-9]+/bin/lsphp" {vhFile}'
-            result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
-
-            result = result.rsplit("lsphp", 1)[0] + "php"
-            return result
+            command = 'grep -Eo "/usr/local/lsws/lsphp[0-9]+/bin/lsphp" ' + shlex.quote(vhFile)
+            result = ProcessUtilities.outputExecutioner(command, None, True)
+            match = re.search(r'/usr/local/lsws/lsphp([0-9]{2,3})/bin/lsphp', str(result or ''))
+            if match is None:
+                return 'php'
+            return '/usr/local/lsws/lsphp%s/bin/php' % match.group(1)
 
         else:
-            command = f'grep -Po "php\d+" {vhFile} | head -n 1'
-            result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
-            result = f'/usr/local/lsws/ls{result}/bin/lsphp'
-            result = result.rsplit("lsphp", 1)[0] + "php"
-            return result
+            command = 'grep -Po "php\\d+" ' + shlex.quote(vhFile) + ' | head -n 1'
+            result = ProcessUtilities.outputExecutioner(command, None, True)
+            match = re.search(r'php([0-9]{2,3})(?![0-9])', str(result or ''))
+            if match is None:
+                return '/usr/local/lsws/ls/bin/php'
+            return '/usr/local/lsws/lsphp%s/bin/php' % match.group(1)
+
+    # The three places a website's PHP command can be: LiteSpeed PHP, Remi
+    # (Apache backend, RPM family) and the distribution's PHP (Debian, Ubuntu).
+    PHP_COMMAND_PATHS = (
+        re.compile(r'/usr/local/lsws/lsphp([0-9])([0-9]{1,2})/bin/php'),
+        re.compile(r'/opt/remi/php([0-9])([0-9]{1,2})/root/bin/php'),
+        re.compile(r'/usr/bin/php([0-9])\.([0-9]{1,2})'),
+    )
 
     ## returns something like PHP 8.2
     @staticmethod
     def WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile):
+        # The version is read from the digits in the path of the website's PHP
+        # command. Nothing found in a website's configuration is run.
         result = phpUtilities.GetPHPVersionFromFile(vhFile)
 
         if os.path.exists(ProcessUtilities.debugPath):
             logging.CyberCPLogFileWriter.writeToFile(result)
 
-        command = result + " -v 2>/dev/null | awk '/^PHP/ {print $2}'"
-        php_version = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')[:3]
+        for shape in phpUtilities.PHP_COMMAND_PATHS:
+            match = shape.fullmatch(str(result))
+            if match is not None:
+                return 'PHP %s.%s' % match.groups()
 
-        return f"PHP {php_version}"
+        return 'PHP '
 
     @staticmethod
     def FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion):
