@@ -2498,11 +2498,6 @@ Require valid-user
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-            if normalize_apache_backend(data.get('apacheBackend', 0)):
-                first_setup_error = apache_first_setup_error(currentACL, ApacheController.checkIfApacheInstalled())
-                if first_setup_error is not None:
-                    return first_setup_error
-
             try:
                 alias = data['alias']
             except:
@@ -2533,6 +2528,13 @@ Require valid-user
 
                 # The master's stored selection may have an older spelling.
                 phpSelection = normalized_php_selection(Websites.objects.get(domain=masterDomain).phpSelection)
+
+            # Checked here, where the backend that will really be used is
+            # known: an alias takes the Apache backend of its master.
+            if normalize_apache_backend(data.get('apacheBackend', 0)):
+                first_setup_error = apache_first_setup_error(currentACL, ApacheController.checkIfApacheInstalled())
+                if first_setup_error is not None:
+                    return first_setup_error
 
             php_selection_digits(phpSelection)
 

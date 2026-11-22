@@ -33,6 +33,7 @@ class ApacheController:
         php85Path = '/etc/opt/remi/php85/php-fpm.d/'
 
         serviceName = 'httpd'
+        apacheBinary = '/usr/sbin/httpd'
 
     else:
         serverRootPath = '/etc/apache2'
@@ -58,6 +59,13 @@ class ApacheController:
         php85Path = '/etc/php/8.5/fpm/pool.d/'
 
         serviceName = 'apache2'
+        apacheBinary = '/usr/sbin/apache2'
+
+    # The PHP-FPM pool directories of the versions a website on the Apache
+    # backend can use. The set-up installs every one of them that the
+    # distribution's PHP archive offers.
+    fpmPoolPaths = (php54Path, php55Path, php56Path, php70Path, php71Path, php72Path, php73Path, php74Path,
+                    php80Path, php81Path, php82Path, php83Path, php84Path, php85Path)
 
     mpmConfigs = """# Select the MPM module which should be used by uncommenting exactly
 # one of the following LoadModule lines:
@@ -91,48 +99,19 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
     @staticmethod
     def checkIfApacheInstalled():
+        # Set up means that Apache itself is installed and at least one of
+        # the PHP-FPM versions has its pool directory. No single version is
+        # asked for: which ones the set-up could install depends on the PHP
+        # archive of the distribution (Ubuntu 20.04 is offered no PHP 8.0),
+        # and an administrator may have removed one. The page checks and the
+        # workers both ask here, so they agree on when the set-up runs.
         try:
-            if os.path.exists(ApacheController.php80Path):
-                return 1
-            else:
+            if not os.path.exists(ApacheController.apacheBinary):
                 return 0
-
-            # if os.path.exists(ApacheVhost.php54Path):
-            #     pass
-            # else:
-            #     return 0
-            #
-            # if os.path.exists(ApacheVhost.php55Path):
-            #     pass
-            # else:
-            #     return 0
-            #
-            # if os.path.exists(ApacheVhost.php56Path):
-            #     pass
-            # else:
-            #     return 0
-            #
-            # if os.path.exists(ApacheVhost.php70Path):
-            #     pass
-            # else:
-            #     return 0
-            #
-            # if os.path.exists(ApacheVhost.php71Path):
-            #     pass
-            # else:
-            #     return 0
-            #
-            # if os.path.exists(ApacheVhost.php72Path):
-            #     pass
-            # else:
-            #     return 0
-            #
-            # if os.path.exists(ApacheVhost.php73Path):
-            #     return 1
-            # else:
-            #     return 0
-
-
+            for poolPath in ApacheController.fpmPoolPaths:
+                if os.path.isdir(poolPath):
+                    return 1
+            return 0
         except BaseException as msg:
             message = "%s. [%s]" % (str(msg), '[ApacheController.checkIfApacheInstalled]')
             logging.CyberCPLogFileWriter.writeToFile(message)
