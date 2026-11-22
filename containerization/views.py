@@ -149,11 +149,24 @@ def saveWebsiteLimits(request):
         except:
             enforce = False
 
+        ## The limits become part of commands and of a configuration file that
+        ## root runs and reads, so each must be the plain number it stands for.
+
+        for value in (cpuPers, IO, IOPS, memory, networkSpeed):
+            if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 1000000000:
+                return httpProc.AJAX(0, 'Limits must be whole numbers.')
+
+        if networkHandle not in ('kbit', 'mbit', 'gbit', 'kbps', 'mbps'):
+            return httpProc.AJAX(0, 'Unknown unit for the network speed.')
+
         if cpuPers > 100:
             return httpProc.AJAX(0, 'CPU Percentage can not be greater then 100%')
 
         website = Websites.objects.get(domain=domain)
         websiteLimits = ContainerLimits.objects.get(owner=website)
+
+        ## The name of the configuration file comes from the stored website.
+        domain = website.domain
 
 
         if enforce == True:
