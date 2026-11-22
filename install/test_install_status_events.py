@@ -7,6 +7,7 @@ import os
 import re
 import signal
 import stat
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -137,6 +138,75 @@ class SuccessfulRunTests(unittest.TestCase):
         machine.run('-v', 'ols')
         self.assertEqual(['Starting installation..,1', 'Initialization completed..,2', 'Completed [200]'],
                          [line for line in machine.install_log.read_text().splitlines() if line])
+
+
+class NoRunTests(unittest.TestCase):
+    """Help and a command line that cannot be read touch nothing."""
+
+    def assert_untouched(self, machine):
+        self.assertEqual([], machine.event_lines())
+        self.assertEqual([], machine.recorded(machine.calls))
+        self.assertEqual([], machine.recorded(machine.phases))
+        self.assertFalse(machine.install_log.exists())
+
+    def test_help_ends_with_status_zero_before_anything_is_checked(self):
+        for arguments in (['help'], ['-h'], ['--help'], ['-v', 'ols', '--help'], ['-m', '-h']):
+            with self.subTest(arguments=arguments):
+                machine = Installer(self)
+                result = machine.run(*arguments)
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertIn('CyberPanel Installer Script Help', result.stdout)
+                self.assert_untouched(machine)
+
+    def test_unreadable_command_line_ends_with_status_two(self):
+        for arguments in (['--frobnicate'], ['-v', 'ols', 'extra'], ['-v'], ['-v', 'ols', '-x'],
+                          ['-m', 'nginx']):
+            with self.subTest(arguments=arguments):
+                machine = Installer(self)
+                result = machine.run(*arguments)
+                self.assertEqual(2, result.returncode, result.stdout + result.stderr)
+                self.assertIn('CyberPanel Installer Script Help', result.stdout)
+                self.assert_untouched(machine)
+
+    def test_usage_check_and_argument_reader_agree(self):
+        functions, _ = script_parts()
+        reader = functions[functions.index('\nCheck_Usage() {'):functions.index('\nArgument_Mode() {')]
+        helpers = ''.join(
+            re.search(r'^%s\(\) \{\n.*?^\}\n' % name, functions, re.M | re.S).group(0)
+            for name in ('Fail_Install', 'Leave_Install', 'Branch_Check', 'Named_Components')
+            if re.search(r'^%s\(\) \{' % name, functions, re.M))
+        cases = {
+            (): (0, 0), ('--debug',): (0, 0), ('default',): (0, 0), ('default', 'junk'): (0, 0),
+            ('-v', 'ols'): (0, 0), ('--version', 'OLS', '--addons', '--mirror'): (0, 0),
+            ('-v', 'ols', '-p', 'r'): (0, 0), ('-v', 'ols', '-p'): (0, 0),
+            ('-v', 'ols', '-m', 'postfix', 'powerdns'): (0, 0),
+            ('-v', 'ols', '-b', '2.4.4'): (0, 0),
+            ('help',): ('help', 0), ('-h',): ('help', 0), ('-a', '--help'): ('help', 0),
+            ('-v',): (2, 2), ('-x',): (2, 2), ('-v', 'ols', 'what'): (2, 2),
+            # A value that cannot be used is found by the reader alone.
+            ('-v', 'ols', '-p', 'short'): (0, 2), ('-v', 'ols', '-b', 'junk'): (0, 2),
+            ('-v', 'ols', '-b', '1.0.0'): (0, 2),
+        }
+        for arguments, (usage, reading) in cases.items():
+            with self.subTest(arguments=arguments):
+                script = ('Show_Help() { echo HELP; }\nlog_function_start() { :; }\nDebug_Log2() { :; }\n'
+                          'Base_Number="1.9.3"\ntrap \'echo "REASON=$Install_Fail_Code"\' EXIT\n'
+                          + helpers + reader)
+                outcomes = []
+                for function in ('Check_Usage', 'Check_Argument'):
+                    result = subprocess.run(['bash', '-c', script + '\n%s "$@"\necho CONTINUES\n' % function,
+                                             'bash'] + list(arguments),
+                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                            universal_newlines=True, timeout=20)
+                    self.assertEqual('', result.stderr)
+                    if 'HELP' in result.stdout and result.returncode == 0:
+                        self.assertNotIn('CONTINUES', result.stdout)
+                        outcomes.append('help')
+                    else:
+                        self.assertEqual(result.returncode == 0, 'CONTINUES' in result.stdout)
+                        outcomes.append(result.returncode)
+                self.assertEqual(usage, outcomes[0])
+                self.assertEqual('help' if usage == 'help' else reading, outcomes[1])
 
 
 class FailedRunTests(unittest.TestCase):

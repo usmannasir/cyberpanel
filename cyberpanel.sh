@@ -929,6 +929,47 @@ echo -e "\nsh <(curl cyberpanel.sh) -v LICENSE_KEY -a -p my_pass_word"
 echo -e "\nThis will install LiteSpeed Enterise , replace LICENSE_KEY to actual license key and set password to my_pass_word\n"
 }
 
+Check_Usage() {
+# Answers from the arguments alone, before the server is looked at or anything
+# on it is changed: a request for help ends here with status 0, a command line
+# that cannot be understood with status 2. Neither starts an installation, so
+# neither is recorded as one. The options are those of Check_Argument.
+if [[ "${1:-}" = "help" ]]; then
+  Show_Help
+  exit 0
+elif [[ "${1:-}" = "default" ]]; then
+  return 0
+fi
+while [[ -n "${1:-}" ]]; do
+  case $1 in
+  -h | --help)
+    Show_Help
+    exit 0
+  ;;
+  -v | --version)
+    shift
+    if [[ "${1:-}" = "" ]]; then
+      Show_Help
+      exit 2
+    fi
+  ;;
+  -p | --password | -b | --branch)
+    shift
+  ;;
+  -m | --minimal | -a | --addons | --debug | --mirror)
+  ;;
+  *)
+    if [[ "${1^^}" != *"POSTFIX"* ]] && [[ "${1^^}" != *"PUREFTPD"* ]] && [[ "${1^^}" != *"POWERDNS"* ]] ; then
+      echo -e "\nUnknown argument...\n"
+      Show_Help
+      exit 2
+    fi
+  ;;
+  esac
+  shift
+done
+}
+
 Check_Argument() {
 log_function_start "Check_Argument" "$@"
 if  [[ "$#" = "0" ]] || [[ "$#" = "1" && "$1" = "--debug" ]] || [[ "$#" = "1" && "$1" = "--mirror" ]]; then
@@ -2932,6 +2973,8 @@ sed -i 's|wp plugin install litespeed-cache|wp plugin install  https://cyberpane
 sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 }
+
+Check_Usage "$@"
 
 echo -e "\nInitializing...\n"
 log_info "============================================="
