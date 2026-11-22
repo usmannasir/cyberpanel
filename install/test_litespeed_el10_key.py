@@ -146,24 +146,55 @@ class LiteSpeedEL10KeyTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
-            call_log = directory / 'ip-checks'
+            call_log = directory / 'requests'
+            # Debug_Log2 asks for the address with curl when it does not know
+            # it, and posts the progress line with curl. Both are recorded
+            # here instead of being sent; nothing leaves this machine.
             harness = (
-                'Check_Server_IP() { printf called >> "$CALL_LOG"; }\n'
-                'curl() { :; }\n'
+                'curl() {\n'
+                '  printf "%s\\n" "$*" >> "$CALL_LOG"\n'
+                '  case "$*" in *cyberpanel.sh/?ip*) printf "%s" "$LOOKUP_ANSWER" ;; esac\n'
+                '}\n'
                 f'{function}\n'
                 'Debug_Log2 "Installing components,10"\n'
+                'Debug_Log2 "Installing more components,20"\n'
             )
-            environment = os.environ.copy()
-            environment.update({
+            environment = {
+                'PATH': os.environ['PATH'],
                 'CALL_LOG': str(call_log),
                 'INSTALL_LOG': str(directory / 'install.log'),
-                'Server_IP': '192.0.2.10',
-            })
-            subprocess.run(
-                ['bash', '-c', harness], check=True, env=environment
-            )
+                'LOOKUP_ANSWER': '192.0.2.20',
+            }
 
-            self.assertFalse(call_log.exists())
+            def requests(**variables):
+                if call_log.exists():
+                    call_log.unlink()
+                subprocess.run(
+                    ['bash', '-c', harness], check=True, env=dict(environment, **variables)
+                )
+                lines = call_log.read_text().splitlines()
+                lookups = [line for line in lines if 'cyberpanel.sh/?ip' in line]
+                posts = [line for line in lines if 'servers/RecvData' in line]
+                self.assertEqual(len(lines), len(lookups) + len(posts))
+                return lookups, posts
+
+            # The address is known: it is used, and not asked for again.
+            lookups, posts = requests(Server_IP='192.0.2.10')
+            self.assertEqual([], lookups)
+            self.assertEqual(2, len(posts))
+            self.assertTrue(all('"ipAddress": "192.0.2.10"' in post for post in posts))
+
+            # The address is not known: asked for once, then reused.
+            lookups, posts = requests()
+            self.assertEqual(1, len(lookups))
+            self.assertEqual(2, len(posts))
+            self.assertTrue(all('"ipAddress": "192.0.2.20"' in post for post in posts))
+
+            # No usable answer: nothing is taken for an address, and the next
+            # progress line asks again.
+            lookups, posts = requests(LOOKUP_ANSWER='<html>busy</html>')
+            self.assertEqual(2, len(lookups))
+            self.assertTrue(all('"ipAddress": ""' in post for post in posts))
 
 
 if __name__ == '__main__':
