@@ -6,7 +6,7 @@ import sys
 import django
 
 from databases.models import Databases
-from plogical.DockerSites import Docker_Sites, DOCKER_APPS
+from plogical.DockerSites import Docker_Sites, DOCKER_APPS, n8n_password_problem
 from plogical.httpProc import httpProc
 
 sys.path.append('/usr/local/CyberCP')
@@ -7831,6 +7831,18 @@ StrictHostKeyChecking no
                              'error_message': f"Minimum site ram for {App} should be {AppMeta['minSiteRam']}MB."}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
+
+            ## The email and password become the n8n owner account, which the panel
+            ## creates itself, so n8n has to be able to accept them.
+
+            if App == 'n8n':
+                problem = n8n_password_problem(WPpasswd)
+                if problem is None and not (isinstance(WPemal, str) and validators.email(WPemal)):
+                    problem = 'n8n needs a valid administrator email address.'
+                if problem is not None:
+                    final_dic = {'status': 0, 'error_message': problem}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
 
 
             pattern = r"^[a-z0-9][a-z0-9]*$"

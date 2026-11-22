@@ -448,6 +448,11 @@
                         {% trans "Hermes Agent stores everything in its own data volume and needs no database. The username and password below become the login for the Hermes dashboard on your domain. Add your model provider API key from inside the dashboard once it is up." %}
                     </div>
 
+                    <div ng-show="App === 'n8n'" class="info-box" style="margin-bottom: 20px;">
+                        <i class="fas fa-info-circle"></i>
+                        {% trans "The email and password below become the n8n owner account, which is created for you before the site goes online. The password needs 8 to 64 characters with at least one number and one uppercase letter." %}
+                    </div>
+
                     <div class="form-group">
                         <div class="form-row">
                             <label class="form-label">{% trans "Admin Username" %}</label>

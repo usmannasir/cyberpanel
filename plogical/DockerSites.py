@@ -101,6 +101,9 @@ def site_directory_name(domain):
 ## compose    -> Docker_Sites method that renders the compose file (None when the
 ##               deployment function writes its own compose content inline)
 ## minSiteRam -> minimum RAM (MB) the application container needs to run
+## firstRun   -> optional Docker_Sites method that completes the application's own
+##               first-run setup after its containers are up and before the website
+##               is pointed at them
 
 DOCKER_APPS = {
     'WordPress': {
@@ -116,6 +119,7 @@ DOCKER_APPS = {
         'deploy': 'DeployN8NContainer',
         'compose': 'generate_compose_config',
         'minSiteRam': 256,
+        'firstRun': 'create_n8n_owner',
     },
     'Hermes': {
         'siteType': 4,
@@ -125,6 +129,23 @@ DOCKER_APPS = {
         'minSiteRam': 2048,
     },
 }
+
+
+N8N_PASSWORD_RULE = ('n8n needs an administrator password of 8 to 64 characters '
+                     'with at least one number and one uppercase letter.')
+
+
+def n8n_password_problem(password):
+    """Say what n8n would refuse about an owner password, or None.
+
+    n8n applies this rule when its owner account is created. The creation page
+    applies it first so that the customer hears about it at once and not after
+    the containers have been started and removed again.
+    """
+    if (not isinstance(password, str) or not 8 <= len(password) <= 64
+            or not re.search('[0-9]', password) or not re.search('[A-Z]', password)):
+        return N8N_PASSWORD_RULE
+    return None
 
 
 class DockerDeploymentError(Exception):
@@ -1442,6 +1463,12 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                     raise DockerDeploymentError("Containers failed to reach healthy state", self.ERROR_CONTAINER_FAILED)
                 logging.statusWriter(self.JobID, 'Containers healthy...,70')
 
+                # The website is pointed at the containers only after the
+                # application has been given its administrator.
+                if meta.get('firstRun'):
+                    getattr(self, meta['firstRun'])()
+                    logging.statusWriter(self.JobID, f'{app} administrator created...,75')
+
                 # Setup proxy
                 execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
                 execPath = execPath + f" SetupProxy --port {self.data['port']}"
@@ -1483,6 +1510,53 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
                 
         logging.statusWriter(self.JobID, f'Deployment failed after {max_retries} attempts [404]')
         return False
+
+    def create_n8n_owner(self, attempts=150, delay=2):
+        """
+        Create the n8n owner account with the credentials from the creation page.
+
+        A new n8n instance gives its owner account to the first caller of its
+        setup address. The container is published on 127.0.0.1 only and the
+        website does not proxy to it yet, so that caller is the panel. Anything
+        but a created owner fails the deployment, and a failed deployment is
+        removed: an instance that somebody else has claimed is never published.
+        """
+        import requests
+
+        # n8n takes a name of up to 32 characters and refuses one that looks like
+        # markup or an address, which a user name with a dot in it does.
+        name = re.sub(r'[^\w -]', '', str(self.data.get('adminUser') or '')).strip()[:32]
+
+        owner = {
+            'email': self.data['adminEmail'],
+            'firstName': name or 'Administrator',
+            'lastName': 'Admin',
+            'password': self.data['adminPassword'],
+        }
+        url = 'http://127.0.0.1:%s/rest/owner/setup' % int(self.data['port'])
+
+        session = requests.Session()
+        session.trust_env = False
+
+        for _ in range(attempts):
+            try:
+                response = session.post(url, json=owner, timeout=30)
+                answer = response.json()
+            except (requests.RequestException, ValueError):
+                # Not listening yet, or still answering every address with its
+                # "n8n is starting up" page.
+                time.sleep(delay)
+                continue
+
+            if response.status_code == 200 and isinstance(answer, dict) and isinstance(answer.get('data'), dict):
+                logging.writeToFile('n8n owner account created for %s' % self.data['finalURL'])
+                return True
+
+            reason = answer.get('message') if isinstance(answer, dict) else None
+            raise DockerDeploymentError('n8n did not accept the administrator account: %s' % (
+                reason or 'HTTP %s' % response.status_code))
+
+        raise DockerDeploymentError('n8n did not become ready to create its administrator account.')
 
     def generate_compose_config(self):
         """
@@ -1600,7 +1674,7 @@ services:
       - N8N_PROTOCOL={n8n_config['environment']['N8N_PROTOCOL']}
       - N8N_SECURE_COOKIE={n8n_config['environment']['N8N_SECURE_COOKIE']}
     ports:
-      - "{self.data['port']}:5678"
+      - "127.0.0.1:{self.data['port']}:5678"
     depends_on:
       - {self.data['ServiceName']}-db
     volumes:
