@@ -363,6 +363,18 @@
                                     <li><code>user_[0-9]+</code> - {% trans "Matches user_ followed by digits" %}</li>
                                     <li><code>support-(sales|billing)</code> - {% trans "Matches support-sales or support-billing" %}</li>
                                     <li>{% trans "Note: Pattern is matched against the local part only (before @)" %}</li>
+                                    <li>{% trans "Repeats are limited: one of * + ? or a count such as {2,4} cannot follow another, a count cannot follow a group, and the counts of a pattern may add up to 16 at most." %}</li>
+                                </ul>
+                            </div>
+
+                            <div class="help-text">
+                                <h4><i class="fas fa-sort-amount-down"></i> {% trans "Which Rule Applies" %}</h4>
+                                <ul>
+                                    <li>{% trans "An exact forwarding and an existing mailbox for the address always come before a pattern." %}</li>
+                                    <li>{% trans "Among patterns that match, the rule with the lowest priority number is used." %}</li>
+                                    <li>{% trans "A pattern comes before the catch-all of the domain." %}</li>
+                                    <li>{% trans "With plus-addressing enabled on the mail server, a tagged address such as user+tag is compared with the patterns before the mailbox user is tried, so a broad pattern such as * also receives tagged mail of existing mailboxes." %}</li>
+                                    <li>{% trans "A domain can have 20 rules and a pattern can be 100 characters long." %}</li>
                                 </ul>
                             </div>
 
@@ -426,7 +438,13 @@
                                             {$ rule.pattern_type $}
                                         </span>
                                     </td>
-                                    <td><code ng-bind="rule.pattern"></code>@{$ selectedDomain $}</td>
+                                    <td>
+                                        <code ng-bind="rule.pattern"></code>@{$ selectedDomain $}
+                                        <span class="pattern-type-badge type-regex" ng-if="!rule.enabled"
+                                              title="{% trans 'The mail server does not use this rule.' %}">
+                                            <i class="fas fa-ban"></i> {% trans "Not in use" %}
+                                        </span>
+                                    </td>
                                     <td ng-bind="rule.destination"></td>
                                     <td>
                                         <button type="button" ng-click="deleteRule(rule.id)" class="btn-danger">

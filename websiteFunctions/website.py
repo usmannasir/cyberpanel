@@ -28,6 +28,7 @@ from django.shortcuts import HttpResponse, render, redirect
 from loginSystem.models import Administrator, ACL
 from packages.models import Package
 from plogical.mailUtilities import mailUtilities
+from plogical import patternForwardingMap
 from random import randint
 import time
 import re
@@ -303,6 +304,8 @@ class WebsiteManager:
                         staging_records.delete()  # Delete WPStaging records
                         WPDelete.delete()         # Delete WPSites record
                         staging_website.delete()  # Delete Websites record
+                        # Its pattern forwarding rules went with its mail domains; Postfix's map follows.
+                        patternForwardingMap.rebuild_after_removal()
                     else:
                         # Regular WP site deletion
                         WPDelete.delete()
@@ -383,6 +386,8 @@ class WebsiteManager:
 
                 # Delete the staging Websites record
                 staging_website.delete()
+                # Its pattern forwarding rules went with its mail domains; Postfix's map follows.
+                patternForwardingMap.rebuild_after_removal()
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(f"Error cleaning up WP/Staging sites: {str(msg)}")

@@ -2394,6 +2394,21 @@ protocol sieve {
 
             domainObj = Domains.objects.get(domain=domain)
 
+            # Postfix tries every rule of the server for every recipient, so their number is limited.
+            if PatternForwarding.objects.filter(domain=domainObj, enabled=True).count() >= \
+                    patternForwardingMap.MAX_RULES_PER_DOMAIN:
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'A domain can have %s pattern forwarding rules. Delete one first.'
+                                             % patternForwardingMap.MAX_RULES_PER_DOMAIN}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            if PatternForwarding.objects.filter(enabled=True).count() >= patternForwardingMap.MAX_RULES:
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'This server has reached its limit of %s pattern forwarding rules.'
+                                             % patternForwardingMap.MAX_RULES}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             # Create pattern rule
             rule = PatternForwarding(
                 domain=domainObj,
@@ -2411,7 +2426,8 @@ protocol sieve {
             if refusal:
                 rule.delete()
                 data_ret = {'status': 0, 'createStatus': 0,
-                            'error_message': 'The rule was not created. ' + refusal}
+                            'error_message': 'The rule was not created. ' + refusal
+                                             + self._settlePatternForwarding(result)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -2461,7 +2477,8 @@ protocol sieve {
                 # Postfix still follows the rule, so it stays in the list.
                 PatternForwarding(domain=domainObj, **removed).save()
                 data_ret = {'status': 0, 'deleteStatus': 0,
-                            'error_message': 'The rule was not deleted. ' + self._patternRuleRefusal(result, None)}
+                            'error_message': 'The rule was not deleted. ' + self._patternRuleRefusal(result, None)
+                                             + self._settlePatternForwarding(result)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -2492,6 +2509,20 @@ protocol sieve {
             logging.CyberCPLogFileWriter.writeToFile(
                 str(result.get('error_message')) + ' [applyPatternForwarding]')
         return result
+
+    def _settlePatternForwarding(self, result):
+        """After a failed update, once the rule list is as it was: make sure the map agrees with it.
+
+        The helper puts the previous map back when a step fails and says so.
+        Where it did not say so (it gave no answer, or could not put the map
+        back) it is run once more, now for the corrected list. Returns a
+        sentence for the error message; empty when list and map agree.
+        """
+        if result.get('status') or result.get('map_unchanged'):
+            return ''
+        if self._applyPatternForwarding().get('status'):
+            return ''
+        return ' The mail server may not follow the rules listed here until a rule is next created or deleted.'
 
     def _patternRuleRefusal(self, result, ruleId):
         """Why Postfix does not have the rule after the helper ran, or None when it has."""

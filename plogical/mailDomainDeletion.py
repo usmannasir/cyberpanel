@@ -3,6 +3,7 @@ from django.db import transaction
 from mailServer.models import Domains, EUsers
 from websiteFunctions.models import Websites, ChildDomains
 from plogical import storageQuota
+from plogical import patternForwardingMap
 
 
 def delete_mailbox(email, authorize=None):
@@ -35,3 +36,5 @@ def delete_mailbox(email, authorize=None):
         mailbox.delete()
         if not retain_domain and not EUsers.objects.select_for_update().filter(emailOwner_id=domain.pk).exists():
             domain.delete()
+            # Its pattern forwarding rules went with it; Postfix's map follows once this is committed.
+            patternForwardingMap.rebuild_after_removal()

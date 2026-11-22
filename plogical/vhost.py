@@ -26,6 +26,7 @@ from managePHP.phpConfig import normalized_php_selection, php_selection_digits
 from plogical.vhostConfs import vhostConfs
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.domainAliasUtilities import add_https_alias_mapping
+from plogical import patternForwardingMap
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites, WPSites, WPStaging
     from databases.models import Databases
@@ -566,6 +567,8 @@ class vhost:
                             raise RuntimeError('Failed to remove a website database; panel metadata retained.')
 
                     delWebsite.delete()
+                    # Its pattern forwarding rules went with its mail domains; Postfix's map follows.
+                    patternForwardingMap.rebuild_after_removal()
 
 
                 if not os.path.exists(vhost.redisConf):
@@ -663,6 +666,8 @@ class vhost:
                             raise RuntimeError('Failed to remove a website database; panel metadata retained.')
 
                     delWebsite.delete()
+                    # Its pattern forwarding rules went with its mail domains; Postfix's map follows.
+                    patternForwardingMap.rebuild_after_removal()
 
 
                 installUtilities.installUtilities.reStartLiteSpeed()

@@ -34,6 +34,7 @@ from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
 from plogical.domainAliasUtilities import add_http_alias_mapping, remove_alias_from_map_line
+from plogical import patternForwardingMap
 
 try:
     from websiteFunctions.models import Websites, ChildDomains, aliasDomains, WPSites, WPStaging
@@ -1908,6 +1909,8 @@ class virtualHostUtilities:
                     raise ValueError('Could not remove the child domain files: %s' % output)
 
             delWebsite.delete()
+            # Its pattern forwarding rules went with its mail domain; Postfix's map follows.
+            patternForwardingMap.rebuild_after_removal()
             installUtilities.installUtilities.reStartLiteSpeed()
 
             try:

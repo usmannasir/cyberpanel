@@ -1596,14 +1596,19 @@ LogFile /var/log/clamav/clamav.log
         """
         from plogical import patternForwardingMap
         try:
-            from django.db import connection
-
-            def savedRules():
-                with connection.cursor() as cursor:
-                    return patternForwardingMap.read_rules(cursor)
-
-            result = patternForwardingMap.apply(savedRules)
+            result = patternForwardingMap.apply_saved_rules()
             result['status'] = 1
+            for refused in result['rejected']:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Pattern forwarding rule %s is not in use: %s [applyPatternForwarding]'
+                    % (refused['id'], refused['reason']))
+            if result.get('unmarked'):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'Rules that are not in use could not be marked: %s [applyPatternForwarding]'
+                    % result['unmarked'])
+        except patternForwardingMap.MapError as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [applyPatternForwarding]')
+            result = {'status': 0, 'error_message': str(msg), 'map_unchanged': msg.unchanged}
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [applyPatternForwarding]')
             result = {'status': 0, 'error_message': str(msg)}
