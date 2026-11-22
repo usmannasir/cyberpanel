@@ -21,11 +21,12 @@ import plogical.randomPassword as randomPassword
 from plogical.httpProc import httpProc
 from backup.models import DBUsers
 from plogical.securityUtils import is_safe_sql_identifier
+from plogical import databaseAccounts
 import re
 
 # MySQL host literal: IPs, hostnames, CIDR and the '%' wildcard are valid, but
 # never quotes/spaces/semicolons that could break out of the '...'@'host' literal.
-_MYSQL_HOST_RE = re.compile(r"^[A-Za-z0-9_.:%/-]{1,255}$")
+_MYSQL_HOST_RE = re.compile(r"[A-Za-z0-9_.:%/-]{1,255}")
 
 
 def website_database_prefix(domain):
@@ -92,6 +93,12 @@ class DatabaseManager:
             if not is_safe_sql_identifier(dbName) or not is_safe_sql_identifier(dbUsername):
                 data_ret = {'status': 0, 'createDBStatus': 0,
                             'error_message': 'Database name and username may only contain letters, numbers, and underscores.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if not isinstance(dbPassword, str) or not dbPassword:
+                data_ret = {'status': 0, 'createDBStatus': 0,
+                            'error_message': 'A database password is required.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -213,7 +220,14 @@ class DatabaseManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            result = mysqlUtilities.submitDBDeletion(dbName)
+            # The database server tells names apart by case; the registration is the name to act on.
+            if db.dbName != dbName:
+                data_ret = {'status': 0, 'deleteStatus': 0,
+                            'error_message': 'Invalid database name.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            result = mysqlUtilities.submitDBDeletion(db.dbName)
 
             if result[0] == 1:
                 data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': "None"}
@@ -236,6 +250,28 @@ class DatabaseManager:
         proc = httpProc(request, template, {'AllWebsites': AllWebsites}, 'listDatabases')
         return proc.render()
 
+    @staticmethod
+    def ownedDatabaseUser(userName, admin, currentACL):
+        """The databases registered with exactly this user, when the caller manages every one of them.
+
+        Returns (databases, None), or (None, reason) where reason is 'unauthorized'
+        or a sentence for the customer.
+        """
+        databases = databaseAccounts.registered_databases(userName)
+        if not databases:
+            return None, 'unauthorized'
+        for database in databases:
+            if ACLManager.checkOwnership(database.website.domain, admin, currentACL) != 1:
+                return None, 'unauthorized'
+        refusal = databaseAccounts.account_refusal(databases[0].dbUser)
+        if refusal is not None:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Database %s is registered with a user the panel does not act on (%s). '
+                'Give the database a user of its own. [databases]' % (databases[0].dbName, refusal))
+            return None, ('This database is registered with a user name the panel does not change. '
+                          'Ask the administrator to give the database a user of its own.')
+        return databases, None
+
     def changePassword(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -252,22 +288,24 @@ class DatabaseManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            db = Databases.objects.filter(dbUser=userName)
+            if not isinstance(dbPassword, str) or not dbPassword:
+                data_ret = {'status': 0, 'changePasswordStatus': 0,
+                            'error_message': 'A database password is required.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadErrorJson()
+            databases, refusal = DatabaseManager.ownedDatabaseUser(userName, admin, currentACL)
+            if databases is None:
+                if refusal == 'unauthorized':
+                    return ACLManager.loadErrorJson()
+                data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': refusal}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-            try:
-                meta = DBMeta.objects.get(database=db[0], key=DatabaseManager.REMOTE_ACCESS)
-                host = json.loads(meta.value)['remoteIP']
-            except:
-                host = None
-
-            res = mysqlUtilities.changePassword(userName, dbPassword, None, host)
+            # The registered name, on every host the user has an account at.
+            res = mysqlUtilities.changePassword(databases[0].dbUser, dbPassword)
 
             if res == 0:
                 data_ret = {'status': 0, 'changePasswordStatus': 0,'error_message': "Please see CyberPanel main log file."}
@@ -292,16 +330,17 @@ class DatabaseManager:
 
             userName = data['dbUserName']
 
-            db = Databases.objects.filter(dbUser=userName)
-
             admin = Administrator.objects.get(pk=userID)
-            if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
-                pass
-            else:
+
+            databases = databaseAccounts.registered_databases(userName)
+            if not databases:
                 return ACLManager.loadErrorJson()
+            for database in databases:
+                if ACLManager.checkOwnership(database.website.domain, admin, currentACL) != 1:
+                    return ACLManager.loadErrorJson()
 
             try:
-                meta = DBMeta.objects.get(database=db[0], key=DatabaseManager.REMOTE_ACCESS)
+                meta = DBMeta.objects.get(database=databases[0], key=DatabaseManager.REMOTE_ACCESS)
                 data_ret = {'status': 1, 'dbHost': json.loads(meta.value)['remoteIP']}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -326,31 +365,52 @@ class DatabaseManager:
             userName = data['dbUserName']
             remoteIP = data['remoteIP']
 
-            if not is_safe_sql_identifier(userName) or not _MYSQL_HOST_RE.match(str(remoteIP)):
+            if (not is_safe_sql_identifier(userName) or not isinstance(remoteIP, str)
+                    or not _MYSQL_HOST_RE.fullmatch(remoteIP)):
                 return ACLManager.loadErrorJson('changePasswordStatus', 0)
-
-            db = Databases.objects.filter(dbUser=userName)
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadErrorJson()
+            databases, refusal = DatabaseManager.ownedDatabaseUser(userName, admin, currentACL)
+            if databases is None:
+                if refusal == 'unauthorized':
+                    return ACLManager.loadErrorJson()
+                data_ret = {'status': 0, 'error_message': refusal}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-            mysqlUtilities.allowRemoteAccess(db[0].dbName, userName, remoteIP)
-            mysqlUtilities.createDatabase(db[0].dbName, userName, 'cyberpanel', 0, remoteIP)
-            dbUserInMysql = DBUsers.objects.get(user=userName, host='localhost')
-            mysqlUtilities.changePassword(userName, dbUserInMysql.password, 1, remoteIP)
+            db = databases[0]
+            # The server keeps host names in lower case.
+            remoteIP = remoteIP.lower()
+
+            try:
+                meta = DBMeta.objects.get(database=db, key=DatabaseManager.REMOTE_ACCESS)
+                previousIP = json.loads(meta.value)['remoteIP']
+            except:
+                meta = None
+                previousIP = None
+
+            # The user's accounts as the server has them, with the stored password of each.
+            passwords = {}
+            for account in DBUsers.objects.filter(user=db.dbUser):
+                if account.user == db.dbUser:
+                    passwords[account.host] = account.password
+
+            mysqlUtilities.allowRemoteAccess(db.dbName, db.dbUser, remoteIP)
+            opened, reason = databaseAccounts.open_remote_access(
+                mysqlUtilities, passwords, db.dbName, db.dbUser, remoteIP, previousIP)
+            if opened != 1:
+                data_ret = {'status': 0, 'error_message': reason}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             metaData = {'remoteIP': remoteIP}
 
-            try:
-                meta = DBMeta.objects.get(database=db[0], key=DatabaseManager.REMOTE_ACCESS)
+            if meta is not None:
                 meta.value = json.dumps(metaData)
                 meta.save()
-            except:
-                DBMeta(database=db[0], value = json.dumps(metaData), key=DatabaseManager.REMOTE_ACCESS).save()
+            else:
+                DBMeta(database=db, value = json.dumps(metaData), key=DatabaseManager.REMOTE_ACCESS).save()
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)

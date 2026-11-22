@@ -35,6 +35,53 @@ class StatementTests(unittest.TestCase):
         return ' '.join(str(call[0][0]) for call in self.log.call_args_list)
 
 
+class PasswordChangeTests(StatementTests):
+    def test_every_account_of_the_user_gets_the_new_password(self):
+        self.cursor.hosts = {'exam_user': ['localhost', '127.0.0.1', '198.51.100.7', '203.0.113.5']}
+        self.assertEqual(1, mysqlUtilities.changePassword('exam_user', "n'ew $pass"))
+        self.assertEqual([('ALTER USER %s@%s IDENTIFIED BY %s', ('exam_user', host, "n'ew $pass"))
+                          for host in ('localhost', '127.0.0.1', '198.51.100.7', '203.0.113.5')],
+                         self.cursor.ran('ALTER USER'))
+        self.assertEqual(1, self.connection.closed)
+
+    def test_accounts_of_a_name_in_another_case_are_not_touched(self):
+        self.cursor.hosts = {'exam_user': ['localhost'], 'Exam_User': ['localhost', '%']}
+        self.assertEqual(1, mysqlUtilities.changePassword('exam_user', 'new'))
+        self.assertEqual([('ALTER USER %s@%s IDENTIFIED BY %s', ('exam_user', 'localhost', 'new'))],
+                         self.cursor.ran('ALTER USER'))
+
+    def test_user_without_an_account_is_reported_as_failure(self):
+        self.assertEqual(0, mysqlUtilities.changePassword('exam_user', 'new'))
+        self.assertEqual([], self.cursor.ran('ALTER USER'))
+        self.assertEqual(1, self.connection.closed)
+
+    def test_one_failed_account_fails_the_change(self):
+        self.cursor.hosts = {'exam_user': ['localhost', '127.0.0.1']}
+        self.cursor.fail = 'ALTER USER'
+        self.assertEqual(0, mysqlUtilities.changePassword('exam_user', 'new'))
+        self.assertEqual(1, self.connection.closed)
+
+    def test_accounts_of_the_server_are_refused_before_connecting(self):
+        self.cursor.hosts = {'root': ['localhost'], 'cyberpanel': ['localhost'], 'cp-pma-7': ['localhost']}
+        for name in ('root', 'Root', 'mysql', 'mariadb.sys', 'cyberpanel', 'debian-sys-maint', 'cp-pma-7', '', None):
+            self.assertEqual(0, mysqlUtilities.changePassword(name, 'new'), repr(name))
+            self.assertEqual(0, mysqlUtilities.changePassword(name, '*HASH', 1, 'localhost'), repr(name))
+        self.assertEqual([], self.cursor.statements)
+        self.assertEqual(0, self.connection.closed)
+
+    def test_administrative_account_of_a_remote_server_is_refused(self):
+        with mock.patch.object(databaseAccounts, 'administrative_account', return_value='doadmin'):
+            self.assertEqual(0, mysqlUtilities.changePassword('doadmin', 'new'))
+        self.assertEqual([], self.cursor.statements)
+
+    def test_stored_password_for_one_host_is_set_there_and_on_loopback(self):
+        self.assertEqual(1, mysqlUtilities.changePassword('exam_user', '*HASH', 1, '203.0.113.5'))
+        self.assertEqual([('SET PASSWORD FOR %s@%s = %s', ('exam_user', '203.0.113.5', '*HASH')),
+                          ('SET PASSWORD FOR %s@%s = %s', ('exam_user', '127.0.0.1', '*HASH'))],
+                         self.cursor.ran('SET PASSWORD'))
+        self.assertEqual([], self.cursor.ran('SELECT'))
+
+
 class PhpMyAdminAccountTests(StatementTests):
     def test_account_is_created_with_bound_values(self):
         with mock.patch.object(databaseAccounts, 'phpmyadmin_account_is_recorded', return_value=True):

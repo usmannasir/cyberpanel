@@ -6,6 +6,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from plogical import databaseAccounts
 from plogical.databaseProvisioning import ProvisioningJournal, ProvisioningError, create_and_register
 from plogical.mysqlUtilities import mysqlUtilities
 
@@ -20,16 +21,44 @@ class ProvisioningTests(unittest.TestCase):
         self.utilities = mock.Mock()
         self.utilities.databaseNamesExist.return_value = False
         self.utilities.createDatabase.side_effect = self.create_sql
+        # The panel's users are looked up in its own tables: answered here.
+        for item in (mock.patch.object(databaseAccounts, 'administrative_account', return_value='root'),
+                     mock.patch.object(databaseAccounts, 'named_like_panel_user', return_value=False)):
+            self.panel_user = item.start()
+            self.addCleanup(item.stop)
 
     def create_sql(self, db, user, password, progress):
         for stage in ('creating_database', 'database_created', 'creating_user_localhost', 'user_created_localhost', 'granting_user_localhost', 'sql_ready'):
             progress(stage)
         return 1
 
-    def create(self, **kwargs):
-        return create_and_register('fixture_db', 'fixture_user', 'SECRET-MUST-NOT-BE-PERSISTED',
+    def create(self, username='fixture_user', **kwargs):
+        return create_and_register('fixture_db', username, 'SECRET-MUST-NOT-BE-PERSISTED',
                                    self.website, self.utilities, self.model,
                                    self.directory.name, None, **kwargs)
+
+    def assert_nothing_touched(self):
+        self.assertEqual([], os.listdir(self.directory.name))
+        self.model.objects.filter.assert_not_called()
+        self.model.objects.create.assert_not_called()
+        self.utilities.databaseNamesExist.assert_not_called()
+        self.utilities.createDatabase.assert_not_called()
+
+    def test_user_named_like_an_account_of_the_server_is_refused_before_anything_is_touched(self):
+        for name in ('root', 'Root', 'ROOT', 'mysql', 'cyberpanel', 'CyberPanel', 'public', 'rdsadmin'):
+            status, message = self.create(name)
+            self.assertEqual(0, status, name)
+            self.assertIn('reserved', message)
+        self.panel_user.assert_not_called()
+        self.assert_nothing_touched()
+
+    def test_user_named_like_a_panel_user_is_refused_before_anything_is_touched(self):
+        self.panel_user.return_value = True
+        status, message = self.create('Reseller1')
+        self.assertEqual(0, status)
+        self.assertIn('panel user', message)
+        self.panel_user.assert_called_once_with('Reseller1')
+        self.assert_nothing_touched()
 
     def record(self):
         names = [n for n in os.listdir(self.directory.name) if n.endswith('.json')]

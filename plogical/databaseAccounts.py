@@ -18,6 +18,7 @@ import json
 import re
 
 from plogical.databaseGrants import text
+from plogical.securityUtils import is_safe_sql_identifier
 
 PASSWORD_FILE = '/etc/cyberpanel/mysqlPassword'
 
@@ -72,11 +73,38 @@ def _exists_ignoring_case(model, field, name):
     return model.objects.annotate(lowered_name=Lower(field)).filter(lowered_name=name.lower()).exists()
 
 
+def named_like_panel_user(name):
+    """True when a panel user, or a phpMyAdmin record of one, has this name in any case."""
+    from databases.models import GlobalUserDB
+    from loginSystem.models import Administrator
+    return (_exists_ignoring_case(Administrator, 'userName', name)
+            or _exists_ignoring_case(GlobalUserDB, 'username', name))
+
+
 def registered_as_database_user(name):
     """True when a database is registered with a user of this name in any case."""
     from databases.models import Databases, DatabasesUsers
     return (_exists_ignoring_case(Databases, 'dbUser', name)
             or _exists_ignoring_case(DatabasesUsers, 'username', name))
+
+
+def account_refusal(name):
+    """Why a customer's database user may not have this name; None when it may."""
+    if not is_safe_sql_identifier(name):
+        return 'A database user name may only contain letters, numbers and underscores.'
+    if is_reserved(name):
+        return 'This database user name is reserved for the server.'
+    if named_like_panel_user(name):
+        return 'This database user name is the name of a panel user. Choose another name.'
+    return None
+
+
+def registered_databases(name):
+    """The databases registered with exactly this user name."""
+    from databases.models import Databases
+    if not isinstance(name, str) or not name:
+        return []
+    return [database for database in Databases.objects.filter(dbUser=name) if database.dbUser == name]
 
 
 def account_hosts(cursor, user):
@@ -143,3 +171,51 @@ def earlier_phpmyadmin_account_refusal(cursor, user, host):
     if not holds_database_privileges_only(cursor, user, host):
         return 'it holds privileges a phpMyAdmin account was never given'
     return None
+
+
+def open_remote_access(utilities, passwords, database, user, host, previous_host=None):
+    """Give a database user an account at `host` with the password of its local account.
+
+    `passwords` maps each host the user already has an account at to its stored
+    password hash. A new account starts with a random password and is removed
+    again when it cannot be given the user's own. The account of the remote
+    host used before is removed. Returns (1, None) or (0, reason).
+    """
+    from plogical import randomPassword
+    # The server keeps host names in lower case.
+    host = host.lower()
+    passwords = dict((known.lower(), stored) for known, stored in passwords.items())
+    local_hosts = (str(utilities.LOCALHOST).lower(), 'localhost', '127.0.0.1')
+    local_hash = None
+    for local in local_hosts:
+        if passwords.get(local):
+            local_hash = passwords[local]
+            break
+    if local_hash is None:
+        return 0, 'The local account of this database user was not found.'
+
+    created = host not in passwords
+    if created and utilities.createDatabase(database, user, randomPassword.generate_pass(32), 0, host) != 1:
+        _drop(utilities, user, host)
+        return 0, 'The remote account could not be created.'
+    if utilities.changePassword(user, local_hash, 1, host) != 1:
+        if created:
+            _drop(utilities, user, host)
+        return 0, 'The remote account could not be given the password of this database user.'
+    previous_host = previous_host.lower() if isinstance(previous_host, str) else None
+    if previous_host and previous_host != host and previous_host not in local_hosts and previous_host in passwords:
+        _drop(utilities, user, previous_host)
+    return 1, None
+
+
+def _drop(utilities, user, host):
+    connection, cursor = utilities.setupConnection()
+    if connection == 0:
+        return 0
+    try:
+        drop_account(cursor, user, host)
+        return 1
+    except Exception:
+        return 0
+    finally:
+        connection.close()

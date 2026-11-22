@@ -1194,7 +1194,15 @@ password=%s
 
     @staticmethod
     def changePassword(userName, dbPassword, encrypt = None, host = None):
+        connection = None
         try:
+            from plogical import databaseAccounts
+
+            # The accounts of the server and of the panel are never changed here.
+            if databaseAccounts.is_reserved(userName):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'The password of a database account of the server is not changed. [mysqlUtilities.changePassword]')
+                return 0
 
             connection, cursor = mysqlUtilities.setupConnection()
 
@@ -1203,47 +1211,41 @@ password=%s
 
             cursor.execute("use mysql")
 
-            if host != None:
-                LOCALHOST = host
-            else:
-                LOCALHOST = mysqlUtilities.LOCALHOST
-
             if encrypt == None:
                 query = "ALTER USER %s@%s IDENTIFIED BY %s"
-                queryArgs = (userName, LOCALHOST, dbPassword)
             else:
                 query = "SET PASSWORD FOR %s@%s = %s"
-                queryArgs = (userName, LOCALHOST, dbPassword)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
 
-            cursor.execute(query, queryArgs)
+            if host != None:
+                cursor.execute(query, (userName, host, dbPassword))
 
-            if LOCALHOST != '127.0.0.1' and mysqlUtilities.REMOTEHOST in ('', 'localhost', '127.0.0.1'):
-                try:
-                    if encrypt == None:
-                        query = "ALTER USER %s@%s IDENTIFIED BY %s"
-                    else:
-                        query = "SET PASSWORD FOR %s@%s = %s"
-
-                    queryArgs = (userName, '127.0.0.1', dbPassword)
-
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.CyberCPLogFileWriter.writeToFile(query)
-
-                    cursor.execute(query, queryArgs)
-                except BaseException as msg:
+                if host != '127.0.0.1' and mysqlUtilities.REMOTEHOST in ('', 'localhost', '127.0.0.1'):
+                    try:
+                        cursor.execute(query, (userName, '127.0.0.1', dbPassword))
+                    except BaseException as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            str(msg) + " [mysqlUtilities.changePassword:127.0.0.1]")
+            else:
+                # Every account of this user: the local one, the loopback one and each remote host.
+                hosts = databaseAccounts.account_hosts(cursor, userName)
+                if not hosts:
                     logging.CyberCPLogFileWriter.writeToFile(
-                        str(msg) + " [mysqlUtilities.changePassword:127.0.0.1]")
-
-            connection.close()
+                        'The database server has no account for this user. [mysqlUtilities.changePassword]')
+                    return 0
+                for accountHost in hosts:
+                    cursor.execute(query, (userName, accountHost, dbPassword))
 
             return 1
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword]")
             return 0
+        finally:
+            if connection:
+                connection.close()
 
     @staticmethod
     def fetchuser(databaseName):
