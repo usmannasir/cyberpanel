@@ -10,6 +10,7 @@ import os
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheVhosts import ApacheVhost
+from managePHP.phpConfig import is_php_package
 from managePHP.phpConfig import fpm_service_for_ini, matches_directive
 
 import json
@@ -20,17 +21,48 @@ class phpUtilities:
     installLogPath = "/home/cyberpanel/phpExtensionRequestLog"
 
     @staticmethod
+    def packageCommand(action, extension):
+        """The package manager's argument list that installs or removes one PHP package.
+
+        The name is checked again here and is one argument after `--`, so it
+        can add neither a second package nor an option.
+        """
+        if not is_php_package(extension):
+            raise ValueError('Invalid PHP extension name.')
+
+        rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+
+        if action == 'install':
+            if rpmFamily:
+                return ['sudo', 'yum', 'install', '-y', '--', extension]
+            return ['sudo', 'apt-get', 'install', '-y', '--', extension]
+
+        if action == 'remove':
+            if rpmFamily:
+                return ['sudo', 'rpm', '--nodeps', '-e', '-v', '--', extension]
+            return ['sudo', 'apt-get', 'remove', '-y', '--', extension]
+
+        raise ValueError('Unsupported package action.')
+
+    @staticmethod
+    def refuseExtensionRequest(message):
+        # The page polls this log; the line ends its wait.
+        writeToFile = open(phpUtilities.installLogPath, 'w')
+        writeToFile.writelines(message + "\n")
+        writeToFile.close()
+        logging.CyberCPLogFileWriter.writeToFile("[Invalid PHP extension name]")
+        return 0
+
+    @staticmethod
     def installPHPExtension(extension,extensions):
         try:
 
             mailUtilities.checkHome()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                command = 'sudo yum install ' + extension + ' -y'
-            else:
-                command = 'sudo apt-get install ' + extension + ' -y'
+            if not is_php_package(extension):
+                return phpUtilities.refuseExtensionRequest("Can not be installed.")
 
-            cmd = shlex.split(command)
+            cmd = phpUtilities.packageCommand('install', extension)
 
             try:
                 with open(phpUtilities.installLogPath, 'w') as f:
@@ -59,12 +91,10 @@ class phpUtilities:
 
             mailUtilities.checkHome()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
-            else:
-                command = 'sudo apt-get remove -y  ' + extension
+            if not is_php_package(extension):
+                return phpUtilities.refuseExtensionRequest("Can not un-install Extension.")
 
-            cmd = shlex.split(command)
+            cmd = phpUtilities.packageCommand('remove', extension)
 
             try:
 

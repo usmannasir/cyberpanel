@@ -23,6 +23,7 @@ from xml.etree import ElementTree
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from .phpManager import PHPManager
+from .phpConfig import is_php_package, php_package_prefix
 from .phpConfig import matches_directive
 from plogical.httpProc import httpProc
 
@@ -1304,14 +1305,12 @@ def getExtensionsInformation(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                if request.GET.get('apache', None) == None:
-                    phpVers = f"lsphp{PHPManager.getPHPString(phpVers)}"
-                else:
-                    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                        phpVers = f"php{PHPManager.getPHPString(phpVers)}"
-                    else:
-                        phpVers = phpVers.replace(' ', '').lower()
+                # The package prefix goes into a command line below; it is
+                # built from the digits of the selection.
+                rpmFamily = ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+                phpVers = php_package_prefix(phpVers, request.GET.get('apache', None) != None, rpmFamily)
 
+                if request.GET.get('apache', None) != None:
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.writeToFile(f'PHP Version apache {phpVers}')
 
@@ -1410,12 +1409,25 @@ def submitExtensionRequest(request):
                 extensionName = data['extensionName']
                 type = data['type']
 
+                # Only one PHP package as the extension list shows it: the
+                # name ends up as an argument of the package manager.
+                if not is_php_package(extensionName):
+                    final_json = json.dumps({'extensionRequestStatus': 0,
+                                             'error_message': 'Invalid PHP extension name.'})
+                    return HttpResponse(final_json)
+
+                # The page sends one of two words; nothing else is acted on.
+                if type not in ('install', 'uninstall'):
+                    final_json = json.dumps({'extensionRequestStatus': 0,
+                                             'error_message': 'Invalid extension request.'})
+                    return HttpResponse(final_json)
+
                 if type == "install":
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-                    execPath = execPath + " installPHPExtension --extension " + extensionName
+                    execPath = execPath + " installPHPExtension --extension " + shlex.quote(extensionName)
                 else:
                     execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-                    execPath = execPath + " unInstallPHPExtension --extension " + extensionName
+                    execPath = execPath + " unInstallPHPExtension --extension " + shlex.quote(extensionName)
 
                 ProcessUtilities.popenExecutioner(execPath)
 
