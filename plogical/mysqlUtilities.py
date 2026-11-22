@@ -31,6 +31,7 @@ import MySQLdb.cursors as cursors
 from plogical import databaseImport
 from math import ceil
 import argparse
+import pwd
 
 class mysqlUtilities:
 
@@ -338,6 +339,12 @@ class mysqlUtilities:
         - use_new_features: None (auto-detect based on config), True/False (force)
         """
         try:
+            # The name becomes part of file names and of command lines.
+            if not mysqlUtilities.usableInCommands(databaseName):
+                logging.CyberCPLogFileWriter.writeToFile(
+                    'A database with this name cannot be backed up. [createDatabaseBackup]')
+                return 0
+
             # Check if new features are enabled (via config file or parameter)
             if use_new_features is None:
                 use_new_features = mysqlUtilities.checkNewBackupFeatures()
@@ -369,19 +376,7 @@ class mysqlUtilities:
             cnfPath = '/home/cyberpanel/.my.cnf'
 
             if not os.path.exists(cnfPath):
-                cnfContent = """[mysqldump]
-user=root
-password=%s
-max_allowed_packet=1024M
-[mysql]
-user=root
-password=%s
-""" % (password, password)
-                writeToFile = open(cnfPath, 'w')
-                writeToFile.write(cnfContent)
-                writeToFile.close()
-
-                os.chmod(cnfPath, 0o600)
+                mysqlUtilities.writeClientDefaults(cnfPath, password)
 
             SHELL = False
 
@@ -395,7 +390,7 @@ password=%s
                     backup_file = f"{tempStoragePath}/{databaseName}{backup_extension}"
 
                 # Remove old backup if exists
-                command = f'rm -f {backup_file}'
+                command = f'rm -f {shlex.quote(backup_file)}'
                 ProcessUtilities.executioner(command)
 
                 # Build mysqldump command with new features
@@ -406,8 +401,11 @@ password=%s
 
                 if use_compression:
                     # New method: Stream directly to compressed file
-                    full_command = f"{dump_cmd} | gzip -c > {backup_file}"
+                    # The dump holds the customer's data: nobody else may read it.
+                    full_command = f"umask 077; {dump_cmd} | gzip -c > {shlex.quote(backup_file)}"
                     result = ProcessUtilities.executioner(full_command, shell=True)
+                    # The panel's own account reads it back on a restore.
+                    ProcessUtilities.executioner(f'chown cyberpanel:cyberpanel {shlex.quote(backup_file)}')
 
                     # Verify backup file was created successfully
                     if not os.path.exists(backup_file) or os.path.getsize(backup_file) == 0:
@@ -419,7 +417,12 @@ password=%s
                     # Legacy method: Direct dump to file (backward compatible)
                     cmd = shlex.split(dump_cmd)
 
-                    with open(backup_file, 'w') as f:
+                    # The dump holds the customer's data: it is private from
+                    # the moment it exists and never written into a file that
+                    # was already there.
+                    descriptor = os.open(backup_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                    with os.fdopen(descriptor, 'w') as f:
+                        mysqlUtilities.keepForPanelAccount(descriptor)
                         result = subprocess.run(
                             cmd,
                             stdout=f,
@@ -442,7 +445,7 @@ password=%s
             else:
                 SHELL = True
 
-                command = f'mysqldump --defaults-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} 2>/dev/null | sudo -u {externalApp} rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql - --password "" --json 2>/dev/null'
+                command = f'mysqldump --defaults-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {shlex.quote(databaseName)} 2>/dev/null | sudo -u {externalApp} rustic -r {RusticRepoName} backup --stdin-filename {shlex.quote(databaseName + ".sql")} - --password "" --json 2>/dev/null'
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(command)
@@ -466,6 +469,44 @@ password=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabaseBackup]")
             return 0
+
+    @staticmethod
+    def usableInCommands(databaseName):
+        """True for a database name that may become a file name and an argument of the dump programs."""
+        return (isinstance(databaseName, str) and 0 < len(databaseName) <= 64
+                and not databaseName.startswith('-') and databaseName not in ('.', '..')
+                and '/' not in databaseName and '\x00' not in databaseName and '\n' not in databaseName)
+
+    @staticmethod
+    def writeClientDefaults(cnfPath, password):
+        """Write the option file of the panel's dump program; nobody else can read it at any moment."""
+        cnfContent = """[mysqldump]
+user=root
+password=%s
+max_allowed_packet=1024M
+[mysql]
+user=root
+password=%s
+""" % (password, password)
+        descriptor = os.open(cnfPath, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(descriptor, 'w') as writeToFile:
+            mysqlUtilities.keepForPanelAccount(descriptor)
+            writeToFile.write(cnfContent)
+
+    @staticmethod
+    def keepForPanelAccount(descriptor):
+        """Make an open file readable by its owner alone; one that root made goes to the panel's account.
+
+        The panel's own account makes and reads these files as well as root,
+        and no other account has any business with them.
+        """
+        os.fchmod(descriptor, 0o600)
+        if os.geteuid() == 0:
+            try:
+                owner = pwd.getpwnam('cyberpanel')
+                os.fchown(descriptor, owner.pw_uid, owner.pw_gid)
+            except KeyError:
+                pass
 
     @staticmethod
     def restoreRusticDatabase(databaseName, rusticRepoName, externalApp,
@@ -1504,7 +1545,7 @@ gpgcheck=1
                 threads = min(4, ProcessUtilities.getNumberOfCores() if hasattr(ProcessUtilities, 'getNumberOfCores') else 2)
                 base_cmd += f" --parallel={threads}"
 
-        base_cmd += f" {database}"
+        base_cmd += f" {shlex.quote(database)}"
         return base_cmd
 
     @staticmethod

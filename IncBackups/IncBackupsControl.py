@@ -393,7 +393,9 @@ class IncJobs(multi.Thread):
                 command = 'chown cyberpanel:cyberpanel /home/cyberpanel'
                 ProcessUtilities.executioner(command)
 
-                command = 'chmod 755 /home/cyberpanel'
+                # Database dumps pass through this directory: it stays closed
+                # to every other account.
+                command = 'chmod 700 /home/cyberpanel'
                 ProcessUtilities.executioner(command)
 
                 ##
@@ -666,7 +668,8 @@ class IncJobs(multi.Thread):
                 command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
                 ProcessUtilities.executioner(command)
 
-                command = 'chmod 711 %s' % (UploadPath)
+                # Only the panel's account and root go in here.
+                command = 'chmod 700 %s' % (UploadPath)
                 ProcessUtilities.executioner(command)
 
                 ###
