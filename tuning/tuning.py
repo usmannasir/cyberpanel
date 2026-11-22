@@ -33,6 +33,9 @@ class tuningManager:
 
     def phpTuning(self, request, userID):
         currentACL = ACLManager.loadedACL(userID)
+        # Nothing is prepared for a user the page is refused to.
+        if currentACL['admin'] != 1:
+            return httpProc(request, 'tuning/phpTuning.html', None, 'admin').render()
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             websitesName = ACLManager.findAllSites(currentACL, userID)
             OLS = 1
