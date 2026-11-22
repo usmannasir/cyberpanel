@@ -115,6 +115,26 @@ class PHPSelectionEntryTests(unittest.TestCase):
                     self.assertEqual(selection, words[words.index('--phpVersion') + 1])
                     self.assertEqual(1, words.count('--phpVersion'))
 
+    def test_website_changes_refuse_a_version_that_is_not_installed(self):
+        self.existing_site()
+        self.services['os'].path.isfile.return_value = False
+        payload = json.loads(self.manager().saveWebsiteChanges(7, site_changes(phpVersion='PHP 8.4')).content)
+        self.assertEqual(0, payload['status'], payload)
+        self.assertIn('PHP 8.4 is not installed on this server.', payload['error_message'])
+        self.services['os'].path.isfile.assert_called_once_with('/usr/local/lsws/lsphp84/bin/php')
+        self.assertEqual([], self.worker_commands())
+        self.site.save.assert_not_called()
+        self.assertEqual('PHP 7.4', self.site.phpSelection)
+
+    def test_website_changes_keep_working_for_the_version_the_website_already_has(self):
+        # Its PHP may have been removed from the server since; the owner,
+        # the package and the e-mail address can still be changed.
+        self.existing_site()
+        self.services['os'].path.isfile.return_value = False
+        payload = json.loads(self.manager().saveWebsiteChanges(7, site_changes(phpVersion='PHP 7.4')).content)
+        self.assertEqual(1, payload['status'], payload)
+        self.site.save.assert_called_once_with()
+
     def test_alias_of_a_website_with_an_unusable_stored_version_is_refused(self):
         self.services['Websites'].objects.get.side_effect = None
         self.services['Websites'].objects.get.return_value = SimpleNamespace(phpSelection='PHP 8.3 --apache 1')

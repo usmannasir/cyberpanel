@@ -3303,12 +3303,21 @@ Require valid-user
             # Refused before anything is changed: the selection is stored with
             # the website below and handed to the PHP worker.
             try:
-                php_selection_digits(phpVersion)
+                php_binary = php_binary_for_selection(phpVersion)
             except ValueError as error:
                 return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
                     'error_message': 'No website settings were changed. ' + str(error)}))
 
             modifyWeb = Websites.objects.get(domain=domain)
+            # Paths and the worker's command line use the stored name.
+            domain = modifyWeb.domain
+
+            # A version other than the one the website already has must be
+            # one that is installed, as on the PHP change page.
+            if phpVersion != modifyWeb.phpSelection and not os.path.isfile(php_binary):
+                return HttpResponse(json.dumps({'status': 0, 'saveStatus': 0,
+                    'error_message': 'No website settings were changed. %s is not installed on this server.' % phpVersion}))
+
             webpack = Package.objects.get(packageName=package)
             quota_plan = None
             if webpack.enforceDiskLimits:
@@ -3330,7 +3339,7 @@ Require valid-user
             completePathToConfigFile = confPath + "/vhost.conf"
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + completePathToConfigFile
+            execPath = execPath + " changePHP --phpVersion " + shlex.quote(phpVersion) + " --path " + shlex.quote(completePathToConfigFile)
             ProcessUtilities.popenExecutioner(execPath)
 
             ####
