@@ -17,10 +17,17 @@ from plogical.securityUtils import ensure_api_token, is_current_api_token, norma
 if not os.geteuid() == 0:
     sys.exit("\nOnly root can run this script\n")
 
+def password_from_file(path):
+    """The first line of a file, without its line ending."""
+    with open(path, encoding='utf-8') as source:
+        return source.readline().rstrip('\r\n')
+
 def main():
 
     parser = argparse.ArgumentParser(description='Reset admin user password!')
     parser.add_argument('--password', help='New Password')
+    parser.add_argument('--password-file', help='Read the new password from the first line of this file, '
+                                                'so that it is not part of the command line')
     parser.add_argument('--api', help='Enable/Disable API')
     parser.add_argument('--api-token', help='Set a pre-generated versioned API token while enabling API access')
     args = parser.parse_args()
@@ -47,6 +54,10 @@ def main():
     else:
 
         adminPass = args.password
+        if args.password_file is not None:
+            adminPass = password_from_file(args.password_file)
+            if not adminPass:
+                parser.error('--password-file names a file without a password')
 
         numberOfAdministrator = Administrator.objects.count()
         if numberOfAdministrator == 0:

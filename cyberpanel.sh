@@ -2977,9 +2977,11 @@ fi
 rm -rf /etc/profile.d/cyberpanel*
 curl --silent -o /etc/profile.d/cyberpanel.sh https://cyberpanel.sh/?banner 2>/dev/null
 chmod 700 /etc/profile.d/cyberpanel.sh
-echo "$Admin_Pass" > /etc/cyberpanel/adminPass
+( umask 077; printf '%s\n' "$Admin_Pass" > /etc/cyberpanel/adminPass )
 chmod 600 /etc/cyberpanel/adminPass
-/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$Admin_Pass"
+# The password is read from the file, so that it is not part of a command line
+# that other accounts on the server can see while this runs.
+/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password-file /etc/cyberpanel/adminPass
 mkdir -p /etc/opendkim
 
 echo '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password "$@"' > /usr/bin/adminPass
