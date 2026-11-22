@@ -38,6 +38,11 @@ REWRITE = '[ERROR] [config:server:vhosts:vhost:parent.test] rewrite: suspension 
 
 OTHER = '[ERROR] [config:server:vhosts:vhost:other.test] missing docRoot'
 FATAL = '[FATAL] [config:server:vhosts:vhost:child.test] cannot continue'
+# Measured on OpenLiteSpeed as the panel installs it, for this rule among a
+# website's own rewrite rules: the one line the test adds, with status 2. It
+# names neither the virtual host nor its file.
+RULE = 'RewriteRule ^(bad[ /x [L'
+MEASURED = '[ERROR] [(null)] [REWRITE] Unknown rewrite rule flag while parsing: ' + RULE
 
 # Stands in for `openlitespeed -t`. It reads `plan.json` beside `bin`, stamps
 # each line with the present time and its own process ID as the server does,
@@ -48,7 +53,7 @@ FATAL = '[FATAL] [config:server:vhosts:vhost:child.test] cannot continue'
 #   nosuch     parser message that ends with the file and line
 #   badparen   the file and line in brackets, followed by a full stop
 #   badrule    the virtual host in the context, and "line N"
-#   badglobal  names neither the website nor its file
+# The rule above is reported as it was measured.
 SERVER = '''#!%(python)s
 import datetime, json, os, sys
 from pathlib import Path
@@ -70,8 +75,8 @@ for path in sorted(root.glob('conf/vhosts/*/vhost.conf')):
         elif line.startswith('badrule'):
             lines.append('[ERROR] [config:server:vhosts:vhost:%%s:rewrite] invalid rewrite rule at line %%d'
                          %% (path.parent.name, number))
-        elif line.startswith('badglobal'):
-            lines.append('[ERROR] [rewrite] invalid rule badglobal')
+        elif line.startswith(%(rule)r):
+            lines.append(%(measured)r)
 lines += plan.get('suspended' if suspended else 'restored', [])
 status = 2 if any('[ERROR]' in line or '[FATAL]' in line for line in lines) else 1 if lines else 0
 status = plan.get('suspended_status' if suspended else 'status', status)
@@ -112,7 +117,8 @@ class ServerFixture(unittest.TestCase):
         (self.root / 'bin').mkdir()
         for name, source in ((self.binary, SERVER), ('lswsctrl', CONTROL)):
             script = self.root / 'bin' / name
-            script.write_text(source % {'python': sys.executable, 'start': START})
+            script.write_text(source % {'python': sys.executable, 'start': START, 'rule': RULE,
+                                        'measured': MEASURED})
             script.chmod(0o700)
         self.plan()
 
@@ -264,64 +270,97 @@ class MadeWorseByTheChangeTests(ServerFixture):
         self.assertEqual(self.calls(), ['test', 'test', 'restart', 'test'])
 
 
-def with_rule(word):
-    """A website file with a faulty line among its own rewrite rules."""
-    return VHOST.replace('RewriteRule ^ /index.php [L]\n', 'RewriteRule ^ /index.php [L]\n' + word + '\n')
+def with_rule(rule):
+    # A website file with a faulty line among its own rewrite rules.
+    return VHOST.replace('RewriteRule ^ /index.php [L]\n', 'RewriteRule ^ /index.php [L]\n' + rule + '\n')
 
 
-class RestoredWithItsOwnErrorTests(ServerFixture):
-    """Suspension comments a website's rewrite rules out, and an error in them with it."""
+class RestoreTests(ServerFixture):
+    # Suspension comments a website's rewrite rules out, and an error in them
+    # with it. Restoring the website puts both back.
+    FAMILY = ('parent.test', 'child.test', 'sibling.test')
 
     def test_a_website_is_restored_with_the_error_its_own_rules_had(self):
-        for word in ('badrule', 'badparen', 'nosuch'):
-            with self.subTest(word=word):
-                self.paths['parent.test'].write_text(with_rule(word))
+        for rule in (RULE, 'badrule', 'badparen', 'nosuch'):
+            with self.subTest(rule=rule):
+                self.paths['parent.test'].write_text(with_rule(rule))
                 self.assertEqual(self.status(), 2)
                 self.change()
                 self.assert_suspended()
                 self.assertEqual(self.status(), 0)  # the error is not reported while suspended
                 self.change(suspended=False)
-                self.assertEqual(self.paths['parent.test'].read_text(), with_rule(word))
+                self.assertEqual(self.paths['parent.test'].read_text(), with_rule(rule))
                 self.assertEqual(self.status(), 2)
 
     def test_a_parent_is_restored_with_a_child_whose_rules_have_an_error(self):
-        self.paths['child.test'].write_text(with_rule('badrule'))
+        self.paths['child.test'].write_text(with_rule(RULE))
         self.plan(lines=STOCK)
         self.family(True)
-        for domain in ('parent.test', 'child.test', 'sibling.test'):
+        for domain in self.FAMILY:
             self.assert_suspended(domain)
+        self.assertEqual(self.status(), 1)
         (self.root / 'calls').write_text('')
         self.family(False)
         self.assertEqual(self.paths['parent.test'].read_text(), VHOST)
         self.assertEqual(self.paths['sibling.test'].read_text(), VHOST)
-        self.assertEqual(self.paths['child.test'].read_text(), with_rule('badrule'))
+        self.assertEqual(self.paths['child.test'].read_text(), with_rule(RULE))
         self.assertEqual(self.calls(), ['test', 'test', 'restart'])
+        self.assertEqual(self.status(), 2)
 
-    def test_a_restore_is_still_refused_for_a_new_error_anywhere_else(self):
-        self.paths['child.test'].write_text(with_rule('badrule'))
+    def test_an_error_line_that_appears_with_a_restore_does_not_undo_it(self):
+        # Whatever such a line names, it was not written by the restore.
+        for line in (LISTENER, OTHER):
+            with self.subTest(line=line):
+                self.plan()
+                self.family(True)
+                self.plan(restored=[line])
+                self.family(False)
+                for domain in self.FAMILY:
+                    self.assertEqual(self.paths[domain].read_text(), VHOST)
+
+    def test_a_restore_is_undone_for_damage(self):
+        self.paths['child.test'].write_text(with_rule(RULE))
         self.family(True)
-        for foreign in (LISTENER, OTHER, FATAL):
-            with self.subTest(foreign=foreign):
-                self.plan(restored=[foreign])
+        for plan, shown in ((dict(restored=[FATAL]), 'cannot continue'), (dict(status=3), 'ended with status 3'),
+                            (dict(status=139), 'ended with status 139')):
+            with self.subTest(plan=plan):
+                self.plan(**plan)
                 with self.assertRaises(RuntimeError) as refusal:
                     self.family(False)
-                message = str(refusal.exception)
-                self.assertIn(foreign.split('] ', 1)[1], message)
-                self.assertNotIn('invalid rewrite rule', message)
-                self.assertNotIn('automatic recovery failed', message)
-                for domain in ('parent.test', 'child.test', 'sibling.test'):
+                self.assertIn(shown, str(refusal.exception))
+                self.assertNotIn('Unknown rewrite rule flag', str(refusal.exception).split('before the change')[0])
+                self.assertNotIn('automatic recovery failed', str(refusal.exception))
+                for domain in self.FAMILY:
                     self.assert_suspended(domain)
 
-    def test_an_error_that_names_no_website_cannot_be_told_apart_and_refuses_the_restore(self):
-        self.paths['parent.test'].write_text(with_rule('badglobal'))
+    def test_a_restore_is_undone_when_the_server_does_not_restart(self):
+        self.paths['child.test'].write_text(with_rule(RULE))
+        self.family(True)
+        (self.root / 'calls').write_text('')
+        (self.root / 'restart-fails').write_text('')
+        with self.assertRaisesRegex(RuntimeError, 'restart refused') as refusal:
+            self.family(False)
+        self.assertNotIn('automatic recovery failed', str(refusal.exception))
+        for domain in self.FAMILY:
+            self.assert_suspended(domain)
+        self.assertEqual(self.calls(), ['test', 'test', 'restart', 'test', 'restart'])
+
+    def test_a_change_that_also_suspends_a_website_keeps_the_strict_rule(self):
+        self.paths['parent.test'].write_text(with_rule(RULE))
         self.change()
-        message = self.refused(suspended=False)
-        self.assertIn('invalid rule badglobal', message)
-        self.assert_suspended()
+        with self.assertRaises(RuntimeError) as refusal:
+            with server_update(self.root) as update:
+                update.apply([('parent.test', False), ('sibling.test', True)])
+        self.assertIn('Unknown rewrite rule flag', str(refusal.exception))
+        self.assert_suspended('parent.test')
+        self.assertEqual(self.paths['sibling.test'].read_text(), VHOST)
 
     def test_an_error_in_the_website_being_suspended_is_not_excused(self):
         self.plan(suspended=[REWRITE])
         self.assertIn('suspension rule was rejected', self.refused())
+        self.assertEqual(self.paths['parent.test'].read_text(), VHOST)
+        self.plan(suspended=[MEASURED])
+        self.assertIn('Unknown rewrite rule flag', self.refused())
         self.assertEqual(self.paths['parent.test'].read_text(), VHOST)
 
 
@@ -451,48 +490,48 @@ class AddedErrorsTests(unittest.TestCase):
                 self.assertIn('ended with status %d' % after, added[0])
                 self.assertIn('License validation failed', added[0])
 
-    def test_an_error_about_a_restored_website_is_its_own(self):
-        own = (
-            self.MOVED,
-            '[ERROR] [config:server:vhosts:vhost:a.test:rewrite] invalid rewrite rule at line 25',
-            '[ERROR] [config:server:vhosts:vhost:a.test] missing docRoot',
-            '[ERROR] [PlainConf] [virtualHostConfig:] unknown keyword (' + self.FILE + ':25).',
-            '[ERROR] invalid rewrite rule in ' + self.FILE,
-        )
-        for line in own:
-            with self.subTest(line=line):
-                self.assertEqual(config_errors_added((1, self.WARN), (2, line), self.RESTORED), [])
-                # Not while it is being suspended, and not for another website's restore.
-                self.assertEqual(config_errors_added((1, self.WARN), (2, line), self.SUSPENDED), [line])
-                self.assertEqual(config_errors_added((1, self.WARN), (2, line), {'b.test': False}), [line])
-                self.assertEqual(config_errors_added((1, self.WARN), (2, line), {'a.tes': False}), [line])
-                self.assertEqual(config_errors_added((1, self.WARN), (2, line)), [line])
-        self.assertEqual(config_errors_added((0, ''), (2, '\n'.join(own)), self.RESTORED), [])
+    # The measured line, with a time in place of the report's "17:2x:xx.xxxxxx".
+    MEASURED_LINE = '2026-11-22 17:20:00.000000 [ERROR] [299154] [(null)] [REWRITE] ' \
+                    'Unknown rewrite rule flag while parsing: RewriteRule ^(bad[ /x [L'
+    RETURNING = (
+        MEASURED_LINE,
+        MOVED,
+        '[ERROR] [config:server:vhosts:vhost:a.test:rewrite] invalid rewrite rule at line 25',
+        '[ERROR] [config:server:vhosts:vhost:b.test] missing docRoot',
+        '[ERROR] [config:server:listener:SSL] failed to load the certificate',
+        '[cyberpanel_ols] Module v2.7.7 DISABLED: incompatible OpenLiteSpeed core ABI (expected CyberPanel OLS 2.5.2)',
+    )
 
-    def test_an_error_about_anything_else_refuses_a_restore(self):
-        foreign = (
-            '[ERROR] [config:server:vhosts:vhost:b.test] missing docRoot',
-            '[ERROR] [config:server:vhosts:vhost:a.test2] missing docRoot',
-            '[ERROR] [config:server:listener:SSL] failed to load the certificate',
-            '[ERROR] [rewrite] invalid rule',
-            '[ERROR] [config:server:vhosts:vhost:b.test] cannot include ' + self.FILE,
-            '[ERROR] ' + self.FILE + ' and /usr/local/lsws/conf/vhosts/b.test/vhost.conf share a document root',
-            '[FATAL] [config:server:vhosts:vhost:a.test] cannot continue',
-            '[FATAL] cannot read ' + self.FILE,
-            '[cyberpanel_ols] Module v2.7.7 DISABLED: incompatible OpenLiteSpeed core ABI in ' + self.FILE,
-        )
-        for line in foreign:
+    def test_a_restore_is_not_undone_for_an_error_line_whatever_it_names(self):
+        family = {'p.test': False, 'a.test': False, 'b.test': False}
+        for line in self.RETURNING:
             with self.subTest(line=line):
-                self.assertEqual(config_errors_added((1, self.WARN), (2, line + '\n' + self.MOVED), self.RESTORED),
-                                 [line])
+                for before in ((0, ''), (1, self.WARN), (2, self.OLD)):
+                    self.assertEqual(config_errors_added(before, (2, line), self.RESTORED), [])
+                    self.assertEqual(config_errors_added(before, (2, line), family), [])
+        self.assertEqual(config_errors_added((1, self.WARN), (2, '\n'.join(self.RETURNING)), family), [])
 
-    def test_a_restored_websites_error_accounts_for_status_two_and_for_no_other(self):
-        self.assertEqual(config_errors_added((0, ''), (2, self.MOVED), self.RESTORED), [])
-        for after in ((3, self.MOVED), (139, self.MOVED), (2, ''), (2, self.WARN)):
+    def test_the_same_lines_refuse_a_suspension_a_mixed_change_and_files_put_back(self):
+        for line in self.RETURNING:
+            with self.subTest(line=line):
+                for changed in (self.SUSPENDED, {'a.test': False, 'b.test': True}, {}, None):
+                    self.assertEqual(config_errors_added((1, self.WARN), (2, line), changed), [line.strip()])
+
+    def test_a_restore_is_undone_for_a_fatal_message_that_was_not_there(self):
+        fatal = '2026-11-22 17:20:00.000001 [FATAL] [299154] [config:server:vhosts:vhost:a.test] cannot continue'
+        after = (2, '\n'.join(self.RETURNING + (fatal,)))
+        self.assertEqual(config_errors_added((1, self.WARN), after, self.RESTORED), [fatal])
+        self.assertEqual(config_errors_added((2, fatal), after, self.RESTORED), [])
+
+    def test_a_restore_is_undone_for_a_status_that_is_no_result(self):
+        for after in ((3, self.MEASURED_LINE), (139, ''), (-11, self.WARN), (78, self.MEASURED_LINE)):
             with self.subTest(after=after):
                 added = config_errors_added((1, self.WARN), after, self.RESTORED)
                 self.assertEqual(len(added), 1)
                 self.assertIn('ended with status %d' % after[0], added[0])
+        for after in ((2, self.MEASURED_LINE), (2, ''), (2, self.WARN), (1, self.WARN), (0, '')):
+            with self.subTest(after=after):
+                self.assertEqual(config_errors_added((0, ''), after, self.RESTORED), [])
 
 
 if __name__ == '__main__':
