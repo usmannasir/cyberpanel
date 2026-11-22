@@ -146,13 +146,15 @@ class tuningManager:
             # The selection becomes part of a path and of the worker's command
             # line: on OpenLiteSpeed it is a website of this server, written
             # as it is stored; on LiteSpeed Enterprise a LiteSpeed PHP.
-            domainSelection = tuning.phpTuningTarget(domainSelection)
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                if not isinstance(domainSelection, str):
+                    raise ValueError('Invalid domain name.')
                 site = Websites.objects.filter(domain=domainSelection).first() or \
                     ChildDomains.objects.filter(domain=domainSelection).first()
                 if site is None:
                     raise ValueError('Invalid domain name.')
                 domainSelection = site.domain
+            domainSelection = tuning.phpTuningTarget(domainSelection)
 
             if status == "fetch":
 

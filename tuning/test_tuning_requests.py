@@ -69,6 +69,14 @@ class TuningRequestTests(unittest.TestCase):
             words = shlex.split(self.commands()[0])
             self.assertEqual(stored, words[words.index('--virtualHost') + 1])
 
+    def test_php_tuning_reaches_a_website_named_by_an_earlier_release(self):
+        for name in ('my_shop.example.com', 'm\u00fcnchen.de'):
+            self.services.namespace['Websites'].objects.rows.append(NS(domain=name))
+            with self.subTest(name=name):
+                self.assertEqual(1, self.tune_php(domainSelection=name.upper())['tuneStatus'])
+                words = shlex.split(self.commands()[0])
+                self.assertEqual(name, words[words.index('--virtualHost') + 1])
+
     def test_php_tuning_starts_no_worker_for_a_refused_value(self):
         cases = [('maxConns', NOT_A_NUMBER), ('initTimeout', NOT_A_NUMBER), ('procSoftLimit', NOT_A_NUMBER),
                  ('procHardLimit', NOT_A_NUMBER), ('memSoftLimit', NOT_A_SIZE), ('memHardLimit', NOT_A_SIZE),

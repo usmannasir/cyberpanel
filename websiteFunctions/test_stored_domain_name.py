@@ -9,10 +9,16 @@ from websiteFunctions.test_wordpress_entitlements import Response, load_wordpres
 
 # Spellings the database's default comparison treats as the stored 'owned.example'.
 SAME_ROW = ('owned.example', 'OWNED.EXAMPLE', 'Owned.Example')
-# Not a domain name at all: refused before any lookup.
-NOT_A_DOMAIN = ('owned.example ', ' owned.example', 'owned.example\t', 'owned.example/..', '../owned.example',
+# Text that finds no website: not text at all, or a spelling the database does not match with a stored name.
+NOT_A_DOMAIN = (' owned.example', 'owned.example\t', 'owned.example/..', '../owned.example',
                 'owned.example;id', 'owned example', 'owned..example', '-owned.example', '', None, 7,
                 ['owned.example'])
+# Names from earlier releases that today's rule for a new name refuses.
+OLDER_NAMES = ('my_shop.example.com', 'm\u00fcnchen.de')
+# A stored name that cannot be one component of a path.
+UNSAFE_STORED_NAME = ('', '.', '..', '-owned.example', 'owned.example/..', '../owned.example', '/owned.example',
+                      'owned example', 'owned.example ', ' owned.example', 'owned.example\t', 'owned.example\n',
+                      'owned\x00.example', 'owned.example\x7f', 'owned\u2028.example', None, 7, ['owned.example'])
 
 
 class Rows:
@@ -82,13 +88,87 @@ class StoredDomainNameTests(unittest.TestCase):
             self.assertEqual('owned.example', self.manager.storedDomainName(spelling))
         self.assertEqual('shop.owned.example', self.manager.storedDomainName('SHOP.owned.example'))
 
-    def test_text_that_is_not_a_domain_is_refused_before_any_lookup(self):
+    def test_text_that_finds_no_website_is_refused(self):
         for value in NOT_A_DOMAIN:
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, 'Invalid domain name'):
+                    self.manager.storedDomainName(value)
+
+    def test_only_text_is_looked_up(self):
+        for value in (None, 7, ['owned.example'], {'domain': 'owned.example'}, b'owned.example'):
             with self.subTest(value=value):
                 with self.assertRaisesRegex(ValueError, 'Invalid domain name'):
                     self.manager.storedDomainName(value)
         self.assertEqual([], self.ns['Websites'].objects.lookups)
         self.assertEqual([], self.ns['ChildDomains'].objects.lookups)
+
+    def test_a_trailing_space_the_database_ignores_gives_the_stored_name(self):
+        self.assertEqual('owned.example', self.manager.storedDomainName('owned.example '))
+
+    def add_website(self, name, child=False):
+        row = mock.Mock(domain=name, phpSelection='PHP 7.4', externalApp='older1234', master=self.site)
+        row.childdomains_set.filter.return_value = []
+        self.ns['ChildDomains' if child else 'Websites'].objects.rows.append(row)
+        return row
+
+    def test_a_website_named_by_an_earlier_release_is_found_under_its_stored_name(self):
+        for name in OLDER_NAMES:
+            self.add_website(name)
+            self.add_website('shop.' + name, child=True)
+        for name in OLDER_NAMES:
+            with self.subTest(name=name):
+                self.assertEqual(name, self.manager.storedDomainName(name))
+                self.assertEqual(name, self.manager.storedDomainName(name.upper()))
+                self.assertEqual('shop.' + name, self.manager.storedDomainName('Shop.' + name))
+
+    def test_a_stored_name_that_cannot_name_a_directory_is_refused(self):
+        for name in UNSAFE_STORED_NAME:
+            if not isinstance(name, str) or not name:
+                continue
+            with self.subTest(name=name):
+                row = mock.Mock(domain=name)
+                self.ns['ChildDomains'] = NS(objects=NS(filter=lambda domain=None: NS(first=lambda: None)))
+                self.ns['Websites'] = NS(objects=NS(filter=lambda domain=None: NS(first=lambda: row)))
+                with self.assertRaisesRegex(ValueError, 'Invalid domain name'):
+                    self.manager.storedDomainName(name)
+
+    def test_the_stored_name_rule(self):
+        from plogical.websiteSuspension import validate_stored_domain
+        for name in OLDER_NAMES + ('owned.example', 'OWNED.example', 'xn--mnchen-3ya.de', 'a', 'owned.example-'):
+            self.assertEqual(name, validate_stored_domain(name))
+        for name in UNSAFE_STORED_NAME:
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(ValueError, 'Invalid domain name'):
+                    validate_stored_domain(name)
+
+    def test_php_change_works_for_a_website_named_by_an_earlier_release(self):
+        for name in OLDER_NAMES:
+            self.add_website(name)
+            with self.subTest(name=name):
+                self.process.reset_mock()
+                payload = json.loads(self.manager().changePHP(
+                    7, {'childDomain': name.upper(), 'phpSelection': 'PHP 8.3'}).content)
+                self.assertEqual(1, payload['status'], payload)
+                words = self.worker_words()
+                self.assertEqual('/usr/local/lsws/conf/vhosts/%s/vhost.conf' % name,
+                                 words[words.index('--path') + 1])
+
+    def test_server_switch_and_open_basedir_work_for_a_website_named_by_an_earlier_release(self):
+        for name in OLDER_NAMES:
+            self.add_website(name)
+            with self.subTest(name=name):
+                self.process.reset_mock()
+                payload = json.loads(self.manager().switchServer(
+                    7, {'domainName': name, 'phpSelection': 'PHP 8.3', 'server': 1}).content)
+                self.assertEqual(1, payload['status'], payload)
+                words = self.worker_words()
+                self.assertEqual(name, words[words.index('--virtualHostName') + 1])
+                self.process.reset_mock()
+                payload = json.loads(self.manager().changeOpenBasedir(
+                    7, {'domainName': name, 'openBasedirValue': 'Enable'}).content)
+                self.assertEqual(1, payload['status'], payload)
+                words = self.worker_words()
+                self.assertEqual(name, words[words.index('--virtualHostName') + 1])
 
     def test_a_domain_this_server_does_not_have_is_refused(self):
         with self.assertRaisesRegex(ValueError, 'Invalid domain name'):

@@ -15,6 +15,11 @@ NOT_A_SIZE = ('2047M;id', '2047M 1', '2047MB', '-1M', '2.5G', 'M', '', None, 1.5
 NOT_A_SWITCH = ('enable', 'Enabled', 'Enable ', '1', 'Enable --maxConns 9', '', None, True, ['Enable'])
 NOT_A_DOMAIN = ('example.test/../other.test', '../other.test', 'example.test other.test', 'example.test;id',
                 'example.test\n', '', None, 7, ['example.test'])
+# What the worker refuses as the stored name of a website: text that cannot be one component of a path.
+UNSAFE_STORED_NAME = ('example.test/../other.test', '../other.test', 'example.test other.test', 'example.test\n',
+                      'example.test\t', 'example\x00.test', '.', '..', '-example.test', '', None, 7,
+                      ['example.test'])
+OLDER_NAMES = ('my_shop.example.com', 'm\u00fcnchen.de')
 VHOST = ('docRoot                   $VH_ROOT/public_html\nextprocessor example {\n  type                    lsapi\n'
          '  maxConns                10\n  initTimeout             600\n  persistConn             1\n'
          '  memSoftLimit            2047M\n  memHardLimit            2047M\n  procSoftLimit           400\n'
@@ -75,8 +80,9 @@ class TuningValueTests(unittest.TestCase):
                     self.tuning.enableOrDisable(value, 'x')
 
     def test_target_is_a_domain_on_openlitespeed_and_a_litespeed_php_on_enterprise(self):
-        self.assertEqual('example.test', self.tuning.phpTuningTarget('example.test'))
-        for value in NOT_A_DOMAIN:
+        for name in ('example.test',) + OLDER_NAMES:
+            self.assertEqual(name, self.tuning.phpTuningTarget(name))
+        for value in UNSAFE_STORED_NAME:
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     self.tuning.phpTuningTarget(value)
@@ -115,10 +121,19 @@ class TuningWorkerTests(unittest.TestCase):
              ['memHardLimit', '1024M'], ['procSoftLimit', '300'], ['procHardLimit', '400'], ['}']],
             [line.split() for line in lines[3:]])
 
+    def test_a_website_named_by_an_earlier_release_is_tuned(self):
+        for name in OLDER_NAMES:
+            with self.subTest(name=name):
+                vhost = Path(self.temp.name) / 'conf' / 'vhosts' / name / 'vhost.conf'
+                vhost.parent.mkdir(parents=True)
+                vhost.write_text(VHOST)
+                self.assertEqual('1,None\n', self.tune(virtualHost=name))
+                self.assertIn(['maxConns', '20'], [line.split() for line in vhost.read_text().splitlines()])
+
     def test_a_refused_value_leaves_the_configuration_alone(self):
         cases = [('maxConns', NOT_A_NUMBER), ('initTimeout', NOT_A_NUMBER), ('procSoftLimit', NOT_A_NUMBER),
                  ('procHardLimit', NOT_A_NUMBER), ('memSoftLimit', NOT_A_SIZE), ('memHardLimit', NOT_A_SIZE),
-                 ('persistConn', NOT_A_SWITCH), ('virtualHost', NOT_A_DOMAIN)]
+                 ('persistConn', NOT_A_SWITCH), ('virtualHost', UNSAFE_STORED_NAME)]
         with mock.patch.object(self.module, 'open', side_effect=AssertionError('a file was opened'), create=True):
             for name, values in cases:
                 for value in values:
@@ -147,7 +162,7 @@ class TuningWorkerTests(unittest.TestCase):
         self.process.outputExecutioner.assert_called_once_with(
             'sudo cat %s/conf/vhosts/example.test/vhost.conf' % self.temp.name)
         self.process.outputExecutioner.reset_mock()
-        for value in NOT_A_DOMAIN:
+        for value in UNSAFE_STORED_NAME:
             with self.subTest(value=value):
                 self.assertEqual(0, self.tuning.fetchPHPDetails(value))
         self.process.outputExecutioner.assert_not_called()

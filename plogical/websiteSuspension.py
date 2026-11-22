@@ -8,6 +8,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import unicodedata
 
 START = '# Website Suspension Configuration'
 END = '# End Website Suspension Configuration'
@@ -38,6 +39,22 @@ def validate_domain(domain):
             not re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?', domain) or
             any(not label or len(label) > 63 or label.startswith('-') or
                 label.endswith('-') for label in domain.split('.'))):
+        raise ValueError('Invalid domain name.')
+    return domain
+
+
+def validate_stored_domain(domain):
+    """Check the stored name of an existing website before it names a path.
+
+    validate_domain is the rule for a new name. Earlier releases stored names
+    it refuses today (an underscore, letters outside ASCII), and such a
+    website stays manageable. The name of a row that exists is therefore
+    refused only when it cannot be one component of a path: empty, '.' or
+    '..', a leading hyphen, a slash, white space or a control character.
+    """
+    if (not isinstance(domain, str) or domain in ('', '.', '..') or
+            domain.startswith('-') or '/' in domain or
+            any(letter.isspace() or unicodedata.category(letter) == 'Cc' for letter in domain)):
         raise ValueError('Invalid domain name.')
     return domain
 

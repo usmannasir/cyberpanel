@@ -1471,11 +1471,12 @@ class virtualHostUtilities:
 
     @staticmethod
     def changeOpenBasedir(domainName, openBasedirValue):
-        # Checked again here: the name becomes the path of the configuration
-        # that is rewritten, and only the page's two words are acted on.
-        from plogical.websiteSuspension import validate_domain
+        # Checked again here: the stored name becomes the path of the
+        # configuration that is rewritten, and only the page's two words are
+        # acted on.
+        from plogical.websiteSuspension import validate_stored_domain
         try:
-            validate_domain(domainName)
+            validate_stored_domain(domainName)
             if openBasedirValue not in ('Enable', 'Disable'):
                 raise ValueError('Invalid open_basedir selection.')
         except ValueError as msg:
