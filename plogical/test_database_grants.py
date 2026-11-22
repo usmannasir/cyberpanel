@@ -223,7 +223,9 @@ class PanelStatementTests(unittest.TestCase):
     def fetch_user(self, registered, accounts):
         row = mock.Mock(dbUser=registered)
         cursor = Cursor({'SELECT User, Host': accounts})
-        with mock.patch.object(module.Databases.objects, 'get', return_value=row):
+        # Whether a found account may take the registration is the panel's own rule, tested with it.
+        with mock.patch.object(module.Databases.objects, 'get', return_value=row), \
+                mock.patch('plogical.databaseAccounts.may_register_user', return_value=True):
             return self.run_with(cursor, mysqlUtilities.fetchuser, 'shop_db'), row, cursor
 
     def test_registered_user_with_its_grant_stays_the_database_user(self):
