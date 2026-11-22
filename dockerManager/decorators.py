@@ -8,6 +8,25 @@ from loginSystem.views import loadLoginPage
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 
+dockerInstallPath = '/usr/bin/docker'
+
+
+def dockerDaemonAnswers():
+    try:
+        client = docker.from_env()
+        client.ping()
+        return True
+    except BaseException as msg:
+        logging.writeToFile(str(msg))
+        return False
+
+
+def dockerIsReady():
+    """Docker is installed and its daemon answers: the panel shows its Docker
+    pages in this state and offers the installer in every other one."""
+    return os.path.exists(dockerInstallPath) and dockerDaemonAnswers()
+
+
 def preDockerRun(function):
     def wrap(request, *args, **kwargs):
         
@@ -24,7 +43,6 @@ def preDockerRun(function):
             isPost = False
             
         # check if docker is installed
-        dockerInstallPath = '/usr/bin/docker'
         if not os.path.exists(dockerInstallPath):
             if isPost:
                 data_ret = {'status': 0, 'error_message': 'Docker not installed'}
@@ -38,11 +56,7 @@ def preDockerRun(function):
             
         # Check if docker is running and we are able to connect
                 
-        try:
-            client = docker.from_env()
-            result = client.ping()
-        except BaseException as msg:
-            logging.writeToFile(str(msg))
+        if not dockerDaemonAnswers():
             if isPost:
                 data_ret = {'status': 0, 'error_message': 'Docker daemon not running or not responsive'}
                 json_data = json.dumps(data_ret)
