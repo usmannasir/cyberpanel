@@ -707,6 +707,9 @@ def check_rate_limit(scan_id, endpoint, max_requests):
 def file_request(request, operation, scan_id, file_path):
     """Authenticate one file operation request.
 
+    Reading is open to a scan's file access token and to the scanner key of
+    the scan's owner; backing up, replacing, renaming and deleting need the key.
+
     Returns (authentication, None) or (None, the reply to send).
     """
     access_token, auth_type = extract_auth_token(request)
@@ -720,6 +723,12 @@ def file_request(request, operation, scan_id, file_path):
     if error:
         log_file_operation(scan_id, operation, file_path, False, error, request=request)
         return None, JsonResponse({'success': False, 'error': error}, status=401)
+
+    # The token a scan hands to its workers reads files and nothing more.
+    if operation != 'read' and file_token.auth_type != 'api_key':
+        error = 'The file access token of a scan can only read files'
+        log_file_operation(scan_id, operation, file_path, False, error, request=request)
+        return None, JsonResponse({'success': False, 'error': error, 'error_code': 'READ_ONLY_TOKEN'}, status=403)
 
     return file_token, None
 

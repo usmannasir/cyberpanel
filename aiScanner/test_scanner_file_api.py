@@ -198,3 +198,22 @@ class ScannerFileApiTests(SimpleTestCase):
         status, replaced = self.post(api.scanner_replace_file, {'file_path': 'readme.txt', 'content': 'x'})
         self.assertEqual((500, 'NO_USER'), (status, replaced['error_code']))
         self.assertEqual([], self.helper.calls)
+
+    def test_the_file_token_of_a_scan_only_reads(self):
+        self.auth = api.AuthWrapper('secai.test', self.root, 'file_token', external_app=SITE_USER,
+                                    source_obj=SimpleNamespace())
+        self.assertEqual(200, self.get(api.list_files, path='.')[0])
+        self.assertEqual(200, self.get(api.get_file_content, path='readme.txt')[0])
+        self.assertEqual(200, self.get(api.scanner_get_file, file_path='readme.txt')[0])
+        del self.helper.calls[:]
+        for view, payload in (
+                (api.scanner_replace_file, {'file_path': 'readme.txt', 'content': 'changed\n'}),
+                (api.scanner_rename_file, {'old_path': 'readme.txt', 'new_path': 'readme.txt.quarantined.1'}),
+                (api.scanner_delete_file, {'file_path': 'readme.txt', 'confirm_deletion': True}),
+                (api.scanner_backup_file, {'file_path': 'readme.txt', 'scan_id': SCAN_ID}),
+        ):
+            status, reply = self.post(view, payload)
+            self.assertEqual((403, False, 'READ_ONLY_TOKEN'), (status, reply['success'], reply['error_code']))
+        self.assertEqual([], self.helper.calls)
+        self.assertEqual(b'read me\n', self.read(self.root, 'readme.txt'))
+        self.assertFalse(os.path.exists(os.path.join(self.home, '.ai-scanner-backups')))
