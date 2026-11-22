@@ -25,6 +25,7 @@ import re
 import plogical.CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
+from plogical.panelUserNames import existing_file_for_user, file_for_user
 
 class DNSManager:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
@@ -33,7 +34,9 @@ class DNSManager:
         self.extraArgs = extraArgs
 
     def loadCFKeys(self):
-        cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
+        cfFile = existing_file_for_user(DNS.CFPath, self.admin)
+        if cfFile is None:
+            raise FileNotFoundError('CloudFlare is not configured for this user.')
         data = open(cfFile, 'r').readlines()
         self.email = data[0].rstrip('\n')
         self.key = data[1].rstrip('\n')
@@ -656,9 +659,7 @@ class DNSManager:
 
         CloudFlare = 0
 
-        cfPath = '%s%s' % (DNS.CFPath, admin.userName)
-
-        if os.path.exists(cfPath):
+        if existing_file_for_user(DNS.CFPath, admin) is not None:
             CloudFlare = 1
             domainsList = ACLManager.findAllDomains(currentACL, userID)
             self.admin = admin
@@ -684,7 +685,7 @@ class DNSManager:
                 return ACLManager.loadErrorJson('status', 0)
 
             admin = Administrator.objects.get(pk=userID)
-            cfPath = '%s%s' % (DNS.CFPath, admin.userName)
+            cfPath = file_for_user(DNS.CFPath, admin)
 
             writeToFile = open(cfPath, 'w')
             writeToFile.write('%s\n%s\n%s' % (cfEmail, cfToken, cfSync))
