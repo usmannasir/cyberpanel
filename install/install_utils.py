@@ -4,7 +4,9 @@ Common utility functions for CyberPanel installation scripts.
 This module contains shared functions used by both install.py and installCyberPanel.py
 """
 
+import fcntl
 import os
+import re
 import sys
 import time
 import logging
@@ -338,6 +340,70 @@ def resFailed(distro, res):
     return False
 
 
+# The locks apt and dpkg take. While another apt process holds one of them (the
+# daily apt timer, unattended upgrades), apt-get fails at once: "Could not get
+# lock". DPkg::Lock::Timeout makes apt wait only for the dpkg frontend lock, not
+# for the lists lock of "apt-get update" or the archives lock of a download.
+APT_LOCKS = ('/var/lib/dpkg/lock-frontend', '/var/lib/dpkg/lock',
+             '/var/lib/apt/lists/lock', '/var/cache/apt/archives/lock')
+# Unattended upgrades on a new server can hold the locks for many minutes.
+PACKAGE_LOCK_WAIT_SECONDS = 1800
+_APT_COMMAND = re.compile(r'(^|[\s;&|(])(apt-get|apt|dpkg)(\s|$)')
+
+
+def busy_package_locks(paths=APT_LOCKS):
+    """The apt and dpkg locks that another process holds now.
+
+    A lock is tried the way apt takes it (an fcntl write lock), without waiting,
+    and let go at once. A lock file that does not exist is free.
+    """
+    busy = []
+    for path in paths:
+        try:
+            fd = os.open(path, os.O_RDWR)
+        except OSError:
+            continue
+        try:
+            fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.lockf(fd, fcntl.LOCK_UN)
+        except OSError:
+            busy.append(path)
+        finally:
+            os.close(fd)
+    return busy
+
+
+def wait_for_package_locks(timeout=PACKAGE_LOCK_WAIT_SECONDS, poll=5, paths=APT_LOCKS,
+                           clock=time.monotonic, sleep=time.sleep, say=None):
+    """Wait until no other process holds an apt or dpkg lock, at most timeout
+    seconds. Returns True when the locks are free, False when the time is up."""
+    say = say or (lambda text: stdOut(text, 1))
+    deadline = clock() + timeout
+    last_said = None
+    while True:
+        busy = busy_package_locks(paths)
+        if not busy:
+            if last_said is not None:
+                say('The other package manager has finished; continuing.')
+            return True
+        now = clock()
+        if now >= deadline:
+            say('[WARNING] Another package manager still holds %s after %d minutes; trying anyway.'
+                % (', '.join(busy), timeout // 60))
+            return False
+        if last_said is None or now - last_said >= 60:
+            say('Waiting for another package manager to finish (it holds %s). This happens while the '
+                'daily apt update or unattended upgrades run; waiting up to %d minutes.'
+                % (', '.join(busy), timeout // 60))
+            last_said = now
+        sleep(poll)
+
+
+def uses_apt(command, distro):
+    """Whether this command runs apt or dpkg on a Debian-family server."""
+    return distro == ubuntu and bool(_APT_COMMAND.search(command))
+
+
 def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_SOFTWARE, shell=False):
     """
     Execute a shell command with retry logic and error handling
@@ -358,7 +424,12 @@ def call(command, distro, bracket, message, log=0, do_exit=0, code=os.EX_SOFTWAR
     finalMessage = 'Running: %s' % (message)
     stdOut(finalMessage, log)
     count = 0
+    apt_command = uses_apt(command, distro)
     while True:
+        if apt_command:
+            # apt gives up at once on a lock another apt process holds: wait
+            # for it here, so that the attempts below are real attempts.
+            wait_for_package_locks()
         if shell == False:
             res = subprocess.call(shlex.split(command))
         else:

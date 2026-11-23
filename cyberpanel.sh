@@ -767,6 +767,57 @@ do
 done
 }
 
+# apt and apt-get give up at once while another apt process holds a package
+# lock (the daily apt update and unattended upgrades start on a new server at
+# any moment), and apt's DPkg::Lock::Timeout covers only the dpkg frontend lock.
+# Every apt and apt-get of this script first waits until no other process holds
+# one, at most 30 minutes, as install_utils.wait_for_package_locks does for the
+# Python installer.
+Wait_For_Package_Locks() {
+command -v python3 >/dev/null 2>&1 || return 0
+python3 - <<'WAIT'
+import fcntl, os, sys, time
+LOCKS = ('/var/lib/dpkg/lock-frontend', '/var/lib/dpkg/lock',
+         '/var/lib/apt/lists/lock', '/var/cache/apt/archives/lock')
+def busy():
+    held = []
+    for path in LOCKS:
+        try:
+            fd = os.open(path, os.O_RDWR)
+        except OSError:
+            continue
+        try:
+            fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.lockf(fd, fcntl.LOCK_UN)
+        except OSError:
+            held.append(path)
+        finally:
+            os.close(fd)
+    return held
+deadline = time.time() + 1800
+said = None
+while True:
+    held = busy()
+    if not held:
+        if said is not None:
+            print('The other package manager has finished; continuing.')
+        break
+    if time.time() >= deadline:
+        print('Another package manager still holds %s after 30 minutes; trying anyway.' % ', '.join(held))
+        break
+    if said is None or time.time() - said >= 60:
+        print('Waiting for another package manager to finish (it holds %s). This happens while the daily '
+              'apt update or unattended upgrades run; waiting up to 30 minutes.' % ', '.join(held))
+        sys.stdout.flush()
+        said = time.time()
+    time.sleep(5)
+WAIT
+return 0
+}
+
+apt() { Wait_For_Package_Locks; command apt "$@"; }
+apt-get() { Wait_For_Package_Locks; command apt-get "$@"; }
+
 Check_Root() {
 log_function_start "Check_Root"
 echo -e "\nChecking root privileges..."
