@@ -7,7 +7,7 @@
     <p>{{ notice }}</p>
     <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
     <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
-    <label><input type="checkbox" name="confirm" value="{{ action }}" required> Confirm for {{ node.label }}</label>
+    <label><input type="checkbox" name="confirm" value="{{ action }}" required> Yes, {{ title|lower }}: {{ node.label }}</label>
     <button class="btn btn-danger" type="submit">{{ title }}</button>
   </form>
 </details>

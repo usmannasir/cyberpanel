@@ -35,7 +35,7 @@ def switch_choices():
             try:
                 label = links.check_label(label)
             except links.InvalidLabel:
-                label = 'Unnamed node'
+                label = 'Unnamed server'
             choices.append({'id': link_id, 'label': label})
     return choices
 
@@ -58,7 +58,7 @@ def summary(row):
     try:
         label = links.check_label(row.label)
     except links.InvalidLabel:
-        label = 'Unnamed node'
+        label = 'Unnamed server'
     caps = row.advertised.split(',') if row.advertised else []
     valid = len(caps) <= links.MAX_CAPABILITIES and all(links._CAPABILITY.fullmatch(cap) for cap in caps)
     return {
@@ -115,7 +115,7 @@ def control(request):
     if action == 'refresh':
         result = links.hello(link_id, admin.userName)
         if result.ok:
-            messages.success(request, 'Node capabilities refreshed.')
+            messages.success(request, 'Server info updated.')
         else:
             messages.error(request, result.error)
         return redirect('multiServerNodes')
@@ -139,24 +139,24 @@ def control(request):
     if action == 'pause' and (changed or models.Node.objects.filter(pk=link_id, status=models.PAUSED).exists()):
         from multiServer.sso import end_paused
         if end_paused(link_id, admin.userName):
-            messages.success(request, 'Paused on this controller. The node confirmed that its managed sessions ended.')
+            messages.success(request, 'Paused. This controller sends that server nothing until you resume it, and the server signed out the sessions opened from here.')
         else:
-            messages.warning(request, 'Paused on this controller. The node has not confirmed session invalidation. '
-                             'Retry while paused. Existing managed sessions expire within 30 minutes of login.')
+            messages.warning(request, 'Paused. That server has not yet confirmed that it signed out the sessions opened from here: press "Sign out open sessions" to try again. '
+                             'Those sessions end by themselves within 30 minutes of their sign-in.')
         return redirect('multiServerNodes')
     if changed:
-        messages.success(request, {'pause': 'Paused on this controller.', 'resume': 'Node resumed.',
-                                   'revoke': 'The node confirmed revocation. Its controller record was removed.',
-                                   'forget': 'Local record removed. Remote revocation is unconfirmed.'}[action])
+        messages.success(request, {'pause': 'Paused.', 'resume': 'Resumed. You can manage that server again.',
+                                   'revoke': 'Removed. That server confirmed that it no longer trusts this controller.',
+                                   'forget': 'Deleted from this list. That server was not told: if it still exists, end the link there too.'}[action])
     elif action == 'revoke':
-        messages.error(request, 'Revocation was not confirmed. Check the node and retry if it is still listed.')
+        messages.error(request, 'That server did not confirm the removal, so it stays listed as "Being removed". Make sure it is online and try again.')
     else:
-        messages.error(request, 'Action unavailable. Check the current node status and licence.')
+        messages.error(request, "That cannot be done now. Check the server's status and this controller's licence.")
     return redirect('multiServerNodes')
 
 
-PAIRED = ('Paired. Now, on that server, open Multi-Server > Controllers and approve this controller with the '
-          'number shown below. Then press "Check approval" here.')
+PAIRED = ('Code accepted. Now, on that server, open Multi-Server, Controllers, type the eight-digit number shown '
+          'below and press Approve. Then press "I approved it, check now" here.')
 
 
 @never_cache

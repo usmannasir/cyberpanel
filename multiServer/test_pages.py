@@ -743,8 +743,8 @@ class AddServerTests(Pages):
         self.assertEqual(('Frankfurt 1', 'pending', self.sent[0][0]), (row.label, row.status, row.link_id))
         number = self.number()
         shown = number[:4] + ' ' + number[4:]
-        self.assertIn('Paired. Now, on that server', page)
-        self.assertIn('Waiting for approval on that server<br>Number to type there: <strong>%s</strong>' % shown, page)
+        self.assertIn('Code accepted. Now, on that server', page)
+        self.assertIn('Waiting for approval on that server</strong><br>Number to type there: <strong>%s</strong>' % shown, page)
         self.assertIn('name="action" value="confirm"', page)
         # It is shown again whenever the page is opened, and it is written down nowhere.
         self.assertIn(shown, self.text(self.client.get(self.NODES)))

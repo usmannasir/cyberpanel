@@ -17,7 +17,7 @@ class NodePresentationTests(unittest.TestCase):
                               panel_version='bad version', last_seen_at=2**63, last_error='private data',
                               last_error_at=None)
         summary = nodes.summary(row)
-        self.assertEqual(('Unnamed node', '', 'unknown', '', '', None, 'Unknown error'),
+        self.assertEqual(('Unnamed server', '', 'unknown', '', '', None, 'Unknown error'),
                          tuple(summary[k] for k in ('label', 'id', 'status', 'version', 'capabilities', 'seen', 'error')))
         row.advertised = ''
         self.assertEqual('', nodes.summary(row)['capabilities'])
