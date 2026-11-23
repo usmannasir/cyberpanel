@@ -776,21 +776,18 @@ done
 # Every apt of this script, and every apt-get and add-apt-repository run through
 # Retry_Command, first waits until no other process holds one. The kernel is
 # asked who holds a lock (F_GETLK); no lock is taken. The whole installation
-# waits at most 30 minutes in all: the moment that runs out (seconds since boot)
-# is kept in CP_PACKAGE_LOCK_DEADLINE, which install.py reads too
+# waits at most 30 minutes in all: the seconds waited so far are kept in
+# CP_PACKAGE_LOCK_WAITED, which install.py adds to as well
 # (install_utils.wait_for_package_locks does the same for the Python installer).
 Wait_For_Package_Locks() {
 command -v python3 >/dev/null 2>&1 || return 0
-local deadline
-deadline=$(python3 -I - "${CP_PACKAGE_LOCK_DEADLINE:-}" <<'WAIT'
+local waited
+waited=$(python3 -I - "${CP_PACKAGE_LOCK_WAITED:-0}" <<'WAIT'
 import fcntl, os, struct, sys, time
 LOCKS = ('/var/lib/dpkg/lock-frontend', '/var/lib/dpkg/lock',
          '/var/lib/apt/lists/lock', '/var/cache/apt/archives/lock')
-FLOCK = 'hhqqi'
+FLOCK = 'hhqqi4x'
 WAIT_SECONDS = 1800
-def uptime():
-    with open('/proc/uptime') as f:
-        return float(f.read().split()[0])
 def holder(path):
     try:
         fd = os.open(path, os.O_RDONLY)
@@ -800,7 +797,7 @@ def holder(path):
         kind, _, _, _, pid = struct.unpack(FLOCK, fcntl.fcntl(
             fd, fcntl.F_GETLK, struct.pack(FLOCK, fcntl.F_WRLCK, os.SEEK_SET, 0, 0, 0)))
         return None if kind == fcntl.F_UNLCK else pid
-    except OSError:
+    except Exception:
         return None
     finally:
         os.close(fd)
@@ -818,9 +815,10 @@ def busy():
         held.append('%s (process %d, %s)' % (path, pid, name))
     return held
 try:
-    deadline = float(sys.argv[1])
+    waited = max(0.0, float(sys.argv[1]))
 except (IndexError, ValueError):
-    deadline = None
+    waited = 0.0
+started = time.monotonic()
 said = None
 while True:
     held = busy()
@@ -828,10 +826,8 @@ while True:
         if said is not None:
             sys.stderr.write('The other package manager has finished; continuing.\n')
         break
-    now = uptime()
-    if deadline is None:
-        deadline = now + WAIT_SECONDS
-    if now >= deadline:
+    now = time.monotonic()
+    if waited + now - started >= WAIT_SECONDS:
         sys.stderr.write('Another package manager still holds %s, and this installation has already waited '
                          '30 minutes for package locks; trying anyway.\n' % '; '.join(held))
         break
@@ -841,11 +837,10 @@ while True:
                          'in all.\n' % '; '.join(held))
         said = now
     time.sleep(5)
-if deadline is not None:
-    print('%.0f' % deadline)
+print('%.0f' % (waited + time.monotonic() - started))
 WAIT
 )
-[[ -n "$deadline" ]] && export CP_PACKAGE_LOCK_DEADLINE="$deadline"
+[[ -n "$waited" ]] && export CP_PACKAGE_LOCK_WAITED="$waited"
 return 0
 }
 

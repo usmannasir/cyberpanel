@@ -67,7 +67,7 @@ class Budget(unittest.TestCase):
         patcher = mock.patch.dict(os.environ)
         patcher.start()
         self.addCleanup(patcher.stop)
-        os.environ.pop(install_utils.PACKAGE_LOCK_DEADLINE, None)
+        os.environ.pop(install_utils.PACKAGE_LOCK_WAITED, None)
 
 
 class Locks(Budget):
@@ -115,47 +115,59 @@ class Locks(Budget):
         self.assertIn('it holds %s (process %d' % (self.paths[3], holder.pid), said[0])
         self.assertTrue(said[-1].startswith('The other package manager has finished'))
 
-    def test_nothing_is_said_or_budgeted_when_the_locks_are_free(self):
+    def test_nothing_is_said_or_counted_when_the_locks_are_free(self):
         said = []
         self.assertTrue(install_utils.wait_for_package_locks(paths=self.paths, say=said.append))
         self.assertEqual([], said)
-        self.assertNotIn(install_utils.PACKAGE_LOCK_DEADLINE, os.environ)
+        self.assertEqual('0', os.environ[install_utils.PACKAGE_LOCK_WAITED])
+
+    def test_a_probe_that_fails_in_any_way_counts_as_free(self):
+        with mock.patch.object(install_utils.fcntl, 'fcntl', side_effect=SystemError('buffer overflow')):
+            self.assertIsNone(install_utils.lock_holder(self.paths[0]))
 
 
 class OneBudget(Budget):
-    def wait(self, now, said):
-        return install_utils.wait_for_package_locks(
-            timeout=120, poll=5, clock=lambda: now[0],
-            sleep=lambda seconds: now.__setitem__(0, now[0] + seconds), say=said.append)
+    """30 minutes of waiting in all, however the waiting is spread over the installation."""
+
+    def wait(self, now, said, busy_for=None):
+        def busy(paths):
+            return ['/var/lib/dpkg/lock (x)'] if busy_for is None or now[0] < busy_for else []
+        with mock.patch.object(install_utils, 'busy_package_locks', side_effect=busy):
+            return install_utils.wait_for_package_locks(
+                timeout=120, poll=5, clock=lambda: now[0],
+                sleep=lambda seconds: now.__setitem__(0, now[0] + seconds), say=said.append)
 
     def test_the_wait_is_bounded_and_says_once_a_minute(self):
         now, said = [1000.0], []
-        with mock.patch.object(install_utils, 'busy_package_locks', return_value=['/var/lib/apt/lists/lock (x)']):
-            self.assertFalse(self.wait(now, said))
+        self.assertFalse(self.wait(now, said))
         self.assertEqual(1120.0, now[0])
-        self.assertEqual('1120', os.environ[install_utils.PACKAGE_LOCK_DEADLINE])
+        self.assertEqual('120', os.environ[install_utils.PACKAGE_LOCK_WAITED])
         self.assertTrue(said[-1].startswith('[WARNING] Another package manager still holds'))
         self.assertEqual(2, sum(1 for text in said if text.startswith('Waiting for another package manager')))
 
     def test_a_used_up_budget_is_not_spent_again(self):
         now, said = [1000.0], []
-        with mock.patch.object(install_utils, 'busy_package_locks', return_value=['/var/lib/dpkg/lock (x)']):
-            self.wait(now, said)
-            spent = now[0]
-            self.assertFalse(self.wait(now, said))
+        self.wait(now, said)
+        spent = now[0]
+        self.assertFalse(self.wait(now, said))
         self.assertEqual(spent, now[0])
 
-    def test_the_budget_cyberpanel_sh_started_is_kept(self):
-        os.environ[install_utils.PACKAGE_LOCK_DEADLINE] = '1030'
+    def test_short_holds_far_apart_are_each_waited_for(self):
+        # A 20 s hold at the start and another one much later: both are waited
+        # for, because only the time actually waited counts.
         now, said = [1000.0], []
-        with mock.patch.object(install_utils, 'busy_package_locks', return_value=['/var/lib/dpkg/lock (x)']):
-            self.assertFalse(self.wait(now, said))
-        self.assertEqual(1030.0, now[0])
+        self.assertTrue(self.wait(now, said, busy_for=1020.0))
+        self.assertEqual('20', os.environ[install_utils.PACKAGE_LOCK_WAITED])
+        now[0] = 3000.0
+        self.assertTrue(self.wait(now, said, busy_for=3030.0))
+        self.assertEqual('50', os.environ[install_utils.PACKAGE_LOCK_WAITED])
 
-    def test_the_clock_is_the_time_since_boot(self):
-        first = install_utils.seconds_since_boot()
-        self.assertGreater(first, 0)
-        self.assertLessEqual(first, install_utils.seconds_since_boot())
+    def test_the_time_cyberpanel_sh_waited_counts(self):
+        os.environ[install_utils.PACKAGE_LOCK_WAITED] = '90'
+        now, said = [1000.0], []
+        self.assertFalse(self.wait(now, said))
+        self.assertEqual(1030.0, now[0])
+        self.assertEqual('120', os.environ[install_utils.PACKAGE_LOCK_WAITED])
 
 
 class AptCommands(Budget):
@@ -195,7 +207,7 @@ class ShellScript(unittest.TestCase):
 
     def setUp(self):
         self.script = (ROOT / 'cyberpanel.sh').read_text()
-        opening = 'deadline=$(python3 -I - "${CP_PACKAGE_LOCK_DEADLINE:-}" <<\'WAIT\'\n'
+        opening = 'waited=$(python3 -I - "${CP_PACKAGE_LOCK_WAITED:-0}" <<\'WAIT\'\n'
         start = self.script.index(opening) + len(opening)
         self.waiter = self.script[start:self.script.index('\nWAIT\n', start)]
 
@@ -228,13 +240,13 @@ class ShellScript(unittest.TestCase):
         return subprocess.run([sys.executable, '-I', '-c', waiter] + list(arguments), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, universal_newlines=True, timeout=60)
 
-    def test_the_script_waits_until_the_lock_is_free_and_hands_on_its_budget(self):
+    def test_the_script_waits_until_the_lock_is_free_and_counts_the_wait(self):
         with tempfile.TemporaryDirectory() as directory:
             paths = lock_files(directory)
             holder = hold(paths[2], 2)
             started = time.monotonic()
             try:
-                result = self.run_waiter(paths, '')
+                result = self.run_waiter(paths, '7')
             finally:
                 holder.kill()
                 holder.wait()
@@ -242,12 +254,11 @@ class ShellScript(unittest.TestCase):
             self.assertGreaterEqual(time.monotonic() - started, 1.5)
             self.assertIn('it holds %s (process %d' % (paths[2], holder.pid), result.stderr)
             self.assertIn('The other package manager has finished; continuing.', result.stderr)
-            deadline = float(result.stdout.strip())
-            self.assertAlmostEqual(install_utils.seconds_since_boot() + 1800, deadline, delta=30)
+            self.assertGreaterEqual(int(result.stdout.strip()), 9)
 
-            # Free locks: no wait, nothing said, no budget started.
-            result = self.run_waiter(paths, '')
-            self.assertEqual(('', ''), (result.stdout, result.stderr))
+            # Free locks: no wait, nothing said, the count handed on unchanged.
+            result = self.run_waiter(paths, '7')
+            self.assertEqual(('7\n', ''), (result.stdout, result.stderr))
 
     def test_the_script_does_not_wait_past_the_budget(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -255,7 +266,7 @@ class ShellScript(unittest.TestCase):
             holder = hold(paths[0], 30)
             try:
                 started = time.monotonic()
-                result = self.run_waiter(paths, '%.0f' % (install_utils.seconds_since_boot() - 1))
+                result = self.run_waiter(paths, '1800')
             finally:
                 holder.kill()
                 holder.wait()
