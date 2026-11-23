@@ -822,9 +822,10 @@ mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'loca
 # remi-release requires epel-release, so the removal of epel-release below
 # removed the Remi repository too, at every upgrade, and LiteSpeed's PHP
 # packages need libraries that only Remi provides (lsphp8x-intl on EL9 needs
-# libicu78). Once EPEL is back, the Remi release package is installed again:
-# always on 9 and 10, where the installer sets Remi up (this also repairs a
-# server that lost it in an earlier upgrade), elsewhere when it was there.
+# libicu78). The Remi release package is installed again once EPEL is back:
+# always on 9 and 10, where the installer sets Remi up, elsewhere when it was
+# there. On 9 and 10 it is also installed before the system update, so that a
+# server that lost it in an earlier upgrade can update at all.
 Remember_Remi_Release() {
 Remi_Release_Was_Installed=0
 if rpm -q remi-release >/dev/null 2>&1 ; then
@@ -859,8 +860,12 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
     curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed.repo
   fi
   yum clean all
-  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y "${OLS_RPM_EXCLUDES[@]}" || return 1; fi
   Remember_Remi_Release
+  # Before the update: a 9 or 10 server whose Remi an earlier upgrade removed
+  # cannot update LiteSpeed's PHP packages without it, and the upgrade would
+  # end here.
+  Restore_Remi_Release
+  if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y "${OLS_RPM_EXCLUDES[@]}" || return 1; fi
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave

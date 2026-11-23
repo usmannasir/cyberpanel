@@ -73,12 +73,24 @@ class RemiRelease(unittest.TestCase):
         self.assertEqual(1, len(installs))
         self.assertIn('WARNING: the Remi repository was removed with EPEL and could not be installed again', log)
 
+    def test_remi_is_back_before_the_system_update_that_needs_it(self):
+        # On a 9 or 10 server that lost Remi in an earlier upgrade, the system
+        # update fails on LiteSpeed's PHP packages (libicu78) and the upgrade
+        # ends before EPEL is touched.
+        start = SOURCE.index('\nPre_Upgrade_Setup_Repository() {')
+        body = SOURCE[start:SOURCE.index('\nelif [[ "$Server_OS" = "Ubuntu" ]] ; then', start)]
+        update = body.index('yum update -y "${OLS_RPM_EXCLUDES[@]}" || return 1')
+        self.assertLess(body.index('Remember_Remi_Release'), body.index('Restore_Remi_Release'))
+        self.assertLess(body.index('Restore_Remi_Release'), update)
+        self.assertLess(update, body.index('yum autoremove epel-release -y'))
+
     def test_the_steps_surround_every_removal_and_reinstall_of_epel(self):
         start = SOURCE.index('\nPre_Upgrade_Setup_Repository() {')
         body = SOURCE[start:SOURCE.index('\nelif [[ "$Server_OS" = "Ubuntu" ]] ; then', start)]
         self.assertLess(body.index('Remember_Remi_Release'), body.index('yum autoremove epel-release -y'))
         self.assertEqual(1, body.count('Remember_Remi_Release'))
-        self.assertEqual(body.count('install epel-release -y'), body.count('Restore_Remi_Release'))
+        # One before the system update, one after every reinstall of EPEL.
+        self.assertEqual(body.count('install epel-release -y') + 1, body.count('Restore_Remi_Release'))
         for line in body.splitlines():
             if 'install epel-release -y' in line:
                 following = body[body.index(line) + len(line):].lstrip().splitlines()[0]
