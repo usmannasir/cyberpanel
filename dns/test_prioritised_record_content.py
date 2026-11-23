@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def method_of(source, class_name, name, scope):
     """One method of a panel class, run in ``scope`` instead of the module that needs Django."""
-    tree = ast.parse((ROOT / source).read_text())
+    tree = ast.parse((ROOT / source).read_text(encoding='utf-8'))
     owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name)
     method = next(node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name == name)
     method.decorator_list = []
@@ -315,7 +315,7 @@ class FormExampleTests(unittest.TestCase):
     PAGES = ('addDeleteDNSRecords.html', 'addDeleteDNSRecordsCloudFlare.html')
 
     def examples(self, page, model):
-        text = (ROOT / 'dns' / 'templates' / 'dns' / page).read_text()
+        text = (ROOT / 'dns' / 'templates' / 'dns' / page).read_text(encoding='utf-8')
         found = []
         for field in re.findall(r'<input[^>]*ng-model="%s"[^>]*>' % model, text):
             found.append(re.search(r'placeholder=(["\'])(.*?)\1', field).group(2))
@@ -335,14 +335,14 @@ class FormExampleTests(unittest.TestCase):
                 self.assertEqual(example, mx_record_content(example, 10), page)
 
     def test_the_srv_field_is_named_for_what_it_takes(self):
-        page = (ROOT / 'dns' / 'templates' / 'dns' / 'addDeleteDNSRecords.html').read_text()
+        page = (ROOT / 'dns' / 'templates' / 'dns' / 'addDeleteDNSRecords.html').read_text(encoding='utf-8')
         form = page[page.index('<!-- SRV Record -->'):page.index('<!-- CAA Record -->')]
         self.assertIn('<label>{% trans "Weight, Port and Target" %}</label>', form)
         self.assertIn('<label>{% trans "Priority" %}</label>', form)
         self.assertNotIn('10 60 5060', page)
 
     def test_the_srv_name_example_is_a_name_the_zone_is_added_to(self):
-        page = (ROOT / 'dns' / 'templates' / 'dns' / 'addDeleteDNSRecords.html').read_text()
+        page = (ROOT / 'dns' / 'templates' / 'dns' / 'addDeleteDNSRecords.html').read_text(encoding='utf-8')
         form = page[page.index('<!-- SRV Record -->'):page.index('<!-- CAA Record -->')]
         self.assertIn('placeholder="_service._proto"', form)
 
@@ -353,7 +353,7 @@ class OldestPythonTests(unittest.TestCase):
         options = {'feature_version': (3, 6)} if sys.version_info >= (3, 8) else {}
         for source in ('plogical/dnsRecordContent.py', 'dns/dnsManager.py', 'cli/cyberPanel.py',
                        'dns/test_prioritised_record_content.py'):
-            ast.parse((ROOT / source).read_text(), **options)
+            ast.parse((ROOT / source).read_text(encoding='utf-8'), **options)
 
 
 if __name__ == '__main__':
