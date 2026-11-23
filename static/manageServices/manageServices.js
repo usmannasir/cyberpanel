@@ -501,13 +501,20 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
                 $scope.requestData = response.data.requestStatus;
                 $timeout(getRequestStatus, 1000);
             } else {
-                // Notifications
+                // The work has ended: stop the spinner and say how it ended.
                 $timeout.cancel();
+                $scope.cyberpanelLoading = true;
                 $scope.requestData = response.data.requestStatus;
                 if (response.data.installed === 1) {
                     $timeout(function () {
                         $window.location.reload();
                     }, 3000);
+                } else {
+                    new PNotify({
+                        title: 'Operation Failed!',
+                        text: 'The last line of the log gives the reason. Reload this page to see the current state.',
+                        type: 'error'
+                    });
                 }
 
             }

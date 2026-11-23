@@ -11,6 +11,7 @@ from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
 from .models import PDNSStatus, SlaveServers
 from .serviceManager import ServiceManager
+from . import applicationState
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
@@ -272,27 +273,23 @@ def saveStatus(request):
 def manageApplications(request):
     services = []
 
-    ## ElasticSearch
+    # Each state is read from the server, not from the installer's marker
+    # file: the program is present and its unit is active. Only an
+    # administrator's request asks the server; the page itself refuses others.
+    try:
+        isAdmin = ACLManager.loadedACL(request.session['userID'])['admin'] == 1
+    except Exception:
+        isAdmin = False
 
-    esPath = '/home/cyberpanel/elasticsearch'
-    rPath = '/home/cyberpanel/redis'
+    if isAdmin:
+        debian = ProcessUtilities.decideDistro() not in (ProcessUtilities.centos, ProcessUtilities.cent8)
 
-    if os.path.exists(esPath):
-        installed = 'Installed'
-    else:
-        installed = 'Not-Installed'
+        def unitReply(unit):
+            return ProcessUtilities.outputExecutioner('systemctl is-active %s' % unit)
 
-    if os.path.exists(rPath):
-        rInstalled = 'Installed'
-    else:
-        rInstalled = 'Not-Installed'
-
-    elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elasticsearch',
-                     'installed': installed}
-    redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
-             'installed': rInstalled}
-    services.append(elasticSearch)
-    services.append(redis)
+        for name, image in (('Elasticsearch', 'elastic-search.png'), ('Redis', 'redis.png')):
+            services.append({'image': '/static/manageServices/images/%s' % image, 'name': name,
+                             'installed': applicationState.state(name, debian, unitReply)})
 
     proc = httpProc(request, 'manageServices/applications.html',
                     {'services': services}, 'admin')
