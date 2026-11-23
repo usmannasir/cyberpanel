@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load static %}
-{% block module_scripts %}<script defer src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}"></script>{% endblock %}
+{% block module_scripts %}<script defer src="{% static 'manageServices/manageServices.js' %}?v={{ CP_VERSION }}-app-state"></script>{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Manage Applications - CyberPanel" %}{% endblock %}
 
@@ -177,6 +177,15 @@
     
     .app-status.installed i {
         color: #10b981;
+    }
+    
+    .app-status.stopped {
+        background: var(--warning-bg, #fef3c7);
+        color: var(--warning-text, #92400e);
+    }
+    
+    .app-status.stopped i {
+        color: #f59e0b;
     }
     
     .app-status.not-installed {
@@ -393,6 +402,11 @@
                                 <i class="fas fa-check-circle"></i>
                                 {% trans "Installed" %}
                             </span>
+                            {% elif service.installed == 'Stopped' %}
+                            <span class="app-status stopped">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {% trans "Installed, service not running" %}
+                            </span>
                             {% else %}
                             <span class="app-status not-installed">
                                 <i class="fas fa-times-circle"></i>
@@ -413,7 +427,17 @@
                     </div>
                     
                     <div class="app-actions">
-                        {% if service.installed == 'Installed' %}
+                        {% if service.installed == 'Stopped' %}
+                        <button type="button"
+                                class="action-btn install"
+                                data-toggle="modal"
+                                data-target="#settings"
+                                ng-click="removeInstall('{{ service.name }}', 'Installing')">
+                            <i class="fas fa-play"></i>
+                            {% trans "Start service" %}
+                        </button>
+                        {% endif %}
+                        {% if service.installed == 'Installed' or service.installed == 'Stopped' %}
                         <button type="button" 
                                 class="action-btn remove" 
                                 data-toggle="modal" 
