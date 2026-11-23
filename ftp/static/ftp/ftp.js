@@ -89,7 +89,8 @@ app.controller('createFTPAccount', function ($scope, $http) {
                 $scope.successfullyCreatedFTP = false;
                 $scope.canNotCreateFTP = true;
                 $scope.couldNotConnect = true;
-                $scope.createdFTPUsername = ftpDomain + "_" + ftpUserName;
+                // The name that was stored and signs in, as the server reports it.
+                $scope.createdFTPUsername = response.data.ftpUserName;
                 
                 // Also show PNotify if available
                 if (typeof PNotify !== 'undefined') {
