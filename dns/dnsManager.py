@@ -26,6 +26,7 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 from plogical.panelUserNames import existing_file_for_user, file_for_user
+from plogical.dnsRecordContent import record_priority, srv_record_content, mx_record_content
 
 class DNSManager:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
@@ -304,8 +305,8 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentMX = data['recordContentMX']
-                priority = data['priority']
+                priority = record_priority(data.get('priority'))
+                recordContentMX = mx_record_content(data['recordContentMX'], priority)
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentMX, priority, ttl)
 
@@ -401,8 +402,10 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentSRV = data['recordContentSRV']
-                priority = data['priority']
+                ## The content is weight, port and target. The priority has its own field.
+
+                priority = record_priority(data.get('priority'))
+                recordContentSRV = srv_record_content(data['recordContentSRV'], priority)
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentSRV, priority, ttl)
 
@@ -467,10 +470,20 @@ class DNSManager:
                     raise ValueError("TTL: The item must be lesser than 86401")
 
             if data['priorityNow'] != None:
-                record.prio = int(data['priorityNow'])
+                if record.type in ('MX', 'SRV'):
+                    record.prio = record_priority(data['priorityNow'])
+                else:
+                    record.prio = int(data['priorityNow'])
+
+            ## A new content of an MX or SRV record goes beside the priority the record has now.
 
             if data['contentNow'] != None:
-                record.content = data['contentNow']
+                if record.type == 'SRV':
+                    record.content = srv_record_content(data['contentNow'], record_priority(record.prio))
+                elif record.type == 'MX':
+                    record.content = mx_record_content(data['contentNow'], record_priority(record.prio))
+                else:
+                    record.content = data['contentNow']
 
             record.save()
 

@@ -951,7 +951,7 @@
                         <div class="record-form-grid grid-4">
                             <div class="form-field">
                                 <label>{% trans "Service Name" %}</label>
-                                <input placeholder="_service._proto.name" type="text" ng-model="recordName">
+                                <input placeholder="_service._proto" type="text" ng-model="recordName">
                             </div>
                             <div class="form-field">
                                 <label>{% trans "TTL" %}</label>
@@ -962,8 +962,8 @@
                                 <input placeholder="10" type="number" ng-model="priority">
                             </div>
                             <div class="form-field">
-                                <label>{% trans "Target" %}</label>
-                                <input placeholder="10 60 5060 server.example.com" type="text" ng-model="recordContentSRV">
+                                <label>{% trans "Weight, Port and Target" %}</label>
+                                <input placeholder="5 5060 sip.example.com" type="text" ng-model="recordContentSRV">
                             </div>
                             <button type="button" ng-click="addDNSRecord('SRV')" class="btn-add-record">
                                 <i class="fas fa-plus"></i>
