@@ -1906,7 +1906,10 @@ class virtualHostUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def deleteDomain(virtualHostName, DeleteDocRoot=0):
+    def deleteDomain(virtualHostName, DeleteDocRoot=0, keep=()):
+        # keep as for vhost.deleteVirtualHostConfigurations: the undone
+        # creation of a child domain leaves a certificate work folder ('ssl')
+        # that it found already there.
         try:
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
@@ -1926,7 +1929,8 @@ class virtualHostUtilities:
             installUtilities.installUtilities.reStartLiteSpeed()
 
             try:
-                sslUtilities.removeSSLForDomain(virtualHostName)
+                if 'ssl' not in keep:
+                    sslUtilities.removeSSLForDomain(virtualHostName)
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + "  [deleteDomain:removeSSLForDomain]")
@@ -2448,7 +2452,8 @@ def main():
     elif args.function == 'changeOpenBasedir':
         virtualHostUtilities.changeOpenBasedir(args.virtualHostName, args.openBasedirValue)
     elif args.function == 'deleteDomain':
-        virtualHostUtilities.deleteDomain(args.virtualHostName, int(args.DeleteDocRoot))
+        from plogical.websiteDeletion import kept_by_creation
+        virtualHostUtilities.deleteDomain(args.virtualHostName, int(args.DeleteDocRoot), kept_by_creation(args.keep))
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
     elif args.function == 'EnableDisablePP':
