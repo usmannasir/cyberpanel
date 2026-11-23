@@ -5950,8 +5950,11 @@ StrictHostKeyChecking no
             extraArgs['masterDomain'] = data['masterDomain']
             extraArgs['admin'] = admin
 
-            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            writeToFile = open(tempStatusPath, 'a')
+            # A status file of this job alone: a short random name can be one
+            # that another job still writes to, or the stale file of an old one.
+            from plogical.statusUtilities import create_status_file
+            tempStatusPath = create_status_file()
+            writeToFile = open(tempStatusPath, 'w')
             message = 'Cloning process has started..,5'
             writeToFile.write(message)
             writeToFile.close()

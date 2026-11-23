@@ -780,6 +780,33 @@ class ApplicationInstaller(multi.Thread):
         return ('The website %s that was created for this job could not be removed; '
                 'delete it under Websites before trying again.' % domain)
 
+    def removeCreatedChildDomain(self, domain, keep):
+        """Remove a child domain that this job created itself, with its folder, after the job failed.
+
+        As for removeCreatedWebsite(): call it only for a child domain that
+        did not exist before the job and was created by it, in a folder that
+        was not there before either. keep is what foundBeforeCreation()
+        answered before that creation. Returns the sentence that tells the
+        user what happened to that domain.
+        """
+        execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/virtualHostUtilities.py"
+        execPath = execPath + " deleteDomain --virtualHostName " + shlex.quote(domain) + " --DeleteDocRoot 1"
+        if keep:
+            execPath = execPath + " --keep " + shlex.quote(','.join(keep))
+        try:
+            success, output = ProcessUtilities.outputExecutioner(execPath, retRequired=True)
+            # The helper prints "1,None" as its last line only when the domain is gone.
+            lines = str(output or '').strip().splitlines()
+            removed = (success == 1 and bool(lines) and lines[-1].strip() == '1,None'
+                       and not ChildDomains.objects.filter(domain=domain).exists())
+        except BaseException as msg:
+            logging.writeToFile('%s: %s [removeCreatedChildDomain]' % (domain, str(msg)))
+            removed = False
+        if removed:
+            return 'The domain %s that was created for this job has been removed again.' % domain
+        return ('The domain %s that was created for this job could not be removed; '
+                'delete it under Sub/Addon Domains before trying again.' % domain)
+
     def installWordPress(self):
         # What the install directory held before WordPress was unpacked into it.
         entriesBefore = None
