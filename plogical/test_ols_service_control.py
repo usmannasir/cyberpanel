@@ -501,3 +501,155 @@ class ServiceControlTests(unittest.TestCase):
             self.assertEqual(conf.read_text(), 'new')
             svc.reload.assert_not_called()
             svc.change.assert_not_called()
+
+
+class PreviousGenerationTests(unittest.TestCase):
+    """A graceful restart leaves the old main and its busy worker running under init."""
+    MAIN = b'openlitespeed (lshttpd - main)\x00'
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.binary = self.root / 'bin/openlitespeed'
+        self.binary.parent.mkdir()
+        self.binary.write_bytes(b'installed core fixture')
+        self.proc = self.root / 'proc'
+        self.proc.mkdir()
+        # Live generation: master 200 with two workers. Old generation: 100 with worker 101.
+        self.process(200, 1, '500')
+        self.process(201, 200, '501', cmdline=b'openlitespeed (lshttpd - #01)\x00')
+        self.process(202, 200, '502', cmdline=b'openlitespeed (lscgid)\x00')
+        self.process(100, 1, '300')
+        self.process(101, 100, '301', cmdline=b'openlitespeed (lshttpd - #03)\x00')
+        self.service = control.OLSService(self.root, self.proc)
+        for target in ('controller', 'verify_unit_claims', 'systemd'):
+            patcher = patch.object(self.service, target, return_value=None)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        patcher = patch.object(control, 'run', return_value=SimpleNamespace(stdout='litespeed is running with PID 200.'))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.killed = []
+        self.service.kill = self.kill
+
+    def process(self, pid, parent, ticks, cmdline=MAIN, group='lshttpd.service', executable=None):
+        entry = self.proc / str(pid)
+        entry.mkdir()
+        (entry / 'comm').write_text('litespeed\n')
+        (entry / 'exe').symlink_to(executable or self.binary)
+        fields = ['S', str(parent)] + ['0'] * 17 + [ticks]
+        (entry / 'stat').write_text('%s (litespeed) %s\n' % (pid, ' '.join(fields)))
+        (entry / 'cgroup').write_text('0::/system.slice/' + group + '\n')
+        (entry / 'cmdline').write_bytes(cmdline)
+
+    def remove(self, pid):
+        for path in (self.proc / str(pid)).iterdir():
+            path.unlink()
+        (self.proc / str(pid)).rmdir()
+
+    def kill(self, pid, number):
+        self.assertEqual(number, control.signal.SIGKILL)
+        self.killed.append(pid)
+        self.remove(pid)
+
+    def clock(self):
+        """Fake monotonic time: every sleep advances it; returns the sleep mock."""
+        now = [1000.0]
+        patchers = [patch.object(control.time, 'monotonic', side_effect=lambda: now[0]),
+                    patch.object(control.time, 'sleep', side_effect=lambda delay: now.__setitem__(0, now[0] + delay))]
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        return now
+
+    def test_the_old_generation_is_recognised_and_named(self):
+        with self.assertRaises(control.OLSPreviousGeneration) as raised:
+            self.service._native_state()
+        self.assertEqual(raised.exception.generation, {100: '300', 101: '301'})
+        self.assertIn('PIDs 100, 101', str(raised.exception))
+        self.service.systemd.assert_not_called()
+
+    def test_anything_that_is_not_an_earlier_generation_of_this_service_stays_unmanaged(self):
+        def mutate_parent():
+            self.remove(100); self.process(100, 77, '300')
+        def mutate_cmdline():
+            self.remove(100); self.process(100, 1, '300', cmdline=b'openlitespeed -d\x00')
+        def mutate_group():
+            self.remove(100); self.process(100, 1, '300', group='lsws.service')
+        def mutate_worker_group():
+            self.remove(101); self.process(101, 100, '301', group='other.service')
+        def mutate_younger():
+            self.remove(100); self.process(100, 1, '900')
+        def mutate_orphan_worker():
+            self.remove(100)
+        for name, mutate in [('parent is not init', mutate_parent), ('other command line', mutate_cmdline),
+                             ('other service', mutate_group), ('worker in another service', mutate_worker_group),
+                             ('started after the master', mutate_younger), ('worker without its main', mutate_orphan_worker)]:
+            with self.subTest(name):
+                self.setUp()
+                mutate()
+                with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process') as raised:
+                    self.service._native_state()
+                self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
+
+    def test_a_known_stop_in_progress_keeps_the_strict_rule(self):
+        self.service.draining = (200, '500', 'lshttpd.service')
+        with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process') as raised:
+            self.service._native_state()
+        self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
+
+    def test_a_generation_that_finishes_on_its_own_is_never_killed(self):
+        now = self.clock()
+        start = now[0]
+        calls = []
+
+        def check():
+            calls.append(now[0])
+            if now[0] - start >= 5:
+                for pid in (101, 100):
+                    if (self.proc / str(pid)).exists():
+                        self.remove(pid)
+            return self.service._native_state()
+
+        state = self.service.settle_previous_generation(check)
+        self.assertEqual(state[0], 200)
+        self.assertEqual(self.killed, [])
+
+    def test_after_the_wait_exactly_the_old_generation_is_ended_and_the_live_one_kept(self):
+        now = self.clock()
+        start = now[0]
+        with patch('builtins.print') as said:
+            state = self.service.settled_state()
+        self.assertEqual(state[0], 200)
+        self.assertEqual(sorted(self.killed), [100, 101])
+        self.assertGreaterEqual(now[0] - start, control.OLSService.PREVIOUS_GENERATION_WAIT)
+        for pid in (200, 201, 202):
+            self.assertTrue((self.proc / str(pid)).exists())
+        self.assertIn('PIDs 100, 101', said.call_args[0][0])
+
+    def test_prepare_state_settles_the_old_generation_first(self):
+        self.clock()
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(control.watchdog, 'prepare_watchdog'), \
+                patch.object(self.service, 'verify_mapped_bundle'), patch('builtins.print'):
+            state = self.service.prepare_state()
+        self.assertEqual(state[0], 200)
+        self.assertEqual(sorted(self.killed), [100, 101])
+
+    def test_a_reused_pid_or_other_binary_is_not_killed_and_the_upgrade_still_stops(self):
+        self.clock()
+        foreign = self.root / 'foreign'
+        foreign.write_bytes(b'unrelated')
+        real_end = self.service._end_previous_generation
+
+        def swap_identities(generation):
+            # Between observation and the kill, 101 became another process and 100 another binary.
+            self.remove(101); self.process(101, 100, '999', cmdline=b'openlitespeed (lshttpd - #03)\x00')
+            (self.proc / '100/exe').unlink(); (self.proc / '100/exe').symlink_to(foreign)
+            return real_end(generation)
+
+        with patch.object(self.service, '_end_previous_generation', side_effect=swap_identities), \
+                patch('builtins.print'), self.assertRaises(RuntimeError):
+            self.service.settled_state()
+        self.assertEqual(self.killed, [])
