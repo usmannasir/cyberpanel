@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def method_of(source, class_name, name, scope):
     """One method of a panel class, run in ``scope`` instead of the module that needs Django."""
-    tree = ast.parse((ROOT / source).read_text())
+    tree = ast.parse((ROOT / source).read_text(encoding='utf-8'))
     owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name)
     method = next(node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name == name)
     method.decorator_list = []
@@ -86,6 +86,7 @@ class CreationUtilityTests(unittest.TestCase):
             'stored_ftp_user_name': stored_ftp_user_name,
             'print': lambda *args: None,
         }
+        self.scope = scope
         self.create = method_of('plogical/ftpUtilities.py', 'FTPUtilities', 'submitFTPCreation', scope)
 
     def test_the_form_gets_back_the_name_of_the_stored_row(self):
@@ -111,6 +112,12 @@ class CreationUtilityTests(unittest.TestCase):
         self.assertEqual((0, 'Exceeded maximum amount of FTP accounts allowed for the package.'), result)
         self.assertEqual([], StoredRow.saved)
         self.log.assert_called_once()
+
+    def test_a_symlinked_home_is_refused_with_a_reason(self):
+        self.scope['os'] = SimpleNamespace(path=SimpleNamespace(islink=lambda path: True))
+        result = self.create('panelqa.test', 'qaftp', 'inert', 'None', 'admin', '0')
+        self.assertEqual((0, '/home/panelqa.test file is symlinked.'), result)
+        self.assertEqual([], StoredRow.saved)
 
 
 class Reply(object):
@@ -164,8 +171,8 @@ class CreationReplyTests(unittest.TestCase):
 class PageTests(unittest.TestCase):
 
     def setUp(self):
-        self.script = (ROOT / 'ftp' / 'static' / 'ftp' / 'ftp.js').read_text()
-        self.page = (ROOT / 'ftp' / 'templates' / 'ftp' / 'createFTPAccount.html').read_text()
+        self.script = (ROOT / 'ftp' / 'static' / 'ftp' / 'ftp.js').read_text(encoding='utf-8')
+        self.page = (ROOT / 'ftp' / 'templates' / 'ftp' / 'createFTPAccount.html').read_text(encoding='utf-8')
 
     def test_the_page_shows_the_name_of_the_reply(self):
         self.assertIn('$scope.createdFTPUsername = response.data.ftpUserName;', self.script)
@@ -179,9 +186,9 @@ class PageTests(unittest.TestCase):
     def test_the_preview_uses_the_prefix_the_server_gives(self):
         self.assertIn('{{ ftpUserNamePrefix }}{$ ftpUserName $}', self.page)
         self.assertNotIn('}}_{$', self.page)
-        manager = (ROOT / 'ftp' / 'ftpManager.py').read_text()
+        manager = (ROOT / 'ftp' / 'ftpManager.py').read_text(encoding='utf-8')
         self.assertIn("'ftpUserNamePrefix': ftp_user_name_prefix(admin.userName)", manager)
-        utility = (ROOT / 'plogical' / 'ftpUtilities.py').read_text()
+        utility = (ROOT / 'plogical' / 'ftpUtilities.py').read_text(encoding='utf-8')
         self.assertIn('userName = stored_ftp_user_name(admin.userName, userName, api)', utility)
         self.assertNotIn('admin.userName + "_"', utility)
 
@@ -191,7 +198,7 @@ class PageTests(unittest.TestCase):
 
     def test_the_changed_script_is_fetched_again(self):
         for page in ('baseTemplate/templates/baseTemplate/index.html', 'ftp/templates/ftp/ResetFTPconf.html'):
-            self.assertIn("{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}-created-name\"", (ROOT / page).read_text(), page)
+            self.assertIn("{% static 'ftp/ftp.js' %}?v={{ CP_VERSION }}-created-name\"", (ROOT / page).read_text(encoding='utf-8'), page)
 
 
 class OldestPythonTests(unittest.TestCase):
@@ -200,7 +207,7 @@ class OldestPythonTests(unittest.TestCase):
         options = {'feature_version': (3, 6)} if sys.version_info >= (3, 8) else {}
         for source in ('plogical/ftpConfiguration.py', 'plogical/ftpUtilities.py', 'ftp/ftpManager.py',
                        'ftp/test_created_user_name.py'):
-            ast.parse((ROOT / source).read_text(), **options)
+            ast.parse((ROOT / source).read_text(encoding='utf-8'), **options)
 
 
 if __name__ == '__main__':

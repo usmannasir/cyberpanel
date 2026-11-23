@@ -142,7 +142,7 @@ class FTPUtilities:
 
             if os.path.islink(path):
                 print("0, %s file is symlinked." % (path))
-                return 0
+                return 0, "%s file is symlinked." % (path)
 
             ProcessUtilities.decideDistro()
 
