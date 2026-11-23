@@ -446,9 +446,12 @@ class FileManager:
 
                 RemoveOK = 1
 
-                # The probe file sits in the customer's own home, where its name
-                # can be a link: touch only the name itself, as the site's own user.
-                command = 'touch -h %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
+                # Whether the site's user can write in its home. Run as that user,
+                # so a link in the probe's place reaches only what the user may
+                # write anyway. Not "touch -h": it never creates a file and always
+                # fails with "No such file or directory", which made every delete
+                # lock the whole home (chattr -R +i below).
+                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
                 result = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
                 if result.find('No such file or directory') > -1:
