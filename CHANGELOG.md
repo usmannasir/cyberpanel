@@ -4,6 +4,44 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.14 (build 14) — 2026-11-23
+
+Reliability release. It corrects the eleven Medium and Low defects found in
+acceptance testing of 3.0.11 and the defects of the same kind found beside
+them.
+
+### Users
+- The two-factor set-up shows the key for typing by hand next to the QR
+  code. The secret is sent only while two-factor is being set up for an
+  account that does not have it yet; an enrolled account's secret is never
+  sent to the browser, and loading an account no longer creates one.
+- Saving a user leaves two-factor as it is unless the request changes it;
+  `cyberpanel editUser` and the cloud API no longer switch it off.
+- The Reseller Center saves a website limit when the current owner is kept,
+  refuses an unknown owner, and checks a limit sent as text like any other.
+
+### Websites and applications
+- After an FTP account is created the page shows the user name that was
+  stored.
+- An SRV record takes weight, port and target beside its own priority; the
+  form's example says so and a record that cannot be served is refused.
+- WordPress and Docker site deployment show their real progress up to 100%.
+- Cloning a website reports success only when the copy works; a failed clone
+  says why and removes what it created. The copy runs as the website's user
+  and the database dump no longer lands in the new site's folder.
+- Each application installer shows only its own progress; the PrestaShop
+  installer names the page where a website is switched to Apache and refuses
+  before it changes anything. The Visit links after an installation open the
+  website itself.
+
+### Services and pages
+- Redis and Elasticsearch are shown as installed only when the program is
+  there and its service runs; a busy package manager is reported as such.
+  A SpamAssassin installation that failed is reported as failed.
+- Links to the guides point to their current addresses.
+- The AI Scanner says that an account must be connected before a scan and
+  where to connect it, and why a scan was refused.
+
 ## v3.0.13 (build 13) — 2026-11-22
 
 Reliability release. It corrects nine defects found in acceptance testing of
