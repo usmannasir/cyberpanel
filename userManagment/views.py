@@ -802,32 +802,55 @@ def saveResellerChanges(request):
         else:
             return ACLManager.loadErrorJson()
 
+        def refused(message):
+            return HttpResponse(json.dumps({'status': 0, 'errorMessage': message, 'error_message': message}))
+
         loggedUser = Administrator.objects.get(pk=val)
 
         userToBeModified = Administrator.objects.get(userName=data['userToBeModified'])
-        newOwner = Administrator.objects.get(userName=data['newOwner'])
 
         ### Check user owners
 
-        if ACLManager.checkUserOwnerShip(currentACL, loggedUser, userToBeModified) == 0 or ACLManager.checkUserOwnerShip(currentACL, loggedUser, newOwner) == 0:
+        if ACLManager.checkUserOwnerShip(currentACL, loggedUser, userToBeModified) == 0:
             return ACLManager.loadErrorJson()
 
+        # "Keep current owner" sends no owner, or an empty one. That is read as naming the current
+        # owner, so it passes exactly the checks an owner chosen by name passes and moves nothing.
+        ownerName = data.get('newOwner')
+        ownerKept = ownerName in (None, '')
         try:
-            if ACLManager.websitesLimitCheck(newOwner, data['websitesLimit'], userToBeModified) == 0:
-                finalResponse = {'status': 0,
-                                 'errorMessage': "You've reached maximum websites limit as a reseller.",
-                                 'error_message': "You've reached maximum websites limit as a reseller."}
-                json_data = json.dumps(finalResponse)
-                return HttpResponse(json_data)
-        except:
-            pass
+            if ownerKept:
+                newOwner = Administrator.objects.get(pk=userToBeModified.owner)
+            elif isinstance(ownerName, str):
+                newOwner = Administrator.objects.get(userName=ownerName)
+            else:
+                raise Administrator.DoesNotExist
+        except Administrator.DoesNotExist:
+            if ownerKept:
+                return refused("The current owner of this user no longer exists. Choose a new owner.")
+            return refused("The new owner does not exist.")
+
+        if ACLManager.checkUserOwnerShip(currentACL, loggedUser, newOwner) == 0:
+            return ACLManager.loadErrorJson()
+
+        # A request without a limit leaves the limit of the user as it is.
+        websitesLimit = data.get('websitesLimit')
+        if websitesLimit is None:
+            if ownerKept:
+                return refused("Nothing to change: no new owner and no website limit were given.")
+        else:
+            # A whole number, given as a number or as its digits.
+            if isinstance(websitesLimit, str) and websitesLimit and all('0' <= c <= '9' for c in websitesLimit):
+                websitesLimit = int(websitesLimit)
+            if type(websitesLimit) is not int or websitesLimit < 0:
+                return refused("The website limit is a whole number, 0 for unlimited.")
+            if ACLManager.websitesLimitCheck(newOwner, websitesLimit, userToBeModified) == 0:
+                return refused("You've reached maximum websites limit as a reseller.")
 
         previousOwner = userToBeModified.owner
         userToBeModified.owner = newOwner.pk
-        try:
-            userToBeModified.initWebsitesLimit = data['websitesLimit']
-        except:
-            pass
+        if websitesLimit is not None:
+            userToBeModified.initWebsitesLimit = websitesLimit
         userToBeModified.save()
 
         # The reseller this user leaves no longer reaches the user's databases.
