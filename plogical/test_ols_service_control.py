@@ -568,7 +568,7 @@ class PreviousGenerationTests(unittest.TestCase):
             self.service._native_state()
         self.assertEqual(raised.exception.generation, {100: '300', 101: '301'})
         self.assertIn('PIDs 100, 101', str(raised.exception))
-        self.service.systemd.assert_not_called()
+        self.service.systemd.assert_called_once_with(200)  # the master is verified first
 
     def test_anything_that_is_not_an_earlier_generation_of_this_service_stays_unmanaged(self):
         def mutate_parent():
@@ -723,3 +723,40 @@ class PreviousGenerationTests(unittest.TestCase):
         self.service.kill = Mock(side_effect=PermissionError('not permitted'))
         with patch('builtins.print'), self.assertRaisesRegex(RuntimeError, 'Cannot end previous OpenLiteSpeed process'):
             self.service.settled_state()
+
+    def test_the_masters_unit_checks_come_before_the_previous_generation_signal(self):
+        self.service.verify_unit_claims.side_effect = RuntimeError('OLS unit claim mismatch')
+        with self.assertRaisesRegex(RuntimeError, 'unit claim mismatch') as raised:
+            self.service._native_state()
+        self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
+
+    def test_an_older_generation_waits_until_a_newer_one_is_also_old_enough(self):
+        now = self.clock()
+        start = now[0]
+        restarted = []
+
+        def check():
+            if not restarted and now[0] - start >= 59:
+                # Another restart: 200's generation drains under init beside 100's, 400 is the new master.
+                restarted.append(True)
+                self.remove(200); self.process(200, 1, '500')
+                self.remove(202)
+                self.process(400, 1, '700')
+                control.run.return_value = SimpleNamespace(stdout='litespeed is running with PID 400.')
+            return self.service._native_state()
+
+        with patch('builtins.print'):
+            state = self.service.settle_previous_generation(check)
+        self.assertEqual(state[0], 400)
+        self.assertEqual(sorted(self.killed), [100, 101, 200, 201])
+        self.assertGreaterEqual(now[0] - start, 59 + control.OLSService.PREVIOUS_GENERATION_WAIT)
+
+    def test_a_kill_without_effect_is_sent_once_and_the_wait_is_bounded(self):
+        now = self.clock()
+        start = now[0]
+        self.service.kill = Mock()  # the processes stay, as in uninterruptible sleep
+        with patch('builtins.print') as said, self.assertRaises(control.OLSPreviousGeneration):
+            self.service.settled_state()
+        self.assertEqual(sorted(call[0][0] for call in self.service.kill.call_args_list), [100, 101])
+        self.assertEqual(said.call_count, 1)
+        self.assertGreaterEqual(now[0] - start, 3 * control.OLSService.PREVIOUS_GENERATION_WAIT)

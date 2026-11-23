@@ -274,6 +274,7 @@ class OLSService:
         self._policy_checked = False
         self.kill = os.kill
         self._generation_seen = {}  # (pid, start ticks) -> first seen, monotonic
+        self._generation_signalled = set()  # (pid, start ticks) already sent SIGKILL
 
     # How long every process of an earlier generation must have been seen draining before the upgrade ends it.
     PREVIOUS_GENERATION_WAIT = 60
@@ -348,7 +349,10 @@ class OLSService:
                        for key in previous.generation.items()):
                     time.sleep(1)
                     continue
-                pids = self._end_previous_generation(previous.generation)
+                pending = {pid: ticks for pid, ticks in previous.generation.items()
+                           if (pid, ticks) not in self._generation_signalled}
+                pids = self._end_previous_generation(pending)
+                self._generation_signalled.update((pid, pending[pid]) for pid in pids)
                 if pids:
                     print('Ended a previous OpenLiteSpeed generation that was still finishing connections '
                           'after %d seconds: PIDs %s' % (self.PREVIOUS_GENERATION_WAIT,
@@ -643,11 +647,13 @@ class OLSService:
                     break
                 seen.add(current)
                 current = processes[current][0]
+        previous = None
         if strays:
             generation = None if self.draining is not None else self._previous_generation(master, processes, strays)
             if generation is None:
                 raise RuntimeError('An unmanaged OLS process is also running')
-            raise OLSPreviousGeneration(generation)
+            # Raised only after the master's own unit checks below have passed.
+            previous = OLSPreviousGeneration(generation)
         try:
             owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
         except (FileNotFoundError, ProcessLookupError):
@@ -666,6 +672,8 @@ class OLSService:
         self.unit = owner
         self.manager_identified = True
         self.systemd(master)
+        if previous is not None:
+            raise previous
         self._observed_processes = {pid: entry[1] for pid, entry in processes.items()}
         return master, processes[master][1], owner
 
