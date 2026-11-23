@@ -865,11 +865,55 @@ class PanelHoldTests(unittest.TestCase):
                 self.assertEqual(COMPLETING, machine.panel_service_calls())
                 self.assertNotIn('The panel is stopped', result.stdout)
 
+    STOPPED_THOUGH_CONFIRMED = ('The panel is stopped and is not started when the server boots, because the '
+                                'installation ended before the panel was started.')
+
+    def test_failure_after_the_confirmation_and_before_the_start_says_how_to_start_the_panel(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', fail_at='Configure_Default_PHP_CLI')
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(['finishing failed panel_setup', 'install failed panel_setup'], machine.events()[-2:])
+        # Held when install.py had returned and confirmed after that: the end
+        # of the run neither starts the panel nor holds it again.
+        self.assertEqual(HELD + ['password-check'], machine.panel_service_calls())
+        self.assertEqual([], [call for call in machine.recorded(machine.calls) if '127.0.0.1:8090' in call])
+        self.assertEqual(1, result.stdout.count(self.STOPPED_THOUGH_CONFIRMED))
+        self.assertIn('Its administrator has the password of this installation. These two commands start the panel:\n'
+                      'systemctl enable lscpd\nsystemctl start lscpd\n', result.stdout)
+        self.assertNotIn('will not start by itself', result.stdout)
+        self.assertNotIn('a password that is not yours', result.stdout)
+
+    def test_signal_after_the_confirmation_and_before_the_start_says_nothing(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', signal_at='Configure_Default_PHP_CLI')
+        self.assertEqual(-signal.SIGTERM, result.returncode)
+        self.assertEqual('install failed interrupted', machine.events()[-1])
+        self.assertEqual(HELD + ['password-check'], machine.panel_service_calls())
+        self.assertNotIn('The panel is stopped', result.stdout)
+
+    def test_panel_that_was_started_is_not_called_stopped(self):
+        # A run that completes, and one that fails after the panel was started
+        # (the website for the hostname could not be made).
+        for options, status in (({}, 0), ({'dns': True, 'create_output': CLI_FAILED}, 1)):
+            with self.subTest(options=options):
+                machine = Installer(self)
+                machine.path('/usr/local/lsws/lsphp83/bin').mkdir(parents=True)
+                runtime = machine.path('/usr/local/lsws/lsphp83/bin/lsphp')
+                runtime.write_text('#!/bin/sh\n')
+                runtime.chmod(0o755)
+                result = machine.run('-v', 'ols', **options)
+                self.assertEqual(status, result.returncode, result.stdout + result.stderr)
+                self.assertEqual(COMPLETING, machine.panel_service_calls())
+                self.assertNotIn('The panel is stopped', result.stdout)
+
     def test_only_two_places_enable_or_start_the_panel(self):
         functions, top_level = script_parts()
         source = functions + top_level
+        # Commands only: a message that tells the person installing how to
+        # start the panel names the commands without running them.
         starts = [line.strip() for line in source.splitlines()
-                  if re.search(r'systemctl\s+(enable|start|restart|reenable|unmask)\b.*\blscpd\b', line)]
+                  if re.search(r'systemctl\s+(enable|start|restart|reenable|unmask)\b.*\blscpd\b', line)
+                  and not line.strip().startswith('echo')]
         self.assertEqual(['systemctl enable lscpd >/dev/null 2>&1', 'systemctl restart lscpd >/dev/null 2>&1',
                           'systemctl enable lscpd >/dev/null 2>&1', 'systemctl restart lscpd'], starts)
         start_panel = function('Start_Panel')

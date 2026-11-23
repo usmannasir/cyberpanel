@@ -120,6 +120,8 @@ Panel_Installing="No"
 Panel_Password_Confirmed="No"
 # "Yes" once the person installing was told why the panel is not running.
 Panel_Held_Told="No"
+# "Yes" once Start_Panel has enabled and started the panel's service.
+Panel_Started="No"
 
 Install_Event() {
 # Install_Event <step> <state> [<code>]
@@ -221,6 +223,15 @@ if [[ "$Panel_Installing" = "Yes" && "$Panel_Password_Confirmed" != "Yes" ]]; th
   if [[ "$Panel_Held_Told" != "Yes" ]]; then
     echo -e "\nThe panel is stopped and will not start by itself: the installation ended before the panel's administrator had a confirmed password.\n"
   fi
+elif [[ "$Panel_Installing" = "Yes" && "$Panel_Started" != "Yes" ]]; then
+  # The password was confirmed and the run ended before Start_Panel: the
+  # panel is still as Hold_Panel left it when install.py had returned. It is
+  # left so, a run that failed starts nothing, but the person installing is
+  # told that the panel can be started and how.
+  echo -e "\nThe panel is stopped and is not started when the server boots, because the installation ended before the panel was started."
+  echo "Its administrator has the password of this installation. These two commands start the panel:"
+  echo "systemctl enable lscpd"
+  echo -e "systemctl start lscpd\n"
 fi
 step=$(Install_Running_Step)
 reason="${Install_Fail_Code:-$(Install_Default_Reason "$step")}"
@@ -3244,6 +3255,7 @@ if [[ "$Panel_Password_Confirmed" != "Yes" ]]; then
 fi
 systemctl enable lscpd >/dev/null 2>&1
 systemctl restart lscpd >/dev/null 2>&1
+Panel_Started="Yes"
 return 0
 }
 
