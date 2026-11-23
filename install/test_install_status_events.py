@@ -325,6 +325,48 @@ class NoRunTests(unittest.TestCase):
                 self.assertEqual((usage, reading), tuple(outcomes))
 
 
+class InstallerArgumentsTests(unittest.TestCase):
+    """What the script hands to install.py: the real lines that make its arguments."""
+
+    FULL = ['192.0.2.10', '--postfix', 'ON', '--powerdns', 'ON', '--ftp', 'ON', '--remotemysql', 'OFF']
+
+    def edition(self, *arguments):
+        functions, _ = script_parts()
+        reader = functions[functions.index('\nCheck_Argument() {'):functions.index('\nArgument_Mode() {')]
+        script = ('Show_Help() { echo HELP; }\nlog_function_start() { :; }\nDebug_Log2() { :; }\n'
+                  'Fail_Install() { exit "${2:-1}"; }\nBase_Number="1.9.3"\nAdmin_Pass_From_File=""\n'
+                  'Server_Edition="OLS"\nLicense_Key=""\n' + reader
+                  + '\nCheck_Argument "$@" >/dev/null\nprintf "%s|%s" "$Server_Edition" "$License_Key"\n')
+        result = subprocess.run(['bash', '-c', script, 'bash'] + list(arguments), stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, encoding='utf-8', timeout=20)
+        self.assertEqual((0, ''), (result.returncode, result.stderr))
+        return result.stdout
+
+    def test_default_run_hands_over_the_address_and_the_components(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(self.FULL, machine.installer_flags())
+
+    def test_last_version_option_counts_and_nothing_of_an_earlier_one_is_left(self):
+        serial = '1111-2222-3333-4444'
+        self.assertEqual('OLS|', self.edition('-v', serial, '-v', 'ols'))
+        self.assertEqual('OLS|', self.edition('--version', serial, '-a', '--version', 'OLS'))
+        self.assertEqual('OLS|', self.edition('-v', 'trial', '-v', 'ols'))
+        self.assertEqual('Enterprise|' + serial, self.edition('-v', 'ols', '-v', serial))
+        self.assertEqual('Enterprise|' + serial, self.edition('-v', 'AAAA-BBBB-CCCC-DDDD', '-v', serial))
+
+    def test_serial_number_of_an_earlier_version_option_is_not_handed_to_the_installer(self):
+        # Handed over, install.py refuses it as an argument it does not know,
+        # after the whole of the installation before it has run.
+        machine = Installer(self)
+        result = machine.run('-v', '1111-2222-3333-4444', '-v', 'ols')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual('install complete', machine.events()[-1])
+        self.assertEqual(self.FULL, machine.installer_flags())
+        self.assertNotIn('1111-2222-3333-4444', ' '.join(machine.installer_flags()))
+
+
 class FailedRunTests(unittest.TestCase):
     def failed(self, *arguments, status=1, reason, step='preflight', machine=None, **options):
         machine = machine or Installer(self)
