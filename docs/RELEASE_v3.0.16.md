@@ -1,9 +1,11 @@
-# CyberPanel v3.0.16 (build 16) — installer reliability
+# CyberPanel v3.0.16 (build 16) — installer reliability and File Manager
 
 _Release candidate._
 
 The installer waits while another apt process holds a package lock instead
-of failing at once. The change is listed in CHANGELOG.md.
+of failing at once, a delete in the File Manager no longer makes the
+website's whole home immutable, and the upgrade unlocks the homes that such
+a delete locked. The changes are listed in CHANGELOG.md.
 
 ## Release gates
 
@@ -11,6 +13,10 @@ of failing at once. The change is listed in CHANGELOG.md.
   during the installation the way the daily apt update does: the published
   v3.0.15 installer fails, the candidate completes and says what it waited
   for.
+- On a server with the published v3.0.15 tree, delete a file in the File
+  Manager: the website's home becomes immutable and an upload fails. Upgrade:
+  the home is unlocked, an upload works, a file its owner protected outside
+  that home stays protected, and a new delete locks nothing.
 - Install the candidate on clean Ubuntu and RPM servers, Python 3.6
   included; upgrade servers installed from the published v3.0.15 tree.
 - Run the installer test collection and the whole test collection against

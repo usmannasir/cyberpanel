@@ -6,7 +6,17 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## v3.0.16 (build 16) — 2026-11-23
 
-Installer reliability release.
+Installer reliability and File Manager release.
+
+### File Manager
+- A delete in the File Manager no longer makes the website's whole home
+  immutable. From 3.0.9 every delete did, and uploads by FTP and by the
+  File Manager, and the website's own writes, then failed with "Operation
+  not permitted" (GitHub issue 2018).
+- The upgrade unlocks every website home whose folder is immutable, which
+  is what that delete left, without following links. Homes whose folder is
+  not immutable, including files an owner protected with chattr, are left
+  as they are.
 
 ### Installer
 - The installer waits while another apt process holds a package lock
