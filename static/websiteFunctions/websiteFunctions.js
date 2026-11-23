@@ -7616,6 +7616,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         $scope.couldNotConnect = true;
         $scope.goBackDisable = true;
         $("#installProgress").css("width", "0%");
+        $scope.installPercentage = "0";
     };
 
     function getCreationStatus() {
@@ -17797,6 +17798,7 @@ app.controller('createDockerSite', function ($scope, $http, $timeout) {
         $scope.couldNotConnect = true;
         $scope.goBackDisable = true;
         $("#installProgress").css("width", "0%");
+        $scope.installPercentage = "0";
     };
 
     function getCreationStatus() {

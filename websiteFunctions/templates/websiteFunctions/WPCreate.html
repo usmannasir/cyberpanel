@@ -1,7 +1,7 @@
 {% extends "baseTemplate/index.html" %}
 {% block create_server_selector %}{% endblock %}
 {% load static %}
-{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20260909"></script>{% endblock %}
+{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20261123-wp-progress"></script>{% endblock %}
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans "Deploy WordPress - CyberPanel" %}{% endblock %}
@@ -801,8 +801,8 @@
 
                     <div class="progress">
                         <div id="installProgress" class="progress-bar" role="progressbar" 
-                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
-                            <span>0%</span>
+                             aria-valuenow="{$ installPercentage || 0 $}" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                            <span>{$ installPercentage || 0 $}%</span>
                         </div>
                     </div>
 
