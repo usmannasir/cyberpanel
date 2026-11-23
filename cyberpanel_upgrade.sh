@@ -819,6 +819,33 @@ fi
 mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
 }
 
+# remi-release requires epel-release, so the removal of epel-release below
+# removed the Remi repository too, at every upgrade, and LiteSpeed's PHP
+# packages need libraries that only Remi provides (lsphp8x-intl on EL9 needs
+# libicu78). Once EPEL is back, the Remi release package is installed again:
+# always on 9 and 10, where the installer sets Remi up (this also repairs a
+# server that lost it in an earlier upgrade), elsewhere when it was there.
+Remember_Remi_Release() {
+Remi_Release_Was_Installed=0
+if rpm -q remi-release >/dev/null 2>&1 ; then
+  Remi_Release_Was_Installed=1
+fi
+}
+
+Restore_Remi_Release() {
+if [[ "$Server_OS_Version" != "9" ]] && [[ "$Server_OS_Version" != "10" ]] && \
+   [[ "${Remi_Release_Was_Installed:-0}" != "1" ]] ; then
+  return 0
+fi
+rpm -q remi-release >/dev/null 2>&1 && return 0
+local release="https://rpms.remirepo.net/enterprise/remi-release-${Server_OS_Version}.rpm"
+if yum install -y "$release" ; then
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Remi repository installed again after EPEL" | tee -a /var/log/cyberpanel_upgrade_debug.log
+else
+  echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] WARNING: the Remi repository was removed with EPEL and could not be installed again; run: yum install -y $release" | tee -a /var/log/cyberpanel_upgrade_debug.log
+fi
+}
+
 Pre_Upgrade_Setup_Repository() {
 echo -e "[$(date +"%Y-%m-%d %H:%M:%S")] Pre_Upgrade_Setup_Repository started for OS: $Server_OS" | tee -a /var/log/cyberpanel_upgrade_debug.log
 
@@ -833,6 +860,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
   fi
   yum clean all
   if [[ -z "${CYBERPANEL_CSF_STATE:-}" ]]; then yum update -y "${OLS_RPM_EXCLUDES[@]}" || return 1; fi
+  Remember_Remi_Release
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
@@ -841,6 +869,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
 
   if [[ "$Server_OS_Version" = "7" ]] ; then
     yum install epel-release -y
+    Restore_Remi_Release
     yum -y install yum-utils
     yum -y groupinstall development
     rm -f /etc/yum.repos.d/dovecot.repo
@@ -926,6 +955,7 @@ EOF
   fi
 
   dnf install epel-release -y
+  Restore_Remi_Release
 
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
   dnf install gpgme-devel -y
@@ -941,6 +971,7 @@ EOF
   fi
 
   dnf install epel-release -y
+  Restore_Remi_Release
 
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-connector-c-devel curl-devel git platform-python-devel tar socat bind-utils
   dnf install gpgme-devel -y
