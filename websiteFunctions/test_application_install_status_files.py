@@ -14,6 +14,7 @@ import unittest
 from unittest import mock
 
 from plogical import statusUtilities
+from plogical.wordpressInstallerUtilities import apache_backend_missing, apache_backend_required_message
 
 ROOT = Path(__file__).resolve().parents[1]
 WEBSITE = ROOT / 'websiteFunctions' / 'website.py'
@@ -43,8 +44,8 @@ def manager_method(name):
     return method
 
 
-class ApplicationInstallStatusFileTests(unittest.TestCase):
-    def launch(self, view, data, directory):
+class LaunchMixin:
+    def launch(self, view, data, directory, process=None, apache_config_base='/nonexistent/apache/'):
         method = manager_method(view)
         module = ast.Module(body=[method], type_ignores=[])
         installer = mock.Mock()
@@ -56,7 +57,11 @@ class ApplicationInstallStatusFileTests(unittest.TestCase):
                                    RequestException=OSError)
         env = {
             'ACLManager': acl, 'Administrator': mock.Mock(), 'ApplicationInstaller': installer,
-            'ProcessUtilities': mock.Mock(), 'virtualHostUtilities': SimpleNamespace(cyberPanel='/usr/local/CyberCP'),
+            'ProcessUtilities': process or mock.Mock(),
+            'ApacheVhost': SimpleNamespace(configBasePath=apache_config_base),
+            'apache_backend_missing': apache_backend_missing,
+            'apache_backend_required_message': apache_backend_required_message,
+            'virtualHostUtilities': SimpleNamespace(cyberPanel='/usr/local/CyberCP'),
             'mailUtilities': mock.Mock(), 'time': mock.Mock(), 'json': json,
             'HttpResponse': lambda body: body, 'requests': requests,
             'select_wordpress_version': lambda offers: offers[0]['current'],
@@ -70,7 +75,11 @@ class ApplicationInstallStatusFileTests(unittest.TestCase):
         with mock.patch.dict(sys.modules, {'plogical.statusUtilities': reserved}), \
                 mock.patch('plogical.statusUtilities', reserved, create=True):
             answer = json.loads(env[view](SimpleNamespace(domain=None), userID=1, data=dict(data)))
+        self.process = env['ProcessUtilities']
         return answer, installer
+
+
+class ApplicationInstallStatusFileTests(LaunchMixin, unittest.TestCase):
 
     def test_each_launch_reserves_its_own_status_file(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -99,6 +108,43 @@ class ApplicationInstallStatusFileTests(unittest.TestCase):
             self.assertEqual(answer['installStatus'], 0)
             installer.assert_not_called()
             self.assertEqual(os.listdir(directory), [])
+
+
+class PrestaShopViewRefusalTests(LaunchMixin, unittest.TestCase):
+    """The PrestaShop launch refuses an OpenLiteSpeed-only website before it changes it."""
+
+    def openlitespeed(self):
+        process = mock.Mock()
+        process.OLS = 1
+        process.decideServer.return_value = 1
+        return process
+
+    def test_openlitespeed_only_website_is_refused_before_its_php_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            answer, installer = self.launch('prestaShopInstall', LAUNCHERS['prestaShopInstall'][1],
+                                            directory, process=self.openlitespeed(),
+                                            apache_config_base=directory + '/apache/')
+
+            self.assertEqual(answer['installStatus'], 0)
+            self.assertEqual(answer['error_message'],
+                             apache_backend_required_message('PrestaShop', 'site.example.com'))
+            self.process.executioner.assert_not_called()
+            installer.assert_not_called()
+            self.assertEqual(os.listdir(directory), [])
+
+    def test_apache_backed_website_has_its_php_changed_and_is_installed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apache = os.path.join(directory, 'apache')
+            os.mkdir(apache)
+            Path(apache, 'site.example.com.conf').write_text('<VirtualHost *:8083>\n')
+            answer, installer = self.launch('prestaShopInstall', LAUNCHERS['prestaShopInstall'][1],
+                                            directory, process=self.openlitespeed(),
+                                            apache_config_base=apache + '/')
+
+            self.assertEqual(answer['installStatus'], 1)
+            command = self.process.executioner.call_args[0][0]
+            self.assertIn("changePHP --phpVersion 'PHP 8.3'", command)
+            self.assertEqual(installer.call_args[0][0], 'prestashop')
 
 
 if __name__ == '__main__':

@@ -72,6 +72,16 @@ def directory_allows_install(command_succeeded, output, maximum_entries=3):
     return len(output) <= maximum_entries
 
 
+def apache_backend_missing(domain, apache_config_base, openlitespeed_server):
+    """True when a website has no Apache backend on an OpenLiteSpeed server.
+
+    apache_config_base is ApacheVhost.configBasePath; a website served through
+    Apache has its own <domain>.conf there. openlitespeed_server is
+    ProcessUtilities.decideServer() == ProcessUtilities.OLS.
+    """
+    return bool(openlitespeed_server) and not os.path.exists(apache_config_base + domain + '.conf')
+
+
 def apache_backend_required_message(application, domain):
     """What an installer reports when its application needs Apache and the website has none.
 
