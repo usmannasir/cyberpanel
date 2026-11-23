@@ -273,23 +273,25 @@ class OLSService:
         self._observed_policy_identity = None
         self._policy_checked = False
         self.kill = os.kill
+        self._generation_seen = {}  # (pid, start ticks) -> first seen, monotonic
 
-    # How long an earlier generation may keep draining before the upgrade ends it.
+    # How long every process of an earlier generation must have been seen draining before the upgrade ends it.
     PREVIOUS_GENERATION_WAIT = 60
 
     def _previous_generation(self, master, processes, strays):
         """{pid: start ticks} when every stray belongs to an earlier generation of this service, else None.
 
-        Each stray's tree must end in a process whose parent is init, with the
-        master's own command line, in the master's service, started before the
-        master. Anything else stays an unmanaged process.
+        The master must belong to a vendor OLS service. Each stray's tree must
+        end in a process whose parent is init, with the master's own command
+        line, started before the master, and every stray must sit in exactly
+        the master's control group. Anything else stays an unmanaged process.
         """
         try:
             master_cmdline = (self.proc / str(master) / 'cmdline').read_bytes()
-            master_owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
-        except (FileNotFoundError, ProcessLookupError):
-            return None
-        if not master_cmdline:
+            master_cgroup = (self.proc / str(master) / 'cgroup').read_text()
+            if process_owner(master_cgroup) not in VENDOR_UNITS or not master_cmdline:
+                return None
+        except (FileNotFoundError, ProcessLookupError, RuntimeError):
             return None
         generation = {}
         for pid in strays:
@@ -302,10 +304,10 @@ class OLSService:
             try:
                 if (processes[root][0] != 1 or int(processes[root][1]) >= int(processes[master][1])
                         or (self.proc / str(root) / 'cmdline').read_bytes() != master_cmdline
-                        or process_owner((self.proc / str(root) / 'cgroup').read_text()) != master_owner
-                        or process_owner((self.proc / str(pid) / 'cgroup').read_text()) != master_owner):
+                        or (self.proc / str(root) / 'cgroup').read_text() != master_cgroup
+                        or (self.proc / str(pid) / 'cgroup').read_text() != master_cgroup):
                     return None
-            except (FileNotFoundError, ProcessLookupError, ValueError, RuntimeError):
+            except (FileNotFoundError, ProcessLookupError, ValueError):
                 return None
             generation[pid] = processes[pid][1]
         return generation
@@ -324,28 +326,34 @@ class OLSService:
                 ended.append(pid)
             except (FileNotFoundError, ProcessLookupError):
                 continue
+            except (IndexError, PermissionError) as error:
+                raise RuntimeError('Cannot end previous OpenLiteSpeed process %d: %s' % (pid, error)) from error
         return ended
 
     def settle_previous_generation(self, check):
-        """Return check(); an earlier generation gets PREVIOUS_GENERATION_WAIT seconds to drain, then is ended once."""
-        deadline = time.monotonic() + self.PREVIOUS_GENERATION_WAIT
-        ended = False
+        """Return check(). A previous generation is ended only once every one of its processes (pid and start
+        time) has been seen draining for PREVIOUS_GENERATION_WAIT seconds, so a generation left by a restart
+        during the wait gets its own full wait. Bounded: refuses after three waits."""
+        hard = time.monotonic() + 3 * self.PREVIOUS_GENERATION_WAIT
         while True:
             try:
                 return check()
             except OLSPreviousGeneration as previous:
-                if time.monotonic() < deadline:
+                now = time.monotonic()
+                for key in previous.generation.items():
+                    self._generation_seen.setdefault(key, now)
+                if now >= hard:
+                    raise
+                if any(now - self._generation_seen[key] < self.PREVIOUS_GENERATION_WAIT
+                       for key in previous.generation.items()):
                     time.sleep(1)
                     continue
-                if ended:
-                    raise
                 pids = self._end_previous_generation(previous.generation)
-                print('Ended a previous OpenLiteSpeed generation that was still finishing connections '
-                      'after %d seconds: PIDs %s' % (self.PREVIOUS_GENERATION_WAIT,
-                                                     ', '.join(str(pid) for pid in pids) or 'none left'),
-                      flush=True)
-                ended = True
-                deadline = time.monotonic() + 10
+                if pids:
+                    print('Ended a previous OpenLiteSpeed generation that was still finishing connections '
+                          'after %d seconds: PIDs %s' % (self.PREVIOUS_GENERATION_WAIT,
+                                                         ', '.join(str(pid) for pid in pids)), flush=True)
+                time.sleep(1)
 
     def bind_recovery_policy(self, policy, original_core, candidate_core):
         if not jammy_platform() or candidate_core != RECOVERED_JAMMY_BUNDLE[0]:
@@ -661,11 +669,12 @@ class OLSService:
         self._observed_processes = {pid: entry[1] for pid, entry in processes.items()}
         return master, processes[master][1], owner
 
-    def settled_state(self):
+    def settled_state(self, retire_previous=True):
+        """retire_previous=False only reports: an earlier generation then raises OLSPreviousGeneration."""
         deadline = time.monotonic() + 20
         while True:
             try:
-                return self.settle_previous_generation(self.state)
+                return self.settle_previous_generation(self.state) if retire_previous else self.state()
             except OLSWorkersRemain:
                 if time.monotonic() >= deadline:
                     raise
