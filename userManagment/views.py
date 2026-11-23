@@ -379,10 +379,17 @@ def saveModifications(request):
             except:
                 securityLevel = 'HIGH'
 
-            try:
-                twofa = int(data['twofa'])
-            except:
-                twofa = 0
+            # Two-factor changes only when the request asks for it: without `twofa` (the command line,
+            # the cloud API) it stays on or off as it is, with its secret.
+            twofa = data.get('twofa')
+            if twofa is not None:
+                # true/false from the page, 1/0 as a number or as text.
+                if not isinstance(twofa, (bool, int, float, str)) or twofa not in (0, 1, '0', '1'):
+                    data_ret = {'status': 0, 'saveStatus': 0,
+                                'error_message': 'twofa is 1 to switch two-factor on or 0 to switch it off.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                twofa = int(twofa)
 
             user = Administrator.objects.get(userName=accountUsername)
 
@@ -422,13 +429,15 @@ def saveModifications(request):
                 return HttpResponse(json_data)
 
             user.type = 0
-            user.twoFA = twofa
 
-            # Security: when 2FA is turned off, discard the shared secret so it is
-            # not silently reused if 2FA is later re-enabled. fetchUserDetails
-            # generates a fresh secret (and QR) the next time setup is opened.
-            if twofa == 0:
-                user.secretKey = 'None'
+            if twofa is not None:
+                user.twoFA = twofa
+
+                # Security: when 2FA is turned off, discard the shared secret so it is
+                # not silently reused if 2FA is later re-enabled. fetchUserDetails
+                # generates a fresh secret (and QR) the next time setup is opened.
+                if twofa == 0:
+                    user.secretKey = 'None'
 
             if securityLevel == 'LOW':
                 user.securityLevel = secMiddleware.LOW
