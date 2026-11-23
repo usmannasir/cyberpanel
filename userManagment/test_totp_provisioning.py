@@ -13,7 +13,7 @@ from userManagment.views import fetchUserDetails
 class UserTOTPProvisioningTests(SimpleTestCase):
     secret = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP'
 
-    def fetch(self, *, secret=None, twofa=False, actor=1, owner=99, admin=True):
+    def fetch(self, *, secret=None, twofa=False, actor=1, owner=99, admin=True, set_up=True):
         self.user = SimpleNamespace(
             id=2, pk=2, owner=owner, firstName='QA', lastName='User',
             email='qa+otp@example.invalid', initWebsitesLimit=10,
@@ -22,7 +22,7 @@ class UserTOTPProvisioningTests(SimpleTestCase):
             twoFA=twofa, save=mock.Mock())
         request = RequestFactory().post(
             '/users/fetchUserDetails',
-            data=json.dumps({'accountUsername': 'qa-user'}),
+            data=json.dumps(dict({'accountUsername': 'qa-user'}, **({'twofaSetup': True} if set_up else {}))),
             content_type='application/json')
         request.session = {'userID': actor}
         real_uri = pyotp.TOTP.provisioning_uri
@@ -56,11 +56,20 @@ class UserTOTPProvisioningTests(SimpleTestCase):
         self.assertEqual(self.user.secretKey, self.secret)
         self.user.save.assert_not_called()
 
-    def test_existing_secret_and_enabled_twofa_are_preserved(self):
+    def test_existing_secret_and_enabled_twofa_are_preserved_and_not_sent(self):
         result = self.fetch(twofa=True)
-        self.assert_uri(result)
+        self.assertEqual(result['fetchStatus'], 1, result)
+        self.assertNotIn('otpauth', result['userDetails'])
+        self.assertNotIn(self.secret, json.dumps(result))
         self.assertTrue(result['userDetails']['twofa'])
         self.assertEqual(self.user.secretKey, self.secret)
+        self.user.save.assert_not_called()
+
+    def test_loading_without_set_up_sends_and_generates_no_secret(self):
+        result = self.fetch(secret='None', set_up=False)
+        self.assertEqual(result['fetchStatus'], 1, result)
+        self.assertNotIn('otpauth', result['userDetails'])
+        self.assertEqual(self.user.secretKey, 'None')
         self.user.save.assert_not_called()
 
     def test_initial_enrollment_generates_one_secret(self):

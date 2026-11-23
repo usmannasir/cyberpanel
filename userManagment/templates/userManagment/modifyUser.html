@@ -302,6 +302,7 @@
                             </label>
                             <p class="help-text mb-0 mt-2">{% trans "Enhance account security with 2FA" %}</p>
                         </div>
+                        <p ng-show="twofa && twofaEnrolled" class="help-text mt-2">{% trans "Two-factor authentication is set up for this account. To set it up again with a new key, untick the box, save, then tick it again." %}</p>
                         <div ng-hide="qrHidden" class="mt-3">
                             <p class="help-text">{% trans "Scan this QR code with your authenticator app:" %}</p>
                             <div style="max-width:220px;">
