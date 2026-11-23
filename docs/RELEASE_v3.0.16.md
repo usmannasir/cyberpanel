@@ -4,8 +4,9 @@ _Release candidate._
 
 The installer waits while another apt process holds a package lock instead
 of failing at once, a delete in the File Manager no longer makes the
-website's whole home immutable, and the upgrade unlocks the homes that such
-a delete locked. The changes are listed in CHANGELOG.md.
+website's whole home immutable, the upgrade unlocks the homes that such
+a delete locked, and an upgrade on RPM systems keeps (or restores) the Remi
+repository. The changes are listed in CHANGELOG.md.
 
 ## Release gates
 
@@ -17,6 +18,9 @@ a delete locked. The changes are listed in CHANGELOG.md.
   Manager: the website's home becomes immutable and an upload fails. Upgrade:
   the home is unlocked, an upload works, a file its owner protected outside
   that home stays protected, and a new delete locks nothing.
+- On AlmaLinux 9, upgrade from the published v3.0.15 tree: Remi is still
+  installed afterwards and dnf can update the LiteSpeed PHP packages; on a
+  server whose Remi an earlier upgrade removed, the upgrade installs it.
 - Install the candidate on clean Ubuntu and RPM servers, Python 3.6
   included; upgrade servers installed from the published v3.0.15 tree.
 - Run the installer test collection and the whole test collection against
