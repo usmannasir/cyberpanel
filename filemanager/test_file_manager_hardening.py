@@ -74,10 +74,43 @@ class DeleteProbeTests(unittest.TestCase):
             ajaxPre=lambda status, message: response(json.dumps({'status': status, 'error_message': message})))
         self.assertEqual(1, json.loads(delete(manager).content)['status'])
         probe = [(command, user) for command, user in commands.calls if 'hello.txt' in command]
-        self.assertEqual([('touch -h /home/example.com/hello.txt', 'examp1234'),
+        self.assertEqual([('touch /home/example.com/hello.txt', 'examp1234'),
                           ('rm -f /home/example.com/hello.txt', 'examp1234')], probe)
         for command, user in commands.calls:
             self.assertEqual('examp1234', user, command)
+
+    def test_a_delete_in_a_writable_home_never_locks_the_home(self):
+        # The probe is run for real, in a temporary home that can be written:
+        # a probe that cannot succeed there (touch -h never creates a file)
+        # made every delete run chattr -R +i on the customer's whole home.
+        import subprocess
+        with tempfile.TemporaryDirectory() as home:
+            class RealProbe(Recorder):
+                def outputExecutioner(self, command, user=None, *arguments, **options):
+                    self.calls.append((command, user))
+                    real = command.replace('/home/example.com', home)
+                    self.assertTrue(real.startswith('touch '), real)
+                    result = subprocess.run(shlex.split(real), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                            universal_newlines=True)
+                    return result.stdout
+
+            RealProbe.assertTrue = self.assertTrue
+            commands = RealProbe()
+            website = SimpleNamespace(externalApp='examp1234')
+            delete = load('filemanager/filemanager.py', 'deleteFolderOrFile', dict(
+                Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kwargs: website)),
+                ProcessUtilities=commands, json=json, HttpResponse=response, Trash=Mock(),
+                require_root_entitlement=Mock(side_effect=AssertionError('site request fell into root mode'))),
+                'FileManager')
+            for skip_trash in (True, False):
+                manager = SimpleNamespace(
+                    data={'domainName': 'example.com', 'path': '/home/example.com/public_html',
+                          'fileAndFolders': ['old.txt'], 'skipTrash': skip_trash},
+                    returnPathEnclosed=shlex.quote, notInside=lambda path, home: False,
+                    ajaxPre=lambda status, message: response(json.dumps({'status': status, 'error_message': message})))
+                self.assertEqual(1, json.loads(delete(manager).content)['status'])
+            self.assertTrue(os.path.exists(os.path.join(home, 'hello.txt')))
+        self.assertEqual([], [command for command, _ in commands.calls if 'chattr' in command])
 
 
 class UploadTests(unittest.TestCase):
