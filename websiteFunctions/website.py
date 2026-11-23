@@ -4684,7 +4684,6 @@ Require valid-user
             extraArgs['adminUser'] = data['adminUser']
             extraArgs['adminPassword'] = data['passwordByPass']
             extraArgs['adminEmail'] = data['adminEmail']
-            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             try:
                 version_response = requests.get(
@@ -4706,6 +4705,11 @@ Require valid-user
 
             if data['home'] == '0':
                 extraArgs['path'] = data['path']
+
+            # A status file of this run alone: a name shared with another
+            # installer would show that installer's result on this page.
+            from plogical.statusUtilities import create_status_file
+            extraArgs['tempStatusPath'] = create_status_file()
 
             background = ApplicationInstaller('wordpress', extraArgs)
             background.start()
@@ -5190,10 +5194,14 @@ StrictHostKeyChecking no
             extraArgs['username'] = data['username']
             extraArgs['email'] = data['email']
             extraArgs['password'] = data['passwordByPass']
-            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             if data['home'] == '0':
                 extraArgs['path'] = data['path']
+
+            # A status file of this run alone: a name shared with another
+            # installer would show that installer's result on this page.
+            from plogical.statusUtilities import create_status_file
+            extraArgs['tempStatusPath'] = create_status_file()
 
             background = ApplicationInstaller('mautic', extraArgs)
             background.start()
@@ -5237,7 +5245,6 @@ StrictHostKeyChecking no
             extraArgs['databasePrefix'] = data['databasePrefix']
             extraArgs['email'] = data['email']
             extraArgs['password'] = data['passwordByPass']
-            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             if data['home'] == '0':
                 extraArgs['path'] = data['path']
@@ -5249,6 +5256,11 @@ StrictHostKeyChecking no
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " changePHP --phpVersion 'PHP 8.3' --path " + completePathToConfigFile
             ProcessUtilities.executioner(execPath)
+
+            # A status file of this run alone: a name shared with another
+            # installer would show that installer's result on this page.
+            from plogical.statusUtilities import create_status_file
+            extraArgs['tempStatusPath'] = create_status_file()
 
             background = ApplicationInstaller('prestashop', extraArgs)
             background.start()
