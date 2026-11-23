@@ -637,19 +637,89 @@ class PreviousGenerationTests(unittest.TestCase):
         self.assertEqual(state[0], 200)
         self.assertEqual(sorted(self.killed), [100, 101])
 
-    def test_a_reused_pid_or_other_binary_is_not_killed_and_the_upgrade_still_stops(self):
+    def swap_before_kill(self, change):
+        real_end = self.service._end_previous_generation
+
+        def swapped(generation):
+            change()
+            return real_end(generation)
+        return patch.object(self.service, '_end_previous_generation', side_effect=swapped)
+
+    def test_a_reused_pid_is_not_killed_and_what_remains_stops_the_upgrade(self):
+        self.clock()
+
+        def reuse_101():
+            # 101 exited and its number now belongs to a process started after the master.
+            self.remove(101); self.process(101, 100, '999', cmdline=b'openlitespeed (lshttpd - #03)\x00')
+
+        with self.swap_before_kill(reuse_101), patch('builtins.print'), \
+                self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process'):
+            self.service.settled_state()
+        self.assertEqual(self.killed, [100])
+        self.assertTrue((self.proc / '101').exists())
+
+    def test_a_process_whose_binary_changed_is_not_killed(self):
         self.clock()
         foreign = self.root / 'foreign'
         foreign.write_bytes(b'unrelated')
-        real_end = self.service._end_previous_generation
 
-        def swap_identities(generation):
-            # Between observation and the kill, 101 became another process and 100 another binary.
-            self.remove(101); self.process(101, 100, '999', cmdline=b'openlitespeed (lshttpd - #03)\x00')
+        def other_binary():
             (self.proc / '100/exe').unlink(); (self.proc / '100/exe').symlink_to(foreign)
-            return real_end(generation)
 
-        with patch.object(self.service, '_end_previous_generation', side_effect=swap_identities), \
-                patch('builtins.print'), self.assertRaises(RuntimeError):
+        with self.swap_before_kill(other_binary), patch('builtins.print'), \
+                self.assertRaisesRegex(RuntimeError, 'different or deleted'):
             self.service.settled_state()
+        self.assertEqual(self.killed, [101])
+        self.assertTrue((self.proc / '100').exists())
+
+    def test_an_ols_started_outside_a_service_is_never_treated_as_a_generation(self):
+        session = 'user.slice/user-0.slice/session-7.scope'
+        for pid, parent, ticks in ((200, 1, '500'), (201, 200, '501'), (202, 200, '502'), (100, 1, '300'), (101, 100, '301')):
+            self.remove(pid)
+            self.process(pid, parent, ticks, group=session)
+        with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process') as raised:
+            self.service._native_state()
+        self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
+
+    def test_a_different_control_group_under_the_same_unit_is_not_the_same_service(self):
+        self.remove(100)
+        self.process(100, 1, '300', group='lshttpd.service/other')
+        with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process'):
+            self.service._native_state()
+
+    def test_a_query_never_waits_or_kills(self):
+        with patch.object(control.time, 'sleep', side_effect=AssertionError('a query must not wait')):
+            with self.assertRaises(control.OLSPreviousGeneration):
+                self.service.settled_state(retire_previous=False)
         self.assertEqual(self.killed, [])
+
+    def test_a_generation_left_by_a_restart_during_the_wait_gets_its_own_full_wait(self):
+        now = self.clock()
+        start = now[0]
+        restarted = []
+
+        def check():
+            if not restarted and now[0] - start >= 59:
+                # The panel restarts OLS: 200's generation drains under init, 400 is the new master.
+                restarted.append(True)
+                for pid in (100, 101):
+                    self.remove(pid)
+                self.remove(200); self.process(200, 1, '500')
+                self.process(400, 1, '700')
+                for pid in (201, 202):
+                    self.remove(pid)
+                self.process(201, 200, '501', cmdline=b'openlitespeed (lshttpd - #01)\x00')
+                control.run.return_value = SimpleNamespace(stdout='litespeed is running with PID 400.')
+            return self.service._native_state()
+
+        with patch('builtins.print'):
+            state = self.service.settle_previous_generation(check)
+        self.assertEqual(state[0], 400)
+        self.assertEqual(sorted(self.killed), [200, 201])
+        self.assertGreaterEqual(now[0] - start, 59 + control.OLSService.PREVIOUS_GENERATION_WAIT)
+
+    def test_a_kill_that_is_refused_stops_the_upgrade_clearly(self):
+        self.clock()
+        self.service.kill = Mock(side_effect=PermissionError('not permitted'))
+        with patch('builtins.print'), self.assertRaisesRegex(RuntimeError, 'Cannot end previous OpenLiteSpeed process'):
+            self.service.settled_state()

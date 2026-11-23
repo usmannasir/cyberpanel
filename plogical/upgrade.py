@@ -207,8 +207,16 @@ def apply_ols_config_changes(changes):
 
 
 def ols_service_running():
-    """Whether OpenLiteSpeed is running, established the way the configuration migrations do."""
-    return bool(load_ols_diagnostic_helper('olsServiceControl.py').OLSService().settled_state())
+    """Whether OpenLiteSpeed is running, established the way the configuration migrations do.
+
+    Only a query: it never ends anything. A live master beside an earlier
+    generation that is still draining is running.
+    """
+    helper = load_ols_diagnostic_helper('olsServiceControl.py')
+    try:
+        return bool(helper.OLSService().settled_state(retire_previous=False))
+    except helper.OLSPreviousGeneration:
+        return True
 
 
 def stagger_renewal_cron(data):
