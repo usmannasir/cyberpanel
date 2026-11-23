@@ -1254,6 +1254,10 @@ else
         Fail_Install invalid_input 2
       elif [[ "${1^^}" = "OLS" ]] ; then
         Server_Edition="OLS"
+        # The last -v counts. A serial number of an earlier one is dropped:
+        # left behind, it would be handed to install.py as an argument of
+        # its own, which install.py refuses after everything before it ran.
+        License_Key=""
         Silent="On"
         echo -e "\nSet to use OpenLiteSpeed..."
       else

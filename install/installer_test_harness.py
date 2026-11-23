@@ -151,6 +151,10 @@ Main_Installation() {
   # stands in for install.py: the real status module, driven by the name of
   # the run that the script exported.
   phase Main_Installation
+  # The lines of the real Main_Installation that make the arguments of
+  # install.py, and what they made.
+#REAL_FLAG_LINES#
+  printf '%s\n' "${Final_Flags[@]}" > "$QA_FLAGS"
   python3 -I "$QA_DRIVER" "$QA_INSTALL_DIRECTORY" "$QA_EVENTS" $QA_PYTHON_STEPS
   Install_Status=$?
   if [[ "$Install_Status" -ne 0 ]]; then
@@ -284,6 +288,7 @@ class Installer:
         self.os_release(UBUNTU_22)
         self.calls = self.root / 'calls'
         self.phases = self.root / 'phases'
+        self.flags = self.root / 'installer-flags'
         self.events_file = self.root / 'var/log/cyberpanel/install_events.log'
         self.install_log = self.root / 'var/log/installLogs.txt'
         self.driver = self.root / 'driver.py'
@@ -319,7 +324,9 @@ class Installer:
         tweak = rest[rest.index('\nInstall_Step hostname_ssl\n'):]
         if rest.index('\nStart_Panel\n') > rest.index('\nInstall_Step hostname_ssl\n'):
             raise AssertionError('the panel is started after the hostname step')
-        stubs = [COMMAND_STUBS]
+        start = functions.index('\nFinal_Flags=()\n', functions.index('\nMain_Installation() {\n'))
+        flags = functions[start + 1:functions.index('\n  #form up the final agurment for install.py\n', start)]
+        stubs = [COMMAND_STUBS.replace('#REAL_FLAG_LINES#', flags)]
         for name, failure in sorted(STUBBED_PHASES.items()):
             stubs.append('%s() { phase %s && { %s; }; return 0; }\n' % (name, name, failure))
         stubs.append('Post_Install_Tweak() {\nphase Post_Install_Tweak%s%s\n}\n'
@@ -345,6 +352,7 @@ class Installer:
             'HOME': str(self.root / 'home'),
             'QA_CALLS': str(self.calls),
             'QA_PHASES': str(self.phases),
+            'QA_FLAGS': str(self.flags),
             'QA_DRIVER': str(self.driver),
             'QA_INSTALL_DIRECTORY': str(ROOT / 'install'),
             'QA_EVENTS': str(self.events_file),
@@ -395,6 +403,10 @@ class Installer:
 
     def recorded(self, record):
         return record.read_text().splitlines() if record.exists() else []
+
+    def installer_flags(self):
+        """The arguments the script made for install.py, in order."""
+        return self.recorded(self.flags)
 
     def panel_service_calls(self):
         """What was done to the panel's service, and when the panel was asked
