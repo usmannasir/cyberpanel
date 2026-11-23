@@ -28,6 +28,7 @@ from databases.models import Databases
 from plogical.installUtilities import installUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.wordpressInstallerUtilities import (
+    apache_backend_required_message,
     build_directory_probe,
     build_wordpress_config_password_command,
     wrap_wordpress_site_shell_script,
@@ -1193,6 +1194,16 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
 
+            # PrestaShop is installed only on a website served through Apache.
+            # Refuse before anything is created, so a refused run leaves no
+            # database behind and the website's files untouched.
+            finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+            if not os.path.exists(finalConfPath) and ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines(apache_backend_required_message('PrestaShop', domainName) + " [404]")
+                statusFile.close()
+                return 0
+
             finalPath = ''
             self.permPath = ''
 
@@ -1281,13 +1292,6 @@ class ApplicationInstaller(multi.Thread):
                 phpUtilities.InstallSaidPHP('83')
 
             ####
-
-            finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
-            if not os.path.exists(finalConfPath) and ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                statusFile = open(self.tempStatusPath, 'w')
-                statusFile.writelines('Your server is currently using OpenLiteSpeed, please switch your website to use Apache otherwise Prestashop installation will not work.' + " [404]")
-                statusFile.close()
-                return 0
 
 
             statusFile = open(tempStatusPath, 'w')

@@ -72,6 +72,21 @@ def directory_allows_install(command_succeeded, output, maximum_entries=3):
     return len(output) <= maximum_entries
 
 
+def apache_backend_required_message(application, domain):
+    """What an installer reports when its application needs Apache and the website has none.
+
+    application is the installer's own application name ('PrestaShop'), so the
+    message always names the application being installed. The text says where
+    the website is switched to Apache and nothing about what the switch needs.
+    """
+    return (
+        '%(app)s needs this website to be served through Apache, and %(domain)s is served by '
+        'OpenLiteSpeed alone. Switch the website to Apache in its Apache Manager '
+        '(/websites/ApacheManager/%(domain)s), then start the %(app)s installation again.'
+        % {'app': application, 'domain': domain}
+    )
+
+
 def build_directory_listing_command(path):
     """Print the name of every entry directly inside a directory, one per line."""
     return 'find %s -mindepth 1 -maxdepth 1 -printf %s' % (shlex.quote(path), shlex.quote('%f\\n'))
