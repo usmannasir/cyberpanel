@@ -36,6 +36,26 @@ from plogical.olsHtaccessReload import merge_defaults, migrate_cron
 # Using shared char_set from install_utils
 char_set = install_utils.char_set
 
+# Set to "1" by a cyberpanel.sh that enables and starts the panel's service
+# itself, once the panel has confirmed its administrator's password.
+PANEL_ENABLED_BY_SCRIPT = 'CP_PANEL_ENABLED_BY_SCRIPT'
+
+
+def panel_enabled_by_script(environment=None):
+    """Whether the script that runs this install enables the panel's service.
+
+    A panel that has no administrator creates one with a well-known password
+    on the first request it gets. Such a script holds the panel until the
+    administrator's password is confirmed; were the service enabled here, a
+    power loss or a killed install from now until then would bring a panel
+    without an administrator up at the next boot. Any other caller gets the
+    service enabled here, as before: a cyberpanel.sh up to 3.0.12 only
+    restarts it, and one of 3.0.13 does not set the variable.
+    """
+    if environment is None:
+        environment = os.environ
+    return environment.get(PANEL_ENABLED_BY_SCRIPT) == '1'
+
 
 # Using shared function from install_utils
 generate_pass = install_utils.generate_pass
@@ -2105,7 +2125,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ##
-            self.manage_service('lscpd', 'enable')
+            if not panel_enabled_by_script():
+                self.manage_service('lscpd', 'enable')
 
             ##
             count = 0
