@@ -432,7 +432,7 @@
                                         <div class="input-group">
                                             <input ng-change="hideFewDetails()" type="text" class="form-control" 
                                                    ng-model="ftpUserName" placeholder="john_ftp" required>
-                                            <span class="username-suffix">{{ OwnerFTP }}_{$ ftpUserName $}</span>
+                                            <span class="username-suffix">{{ ftpUserNamePrefix }}{$ ftpUserName $}</span>
                                         </div>
                                         <small style="color: var(--text-secondary, #64748b); margin-top: 0.5rem; display: block; font-size: 1rem;">
                                             <i class="fas fa-info-circle"></i>

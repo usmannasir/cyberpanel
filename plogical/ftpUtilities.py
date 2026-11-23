@@ -18,6 +18,7 @@ import hashlib
 from ftp.models import Users
 from datetime import datetime
 from plogical.processUtilities import ProcessUtilities
+from plogical.ftpConfiguration import stored_ftp_user_name
 
 
 class FTPUtilities:
@@ -156,8 +157,7 @@ class FTPUtilities:
             admin = Administrator.objects.get(userName=owner)
 
 
-            if api == '0':
-                userName = admin.userName + "_" + userName
+            userName = stored_ftp_user_name(admin.userName, userName, api)
 
 
             if website.package.ftpAccounts == 0:
@@ -183,8 +183,12 @@ class FTPUtilities:
             else:
                 raise BaseException("Exceeded maximum amount of FTP accounts allowed for the package.")
 
+            ## The third value is the user name as the table holds it: the name that signs in.
+
+            user.refresh_from_db(fields=['user'])
+
             print("1,None")
-            return 1,'None'
+            return 1, 'None', user.user
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [submitFTPCreation]")

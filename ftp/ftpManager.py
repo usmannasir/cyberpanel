@@ -25,7 +25,7 @@ except:
 import os
 
 from plogical.processUtilities import ProcessUtilities
-from plogical.ftpConfiguration import pure_ftpd_service_name, write_chroot_everyone
+from plogical.ftpConfiguration import pure_ftpd_service_name, write_chroot_everyone, ftp_user_name_prefix
 import argparse
 
 class FTPManager:
@@ -52,7 +52,8 @@ class FTPManager:
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
         proc = httpProc(self.request, 'ftp/createFTPAccount.html',
-                        {'websiteList': websitesName, 'OwnerFTP': admin.userName, "status": 1}, 'createFTPAccount')
+                        {'websiteList': websitesName, 'ftpUserNamePrefix': ftp_user_name_prefix(admin.userName),
+                         "status": 1}, 'createFTPAccount')
         return proc.render()
 
     def submitFTPCreation(self):
@@ -96,7 +97,7 @@ class FTPManager:
             result = FTPUtilities.submitFTPCreation(domainName, userName, password, path, admin.userName, api)
 
             if result[0] == 1:
-                data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None'}
+                data_ret = {'status': 1, 'creatFTPStatus': 1, 'error_message': 'None', 'ftpUserName': result[2]}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
