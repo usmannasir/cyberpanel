@@ -27,6 +27,7 @@ from plogical.sslUtilities import sslUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.backupSchedule import backupSchedule
 from managePHP.phpConfig import normalized_php_selection
+from plogical.dnsRecordContent import record_priority, srv_record_content, mx_record_content
 
 # All that we see or seem is but a dream within a dream.
 
@@ -321,7 +322,16 @@ class cyberPanel:
             topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
 
             zone = DNS.getZoneObject(topLevelDomain)
-            DNS.createDNSRecord(zone, name, recordType, value, int(priority), int(ttl))
+            priority = int(priority)
+
+            ## --value of an MX or SRV record is what follows the priority.
+
+            if recordType == 'SRV':
+                value = srv_record_content(value, record_priority(priority))
+            elif recordType == 'MX':
+                value = mx_record_content(value, record_priority(priority))
+
+            DNS.createDNSRecord(zone, name, recordType, value, priority, int(ttl))
             self.printStatus(1, 'None')
         except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
