@@ -331,6 +331,21 @@ class OLSService:
                 raise RuntimeError('Cannot end previous OpenLiteSpeed process %d: %s' % (pid, error)) from error
         return ended
 
+    @staticmethod
+    def _unit_check(check, master, roots):
+        """check(master); beside an earlier generation, systemd may still name that generation's main as
+        MainPID (systemd 239 keeps it until it exits, then reads the PID file). Nothing else is accepted."""
+        try:
+            check(master)
+        except RuntimeError:
+            for root in roots:
+                try:
+                    check(root)
+                    return
+                except RuntimeError:
+                    continue
+            raise
+
     def settle_previous_generation(self, check):
         """Return check(). A previous generation is ended only once every one of its processes (pid and start
         time) has been seen draining for PREVIOUS_GENERATION_WAIT seconds, so a generation left by a restart
@@ -647,13 +662,14 @@ class OLSService:
                     break
                 seen.add(current)
                 current = processes[current][0]
-        previous = None
+        previous, roots = None, []
         if strays:
             generation = None if self.draining is not None else self._previous_generation(master, processes, strays)
             if generation is None:
                 raise RuntimeError('An unmanaged OLS process is also running')
             # Raised only after the master's own unit checks below have passed.
             previous = OLSPreviousGeneration(generation)
+            roots = sorted(pid for pid in generation if processes[pid][0] == 1)
         try:
             owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
         except (FileNotFoundError, ProcessLookupError):
@@ -666,12 +682,12 @@ class OLSService:
             raise
         if self.draining is not None and (master, processes[master][1], owner) == self.draining:
             raise OLSWorkersRemain('Original OLS master is draining after its verified stop action')
-        self.verify_unit_claims(master, owner)
+        self._unit_check(lambda pid: self.verify_unit_claims(pid, owner), master, roots)
         if self.manager_identified and owner != self.unit:
             raise RuntimeError('OLS changed its service manager')
         self.unit = owner
         self.manager_identified = True
-        self.systemd(master)
+        self._unit_check(self.systemd, master, roots)
         if previous is not None:
             raise previous
         self._observed_processes = {pid: entry[1] for pid, entry in processes.items()}
