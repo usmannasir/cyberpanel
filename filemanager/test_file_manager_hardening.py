@@ -58,59 +58,43 @@ class Recorder:
         return 1
 
 
-class DeleteProbeTests(unittest.TestCase):
-    def test_probe_in_the_customers_home_never_runs_with_privilege(self):
-        commands = Recorder()
+class DeleteTests(unittest.TestCase):
+    """A delete removes what was asked, as the website's user, and changes no
+    attribute of the home. From 3.0.9 to 3.0.15 a probe that could never
+    succeed ("touch -h hello.txt") made every delete end with "chattr -R +i"
+    on the website's whole home (GitHub issue 2018)."""
+
+    def delete(self, skip_trash, websites=None, root=None):
+        commands = Recorder(output='touch: setting times of hello.txt: No such file or directory')
         website = SimpleNamespace(externalApp='examp1234')
         delete = load('filemanager/filemanager.py', 'deleteFolderOrFile', dict(
-            Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kwargs: website)),
+            Websites=websites or SimpleNamespace(objects=SimpleNamespace(get=lambda **kwargs: website)),
             ProcessUtilities=commands, json=json, HttpResponse=response, Trash=Mock(),
-            require_root_entitlement=Mock(side_effect=AssertionError('site request fell into root mode'))),
+            require_root_entitlement=root or Mock(side_effect=AssertionError('site request fell into root mode'))),
             'FileManager')
         manager = SimpleNamespace(
             data={'domainName': 'example.com', 'path': '/home/example.com/public_html',
-                  'fileAndFolders': ['old.txt'], 'skipTrash': True},
+                  'fileAndFolders': ['old.txt'], 'skipTrash': skip_trash},
             returnPathEnclosed=shlex.quote, notInside=lambda path, home: False,
             ajaxPre=lambda status, message: response(json.dumps({'status': status, 'error_message': message})))
         self.assertEqual(1, json.loads(delete(manager).content)['status'])
-        probe = [(command, user) for command, user in commands.calls if 'hello.txt' in command]
-        self.assertEqual([('touch /home/example.com/hello.txt', 'examp1234'),
-                          ('rm -f /home/example.com/hello.txt', 'examp1234')], probe)
-        for command, user in commands.calls:
+        return commands.calls
+
+    def test_a_delete_in_a_website_runs_only_the_delete_as_the_websites_user(self):
+        self.assertEqual([('rm -rf /home/example.com/public_html/old.txt', 'examp1234')], self.delete(True))
+        calls = self.delete(False)
+        self.assertEqual(['mkdir /home/example.com/.trash',
+                          'mv /home/example.com/public_html/old.txt /home/example.com/.trash'],
+                         [command for command, _ in calls])
+        for command, user in calls:
             self.assertEqual('examp1234', user, command)
 
-    def test_a_delete_in_a_writable_home_never_locks_the_home(self):
-        # The probe is run for real, in a temporary home that can be written:
-        # a probe that cannot succeed there (touch -h never creates a file)
-        # made every delete run chattr -R +i on the customer's whole home.
-        import subprocess
-        with tempfile.TemporaryDirectory() as home:
-            class RealProbe(Recorder):
-                def outputExecutioner(self, command, user=None, *arguments, **options):
-                    self.calls.append((command, user))
-                    real = command.replace('/home/example.com', home)
-                    self.assertTrue(real.startswith('touch '), real)
-                    result = subprocess.run(shlex.split(real), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                            universal_newlines=True)
-                    return result.stdout
-
-            RealProbe.assertTrue = self.assertTrue
-            commands = RealProbe()
-            website = SimpleNamespace(externalApp='examp1234')
-            delete = load('filemanager/filemanager.py', 'deleteFolderOrFile', dict(
-                Websites=SimpleNamespace(objects=SimpleNamespace(get=lambda **kwargs: website)),
-                ProcessUtilities=commands, json=json, HttpResponse=response, Trash=Mock(),
-                require_root_entitlement=Mock(side_effect=AssertionError('site request fell into root mode'))),
-                'FileManager')
-            for skip_trash in (True, False):
-                manager = SimpleNamespace(
-                    data={'domainName': 'example.com', 'path': '/home/example.com/public_html',
-                          'fileAndFolders': ['old.txt'], 'skipTrash': skip_trash},
-                    returnPathEnclosed=shlex.quote, notInside=lambda path, home: False,
-                    ajaxPre=lambda status, message: response(json.dumps({'status': status, 'error_message': message})))
-                self.assertEqual(1, json.loads(delete(manager).content)['status'])
-            self.assertTrue(os.path.exists(os.path.join(home, 'hello.txt')))
-        self.assertEqual([], [command for command, _ in commands.calls if 'chattr' in command])
+    def test_no_delete_changes_attributes_or_probes_the_home(self):
+        missing = SimpleNamespace(objects=SimpleNamespace(get=Mock(side_effect=Exception('no such website'))))
+        for calls in (self.delete(True), self.delete(False), self.delete(True, websites=missing, root=Mock())):
+            for command, _ in calls:
+                self.assertNotIn('chattr', command)
+                self.assertNotIn('hello.txt', command)
 
 
 class UploadTests(unittest.TestCase):

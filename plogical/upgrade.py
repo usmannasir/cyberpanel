@@ -6092,7 +6092,8 @@ pm.max_spare_servers = 3
             from plogical.fileManagerLockRepair import repair as repair_file_manager_locks
             unlocked, failed = repair_file_manager_locks()
             for home in unlocked:
-                Upgrade.stdOut('Unlocked %s: a File Manager delete had made it immutable.' % home, 0)
+                Upgrade.stdOut('Unlocked %s: its home folder was immutable, as a File Manager delete in 3.0.9 '
+                               'to 3.0.15 left it.' % home, 0)
             for home in failed:
                 Upgrade.stdOut('WARNING: %s is immutable and could not be fully unlocked; run '
                                '"find -P %s \\( -type f -o -type d \\) -exec chattr -i {} +".' % (home, home), 0)

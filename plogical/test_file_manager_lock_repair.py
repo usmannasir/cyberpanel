@@ -123,6 +123,18 @@ class Decisions(unittest.TestCase):
                                                     '', '..', 'a/b'], root=base))
         self.assertEqual([os.path.join(base, 'real.example')], homes)
 
+    def test_a_home_that_does_not_answer_is_reported_and_the_others_are_repaired(self):
+        def run(arguments, **options):
+            self.assertIn('timeout', options)
+            if arguments[-1] == '/home/stale.example':
+                raise subprocess.TimeoutExpired(arguments, options['timeout'])
+            if arguments[0] == 'lsattr':
+                return SimpleNamespace(returncode=0, stdout='----i--------- %s\n' % arguments[-1])
+            return SimpleNamespace(returncode=0, stdout='')
+        self.assertEqual((['/home/a.example'], ['/home/stale.example']),
+                         lock_repair.repair(['stale.example', 'a.example'], run=run,
+                                            homes=lambda domains: ['/home/' + d for d in domains]))
+
     def test_the_upgrade_runs_the_repair_and_never_fails_because_of_it(self):
         source = (ROOT / 'plogical' / 'upgrade.py').read_text()
         step = source[source.index('from plogical.fileManagerLockRepair import repair'):]
