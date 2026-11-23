@@ -125,6 +125,14 @@ app.controller('createUserCtr', function ($scope, $http) {
 
 
 /* Java script code to modify user account */
+
+// The key to type into an authenticator app instead of scanning: the secret of the address the QR
+// code shows, so the key and the code are always the same one.
+function manualKeyFromOtpauth(otpauth) {
+    var found = /[?&]secret=([^&#]+)/.exec(typeof otpauth === 'string' ? otpauth : '');
+    return found ? decodeURIComponent(found[1]) : '';
+}
+
 app.controller('modifyUser', function ($scope, $http) {
 
     var qrCode = window.qr = new QRious({
@@ -218,15 +226,16 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.currentSecurityLevel = userDetails.securityLevel;
                 $scope.twofa = Boolean(userDetails.twofa);
 
-                // Format secret key with spaces for better readability
-                if (userDetails.secretKey) {
-                    $scope.secretKey = userDetails.secretKey;
-                    $scope.formattedSecretKey = userDetails.secretKey.match(/.{1,4}/g).join(' ');
-                }
+                // Shown in groups of four for reading; the copy button gives the key without spaces.
+                $scope.secretKey = manualKeyFromOtpauth(userDetails.otpauth);
+                $scope.formattedSecretKey = ($scope.secretKey.match(/.{1,4}/g) || []).join(' ');
 
                 qrCode.set({
                     value: userDetails.otpauth
                 });
+
+                // The code and the key of the account just loaded stay hidden until its box is ticked.
+                $scope.qrHidden = true;
 
 
                 $scope.userModificationLoading = true;
