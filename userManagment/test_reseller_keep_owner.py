@@ -23,7 +23,10 @@ TEMPLATE = ROOT / 'userManagment' / 'templates' / 'userManagment' / 'resellerCen
 NOT_AUTHORIZED = 'You are not authorized to access this resource.'
 NO_SUCH_OWNER = 'The new owner does not exist.'
 NOTHING_TO_CHANGE = 'Nothing to change: no new owner and no website limit were given.'
-NOT_A_LIMIT = 'The website limit is a whole number, 0 for unlimited.'
+NOT_A_LIMIT = 'The website limit is a whole number of 0 or more.'
+NOT_ITSELF = 'Your own owner and website limit can only be changed by an administrator.'
+OWN_OWNER = 'A user cannot be its own owner.'
+NO_UNLIMITED = 'Unlimited websites can only be given under an owner that has unlimited websites.'
 OVER_ALLOWANCE = "You've reached maximum websites limit as a reseller."
 
 # Uses the Reseller Center controller the way the page does and prints the body of each request.
@@ -81,7 +84,9 @@ class Panel:
                                                     ('tenant', 6, 1, 'user', 6, 1),
                                                     ('customer', 7, 4, 'user', 6, 1),
                                                     ('other', 8, 5, 'user', 6, 0),
-                                                    ('orphan', 9, 99, 'user', 6, 0)):
+                                                    ('orphan', 9, 99, 'user', 6, 0),
+                                                    ('reseller3', 10, 1, 'reseller', 0, 0),
+                                                    ('client3', 11, 10, 'user', 6, 0)):
             websites = SimpleNamespace(all=lambda sites=sites: SimpleNamespace(count=lambda: sites))
             self.users[name] = SimpleNamespace(pk=pk, userName=name, owner=owner, acl=roles[role],
                                                initWebsitesLimit=limit, websites_set=websites, save=mock.Mock())
@@ -235,9 +240,50 @@ class AuthorisationTests(unittest.TestCase):
                                 {'userToBeModified': 'customer', 'newOwner': owner, 'websitesLimit': 1})
         self.assertEqual((4, 6), self.panel.stored('customer'))
 
-    def test_reseller_does_not_change_itself_by_keeping_its_owner(self):
-        self.assert_refused(NOT_AUTHORIZED, 'reseller1', {'userToBeModified': 'reseller1', 'websitesLimit': 500})
+    def test_reseller_does_not_change_its_own_limit_or_owner(self):
+        # Kept owner, itself named as the owner, another owner; a higher limit and unlimited.
+        for owner in ({}, {'newOwner': 'reseller1'}, {'newOwner': 'admin'}, {'newOwner': 'customer'}):
+            for limit in ({'websitesLimit': 32}, {'websitesLimit': 0}, {'websitesLimit': 10}, {}):
+                body = dict(owner, userToBeModified='reseller1', **limit)
+                self.assert_refused(NOT_ITSELF, 'reseller1', body)
         self.assertEqual((1, 20), self.panel.stored('reseller1'))
+
+    def test_reseller_does_not_make_a_user_its_own_owner(self):
+        for limit in ({'websitesLimit': 6}, {}):
+            self.assert_refused(OWN_OWNER, 'reseller1', dict(limit, userToBeModified='customer', newOwner='customer'))
+        self.assertEqual((4, 6), self.panel.stored('customer'))
+
+    def test_limited_reseller_does_not_give_out_unlimited(self):
+        for owner in ({}, {'newOwner': 'reseller1'}, {'newOwner': ''}):
+            for limit in (0, '0'):
+                self.assert_refused(NO_UNLIMITED, 'reseller1',
+                                    dict(owner, userToBeModified='customer', websitesLimit=limit))
+        self.assertEqual((4, 6), self.panel.stored('customer'))
+        # An administrator is held to the same allowance of the owner the user stays with or goes to.
+        self.assert_refused(NO_UNLIMITED, 'admin', {'userToBeModified': 'customer', 'websitesLimit': 0})
+        self.assert_refused(NO_UNLIMITED, 'admin', {'userToBeModified': 'tenant', 'newOwner': 'reseller2',
+                                                    'websitesLimit': 0})
+        self.assertEqual([(4, 6), (1, 6)], [self.panel.stored('customer'), self.panel.stored('tenant')])
+
+    def test_unlimited_reseller_gives_out_unlimited(self):
+        self.assertEqual({'status': 1}, self.panel.save('reseller3', {'userToBeModified': 'client3', 'websitesLimit': 0}))
+        self.assertEqual((10, 0), self.panel.stored('client3'))
+
+    def test_new_owner_is_held_to_what_it_really_has_given_out(self):
+        # reseller2 may hand out 20 and has given 6 to its user: a user moved to it may bring 14, not 20.
+        self.assert_refused(OVER_ALLOWANCE, 'admin', {'userToBeModified': 'customer', 'newOwner': 'reseller2',
+                                                      'websitesLimit': 15})
+        self.assertEqual((4, 6), self.panel.stored('customer'))
+        self.assertEqual({'status': 1}, self.panel.save('admin', {'userToBeModified': 'customer',
+                                                                  'newOwner': 'reseller2', 'websitesLimit': 14}))
+        self.assertEqual((5, 14), self.panel.stored('customer'))
+
+    def test_an_owner_that_owns_itself_does_not_count_its_own_limit_as_given_out(self):
+        reseller = self.panel.users['reseller1']
+        reseller.owner = reseller.pk
+        # Its own limit is not one it gave out: its two websites leave 18 of its 20 for its one user.
+        self.assertEqual({'status': 1}, self.panel.save('admin', {'userToBeModified': 'customer', 'websitesLimit': 18}))
+        self.assert_refused(OVER_ALLOWANCE, 'admin', {'userToBeModified': 'customer', 'websitesLimit': 19})
 
     def test_administrator_is_held_to_the_allowance_of_the_owner_that_is_kept(self):
         self.assert_refused(OVER_ALLOWANCE, 'admin', {'userToBeModified': 'customer', 'websitesLimit': 19})
