@@ -26,6 +26,32 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// The public address of a website, or of a sub-folder of it, for links that
+// open the site itself. It is always absolute: a bare host name in an href is
+// resolved as a path inside the panel. http:// is the address the installers
+// give the applications, and it answers before the website has a certificate;
+// a website that forces HTTPS redirects from there. Returns '' for anything
+// that is not a plain host name.
+function siteVisitURL(domain, path) {
+    var site;
+    try {
+        site = new URL('http://' + String(domain || '').trim() + '/');
+    } catch (e) {
+        return '';
+    }
+    if (site.username || site.password || site.port || site.pathname !== '/' || site.search || site.hash ||
+            !/^[a-z0-9-]+(\.[a-z0-9-]+)*$/.test(site.hostname)) {
+        return '';
+    }
+    var segments = String(path || '').split('/').filter(function (segment) {
+        return segment !== '';
+    });
+    if (segments.length === 0) {
+        return site.origin + '/';
+    }
+    return site.origin + '/' + segments.map(encodeURIComponent).join('/') + '/';
+}
+
 
 var arry = []
 
@@ -11076,12 +11102,12 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     };
 
     $scope.fileManagerURL = "/filemanager/" + $("#domainNamePage").text();
-    $scope.wordPressInstallURL = $("#domainNamePage").text() + "/wordpressInstall";
+    $scope.wordPressInstallURL = "/websites/" + $("#domainNamePage").text() + "/wordpressInstall";
     $scope.joomlaInstallURL = $("#domainNamePage").text() + "/joomlaInstall";
     $scope.setupGit = $("#domainNamePage").text() + "/setupGit";
-    $scope.installPrestaURL = $("#domainNamePage").text() + "/installPrestaShop";
+    $scope.installPrestaURL = "/websites/" + $("#domainNamePage").text() + "/installPrestaShop";
     $scope.installMagentoURL = $("#domainNamePage").text() + "/installMagento";
-    $scope.installMauticURL = $("#domainNamePage").text() + "/installMautic";
+    $scope.installMauticURL = "/websites/" + $("#domainNamePage").text() + "/installMautic";
     $scope.domainAliasURL = "/websites/" + $("#domainNamePage").text() + "/domainAlias";
     $scope.previewUrl = "/preview/" + $("#domainNamePage").text() + "/";
 
@@ -11793,11 +11819,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         function ListInitialDatas(response) {
 
             if (response.data.installStatus === 1) {
-                if (typeof path != 'undefined') {
-                    $scope.installationURL = "http://" + domain + "/" + path;
-                } else {
-                    $scope.installationURL = domain;
-                }
+                $scope.installationURL = siteVisitURL(domain, path);
 
                 $scope.installationDetailsForm = false;
                 $scope.applicationInstallerLoading = true;
@@ -11878,11 +11900,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         function ListInitialDatas(response) {
 
             if (response.data.installStatus === 1) {
-                if (typeof path != 'undefined') {
-                    $scope.installationURL = "http://" + domain + "/" + path;
-                } else {
-                    $scope.installationURL = domain;
-                }
+                $scope.installationURL = siteVisitURL(domain, path);
 
                 $scope.installationDetailsFormJoomla = false;
                 $scope.applicationInstallerLoading = true;
@@ -14667,11 +14685,7 @@ app.controller('installWordPressCTRL', function ($scope, $http, $timeout) {
                     $scope.wpInstallLoading = true;
                     $scope.goBackDisable = false;
 
-                    if (typeof path !== 'undefined') {
-                        $scope.installationURL = "http://" + domain + "/" + path;
-                    } else {
-                        $scope.installationURL = domain;
-                    }
+                    $scope.installationURL = siteVisitURL(domain, path);
 
 
                     $("#installProgress").css("width", "100%");
@@ -14784,11 +14798,7 @@ app.controller('installJoomlaCTRL', function ($scope, $http, $timeout) {
                     $scope.wpInstallLoading = true;
                     $scope.goBackDisable = false;
 
-                    if (typeof path !== 'undefined') {
-                        $scope.installationURL = "http://" + domain + "/" + path;
-                    } else {
-                        $scope.installationURL = domain;
-                    }
+                    $scope.installationURL = siteVisitURL(domain, path);
 
 
                     $("#installProgress").css("width", "100%");
@@ -14966,7 +14976,7 @@ app.controller('setupGit', function ($scope, $http, $timeout, $window) {
                     $scope.gitLoading = true;
                     $scope.goBackDisable = true;
 
-                    $scope.installationURL = domain;
+                    $scope.installationURL = siteVisitURL(domain);
 
                     $("#installProgress").css("width", "100%");
                     $scope.installPercentage = "100";
@@ -15283,11 +15293,7 @@ app.controller('installPrestaShopCTRL', function ($scope, $http, $timeout) {
                     $scope.wpInstallLoading = true;
                     $scope.goBackDisable = false;
 
-                    if (typeof path !== 'undefined') {
-                        $scope.installationURL = "http://" + domain + "/" + path;
-                    } else {
-                        $scope.installationURL = domain;
-                    }
+                    $scope.installationURL = siteVisitURL(domain, path);
 
 
                     $("#installProgress").css("width", "100%");
@@ -15471,11 +15477,7 @@ app.controller('installMauticCTRL', function ($scope, $http, $timeout) {
                     $scope.wpInstallLoading = true;
                     $scope.goBackDisable = false;
 
-                    if (typeof path !== 'undefined') {
-                        $scope.installationURL = "http://" + domain + "/" + path;
-                    } else {
-                        $scope.installationURL = domain;
-                    }
+                    $scope.installationURL = siteVisitURL(domain, path);
 
 
                     $("#installProgress").css("width", "100%");
