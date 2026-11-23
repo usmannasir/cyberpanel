@@ -8,10 +8,12 @@ import re
 import shutil
 import signal
 import stat
+import string
 import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from install.installer_test_harness import (
@@ -1058,11 +1060,16 @@ class AdminPassScriptTests(unittest.TestCase):
         hashing = Mock()
         administrators = Mock()
         administrators.objects.count.return_value = 1
+        self.forget = Mock()
         scope = self.functions(dict(argparse=argparse, Administrator=administrators, hashPassword=hashing,
-                                    print=Mock()))
+                                    print=Mock(), forget_generated_password_notice=self.forget))
         with patch.object(sys, 'argv', ['adminPass.py'] + list(arguments)):
             scope['main']()
         return hashing
+
+    def test_a_password_that_is_set_ends_the_notice_of_a_generated_one(self):
+        self.change('--password', 'typed-by-hand')
+        self.forget.assert_called_once_with()
 
     def test_password_file_sets_the_admin_password(self):
         hashing = self.change('--password-file', str(password_file(self.directory)))
@@ -1099,6 +1106,139 @@ class AdminPassScriptTests(unittest.TestCase):
         with patch('sys.stderr'), self.assertRaises(SystemExit) as stopped:
             self.change('--password-file', str(password_file(self.directory, '\n')))
         self.assertEqual(2, stopped.exception.code)
+
+
+class FirstAdministratorTests(unittest.TestCase):
+    """adminPass.py --first-administrator: the panel's first administrator, with
+    a password nobody chose, readable by root only, made at most once."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        (self.root / 'etc').mkdir()
+        (self.root / 'home').mkdir()
+        self.stored = self.root / 'etc' / 'adminPass'
+        self.lock = self.root / 'etc' / 'adminPass.lock'
+        self.marker = self.root / 'home' / 'adminPassGenerated'
+        self.events = []
+        self.administrators = Mock()
+        self.administrators.objects.exists.side_effect = lambda: self.events.append('count') or self.existing
+        self.existing = False
+        self.created = []
+        self.printed = []
+        tree = parse_as_python_36((ROOT / 'plogical/adminPass.py').read_text(encoding='utf-8'))
+        body = [node for node in tree.body if isinstance(node, ast.FunctionDef)]
+        import fcntl
+        flock = fcntl.flock
+
+        def flock_recorded(descriptor, operation):
+            self.events.append('lock')
+            return flock(descriptor, operation)
+
+        self.scope = dict(
+            argparse=argparse, os=os, sys=sys, tempfile=tempfile, secrets=__import__('secrets'),
+            fcntl=SimpleNamespace(flock=flock_recorded, LOCK_EX=fcntl.LOCK_EX),
+            Administrator=self.administrators, create_first_administrator=self.create,
+            forget_generated_password_notice=Mock(), hashPassword=Mock(),
+            PASSWORD_FILE=str(self.stored), PASSWORD_LOCK=str(self.lock), GENERATED_LENGTH=20,
+            GENERATED_ALPHABET=string.ascii_letters + string.digits,
+            GENERATED_PASSWORD_MARKER=str(self.marker),
+            print=lambda *values: self.printed.append(' '.join(str(value) for value in values)))
+        exec(compile(ast.fix_missing_locations(ast.Module(body=body, type_ignores=[])), 'adminPass', 'exec'),
+             self.scope)
+
+    def create(self, password):
+        # What the panel's own function does with the database is not what is
+        # tested here: only that it gets the password, before it is stored.
+        self.created.append((password, self.stored.exists()))
+        if self.fail_create:
+            raise RuntimeError('fixture: the database refused the row')
+
+    fail_create = False
+
+    def leftovers(self):
+        return sorted(path.name for path in (self.root / 'etc').iterdir()
+                      if path.name not in ('adminPass', 'adminPass.lock'))
+
+    def test_a_panel_without_an_administrator_gets_one_with_a_generated_password(self):
+        self.assertEqual(0, self.scope['make_first_administrator']())
+        self.assertEqual(1, len(self.created))
+        password, stored_before = self.created[0]
+        self.assertFalse(stored_before, 'the password was in place before the administrator existed')
+        self.assertRegex(password, r'^[A-Za-z0-9]{20}$')
+        self.assertEqual(password + '\n', self.stored.read_text(encoding='utf-8'))
+        self.assertEqual(0o600, stat.S_IMODE(self.stored.stat().st_mode))
+        self.assertEqual(0o600, stat.S_IMODE(self.lock.stat().st_mode))
+        self.assertEqual([], self.leftovers())
+        self.assertTrue(self.marker.is_file())
+        self.assertEqual('', self.marker.read_text())
+        self.assertTrue(self.printed)
+        self.assertNotIn(password, ' '.join(self.printed))
+        self.assertIn(str(self.stored), ' '.join(self.printed))
+
+    def test_a_panel_with_an_administrator_is_left_as_it_is(self):
+        self.stored.write_text('kept\n')
+        self.existing = True
+        self.assertEqual(0, self.scope['make_first_administrator']())
+        self.assertEqual([], self.created)
+        self.assertEqual('kept\n', self.stored.read_text())
+        self.assertFalse(self.marker.exists())
+        self.assertEqual([], self.leftovers())
+
+    def test_the_count_is_taken_under_the_lock(self):
+        self.scope['make_first_administrator']()
+        self.assertEqual(['lock', 'count'], self.events)
+
+    def test_an_administrator_that_cannot_be_saved_leaves_nothing_behind(self):
+        self.stored.write_text('kept\n')
+        self.fail_create = True
+        with self.assertRaises(RuntimeError):
+            self.scope['make_first_administrator']()
+        self.assertEqual('kept\n', self.stored.read_text())
+        self.assertEqual([], self.leftovers())
+        self.assertFalse(self.marker.exists())
+
+    def test_generated_passwords_are_letters_and_digits_and_differ(self):
+        passwords = {self.scope['generated_password']() for _ in range(200)}
+        self.assertEqual(200, len(passwords))
+        for password in passwords:
+            self.assertRegex(password, r'^[A-Za-z0-9]{20}$')
+
+    def test_the_marker_does_not_follow_a_link(self):
+        target = self.root / 'etc' / 'elsewhere'
+        target.write_text('untouched\n')
+        self.marker.symlink_to(target)
+        self.scope['note_generated_password']()
+        self.assertTrue(self.marker.is_symlink())
+        self.assertEqual('untouched\n', target.read_text())
+
+    def test_the_option_runs_alone_and_its_status_is_the_exit_status(self):
+        with patch.object(sys, 'argv', ['adminPass.py', '--first-administrator']):
+            with self.assertRaises(SystemExit) as stopped:
+                self.scope['main']()
+        self.assertEqual(0, stopped.exception.code)
+        self.assertEqual(1, len(self.created))
+        for others in (['--password', 'typed-by-hand'], ['--password-file', '/dev/null'], ['--api', '1']):
+            with self.subTest(others=others):
+                with patch.object(sys, 'argv', ['adminPass.py', '--first-administrator'] + others), \
+                        patch('sys.stderr'), self.assertRaises(SystemExit) as stopped:
+                    self.scope['main']()
+                self.assertEqual(2, stopped.exception.code)
+
+    def test_a_failure_is_status_1_and_names_only_its_kind(self):
+        self.fail_create = True
+        with patch.object(sys, 'argv', ['adminPass.py', '--first-administrator']):
+            with self.assertRaises(SystemExit) as stopped:
+                self.scope['main']()
+        self.assertEqual(1, stopped.exception.code)
+        self.assertEqual(['The first administrator could not be made: RuntimeError'], self.printed)
+
+    def test_the_first_administrator_of_a_typed_password_is_made_the_same_way(self):
+        source = (ROOT / 'plogical/adminPass.py').read_text(encoding='utf-8')
+        self.assertEqual(2, source.count('create_first_administrator('))
+        self.assertNotIn('Administrator(userName=', source)
+        self.assertNotIn('1234567', source)
 
 
 if __name__ == '__main__':
