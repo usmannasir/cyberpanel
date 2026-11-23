@@ -12,6 +12,7 @@ import time
 import logging
 import subprocess
 import shlex
+import struct
 import secrets
 import string
 from os.path import exists
@@ -341,61 +342,93 @@ def resFailed(distro, res):
 
 
 # The locks apt and dpkg take. While another apt process holds one of them (the
-# daily apt timer, unattended upgrades), apt-get fails at once: "Could not get
+# daily apt update, unattended upgrades), apt-get fails at once: "Could not get
 # lock". DPkg::Lock::Timeout makes apt wait only for the dpkg frontend lock, not
 # for the lists lock of "apt-get update" or the archives lock of a download.
 APT_LOCKS = ('/var/lib/dpkg/lock-frontend', '/var/lib/dpkg/lock',
              '/var/lib/apt/lists/lock', '/var/cache/apt/archives/lock')
-# Unattended upgrades on a new server can hold the locks for many minutes.
+# Unattended upgrades on a new server can hold the locks for many minutes. The
+# whole installation waits at most this long in all: cyberpanel.sh and the
+# Python installer share the moment it runs out (seconds since boot) in
+# CP_PACKAGE_LOCK_DEADLINE, so a lock held for good costs it once.
 PACKAGE_LOCK_WAIT_SECONDS = 1800
-_APT_COMMAND = re.compile(r'(^|[\s;&|(])(apt-get|apt|dpkg)(\s|$)')
+PACKAGE_LOCK_DEADLINE = 'CP_PACKAGE_LOCK_DEADLINE'
+# struct flock of 64-bit Linux: l_type, l_whence, l_start, l_len, l_pid.
+_FLOCK = 'hhqqi'
+_APT_COMMAND = re.compile(r'(^|[\s;&|(])(apt-get|apt|dpkg|add-apt-repository)(\s|$)')
+
+
+def seconds_since_boot():
+    """A clock that a time sync does not move and that every process shares."""
+    with open('/proc/uptime') as f:
+        return float(f.read().split()[0])
+
+
+def lock_holder(path):
+    """The process id of another process that holds a lock on path, -1 when the
+    holder has no process id (an open file description lock), None when nobody
+    does or the file does not exist.
+
+    The kernel is asked (F_GETLK); no lock is taken, so a dpkg run that takes
+    its lock at that moment is never refused because of this.
+    """
+    try:
+        fd = os.open(path, os.O_RDONLY)
+    except OSError:
+        return None
+    try:
+        reply = fcntl.fcntl(fd, fcntl.F_GETLK, struct.pack(_FLOCK, fcntl.F_WRLCK, os.SEEK_SET, 0, 0, 0))
+        kind, _, _, _, pid = struct.unpack(_FLOCK, reply)
+        return None if kind == fcntl.F_UNLCK else pid
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
 
 
 def busy_package_locks(paths=APT_LOCKS):
-    """The apt and dpkg locks that another process holds now.
-
-    A lock is tried the way apt takes it (an fcntl write lock), without waiting,
-    and let go at once. A lock file that does not exist is free.
-    """
+    """The apt and dpkg locks another process holds now, each with its holder."""
     busy = []
     for path in paths:
-        try:
-            fd = os.open(path, os.O_RDWR)
-        except OSError:
+        pid = lock_holder(path)
+        if pid is None:
             continue
         try:
-            fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.lockf(fd, fcntl.LOCK_UN)
-        except OSError:
-            busy.append(path)
-        finally:
-            os.close(fd)
+            with open('/proc/%d/comm' % pid) as f:
+                name = f.read().strip()
+        except (OSError, ValueError):
+            name = 'unknown'
+        busy.append('%s (process %d, %s)' % (path, pid, name))
     return busy
 
 
 def wait_for_package_locks(timeout=PACKAGE_LOCK_WAIT_SECONDS, poll=5, paths=APT_LOCKS,
-                           clock=time.monotonic, sleep=time.sleep, say=None):
-    """Wait until no other process holds an apt or dpkg lock, at most timeout
-    seconds. Returns True when the locks are free, False when the time is up."""
+                           clock=seconds_since_boot, sleep=time.sleep, say=None):
+    """Wait until no other process holds an apt or dpkg lock. Returns True when
+    the locks are free, False when the installation's waiting time is used up."""
     say = say or (lambda text: stdOut(text, 1))
-    deadline = clock() + timeout
-    last_said = None
+    said = None
     while True:
         busy = busy_package_locks(paths)
         if not busy:
-            if last_said is not None:
+            if said is not None:
                 say('The other package manager has finished; continuing.')
             return True
         now = clock()
+        try:
+            deadline = float(os.environ[PACKAGE_LOCK_DEADLINE])
+        except (KeyError, ValueError):
+            deadline = now + timeout
+            os.environ[PACKAGE_LOCK_DEADLINE] = '%.0f' % deadline
         if now >= deadline:
-            say('[WARNING] Another package manager still holds %s after %d minutes; trying anyway.'
-                % (', '.join(busy), timeout // 60))
+            say('[WARNING] Another package manager still holds %s, and this installation has already waited '
+                '%d minutes for package locks; trying anyway.' % ('; '.join(busy), timeout // 60))
             return False
-        if last_said is None or now - last_said >= 60:
-            say('Waiting for another package manager to finish (it holds %s). This happens while the '
-                'daily apt update or unattended upgrades run; waiting up to %d minutes.'
-                % (', '.join(busy), timeout // 60))
-            last_said = now
+        if said is None or now - said >= 60:
+            say('Waiting for another package manager to finish: it holds %s. The daily apt update or '
+                'unattended upgrades do this on a new server; this installation waits up to %d minutes '
+                'in all.' % ('; '.join(busy), timeout // 60))
+            said = now
         sleep(poll)
 
 

@@ -879,6 +879,9 @@ module cyberpanel_ols {
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                       'lsphp7?-sqlite3 lsphp7?-tidy'
+            # Its result is not checked (not every 7.x package exists on every
+            # release), so a busy package lock would skip them without a word.
+            install_utils.wait_for_package_locks()
             os.system(command)
             
             # Install PHP 8.x versions

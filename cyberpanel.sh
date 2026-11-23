@@ -753,6 +753,9 @@ do
     # it happened in. Status 2 is for a command line that cannot be used.
     Fail_Install
   else
+    if [[ "$1" =~ (^|[[:space:]])(apt|apt-get|add-apt-repository)[[:space:]] ]]; then
+      Wait_For_Package_Locks
+    fi
     eval "$1"  && break || {
       echo -e "\n$1 has failed for $i times\nWait and try again...\n"
       log_warning "Command failed, retry $i/50: $1"
@@ -770,53 +773,83 @@ done
 # apt and apt-get give up at once while another apt process holds a package
 # lock (the daily apt update and unattended upgrades start on a new server at
 # any moment), and apt's DPkg::Lock::Timeout covers only the dpkg frontend lock.
-# Every apt and apt-get of this script first waits until no other process holds
-# one, at most 30 minutes, as install_utils.wait_for_package_locks does for the
-# Python installer.
+# Every apt of this script, and every apt-get and add-apt-repository run through
+# Retry_Command, first waits until no other process holds one. The kernel is
+# asked who holds a lock (F_GETLK); no lock is taken. The whole installation
+# waits at most 30 minutes in all: the moment that runs out (seconds since boot)
+# is kept in CP_PACKAGE_LOCK_DEADLINE, which install.py reads too
+# (install_utils.wait_for_package_locks does the same for the Python installer).
 Wait_For_Package_Locks() {
 command -v python3 >/dev/null 2>&1 || return 0
-python3 - <<'WAIT'
-import fcntl, os, sys, time
+local deadline
+deadline=$(python3 -I - "${CP_PACKAGE_LOCK_DEADLINE:-}" <<'WAIT'
+import fcntl, os, struct, sys, time
 LOCKS = ('/var/lib/dpkg/lock-frontend', '/var/lib/dpkg/lock',
          '/var/lib/apt/lists/lock', '/var/cache/apt/archives/lock')
+FLOCK = 'hhqqi'
+WAIT_SECONDS = 1800
+def uptime():
+    with open('/proc/uptime') as f:
+        return float(f.read().split()[0])
+def holder(path):
+    try:
+        fd = os.open(path, os.O_RDONLY)
+    except OSError:
+        return None
+    try:
+        kind, _, _, _, pid = struct.unpack(FLOCK, fcntl.fcntl(
+            fd, fcntl.F_GETLK, struct.pack(FLOCK, fcntl.F_WRLCK, os.SEEK_SET, 0, 0, 0)))
+        return None if kind == fcntl.F_UNLCK else pid
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
 def busy():
     held = []
     for path in LOCKS:
-        try:
-            fd = os.open(path, os.O_RDWR)
-        except OSError:
+        pid = holder(path)
+        if pid is None:
             continue
         try:
-            fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.lockf(fd, fcntl.LOCK_UN)
-        except OSError:
-            held.append(path)
-        finally:
-            os.close(fd)
+            with open('/proc/%d/comm' % pid) as f:
+                name = f.read().strip()
+        except (OSError, ValueError):
+            name = 'unknown'
+        held.append('%s (process %d, %s)' % (path, pid, name))
     return held
-deadline = time.time() + 1800
+try:
+    deadline = float(sys.argv[1])
+except (IndexError, ValueError):
+    deadline = None
 said = None
 while True:
     held = busy()
     if not held:
         if said is not None:
-            print('The other package manager has finished; continuing.')
+            sys.stderr.write('The other package manager has finished; continuing.\n')
         break
-    if time.time() >= deadline:
-        print('Another package manager still holds %s after 30 minutes; trying anyway.' % ', '.join(held))
+    now = uptime()
+    if deadline is None:
+        deadline = now + WAIT_SECONDS
+    if now >= deadline:
+        sys.stderr.write('Another package manager still holds %s, and this installation has already waited '
+                         '30 minutes for package locks; trying anyway.\n' % '; '.join(held))
         break
-    if said is None or time.time() - said >= 60:
-        print('Waiting for another package manager to finish (it holds %s). This happens while the daily '
-              'apt update or unattended upgrades run; waiting up to 30 minutes.' % ', '.join(held))
-        sys.stdout.flush()
-        said = time.time()
+    if said is None or now - said >= 60:
+        sys.stderr.write('Waiting for another package manager to finish: it holds %s. The daily apt update or '
+                         'unattended upgrades do this on a new server; this installation waits up to 30 minutes '
+                         'in all.\n' % '; '.join(held))
+        said = now
     time.sleep(5)
+if deadline is not None:
+    print('%.0f' % deadline)
 WAIT
+)
+[[ -n "$deadline" ]] && export CP_PACKAGE_LOCK_DEADLINE="$deadline"
 return 0
 }
 
 apt() { Wait_For_Package_Locks; command apt "$@"; }
-apt-get() { Wait_For_Package_Locks; command apt-get "$@"; }
 
 Check_Root() {
 log_function_start "Check_Root"
