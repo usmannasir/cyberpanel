@@ -762,7 +762,7 @@ class AddServerTests(Pages):
         self.assertEqual(0, models.Node.objects.count())
         self.assertEqual([('pairing', 'refused', reason, '', 'admin')
                           for reason in ('password', 'two_factor', 'password', 'two_factor')], self.audited())
-        self.assertIn('Paired.', self.text(self.post(self.ADD, follow=True, step='connect', label='Frankfurt 1',
+        self.assertIn('Code accepted.', self.text(self.post(self.ADD, follow=True, step='connect', label='Frankfurt 1',
                                                      pairing_code=self.code, password=PASSWORD, code=used)))
         # The code that paired is not good for a second server.
         self.assertIn(stepup.WRONG, self.text(self.post(self.ADD, follow=True, step='connect', label='Second',
