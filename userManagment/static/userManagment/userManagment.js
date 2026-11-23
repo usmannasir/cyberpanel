@@ -153,11 +153,75 @@ app.controller('modifyUser', function ($scope, $http) {
     $scope.accountTypeView = true;
     $scope.websitesLimit = true;
     $scope.qrHidden = true;
+    // Whether the account loaded has two-factor already; its secret is then not sent to the page.
+    $scope.twofaEnrolled = false;
+    $scope.secretKey = '';
+    $scope.formattedSecretKey = '';
+
+    // Counts the accounts loaded, so that a set-up answer for an earlier one is dropped.
+    var accountLoad = 0;
+    var setUpAsked = false;
+
+    function forgetSetUpCode() {
+        $scope.qrHidden = true;
+        $scope.secretKey = '';
+        $scope.formattedSecretKey = '';
+        setUpAsked = false;
+        accountLoad += 1;
+    }
+
+    // Asks for the code of the two-factor set-up of the account loaded, once per account loaded,
+    // and shows it with the key for typing, which is the secret of that same code.
+    function showSetUpCode() {
+        if ($scope.secretKey) {
+            $scope.qrHidden = false;
+            return;
+        }
+        if (setUpAsked) {
+            return;
+        }
+        setUpAsked = true;
+        var load = accountLoad;
+        var config = {headers: {'X-CSRFToken': getCookie('csrftoken')}};
+        var data = {accountUsername: $scope.accountUsername, twofaSetup: true};
+
+        $http.post("/users/fetchUserDetails", data, config).then(function (response) {
+            if (load !== accountLoad) {
+                return;
+            }
+            var details = response.data.fetchStatus === 1 ? response.data.userDetails : null;
+            var key = details ? manualKeyFromOtpauth(details.otpauth) : '';
+            if (!key) {
+                setUpAsked = false;
+                $scope.twofa = false;
+                $scope.errorMessage = details ? 'Two-factor is already on for this account. Choose the account again.' :
+                    response.data.error_message;
+                $scope.canotFetchDetails = false;
+                return;
+            }
+            $scope.secretKey = key;
+            // Shown in groups of four for reading; the copy button gives the key without spaces.
+            $scope.formattedSecretKey = key.match(/.{1,4}/g).join(' ');
+            qrCode.set({
+                value: details.otpauth
+            });
+            $scope.qrHidden = $scope.twofa !== true;
+        }, function () {
+            if (load !== accountLoad) {
+                return;
+            }
+            setUpAsked = false;
+            $scope.twofa = false;
+            $scope.couldNotConnect = false;
+        });
+    }
 
     $scope.decideQRShow = function(){
-        if($scope.twofa === true){
-            $scope.qrHidden = false;
-        }else{
+        $scope.canotFetchDetails = true;
+        $scope.couldNotConnect = true;
+        if ($scope.twofa === true && !$scope.twofaEnrolled) {
+            showSetUpCode();
+        } else {
             $scope.qrHidden = true;
         }
     };
@@ -194,6 +258,7 @@ app.controller('modifyUser', function ($scope, $http) {
 
         var accountUsername = $scope.accountUsername;
 
+        forgetSetUpCode();
 
         var url = "/users/fetchUserDetails";
 
@@ -225,17 +290,10 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.securityLevel = userDetails.securityLevel;
                 $scope.currentSecurityLevel = userDetails.securityLevel;
                 $scope.twofa = Boolean(userDetails.twofa);
+                $scope.twofaEnrolled = $scope.twofa;
 
-                // Shown in groups of four for reading; the copy button gives the key without spaces.
-                $scope.secretKey = manualKeyFromOtpauth(userDetails.otpauth);
-                $scope.formattedSecretKey = ($scope.secretKey.match(/.{1,4}/g) || []).join(' ');
-
-                qrCode.set({
-                    value: userDetails.otpauth
-                });
-
-                // The code and the key of the account just loaded stay hidden until its box is ticked.
-                $scope.qrHidden = true;
+                // The code and the key of an account are asked for when its box is ticked.
+                forgetSetUpCode();
 
 
                 $scope.userModificationLoading = true;
@@ -333,6 +391,8 @@ app.controller('modifyUser', function ($scope, $http) {
 
             if (response.data.saveStatus == 1) {
 
+                // The form closes; the key of a set-up does not stay on the page.
+                forgetSetUpCode();
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = true;
                 $scope.userModified = false;

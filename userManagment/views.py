@@ -318,14 +318,6 @@ def fetchUserDetails(request):
 
                 websitesLimit = user.initWebsitesLimit
 
-                import pyotp
-
-                if user.secretKey == 'None':
-                    user.secretKey = pyotp.random_base32()
-                    user.save()
-
-                otpauth = pyotp.totp.TOTP(user.secretKey).provisioning_uri(name=email, issuer_name="CyberPanel")
-
                 userDetails = {
                     "id": user.id,
                     "firstName": firstName,
@@ -334,9 +326,22 @@ def fetchUserDetails(request):
                     "acl": user.acl.name,
                     "websitesLimit": websitesLimit,
                     "securityLevel": SecurityLevel(user.securityLevel).name,
-                    "otpauth": otpauth,
                     'twofa': user.twoFA
                 }
+
+                # The two-factor secret leaves the server only while two-factor is being set up: the
+                # page asks for it when the box is ticked for an account that does not have it yet.
+                # Once an account has two-factor, its secret guards the sign-in and is never sent;
+                # setting it up again starts with switching it off, which discards the secret.
+                if data.get('twofaSetup') is True and not user.twoFA:
+                    import pyotp
+
+                    if user.secretKey in (None, '', 'None'):
+                        user.secretKey = pyotp.random_base32()
+                        user.save()
+
+                    userDetails['otpauth'] = pyotp.totp.TOTP(user.secretKey).provisioning_uri(
+                        name=email, issuer_name="CyberPanel")
 
                 data_ret = {'fetchStatus': 1, 'error_message': 'None', "userDetails": userDetails}
                 json_data = json.dumps(data_ret)
@@ -406,6 +411,15 @@ def saveModifications(request):
             if newPassword.strip():
                 user.password = hashPassword.hash_password(newPassword)
                 user.token = hashPassword.generateToken(accountUsername, newPassword)
+
+            # Switching two-factor on needs the secret the code of the set-up showed; without one the
+            # account could no longer sign in.
+            if twofa and not user.twoFA and user.secretKey in (None, '', 'None'):
+                data_ret = {'status': 0, 'saveStatus': 0,
+                            'error_message': 'Two-factor was not set up: tick the box again, add the code '
+                                             'that is shown to your authenticator app, then save.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             user.type = 0
             user.twoFA = twofa
