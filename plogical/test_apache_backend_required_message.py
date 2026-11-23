@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
-from plogical.wordpressInstallerUtilities import apache_backend_required_message
+from plogical.wordpressInstallerUtilities import apache_backend_missing, apache_backend_required_message
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / 'plogical' / 'applicationInstaller.py'
@@ -95,6 +95,7 @@ class PrestaShopRefusalTests(unittest.TestCase):
             env = {
                 'os': os, 'ApacheVhost': SimpleNamespace(configBasePath=conf_base),
                 'ProcessUtilities': process, 'ChildDomains': child_domains, 'Websites': websites,
+                'apache_backend_missing': apache_backend_missing,
                 'apache_backend_required_message': apache_backend_required_message,
                 'BaseException': BaseException, 'open': open, 'str': str,
                 'mysqlUtilities': mock.Mock(), 'Databases': mock.Mock(), 'logging': mock.Mock(),
@@ -132,6 +133,17 @@ class PrestaShopRefusalTests(unittest.TestCase):
 
         websites.objects.get.assert_called_once_with(domain='shop.example.com')
         self.assertEqual(status, 'Maximum database limit reached for this website. [404]')
+
+
+class ApacheBackendMissingTests(unittest.TestCase):
+    def test_only_an_openlitespeed_website_without_its_apache_conf_is_missing_apache(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = directory + os.sep
+            Path(base, 'apache.example.com.conf').write_text('<VirtualHost *:8083>\n')
+
+            self.assertTrue(apache_backend_missing('ols.example.com', base, True))
+            self.assertFalse(apache_backend_missing('apache.example.com', base, True))
+            self.assertFalse(apache_backend_missing('ols.example.com', base, False))
 
 
 if __name__ == '__main__':

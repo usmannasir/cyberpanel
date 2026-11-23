@@ -58,6 +58,8 @@ from django.http import JsonResponse
 import ipaddress
 import requests
 from plogical.wordpressInstallerUtilities import (
+    apache_backend_missing,
+    apache_backend_required_message,
     change_php_succeeded,
     php_binary_for_selection,
     select_wordpress_version,
@@ -5232,6 +5234,14 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
+
+            # PrestaShop is installed only on a website served through Apache.
+            # Refuse here, before the website's PHP version is changed below.
+            if apache_backend_missing(self.domain, ApacheVhost.configBasePath,
+                                      ProcessUtilities.decideServer() == ProcessUtilities.OLS):
+                data_ret = {'status': 0, 'installStatus': 0,
+                            'error_message': apache_backend_required_message('PrestaShop', self.domain)}
+                return HttpResponse(json.dumps(data_ret))
 
             mailUtilities.checkHome()
 
