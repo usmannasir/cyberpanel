@@ -532,14 +532,20 @@ milter_default_action = accept
 
             cmd = shlex.split(command)
 
+            # The package manager's errors go to the log as well, so the page shows why it stopped.
             with open(mailUtilities.spamassassinInstallLogPath, 'w') as f:
-                res = subprocess.call(cmd, stdout=f)
+                res = subprocess.call(cmd, stdout=f, stderr=subprocess.STDOUT)
 
-            if res == 1:
+            # apt-get ends with 100 and yum with 1 when nothing was installed, for
+            # example while another package operation holds the package manager's lock.
+            if res != 0:
+                from manageServices.applicationState import failure_reason
+                with open(mailUtilities.spamassassinInstallLogPath, 'r', errors='replace') as f:
+                    reason = failure_reason(f.read())
                 writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
-                writeToFile.writelines("Can not be installed.[404]\n")
+                writeToFile.writelines("SpamAssassin was not installed. %s Can not be installed.[404]\n" % reason)
                 writeToFile.close()
-                logging.CyberCPLogFileWriter.writeToFile("[Could not Install SpamAssassin.]")
+                logging.CyberCPLogFileWriter.writeToFile("[Could not Install SpamAssassin.] exit status %s" % res)
                 return 0
             else:
                 writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
