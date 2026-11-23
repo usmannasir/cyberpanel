@@ -4,6 +4,19 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.16 (build 16) — 2026-11-23
+
+Installer reliability release.
+
+### Installer
+- The installer waits while another apt process holds a package lock
+  (the daily apt update or unattended upgrades on a new server) instead of
+  failing at once. Before, an installation on Ubuntu could end with exit 71
+  at "systemctl enable pdns" when the daily apt update started during the
+  PowerDNS step. It waits at most 30 minutes and says once a minute which
+  lock it is waiting for; `cyberpanel.sh` waits the same way before its own
+  `apt` and `apt-get` commands.
+
 ## v3.0.15 (build 15) — 2026-11-23
 
 Installer and first-administrator release.
