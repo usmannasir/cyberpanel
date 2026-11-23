@@ -22,8 +22,10 @@ from plogical.wordpressInstallerUtilities import (
 )
 from websiteFunctions.wordpressRestore import address_is_on
 
-# A release ('6.8', '6.8.3') or a pre-release of one ('6.9-RC1'), as WP-CLI downloads it.
-WORDPRESS_RELEASE = re.compile(r'[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[A-Za-z0-9]+)?')
+# What a WordPress version can look like ('6.8.3', '6.9-RC1', '6.9-alpha-60123-src'). WP-CLI
+# downloads releases and pre-releases; a version it cannot download is replaced by
+# the latest release (see StagingCopy.run).
+WORDPRESS_VERSION_TEXT = re.compile(r'[0-9A-Za-z][0-9A-Za-z.-]{0,63}')
 
 
 class CloneFailed(Exception):
@@ -89,9 +91,6 @@ class StagingCopy(object):
         """
         version = self.value(php, source, 'The WordPress version of the site could not be read',
                              'core', 'version')
-        if WORDPRESS_RELEASE.fullmatch(version) is None:
-            raise CloneFailed('The WordPress version of the site is not one that can be downloaded: %s' % (
-                brief_output(version, 60)))
         prefix = self.value(php, source, 'The table prefix of the site could not be read',
                             'config', 'get', 'table_prefix')
         # WordPress itself prints the content folder; it need not be wp-content.
@@ -110,18 +109,32 @@ class StagingCopy(object):
         database is (name, user, password, host) of the empty database made
         for the copy. dump is where the site's database is exported to on the
         way; the caller removes it. oldAddress is the site's address without
-        a scheme, domain the staging domain.
+        a scheme, domain the staging domain. Returns the notes for the final
+        status: what of the site the copy could not take as it is.
         """
+        notes = []
         name, user, password, host = database
 
         def cli(*arguments):
             return wordpress_cli_command(php, destination, *arguments)
 
-        self.status('Downloading WordPress %s..,20' % facts['version'])
-        # The site's own themes and plugins are copied in below, so none of
-        # the default ones come with the download.
-        self.step(cli('core', 'download', '--version=' + facts['version'], '--skip-content'),
-                  'WordPress could not be downloaded')
+        # The copy runs the site's own WordPress version. A version WP-CLI
+        # cannot download (a nightly build, a patched core) is replaced by the
+        # latest release, and the final status says so. The site's own themes
+        # and plugins are copied in below, so none of the default ones come
+        # with the download.
+        version = facts['version']
+        self.status('Downloading WordPress..,20')
+        try:
+            if WORDPRESS_VERSION_TEXT.fullmatch(version) is None:
+                raise CloneFailed('not a version number')
+            self.step(cli('core', 'download', '--version=' + version, '--skip-content'),
+                      'WordPress %s could not be downloaded' % version)
+        except CloneFailed as error:
+            # --force: a download that stopped half-way may have left files.
+            self.step(cli('core', 'download', '--skip-content', '--force'), 'WordPress could not be downloaded')
+            notes.append('WordPress %s of the site could not be downloaded (%s); the copy runs the latest '
+                         'release' % (brief_output(version, 60), brief_output(str(error), 120)))
         # The page the domain was created with.
         self.site('rm -f -- %s' % shlex.quote(os.path.join(destination, 'index.html')))
 
@@ -135,7 +148,8 @@ class StagingCopy(object):
         except ValueError as error:
             raise CloneFailed('%s: %s' % (str(error).rstrip('.'), facts['prefix']))
         self.step(prefix, 'The table prefix could not be written to wp-config.php')
-        self.step(wordpress_cli_command(php, source, 'db', 'export', dump, '--single-transaction'),
+        # umask 077: the dump is readable by the site's user alone.
+        self.step('umask 077 && ' + wordpress_cli_command(php, source, 'db', 'export', dump, '--single-transaction'),
                   'The database of the site could not be exported')
         self.step(cli('db', 'import', dump), 'The database could not be imported', import_failure)
 
@@ -163,3 +177,4 @@ class StagingCopy(object):
         if not address_is_on(address, domain):
             raise CloneFailed('The copy answers under the address "%s" instead of under %s' % (
                 brief_output(address, 120), domain))
+        return notes
