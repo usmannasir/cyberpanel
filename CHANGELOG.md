@@ -6,7 +6,7 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## v3.0.16 (build 16) — 2026-11-23
 
-Installer reliability and File Manager release.
+Installer, upgrade and File Manager reliability release.
 
 ### File Manager
 - A delete in the File Manager no longer makes the website's whole home
@@ -17,6 +17,13 @@ Installer reliability and File Manager release.
   is what that delete left, without following links. Homes whose folder is
   not immutable, including files an owner protected with chattr, are left
   as they are.
+
+### Upgrade
+- On AlmaLinux, Rocky and other RPM systems the upgrade no longer leaves
+  the server without the Remi repository. Removing and installing EPEL
+  again removed Remi with it at every upgrade, and `dnf update` then failed
+  for LiteSpeed PHP packages that need libicu78 from Remi. On 9 and 10 the
+  upgrade installs Remi again also where an earlier upgrade removed it.
 
 ### Installer
 - The installer waits while another apt process holds a package lock
