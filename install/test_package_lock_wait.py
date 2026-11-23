@@ -7,7 +7,6 @@ frontend lock. Everything here works on lock files in a temporary directory.
 import ast
 import os
 from pathlib import Path
-import re
 import subprocess
 import sys
 import tempfile
@@ -28,77 +27,143 @@ print('held', flush=True)
 time.sleep(float(sys.argv[2]))
 '''
 
+# Tries to take the lock without waiting, as dpkg does, again and again.
+TAKER = '''
+import fcntl, os, sys, time
+refused = 0
+end = time.time() + float(sys.argv[2])
+while time.time() < end:
+    fd = os.open(sys.argv[1], os.O_RDWR)
+    try:
+        fcntl.lockf(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.lockf(fd, fcntl.LOCK_UN)
+    except OSError:
+        refused += 1
+    os.close(fd)
+print(refused)
+'''
+
 
 def hold(path, seconds):
     """Hold path's lock the way apt does, in another process, for seconds."""
     process = subprocess.Popen([sys.executable, '-c', HOLDER, str(path), str(seconds)],
                                stdout=subprocess.PIPE, universal_newlines=True)
     assert process.stdout.readline().strip() == 'held'
+    process.stdout.close()
     return process
 
 
-class Locks(unittest.TestCase):
+def lock_files(directory):
+    paths = []
+    for name in ('lock-frontend', 'lock', 'lists-lock', 'archives-lock'):
+        path = os.path.join(directory, name)
+        open(path, 'w').close()
+        paths.append(path)
+    return paths
+
+
+class Budget(unittest.TestCase):
     def setUp(self):
+        patcher = mock.patch.dict(os.environ)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        os.environ.pop(install_utils.PACKAGE_LOCK_DEADLINE, None)
+
+
+class Locks(Budget):
+    def setUp(self):
+        super().setUp()
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
-        self.paths = []
-        for name in ('lock-frontend', 'lock', 'lists-lock', 'archives-lock'):
-            path = Path(directory.name) / name
-            path.write_text('')
-            self.paths.append(str(path))
+        self.paths = lock_files(directory.name)
 
     def test_free_locks_and_missing_files_are_not_busy(self):
         self.assertEqual([], install_utils.busy_package_locks(self.paths + ['/nonexistent/lock']))
 
-    def test_a_lock_another_process_holds_is_busy_and_is_left_alone(self):
+    def test_a_lock_another_process_holds_is_busy_with_its_holder(self):
         holder = hold(self.paths[2], 5)
         try:
-            self.assertEqual([self.paths[2]], install_utils.busy_package_locks(self.paths))
-            self.assertEqual([self.paths[2]], install_utils.busy_package_locks(self.paths))
+            busy = install_utils.busy_package_locks(self.paths)
         finally:
             holder.kill()
             holder.wait()
+        self.assertEqual(['%s (process %d, python3)' % (self.paths[2], holder.pid)],
+                         [entry.replace(os.path.basename(sys.executable), 'python3') for entry in busy])
         self.assertEqual([], install_utils.busy_package_locks(self.paths))
 
+    def test_asking_takes_no_lock(self):
+        # A process that takes the lock without waiting, as dpkg does, is never
+        # refused while the installer keeps asking who holds it.
+        taker = subprocess.Popen([sys.executable, '-c', TAKER, self.paths[1], '2'],
+                                 stdout=subprocess.PIPE, universal_newlines=True)
+        end = time.monotonic() + 2
+        while time.monotonic() < end:
+            install_utils.busy_package_locks(self.paths)
+        self.assertEqual('0', taker.communicate()[0].strip())
+
     def test_the_wait_ends_when_the_other_process_lets_go(self):
-        holder = hold(self.paths[2], 2)
+        holder = hold(self.paths[3], 2)
         said = []
         started = time.monotonic()
         try:
-            free = install_utils.wait_for_package_locks(timeout=60, poll=0.2, paths=self.paths, say=said.append)
+            free = install_utils.wait_for_package_locks(poll=0.2, paths=self.paths, say=said.append)
         finally:
             holder.kill()
             holder.wait()
         self.assertTrue(free)
         self.assertGreaterEqual(time.monotonic() - started, 1.5)
-        self.assertIn(self.paths[2], said[0])
+        self.assertIn('it holds %s (process %d' % (self.paths[3], holder.pid), said[0])
         self.assertTrue(said[-1].startswith('The other package manager has finished'))
 
-    def test_the_wait_is_bounded(self):
-        now = [0.0]
-        said = []
-        with mock.patch.object(install_utils, 'busy_package_locks', return_value=['/var/lib/apt/lists/lock']):
-            free = install_utils.wait_for_package_locks(
-                timeout=120, poll=5, clock=lambda: now[0],
-                sleep=lambda seconds: now.__setitem__(0, now[0] + seconds), say=said.append)
-        self.assertFalse(free)
-        self.assertEqual(120.0, now[0])
-        self.assertTrue(said[-1].startswith('[WARNING] Another package manager still holds'))
-        # One message a minute while waiting (at 0 and 60 s), not one per poll.
-        self.assertEqual(2, sum(1 for text in said if text.startswith('Waiting for another package manager')))
-
-    def test_nothing_is_said_when_the_locks_are_free(self):
+    def test_nothing_is_said_or_budgeted_when_the_locks_are_free(self):
         said = []
         self.assertTrue(install_utils.wait_for_package_locks(paths=self.paths, say=said.append))
         self.assertEqual([], said)
+        self.assertNotIn(install_utils.PACKAGE_LOCK_DEADLINE, os.environ)
 
 
-class AptCommands(unittest.TestCase):
+class OneBudget(Budget):
+    def wait(self, now, said):
+        return install_utils.wait_for_package_locks(
+            timeout=120, poll=5, clock=lambda: now[0],
+            sleep=lambda seconds: now.__setitem__(0, now[0] + seconds), say=said.append)
+
+    def test_the_wait_is_bounded_and_says_once_a_minute(self):
+        now, said = [1000.0], []
+        with mock.patch.object(install_utils, 'busy_package_locks', return_value=['/var/lib/apt/lists/lock (x)']):
+            self.assertFalse(self.wait(now, said))
+        self.assertEqual(1120.0, now[0])
+        self.assertEqual('1120', os.environ[install_utils.PACKAGE_LOCK_DEADLINE])
+        self.assertTrue(said[-1].startswith('[WARNING] Another package manager still holds'))
+        self.assertEqual(2, sum(1 for text in said if text.startswith('Waiting for another package manager')))
+
+    def test_a_used_up_budget_is_not_spent_again(self):
+        now, said = [1000.0], []
+        with mock.patch.object(install_utils, 'busy_package_locks', return_value=['/var/lib/dpkg/lock (x)']):
+            self.wait(now, said)
+            spent = now[0]
+            self.assertFalse(self.wait(now, said))
+        self.assertEqual(spent, now[0])
+
+    def test_the_budget_cyberpanel_sh_started_is_kept(self):
+        os.environ[install_utils.PACKAGE_LOCK_DEADLINE] = '1030'
+        now, said = [1000.0], []
+        with mock.patch.object(install_utils, 'busy_package_locks', return_value=['/var/lib/dpkg/lock (x)']):
+            self.assertFalse(self.wait(now, said))
+        self.assertEqual(1030.0, now[0])
+
+    def test_the_clock_is_the_time_since_boot(self):
+        first = install_utils.seconds_since_boot()
+        self.assertGreater(first, 0)
+        self.assertLessEqual(first, install_utils.seconds_since_boot())
+
+
+class AptCommands(Budget):
     def test_apt_and_dpkg_commands_on_ubuntu(self):
         for command in ('apt-get update', 'DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server',
                         'env DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp83 lsphp83-*',
                         'apt update -y', 'apt install quota -y', 'dpkg -i x.deb',
-                        'sudo apt install linux-image-extra-virtual -y', 'true && apt-get update'):
+                        'add-apt-repository -y ppa:x/y', 'true && apt-get update'):
             self.assertTrue(install_utils.uses_apt(command, install_utils.ubuntu), command)
 
     def test_other_commands_and_other_systems(self):
@@ -126,48 +191,76 @@ class AptCommands(unittest.TestCase):
 
 
 class ShellScript(unittest.TestCase):
-    """cyberpanel.sh waits the same way before its own apt and apt-get."""
+    """cyberpanel.sh waits the same way before its own apt commands."""
 
     def setUp(self):
         self.script = (ROOT / 'cyberpanel.sh').read_text()
-        start = self.script.index("python3 - <<'WAIT'\n") + len("python3 - <<'WAIT'\n")
+        opening = 'deadline=$(python3 -I - "${CP_PACKAGE_LOCK_DEADLINE:-}" <<\'WAIT\'\n'
+        start = self.script.index(opening) + len(opening)
         self.waiter = self.script[start:self.script.index('\nWAIT\n', start)]
 
-    def test_apt_and_apt_get_of_the_script_wait_first(self):
+    def test_apt_and_retried_apt_get_wait_first(self):
         self.assertIn('\napt() { Wait_For_Package_Locks; command apt "$@"; }\n', self.script)
-        self.assertIn('\napt-get() { Wait_For_Package_Locks; command apt-get "$@"; }\n', self.script)
-        # Defined before the first function that runs apt.
-        self.assertLess(self.script.index('\napt-get() {'), self.script.index('\nPre_Install_Required_Components() {'))
+        retry = self.script[self.script.index('\nRetry_Command() {\n'):]
+        retry = retry[:retry.index('\n}\n')]
+        self.assertIn('(apt|apt-get|add-apt-repository)[[:space:]] ]]; then\n      Wait_For_Package_Locks', retry)
+        # No function name that bash refuses in POSIX mode (sh cyberpanel.sh on RPM systems).
+        self.assertNotIn('\napt-get()', self.script)
+        result = subprocess.run(['bash', '--posix', '-n', str(ROOT / 'cyberpanel.sh')],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        self.assertEqual(0, result.returncode, result.stderr)
 
-    def test_the_script_waits_for_the_same_locks(self):
+    def test_the_script_asks_about_the_same_locks_the_same_way(self):
         tree = ast.parse(self.waiter)
-        locks = next(node.value for node in tree.body if isinstance(node, ast.Assign)
-                     and node.targets[0].id == 'LOCKS')
-        self.assertEqual(install_utils.APT_LOCKS, ast.literal_eval(locks))
+        values = {node.targets[0].id: ast.literal_eval(node.value) for node in tree.body
+                  if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
+                  and node.targets[0].id in ('LOCKS', 'FLOCK', 'WAIT_SECONDS')}
+        self.assertEqual({'LOCKS': install_utils.APT_LOCKS, 'FLOCK': install_utils._FLOCK,
+                          'WAIT_SECONDS': install_utils.PACKAGE_LOCK_WAIT_SECONDS}, values)
+        self.assertIn('fcntl.F_GETLK', self.waiter)
+        self.assertNotIn('LOCK_NB', self.waiter)
 
-    def test_the_script_waits_until_the_lock_is_free(self):
+    def run_waiter(self, paths, *arguments):
+        waiter = self.waiter
+        for real, temporary in zip(install_utils.APT_LOCKS, paths):
+            waiter = waiter.replace(repr(real), repr(temporary))
+        self.assertNotIn('/var/lib', waiter)
+        return subprocess.run([sys.executable, '-I', '-c', waiter] + list(arguments), stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, universal_newlines=True, timeout=60)
+
+    def test_the_script_waits_until_the_lock_is_free_and_hands_on_its_budget(self):
         with tempfile.TemporaryDirectory() as directory:
-            paths = []
-            for name in ('lock-frontend', 'lock', 'lists-lock', 'archives-lock'):
-                path = os.path.join(directory, name)
-                open(path, 'w').close()
-                paths.append(path)
-            waiter = self.waiter
-            for real, temporary in zip(install_utils.APT_LOCKS, paths):
-                waiter = waiter.replace(repr(real), repr(temporary))
-            self.assertNotIn('/var/lib', waiter)
-            holder = hold(paths[3], 2)
+            paths = lock_files(directory)
+            holder = hold(paths[2], 2)
             started = time.monotonic()
             try:
-                result = subprocess.run([sys.executable, '-c', waiter], stdout=subprocess.PIPE,
-                                        universal_newlines=True, timeout=60)
+                result = self.run_waiter(paths, '')
             finally:
                 holder.kill()
                 holder.wait()
-            self.assertEqual(0, result.returncode)
+            self.assertEqual(0, result.returncode, result.stderr)
             self.assertGreaterEqual(time.monotonic() - started, 1.5)
-            self.assertIn('Waiting for another package manager to finish (it holds %s)' % paths[3], result.stdout)
-            self.assertIn('The other package manager has finished; continuing.', result.stdout)
+            self.assertIn('it holds %s (process %d' % (paths[2], holder.pid), result.stderr)
+            self.assertIn('The other package manager has finished; continuing.', result.stderr)
+            deadline = float(result.stdout.strip())
+            self.assertAlmostEqual(install_utils.seconds_since_boot() + 1800, deadline, delta=30)
+
+            # Free locks: no wait, nothing said, no budget started.
+            result = self.run_waiter(paths, '')
+            self.assertEqual(('', ''), (result.stdout, result.stderr))
+
+    def test_the_script_does_not_wait_past_the_budget(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = lock_files(directory)
+            holder = hold(paths[0], 30)
+            try:
+                started = time.monotonic()
+                result = self.run_waiter(paths, '%.0f' % (install_utils.seconds_since_boot() - 1))
+            finally:
+                holder.kill()
+                holder.wait()
+            self.assertLess(time.monotonic() - started, 5)
+            self.assertIn('trying anyway', result.stderr)
 
 
 if __name__ == '__main__':
