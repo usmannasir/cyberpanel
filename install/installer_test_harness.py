@@ -111,6 +111,16 @@ systemctl() {
     if [ "$Panel_Stops" = "${QA_STOP_SIGNAL%%:*}" ]; then kill -s "${QA_STOP_SIGNAL##*:}" "$$"; fi
   fi
   if [ "$1" = is-active ]; then [ "$3" = "$QA_ACTIVE_SERVICE" ]; return; fi
+  # QA_PANEL_ENABLED: yes (the default), no (never), second (only once the
+  # panel's service was enabled a second time).
+  if [ "$*" = "enable lscpd" ]; then Panel_Enables=$((${Panel_Enables:-0} + 1)); fi
+  if [ "$*" = "is-enabled lscpd" ]; then
+    case "$QA_PANEL_ENABLED" in
+      no) return 1 ;;
+      second) [ "${Panel_Enables:-0}" -ge 2 ]; return ;;
+    esac
+    return 0
+  fi
   return 0
 }
 # Time passes without being waited for: SECONDS is the clock of the script.
@@ -366,6 +376,7 @@ class Installer:
             'QA_PANEL_EXIT': str(options.pop('panel_exit', 0)),
             'QA_PANEL_HANGS': str(int(options.pop('panel_hangs', False))),
             'QA_ACTIVE_SERVICE': options.pop('active_service', ''),
+            'QA_PANEL_ENABLED': options.pop('panel_enabled', 'yes'),
             'QA_DNS': str(int(options.pop('dns', False))),
             'QA_CREATE_OUTPUT': options.pop('create_output', CLI_OK),
             'QA_TLS_OUTPUT': options.pop('tls_output', CLI_OK),

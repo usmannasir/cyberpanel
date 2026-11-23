@@ -2705,6 +2705,13 @@ if [[ "$Panel_Password_Confirmed" != "Yes" ]]; then
   log_error "The run reached its end without a confirmed admin password"
   Fail_Install panel_setup
 fi
+if ! Panel_Starts_At_Boot; then
+  echo -e "\nCyberPanel was installed and its administrator has the password of this installation,"
+  echo "but the panel's service could not be set to start when the server boots."
+  echo -e "Set it with: systemctl enable lscpd\n"
+  log_error "The panel's service could not be enabled"
+  Fail_Install panel_setup
+fi
 echo -e "\nWaiting for the panel to answer on port 8090 (3 minutes at most)..."
 if ! Panel_Answers; then
   echo -e "\nCyberPanel was installed, but the panel did not answer on port 8090 within 3 minutes."
@@ -3257,6 +3264,16 @@ systemctl enable lscpd >/dev/null 2>&1
 systemctl restart lscpd >/dev/null 2>&1
 Panel_Started="Yes"
 return 0
+}
+
+Panel_Starts_At_Boot() {
+# True when the panel's service is enabled, so that the panel comes up again
+# when the server boots. Start_Panel enabled it without looking at the
+# result; when it is not enabled it is enabled once more and asked again.
+# Only called for a run whose administrator's password was confirmed.
+systemctl is-enabled lscpd >/dev/null 2>&1 && return 0
+systemctl enable lscpd >/dev/null 2>&1
+systemctl is-enabled lscpd >/dev/null 2>&1
 }
 
 Panel_Held_Notice() {

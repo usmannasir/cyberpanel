@@ -24,6 +24,8 @@ SECRET = 'Tr0ub4dor&3 -e \\n $HOME `id` "quoted"'
 # enabled and started once the panel has confirmed the admin password.
 HELD = ['systemctl disable lscpd', 'systemctl stop lscpd']
 COMPLETING = HELD + ['password-check', 'systemctl enable lscpd', 'systemctl restart lscpd']
+# A run that reaches its end also asks whether the panel starts at boot.
+COMPLETE_RUN = COMPLETING + ['systemctl is-enabled lscpd']
 AS_ROOT = unittest.skipUnless(os.geteuid() == 0, 'a file owned by root is needed')
 
 
@@ -673,7 +675,7 @@ class PasswordOutcomeTests(unittest.TestCase):
                           str(machine.stored_password)], call)
         self.assertEqual('Typed-Secret-99\n', machine.stored_password.read_text())
         self.assertEqual(0o600, stat.S_IMODE(machine.stored_password.stat().st_mode))
-        self.assertEqual(COMPLETING, machine.panel_service_calls())
+        self.assertEqual(COMPLETE_RUN, machine.panel_service_calls())
 
     def test_older_tree_gets_the_password_and_the_run_completes(self):
         machine = Installer(self)
@@ -862,7 +864,7 @@ class PanelHoldTests(unittest.TestCase):
                 machine = Installer(self)
                 result = machine.run('-v', 'ols', tree=tree)
                 self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-                self.assertEqual(COMPLETING, machine.panel_service_calls())
+                self.assertEqual(COMPLETE_RUN, machine.panel_service_calls())
                 self.assertNotIn('The panel is stopped', result.stdout)
 
     STOPPED_THOUGH_CONFIRMED = ('The panel is stopped and is not started when the server boots, because the '
@@ -903,8 +905,39 @@ class PanelHoldTests(unittest.TestCase):
                 runtime.chmod(0o755)
                 result = machine.run('-v', 'ols', **options)
                 self.assertEqual(status, result.returncode, result.stdout + result.stderr)
-                self.assertEqual(COMPLETING, machine.panel_service_calls())
+                self.assertEqual(COMPLETE_RUN if status == 0 else COMPLETING, machine.panel_service_calls())
                 self.assertNotIn('The panel is stopped', result.stdout)
+
+    def test_run_ends_complete_only_when_the_panel_starts_at_boot(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(COMPLETE_RUN, machine.panel_service_calls())
+
+    def test_panel_enabled_on_the_second_try_completes_the_run(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', panel_enabled='second')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual('install complete', machine.events()[-1])
+        self.assertEqual(COMPLETE_RUN + ['systemctl enable lscpd', 'systemctl is-enabled lscpd'],
+                         machine.panel_service_calls())
+
+    def test_panel_that_cannot_be_enabled_fails_the_run_before_it_is_called_complete(self):
+        machine = Installer(self)
+        result = machine.run('-v', 'ols', panel_enabled='no')
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(['ready failed panel_setup', 'install failed panel_setup'], machine.events()[-2:])
+        self.assertNotIn('install complete', machine.events())
+        self.assertNotIn('panel ready', machine.events())
+        self.assertIn("but the panel's service could not be set to start when the server boots.\n"
+                      'Set it with: systemctl enable lscpd\n', result.stdout)
+        # The panel was started with a confirmed password: it is not held, and
+        # not called stopped.
+        self.assertEqual(COMPLETE_RUN + ['systemctl enable lscpd', 'systemctl is-enabled lscpd'],
+                         machine.panel_service_calls())
+        self.assertNotIn('The panel is stopped', result.stdout)
+        # Nothing waited for the panel to answer.
+        self.assertEqual([], [call for call in machine.recorded(machine.calls) if '127.0.0.1:8090' in call])
 
     def test_only_two_places_enable_or_start_the_panel(self):
         functions, top_level = script_parts()
@@ -915,7 +948,15 @@ class PanelHoldTests(unittest.TestCase):
                   if re.search(r'systemctl\s+(enable|start|restart|reenable|unmask)\b.*\blscpd\b', line)
                   and not line.strip().startswith('echo')]
         self.assertEqual(['systemctl enable lscpd >/dev/null 2>&1', 'systemctl restart lscpd >/dev/null 2>&1',
+                          'systemctl enable lscpd >/dev/null 2>&1',
                           'systemctl enable lscpd >/dev/null 2>&1', 'systemctl restart lscpd'], starts)
+        # The third is the second try of Panel_Starts_At_Boot, which only the
+        # end of a run with a confirmed password calls.
+        self.assertIn('systemctl enable lscpd >/dev/null 2>&1', function('Panel_Starts_At_Boot'))
+        self.assertEqual(1, source.count('if ! Panel_Starts_At_Boot; then'))
+        finish = function('Install_Run_Finish')
+        self.assertLess(finish.index('if [[ "$Panel_Password_Confirmed" != "Yes" ]]; then'),
+                        finish.index('if ! Panel_Starts_At_Boot; then'))
         start_panel = function('Start_Panel')
         self.assertIn('if [[ "$Panel_Password_Confirmed" != "Yes" ]]; then\n  return 1\nfi\nsystemctl enable lscpd',
                       start_panel)
