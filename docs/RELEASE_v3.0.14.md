@@ -1,6 +1,6 @@
 # CyberPanel v3.0.14 (build 14) — reliability
 
-_Release candidate._
+_Released 2026-11-23._
 
 This release corrects the eleven Medium and Low defects found in acceptance
 testing of 3.0.11 (two-factor key, Reseller Center limit, FTP user name, SRV
