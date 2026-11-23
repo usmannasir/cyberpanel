@@ -17,12 +17,16 @@ import os
 import subprocess
 
 FLAGS_COMMAND = ('lsattr', '-d')
+# A home on a network file system that stopped answering must not hold the
+# upgrade: it is reported instead.
+FLAGS_TIMEOUT = 60
+UNLOCK_TIMEOUT = 1800
 
 
 def is_immutable(path, run=subprocess.run):
     """Whether the folder itself has the immutable attribute."""
     result = run(list(FLAGS_COMMAND) + ['--', path], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                 universal_newlines=True)
+                 universal_newlines=True, timeout=FLAGS_TIMEOUT)
     if result.returncode != 0 or not result.stdout.strip():
         return False
     return 'i' in result.stdout.split()[0]
@@ -33,7 +37,7 @@ def unlock(path, run=subprocess.run):
     in it, links left alone. Returns whether it worked."""
     result = run(['find', '-P', path, '(', '-type', 'f', '-o', '-type', 'd', ')',
                   '-exec', 'chattr', '-i', '{}', '+'],
-                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=UNLOCK_TIMEOUT)
     return result.returncode == 0
 
 
@@ -55,7 +59,11 @@ def repair(domains=None, run=subprocess.run, homes=website_homes):
         domains = list(Websites.objects.values_list('domain', flat=True))
     unlocked, failed = [], []
     for home in homes(domains):
-        if not is_immutable(home, run):
-            continue
-        (unlocked if unlock(home, run) else failed).append(home)
+        try:
+            if not is_immutable(home, run):
+                continue
+            (unlocked if unlock(home, run) else failed).append(home)
+        except Exception:
+            # Timed out or could not be run: the other homes are still repaired.
+            failed.append(home)
     return unlocked, failed

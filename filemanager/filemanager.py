@@ -444,27 +444,11 @@ class FileManager:
                 website = Websites.objects.get(domain=domainName)
                 self.homePath = '/home/%s' % (domainName)
 
-                RemoveOK = 1
-
-                # Whether the site's user can write in its home. Run as that user,
-                # so a link in the probe's place reaches only what the user may
-                # write anyway. Not "touch -h": it never creates a file and always
-                # fails with "No such file or directory", which made every delete
-                # lock the whole home (chattr -R +i below).
-                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
-                result = ProcessUtilities.outputExecutioner(command, website.externalApp)
-
-                if result.find('No such file or directory') > -1:
-                    RemoveOK = 0
-
-                    command = 'chattr -R -i %s' % (self.returnPathEnclosed(self.homePath))
-                    ProcessUtilities.executioner(command)
-
-                else:
-                    command = 'rm -f %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
-                    ProcessUtilities.executioner(command, website.externalApp)
-
-
+                # The delete runs as the website's own user. No attribute of the
+                # home is changed: from 3.0.9 a probe that could never succeed
+                # ("touch -h") made every delete end with "chattr -R +i" on the
+                # whole home, and a link planted in the probe's place could make
+                # root clear and set those attributes at the customer's will.
                 for item in self.data['fileAndFolders']:
 
                     if self.notInside(self.data['path'] + '/' + item, self.homePath):
@@ -487,9 +471,6 @@ class FileManager:
                             self.returnPathEnclosed(trashPath))
                         ProcessUtilities.executioner(command, website.externalApp)
 
-                if RemoveOK == 0:
-                    command = 'chattr -R +i %s' % (self.returnPathEnclosed(self.homePath))
-                    ProcessUtilities.executioner(command)
             except:
                 require_root_entitlement(self.data)
                 try:
@@ -500,21 +481,6 @@ class FileManager:
 
                 self.homePath = '/'
 
-                RemoveOK = 1
-
-                command = 'touch %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
-                result = ProcessUtilities.outputExecutioner(command)
-
-                if result.find('No such file or directory') > -1:
-                    RemoveOK = 0
-
-                    command = 'chattr -R -i %s' % (self.returnPathEnclosed(self.homePath))
-                    ProcessUtilities.executioner(command)
-
-                else:
-                    command = 'rm -f %s' % (self.returnPathEnclosed(self.homePath + '/hello.txt'))
-                    ProcessUtilities.executioner(command)
-
                 for item in self.data['fileAndFolders']:
 
                     if self.notInside(self.data['path'] + '/' + item, self.homePath):
@@ -523,11 +489,6 @@ class FileManager:
                     if skipTrash:
                         command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
                         ProcessUtilities.executioner(command)
-
-
-                if RemoveOK == 0:
-                    command = 'chattr -R +i %s' % (self.returnPathEnclosed(self.homePath))
-                    ProcessUtilities.executioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
