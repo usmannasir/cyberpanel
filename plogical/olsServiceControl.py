@@ -6,6 +6,7 @@ import os
 import platform
 from pathlib import Path
 import re
+import signal
 import stat
 import subprocess
 import tempfile
@@ -237,6 +238,22 @@ class OLSWorkersRemain(RuntimeError):
     """The controller no longer has a master PID but OLS processes still exist."""
 
 
+class OLSPreviousGeneration(RuntimeError):
+    """An earlier generation of this OLS service is still finishing its connections.
+
+    A graceful restart or reload (lswsctrl restart/reload, SIGUSR1) starts a new
+    main process. The old main and every worker still serving a connection keep
+    running, reparented to init, until those connections end: on a busy server
+    with long downloads or slow clients that can take a long time. They run the
+    installed binary in the same service but no longer descend from the master
+    that status reports.
+    """
+    def __init__(self, generation):
+        self.generation = dict(generation)  # pid -> start ticks, as observed
+        super().__init__('A previous OpenLiteSpeed generation is still finishing connections (PIDs %s)'
+                         % ', '.join(str(pid) for pid in sorted(self.generation)))
+
+
 class OLSService:
     def __init__(self, root='/usr/local/lsws', proc='/proc', unit=None):
         self.root = Path(root)
@@ -255,6 +272,80 @@ class OLSService:
         self._recovery_policy = None
         self._observed_policy_identity = None
         self._policy_checked = False
+        self.kill = os.kill
+
+    # How long an earlier generation may keep draining before the upgrade ends it.
+    PREVIOUS_GENERATION_WAIT = 60
+
+    def _previous_generation(self, master, processes, strays):
+        """{pid: start ticks} when every stray belongs to an earlier generation of this service, else None.
+
+        Each stray's tree must end in a process whose parent is init, with the
+        master's own command line, in the master's service, started before the
+        master. Anything else stays an unmanaged process.
+        """
+        try:
+            master_cmdline = (self.proc / str(master) / 'cmdline').read_bytes()
+            master_owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
+        except (FileNotFoundError, ProcessLookupError):
+            return None
+        if not master_cmdline:
+            return None
+        generation = {}
+        for pid in strays:
+            root, seen = pid, set()
+            while processes[root][0] in processes:
+                if root in seen:
+                    return None
+                seen.add(root)
+                root = processes[root][0]
+            try:
+                if (processes[root][0] != 1 or int(processes[root][1]) >= int(processes[master][1])
+                        or (self.proc / str(root) / 'cmdline').read_bytes() != master_cmdline
+                        or process_owner((self.proc / str(root) / 'cgroup').read_text()) != master_owner
+                        or process_owner((self.proc / str(pid) / 'cgroup').read_text()) != master_owner):
+                    return None
+            except (FileNotFoundError, ProcessLookupError, ValueError, RuntimeError):
+                return None
+            generation[pid] = processes[pid][1]
+        return generation
+
+    def _end_previous_generation(self, generation):
+        """SIGKILL exactly the processes observed, each identified again by start time and binary first."""
+        ended = []
+        for pid, ticks in sorted(generation.items()):
+            entry = self.proc / str(pid)
+            try:
+                if (entry / 'stat').read_text().rsplit(')', 1)[1].split()[19] != ticks:
+                    continue
+                if not os.path.samefile(str(entry / 'exe'), str(self.binary)):
+                    continue
+                self.kill(pid, signal.SIGKILL)
+                ended.append(pid)
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+        return ended
+
+    def settle_previous_generation(self, check):
+        """Return check(); an earlier generation gets PREVIOUS_GENERATION_WAIT seconds to drain, then is ended once."""
+        deadline = time.monotonic() + self.PREVIOUS_GENERATION_WAIT
+        ended = False
+        while True:
+            try:
+                return check()
+            except OLSPreviousGeneration as previous:
+                if time.monotonic() < deadline:
+                    time.sleep(1)
+                    continue
+                if ended:
+                    raise
+                pids = self._end_previous_generation(previous.generation)
+                print('Ended a previous OpenLiteSpeed generation that was still finishing connections '
+                      'after %d seconds: PIDs %s' % (self.PREVIOUS_GENERATION_WAIT,
+                                                     ', '.join(str(pid) for pid in pids) or 'none left'),
+                      flush=True)
+                ended = True
+                deadline = time.monotonic() + 10
 
     def bind_recovery_policy(self, policy, original_core, candidate_core):
         if not jammy_platform() or candidate_core != RECOVERED_JAMMY_BUNDLE[0]:
@@ -449,7 +540,7 @@ class OLSService:
         return state
 
     def prepare_state(self, script=None):
-        initial = self.inspect_state()
+        initial = self.settle_previous_generation(self.inspect_state)
         self.verify_mapped_bundle(initial)
         if watchdog.inspect_watchdog(self.root, self.proc, allow_legacy=True):
             self.watch_lock = watchdog.lock_identity(self.root, require_exclusive=True)
@@ -535,13 +626,20 @@ class OLSService:
             raise RuntimeError('OLS status PID does not identify the installed master '
                                '(reported=%s, live=%s, stopping=%s)' %
                                (master, sorted(processes), self.draining is not None))
+        strays = []
         for pid in processes:
-            seen = set()
-            while pid != master:
-                if pid in seen or pid not in processes:
-                    raise RuntimeError('An unmanaged OLS process is also running')
-                seen.add(pid)
-                pid = processes[pid][0]
+            seen, current = set(), pid
+            while current != master:
+                if current in seen or current not in processes:
+                    strays.append(pid)
+                    break
+                seen.add(current)
+                current = processes[current][0]
+        if strays:
+            generation = None if self.draining is not None else self._previous_generation(master, processes, strays)
+            if generation is None:
+                raise RuntimeError('An unmanaged OLS process is also running')
+            raise OLSPreviousGeneration(generation)
         try:
             owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
         except (FileNotFoundError, ProcessLookupError):
@@ -567,7 +665,7 @@ class OLSService:
         deadline = time.monotonic() + 20
         while True:
             try:
-                return self.state()
+                return self.settle_previous_generation(self.state)
             except OLSWorkersRemain:
                 if time.monotonic() >= deadline:
                     raise
