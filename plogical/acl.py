@@ -437,15 +437,24 @@ class ACLManager:
 
     @staticmethod
     def websitesLimitCheck(currentAdmin, websitesLimit, userToBeModified = None):
+        # Whether currentAdmin, an owner, can give one of its users websitesLimit websites (0 is
+        # unlimited), or create that many websites. userToBeModified is the user whose limit is
+        # replaced, if it is one; its current limit only counts while it belongs to this owner.
         if not ACLManager.isAdminACL(currentAdmin.acl):
 
             if currentAdmin.initWebsitesLimit != 0:
+                # An owner with a limit has no unlimited websites to give out.
+                if websitesLimit == 0:
+                    return 0
+
                 webLimits = 0
                 allUsers = Administrator.objects.filter(owner=currentAdmin.pk)
                 for items in allUsers:
-                    webLimits = webLimits + items.initWebsitesLimit
+                    if items.pk != currentAdmin.pk:
+                        webLimits = webLimits + items.initWebsitesLimit
 
-                if userToBeModified != None:
+                if userToBeModified != None and userToBeModified.owner == currentAdmin.pk \
+                        and userToBeModified.pk != currentAdmin.pk:
                     webLimits = webLimits - userToBeModified.initWebsitesLimit
 
                 webLimits = webLimits + websitesLimit + currentAdmin.websites_set.all().count()

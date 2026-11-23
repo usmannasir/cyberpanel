@@ -823,6 +823,10 @@ def saveResellerChanges(request):
         if ACLManager.checkUserOwnerShip(currentACL, loggedUser, userToBeModified) == 0:
             return ACLManager.loadErrorJson()
 
+        # Only an administrator changes the owner or the limit of its own account.
+        if currentACL['admin'] != 1 and userToBeModified.pk == loggedUser.pk:
+            return refused("Your own owner and website limit can only be changed by an administrator.")
+
         # "Keep current owner" sends no owner, or an empty one. That is read as naming the current
         # owner, so it passes exactly the checks an owner chosen by name passes and moves nothing.
         ownerName = data.get('newOwner')
@@ -842,6 +846,9 @@ def saveResellerChanges(request):
         if ACLManager.checkUserOwnerShip(currentACL, loggedUser, newOwner) == 0:
             return ACLManager.loadErrorJson()
 
+        if currentACL['admin'] != 1 and newOwner.pk == userToBeModified.pk:
+            return refused("A user cannot be its own owner.")
+
         # A request without a limit leaves the limit of the user as it is.
         websitesLimit = data.get('websitesLimit')
         if websitesLimit is None:
@@ -852,8 +859,10 @@ def saveResellerChanges(request):
             if isinstance(websitesLimit, str) and websitesLimit and all('0' <= c <= '9' for c in websitesLimit):
                 websitesLimit = int(websitesLimit)
             if type(websitesLimit) is not int or websitesLimit < 0:
-                return refused("The website limit is a whole number, 0 for unlimited.")
+                return refused("The website limit is a whole number of 0 or more.")
             if ACLManager.websitesLimitCheck(newOwner, websitesLimit, userToBeModified) == 0:
+                if websitesLimit == 0:
+                    return refused("Unlimited websites can only be given under an owner that has unlimited websites.")
                 return refused("You've reached maximum websites limit as a reseller.")
 
         previousOwner = userToBeModified.owner
