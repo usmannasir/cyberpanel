@@ -16,6 +16,7 @@ from .models import AIScannerSettings, ScanHistory, FileAccessToken
 from .access import scanner_allowed
 from .panel_address import panel_address
 from .platform_auth import platform_page_url, saved_scanner_auth_headers, scanner_payment_setup_request
+from . import prerequisites
 from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -28,7 +29,48 @@ class AIScannerManager:
     
     def __init__(self):
         self.logger = logging
-    
+
+    @staticmethod
+    def may_connect_account(currentACL):
+        """CyberMail accounts are connected on the Email Delivery page, which only administrators open."""
+        return currentACL.get('admin') == 1
+
+    @staticmethod
+    def account_setup_url():
+        try:
+            return reverse('emailDeliveryHome')
+        except Exception:
+            return ''
+
+    def account_state(self, admin, currentACL):
+        """What the page says about the connected account; nothing when it cannot be read."""
+        try:
+            auth_headers = saved_scanner_auth_headers(admin)
+        except Exception as e:
+            self.logger.writeToFile(f'[AIScannerManager.account_state] Could not read the connected account: {type(e).__name__}')
+            return {}
+        may_connect = self.may_connect_account(currentACL)
+        return prerequisites.page_state(auth_headers, may_connect, self.account_setup_url() if may_connect else '')
+
+    def prerequisite_refusal(self, admin, currentACL, free, server_ip='', scan=True, account_only=False):
+        """The refusal of a step the platform did not allow, worded by its cause, or None.
+
+        It only words a refusal that was already decided. None when the
+        account cannot be read, or, with account_only, when an account is
+        connected and the cause lies elsewhere.
+        """
+        try:
+            auth_headers = saved_scanner_auth_headers(admin)
+        except Exception as e:
+            self.logger.writeToFile(f'[AIScannerManager.prerequisite_refusal] Could not read the connected account: {type(e).__name__}')
+            return None
+        why = prerequisites.reason(auth_headers, free)
+        if account_only and why != prerequisites.ACCOUNT_REQUIRED:
+            return None
+        may_connect = self.may_connect_account(currentACL)
+        return prerequisites.refusal(why, may_connect, free, server_ip,
+                                     self.account_setup_url() if may_connect else '', scan)
+
     def scannerHome(self, request, userID):
         """Main AI Scanner page"""
         try:
@@ -104,7 +146,9 @@ class AIScannerManager:
                 'vps_info': vps_info,
                 'server_ip': server_ip,
             }
-            
+            # Without a connected account the page asks for one before offering scans.
+            context.update(self.account_state(admin, currentACL))
+
             self.logger.writeToFile(f'[AIScannerManager.scannerHome] Context built successfully, rendering template')
             
             return render(request, 'aiScanner/scanner.html', context)
@@ -162,10 +206,11 @@ class AIScannerManager:
                 })
             else:
                 self.logger.writeToFile(f'[AIScannerManager.setupPayment] Payment setup failed for {admin.userName}')
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Failed to setup payment. Please check the logs and try again.'
-                })
+                return JsonResponse(
+                    self.prerequisite_refusal(admin, currentACL, free=False, scan=False, account_only=True) or {
+                        'success': False,
+                        'error': 'Failed to setup payment. Please check the logs and try again.'
+                    })
                 
         except Exception as e:
             self.logger.writeToFile(f'[AIScannerManager.setupPayment] Error: {str(e)}')
@@ -283,17 +328,21 @@ class AIScannerManager:
                         # Continue even if saving fails - scan can still proceed
                 else:
                     self.logger.writeToFile(f'[AIScannerManager.startScan] Failed to get VPS API key')
-                    return JsonResponse({'success': False, 'error': 'Failed to authenticate VPS for free scans'})
-            
+                    return JsonResponse(
+                        self.prerequisite_refusal(admin, currentACL, free=True, server_ip=server_ip) or
+                        {'success': False, 'error': 'Failed to authenticate VPS for free scans'})
+
             # Get scanner settings (only required if not using VPS free scan)
             scanner_settings = None
             if not vps_api_key:
                 try:
                     scanner_settings = AIScannerSettings.objects.get(admin=admin)
                     if not scanner_settings.is_payment_configured or not scanner_settings.api_key:
-                        return JsonResponse({'success': False, 'error': 'Payment not configured'})
+                        return JsonResponse(self.prerequisite_refusal(admin, currentACL, free=False) or
+                                            {'success': False, 'error': 'Payment not configured'})
                 except AIScannerSettings.DoesNotExist:
-                    return JsonResponse({'success': False, 'error': 'Scanner not configured'})
+                    return JsonResponse(self.prerequisite_refusal(admin, currentACL, free=False) or
+                                        {'success': False, 'error': 'Scanner not configured'})
             
             # Parse request data
             data = json.loads(request.body)
@@ -474,9 +523,11 @@ class AIScannerManager:
                             scanner_settings.save()
                             self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Saved VPS API key to database')
                         else:
-                            return JsonResponse({'success': False, 'error': 'Failed to authenticate VPS'})
+                            return JsonResponse(self.prerequisite_refusal(admin, currentACL, free=False, scan=False, account_only=True) or
+                                            {'success': False, 'error': 'Failed to authenticate VPS'})
                     else:
-                        return JsonResponse({'success': False, 'error': 'Initial payment setup required first'})
+                        return JsonResponse(self.prerequisite_refusal(admin, currentACL, free=False, scan=False, account_only=True) or
+                                            {'success': False, 'error': 'Initial payment setup required first'})
                 else:
                     api_key_to_use = scanner_settings.api_key
             except AIScannerSettings.DoesNotExist:
@@ -501,9 +552,11 @@ class AIScannerManager:
                         )
                         self.logger.writeToFile(f'[AIScannerManager.addPaymentMethod] Created new scanner settings with VPS API key')
                     else:
-                        return JsonResponse({'success': False, 'error': 'Failed to authenticate VPS'})
+                        return JsonResponse(self.prerequisite_refusal(admin, currentACL, free=False, scan=False, account_only=True) or
+                                        {'success': False, 'error': 'Failed to authenticate VPS'})
                 else:
-                    return JsonResponse({'success': False, 'error': 'Scanner not configured'})
+                    return JsonResponse(self.prerequisite_refusal(admin, currentACL, free=False, scan=False) or
+                                        {'success': False, 'error': 'Scanner not configured'})
             
             # Get admin email and domain
             cyberpanel_host = request.get_host()  # Keep full host including port
