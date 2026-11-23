@@ -1,6 +1,6 @@
 # CyberPanel v3.0.15 (build 15) — installer and first administrator
 
-_Release candidate._
+_Released 2026-11-23._
 
 This release stops the sign-in page from creating an administrator with a
 well-known password on a panel that has none, and makes the installer report
