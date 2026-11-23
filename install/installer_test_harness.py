@@ -314,12 +314,15 @@ class Installer:
         functions, top_level = script_parts()
         # Of Post_Install_Tweak, the parts that decide how a run ends are the
         # real ones, in their order: setting and confirming the admin password,
-        # starting the panel, and the hostname step.
+        # the first thing after it that can end the run (the default PHP of
+        # the command line, itself a phase here), starting the panel, and the
+        # hostname step.
         start = functions.index('\nPost_Install_Tweak() {\n')
         body = functions[start:functions.index('\n}\n', start)]
         password = body[body.index('\nif ! Set_Admin_Password; then\n'):
                         body.index('\nConfigure_Default_PHP_CLI || return 1\n') + 1]
         rest = body[body.index('\nConfigure_Default_PHP_CLI || return 1\n'):]
+        password += 'Configure_Default_PHP_CLI || return 1\n'
         password += rest[rest.index('\nStart_Panel\n'):][:len('\nStart_Panel\n')]
         tweak = rest[rest.index('\nInstall_Step hostname_ssl\n'):]
         if rest.index('\nStart_Panel\n') > rest.index('\nInstall_Step hostname_ssl\n'):
@@ -329,6 +332,7 @@ class Installer:
         stubs = [COMMAND_STUBS.replace('#REAL_FLAG_LINES#', flags)]
         for name, failure in sorted(STUBBED_PHASES.items()):
             stubs.append('%s() { phase %s && { %s; }; return 0; }\n' % (name, name, failure))
+        stubs.append('Configure_Default_PHP_CLI() { phase Configure_Default_PHP_CLI && return 1; return 0; }\n')
         stubs.append('Post_Install_Tweak() {\nphase Post_Install_Tweak%s%s\n}\n'
                      % (self.relocate(password), self.relocate(tweak)))
         return self.relocate(functions) + ''.join(stubs) + self.relocate(top_level)
