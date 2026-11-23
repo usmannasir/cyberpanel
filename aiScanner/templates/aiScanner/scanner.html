@@ -456,6 +456,27 @@ AI Security Scanner - CyberPanel
             {% endif %}
         </div>
 
+        <!-- Account Required: every scan, free scan and payment set-up goes through a connected account -->
+        {% if account_missing %}
+        <div class="scanner-section" id="scannerAccountRequired">
+            <div class="scanner-alert scanner-alert-warning">
+                <i class="fas fa-plug"></i>
+                <div class="scanner-alert-content">
+                    <h4>{% trans "Connect an account first" %}</h4>
+                    <p>{% trans "Scans, free scans and payment set-up all go through a CyberMail or scanner account connected to your panel account, and none is connected yet. Until one is, no scan can start." %}</p>
+                    {% if account_setup_url %}
+                    <p>{% trans "Open Email Delivery, choose Get Started Free and connect a CyberMail account (free, no card needed), then come back to this page." %}</p>
+                    <a class="btn-primary" href="{{ account_setup_url }}">
+                        <i class="fas fa-paper-plane"></i> {% trans "Open Email Delivery" %}
+                    </a>
+                    {% else %}
+                    <p>{% trans "Accounts are connected on the Email Delivery page, which only an administrator can open: ask the server administrator." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Payment Setup Section -->
         {% if not is_payment_configured and not vps_info.is_vps|default:False|default:False %}
         <div class="scanner-section">
@@ -486,9 +507,15 @@ AI Security Scanner - CyberPanel
                     </div>
                     {% endif %}
                     
+                    {% if account_missing %}
+                    <button type="button" class="btn-primary btn-lg" disabled>
+                        <i class="fas fa-lock"></i> {% trans "Setup Payment: connect an account first" %}
+                    </button>
+                    {% else %}
                     <button type="button" class="btn-primary btn-lg" onclick="setupPayment()">
                         <i class="fas fa-credit-card"></i> Setup Payment ($10 Initial Charge)
                     </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -502,7 +529,9 @@ AI Security Scanner - CyberPanel
                 <div class="scanner-alert-content">
                     <h4>VPS Free Scans Available</h4>
                     <p>Great news! Your CyberPanel VPS hosting includes <strong>{{ vps_info.free_scans_available|default:0 }} free AI security scans</strong> this month ({{ vps_info.scans_used_this_month|default:0 }}/{{ vps_info.free_scans_per_month|default:0 }} used).</p>
-                    {% if not is_payment_configured %}
+                    {% if account_missing %}
+                    <p style="margin-top: 10px;"><strong>{% trans "They can be used once an account is connected: see Connect an account first above." %}</strong></p>
+                    {% elif not is_payment_configured %}
                     <p style="margin-top: 10px;"><small style="color: var(--text-secondary, #64748b);">You can still add a payment method below for additional scans beyond your free allowance.</small></p>
                     {% endif %}
                 </div>
@@ -628,7 +657,11 @@ AI Security Scanner - CyberPanel
                         </select>
                     </div>
                     <div>
-                        {% if vps_info.is_vps|default:False and not vps_info.has_free_scans|default:False and not is_payment_configured %}
+                        {% if account_missing %}
+                        <button type="button" class="btn-primary" id="scanButton" disabled style="width: 100%;">
+                            <i class="fas fa-lock"></i> {% trans "Connect an account first" %}
+                        </button>
+                        {% elif vps_info.is_vps|default:False and not vps_info.has_free_scans|default:False and not is_payment_configured %}
                         <button type="button" class="btn-primary" disabled style="width: 100%;">
                             <i class="fas fa-lock"></i> Free Scans Exhausted
                         </button>
@@ -886,6 +919,20 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
+// A refused step says what is missing. When an account has to be connected
+// first, the answer names the panel page for it and the user may go there.
+function showScannerRefusal(data) {
+    const text = 'Error: ' + ((data && data.error) || 'The request was refused.');
+    const accountUrl = data && typeof data.account_url === 'string' && /^\/[A-Za-z0-9]/.test(data.account_url) ? data.account_url : '';
+    if (accountUrl) {
+        if (confirm(text + '\n\nOpen Email Delivery now?')) {
+            window.location.href = accountUrl;
+        }
+    } else {
+        alert(text);
+    }
+}
+
 function setupPayment() {
     // Show loading
     const button = event.target;
@@ -906,7 +953,7 @@ function setupPayment() {
             // Redirect to payment setup
             window.location.href = data.payment_url;
         } else {
-            alert('Error: ' + data.error);
+            showScannerRefusal(data);
             button.innerHTML = originalText;
             button.disabled = false;
         }
@@ -957,7 +1004,7 @@ if (scanForm) {
             document.getElementById('scanForm').reset();
             setTimeout(() => location.reload(), 2000);
         } else {
-            alert('Error: ' + data.error);
+            showScannerRefusal(data);
         }
         button.innerHTML = originalText;
         button.disabled = false;
@@ -1557,7 +1604,7 @@ function addPaymentMethod() {
             // Redirect to payment method setup
             window.location.href = data.setup_url;
         } else {
-            alert('Error: ' + data.error);
+            showScannerRefusal(data);
             button.innerHTML = originalHtml;
             button.disabled = false;
         }
