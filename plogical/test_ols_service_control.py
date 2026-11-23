@@ -760,3 +760,26 @@ class PreviousGenerationTests(unittest.TestCase):
         self.assertEqual(sorted(call[0][0] for call in self.service.kill.call_args_list), [100, 101])
         self.assertEqual(said.call_count, 1)
         self.assertGreaterEqual(now[0] - start, 3 * control.OLSService.PREVIOUS_GENERATION_WAIT)
+
+    def test_systemd_still_naming_the_earlier_main_is_accepted_only_beside_that_generation(self):
+        # systemd 239 (AlmaLinux 8) keeps MainPID on the old main after a graceful restart.
+        def claims(pid, owner=None):
+            if pid != 100:
+                raise RuntimeError('Conflicting OLS systemd manager or PID')
+        self.service.verify_unit_claims.side_effect = claims
+        self.service.systemd.side_effect = claims
+        with self.assertRaises(control.OLSPreviousGeneration):
+            self.service._native_state()
+        # Once that generation is gone, the same claim no longer fits the live master.
+        for pid in (101, 100):
+            self.remove(pid)
+        with self.assertRaisesRegex(RuntimeError, 'Conflicting OLS systemd manager or PID'):
+            self.service._native_state()
+
+    def test_systemd_naming_some_other_pid_still_refuses(self):
+        def claims(pid, owner=None):
+            raise RuntimeError('Conflicting OLS systemd manager or PID')
+        self.service.verify_unit_claims.side_effect = claims
+        with self.assertRaisesRegex(RuntimeError, 'Conflicting OLS systemd manager or PID') as raised:
+            self.service._native_state()
+        self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
