@@ -15,10 +15,16 @@ them.
   code. The secret is sent only while two-factor is being set up for an
   account that does not have it yet; an enrolled account's secret is never
   sent to the browser, and loading an account no longer creates one.
+- Two-factor is switched on only with a code from the authenticator app, for
+  a secret issued fresh by that set-up.
 - Saving a user leaves two-factor as it is unless the request changes it;
-  `cyberpanel editUser` and the cloud API no longer switch it off.
+  `cyberpanel editUser`, the cloud API and a page left open no longer
+  switch it off.
 - The Reseller Center saves a website limit when the current owner is kept,
   refuses an unknown owner, and checks a limit sent as text like any other.
+- A reseller with a website limit cannot give out unlimited websites, change
+  its own limit or owner, or make a user its own owner; a user moved to a
+  new owner counts against that owner's allowance as it should.
 
 ### Websites and applications
 - After an FTP account is created the page shows the user name that was
@@ -28,7 +34,9 @@ them.
 - WordPress and Docker site deployment show their real progress up to 100%.
 - Cloning a website reports success only when the copy works; a failed clone
   says why and removes what it created. The copy runs as the website's user
-  and the database dump no longer lands in the new site's folder.
+  after the site's permissions are repaired, the recorded WordPress folder is
+  checked first, and the database dump is private and no longer lands in the
+  new site's folder.
 - Each application installer shows only its own progress; the PrestaShop
   installer names the page where a website is switched to Apache and refuses
   before it changes anything. The Visit links after an installation open the
