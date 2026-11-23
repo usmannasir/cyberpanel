@@ -2444,13 +2444,18 @@ if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Final_Flags" "${Final_Flags[@]}"
 fi
 
+# CP_PANEL_ENABLED_BY_SCRIPT=1: install.py leaves the panel's service as it
+# is, not enabled. This script enables and starts it in Start_Panel, once the
+# panel has confirmed its administrator's password; enabled by install.py, a
+# power loss or a killed install before that would bring a panel without an
+# administrator up at the next boot.
 if [[ "$Remote_MySQL" = "On" ]] ; then
-  CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password" \
+  CP_INSTALL_MYSQL_PASSWORD="$MySQL_Password" CP_PANEL_ENABLED_BY_SCRIPT=1 \
     /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
   Install_Status=$?
   unset MySQL_Password
 else
-  /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
+  CP_PANEL_ENABLED_BY_SCRIPT=1 /usr/local/CyberPanel/bin/python install.py "${Final_Flags[@]}"
   Install_Status=$?
 fi
 
@@ -3534,7 +3539,8 @@ Panel_Installing="Yes"
 Main_Installation
 #Python install in here. It closes web_server and writes the steps up to panel.
 
-# install.py enabled the panel's service, and an older one may have started it.
+# A tree up to 3.0.13 enables the panel's service in install.py whatever it is
+# told, and an older one may have started it.
 Hold_Panel
 
 Install_Step finishing

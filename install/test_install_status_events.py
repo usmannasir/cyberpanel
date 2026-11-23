@@ -762,6 +762,7 @@ class InstallerHandoffTests(unittest.TestCase):
         python.write_text(
             '#!/bin/sh\nprintf "%%s\\n" "$*" > "$0.called"\n'
             'printf "%%s" "$CP_INSTALL_MYSQL_PASSWORD" > "$0.password"\n'
+            'printf "%%s" "${CP_PANEL_ENABLED_BY_SCRIPT-unset}" > "$0.panel-enabled-by-script"\n'
             '"%s" -I "%s" "%s" "%s" %s\nstatus=$?\n%s\nexit $status\n'
             % (sys.executable, driver, ROOT / 'install', events, directives,
                'echo "CyberPanel installation successfully completed!,80" >> "%s"' % log if marker else ''))
@@ -772,7 +773,8 @@ class InstallerHandoffTests(unittest.TestCase):
         script = ('Debug_Log2() { :; }\n' + status_functions
                   + 'Remote_MySQL=%s\nMySQL_Password=fixture-only\nFinal_Flags=(192.0.2.10 --postfix ON)\n' % remote
                   + 'Install_Run_Start 3.0.11\nInstall_Step web_server\n'
-                  + handoff + '\necho POST_INSTALL_REACHED\nInstall_Step finishing\n'
+                  + handoff + '\necho POST_INSTALL_REACHED\n'
+                  'echo "afterwards=${CP_PANEL_ENABLED_BY_SCRIPT-unset}"\nInstall_Step finishing\n'
                   # The end of a run, as Install_Run_Finish writes it.
                   'Install_Event finishing done\nInstall_Event install complete\nInstall_Run_Active="No"\n')
         result = subprocess.run(['bash', '-c', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -782,6 +784,18 @@ class InstallerHandoffTests(unittest.TestCase):
         return result, [' '.join(line.split()[2:]) for line in lines], root
 
     START = ['install started 3.0.11', 'preflight running', 'preflight done', 'web_server running']
+
+    def test_installer_is_told_that_the_script_enables_the_panel(self):
+        # install.py then leaves the panel's service as it is (not enabled),
+        # in both ways of calling it; the script's own shell keeps nothing.
+        for remote in ('On', 'Off'):
+            with self.subTest(remote=remote):
+                result, _, root = self.run_handoff('step:php finish', True, remote)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertEqual('1', (root / 'python.panel-enabled-by-script').read_text())
+                self.assertIn('afterwards=unset\n', result.stdout)
+        functions, _ = script_parts()
+        self.assertNotIn('export CP_PANEL_ENABLED_BY_SCRIPT', functions)
 
     def test_installer_that_fails_ends_the_run_with_its_status_and_its_step(self):
         for remote in ('On', 'Off'):
