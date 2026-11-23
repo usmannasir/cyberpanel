@@ -333,12 +333,13 @@ def fetchUserDetails(request):
                 # page asks for it when the box is ticked for an account that does not have it yet.
                 # Once an account has two-factor, its secret guards the sign-in and is never sent;
                 # setting it up again starts with switching it off, which discards the secret.
+                # Every set-up gets a new secret, so one shown to somebody else in an earlier set-up
+                # is never the one the account is switched on with.
                 if data.get('twofaSetup') is True and not user.twoFA:
                     import pyotp
 
-                    if user.secretKey in (None, '', 'None'):
-                        user.secretKey = pyotp.random_base32()
-                        user.save()
+                    user.secretKey = pyotp.random_base32()
+                    user.save()
 
                     userDetails['otpauth'] = pyotp.totp.TOTP(user.secretKey).provisioning_uri(
                         name=email, issuer_name="CyberPanel")
@@ -419,14 +420,24 @@ def saveModifications(request):
                 user.password = hashPassword.hash_password(newPassword)
                 user.token = hashPassword.generateToken(accountUsername, newPassword)
 
-            # Switching two-factor on needs the secret the code of the set-up showed; without one the
-            # account could no longer sign in.
-            if twofa and not user.twoFA and user.secretKey in (None, '', 'None'):
-                data_ret = {'status': 0, 'saveStatus': 0,
-                            'error_message': 'Two-factor was not set up: tick the box again, add the code '
-                                             'that is shown to your authenticator app, then save.'}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            # Switching two-factor on needs the secret of the set-up and a code from the app it was
+            # added to, checked as at sign-in; without them the account could no longer sign in.
+            if twofa and not user.twoFA:
+                code = str(data.get('twofaCode') or '').strip()
+                confirmed = False
+                if user.secretKey not in (None, '', 'None') and len(code) == 6 \
+                        and all('0' <= c <= '9' for c in code):
+                    import pyotp
+                    try:
+                        confirmed = pyotp.TOTP(user.secretKey).verify(code, valid_window=1)
+                    except Exception:
+                        confirmed = False
+                if not confirmed:
+                    data_ret = {'status': 0, 'saveStatus': 0,
+                                'error_message': 'Two-factor was not switched on: enter the code your '
+                                                 'authenticator app shows for the key of this set-up.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
             user.type = 0
 

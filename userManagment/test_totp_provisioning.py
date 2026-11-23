@@ -49,12 +49,12 @@ class UserTOTPProvisioningTests(SimpleTestCase):
         self.assertEqual(parse_qs(parsed.query)['issuer'], ['CyberPanel'])
         self.assertTrue(pyotp.parse_uri(uri).verify(pyotp.TOTP(self.user.secretKey).now()))
 
-    def test_existing_secret_and_disabled_twofa_are_preserved(self):
+    def test_set_up_replaces_an_unconfirmed_secret(self):
         result = self.fetch()
         self.assert_uri(result)
         self.assertFalse(result['userDetails']['twofa'])
-        self.assertEqual(self.user.secretKey, self.secret)
-        self.user.save.assert_not_called()
+        self.assertNotEqual(self.user.secretKey, self.secret)
+        self.user.save.assert_called_once_with()
 
     def test_existing_secret_and_enabled_twofa_are_preserved_and_not_sent(self):
         result = self.fetch(twofa=True)

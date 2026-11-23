@@ -166,6 +166,7 @@ app.controller('modifyUser', function ($scope, $http) {
         $scope.qrHidden = true;
         $scope.secretKey = '';
         $scope.formattedSecretKey = '';
+        $scope.twofaCode = '';
         setUpAsked = false;
         accountLoad += 1;
     }
@@ -193,9 +194,16 @@ app.controller('modifyUser', function ($scope, $http) {
             var key = details ? manualKeyFromOtpauth(details.otpauth) : '';
             if (!key) {
                 setUpAsked = false;
-                $scope.twofa = false;
-                $scope.errorMessage = details ? 'Two-factor is already on for this account. Choose the account again.' :
-                    response.data.error_message;
+                if (details && details.twofa) {
+                    // Switched on elsewhere since the account was loaded: shown as on, and left on.
+                    $scope.twofaEnrolled = true;
+                    $scope.twofa = true;
+                    $scope.errorMessage = 'Two-factor is already on for this account.';
+                } else {
+                    $scope.twofa = false;
+                    $scope.errorMessage = details ? 'Two-factor cannot be set up for this account now.' :
+                        response.data.error_message;
+                }
                 $scope.canotFetchDetails = false;
                 return;
             }
@@ -373,9 +381,17 @@ app.controller('modifyUser', function ($scope, $http) {
             lastName: lastName,
             email: email,
             passwordByPass: password,
-            securityLevel: $scope.securityLevel,
-            twofa: $scope.twofa
+            securityLevel: $scope.securityLevel
         };
+
+        // Two-factor is sent only when the box was changed on this page, so a page loaded before
+        // two-factor was changed elsewhere leaves it as it is now.
+        if ($scope.twofa !== $scope.twofaEnrolled) {
+            data.twofa = $scope.twofa;
+            if ($scope.twofa === true) {
+                data.twofaCode = $scope.twofaCode || '';
+            }
+        }
 
         var config = {
             headers: {

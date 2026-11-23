@@ -29,8 +29,8 @@ LOADERS = [ROOT / 'baseTemplate' / 'templates' / 'baseTemplate' / 'index.html',
            ROOT / 'userManagment' / 'templates' / 'userManagment' / 'createUser.html',
            ROOT / 'userManagment' / 'templates' / 'userManagment' / 'deleteACL.html']
 
-NOT_SET_UP = ('Two-factor was not set up: tick the box again, add the code that is shown to your '
-              'authenticator app, then save.')
+NOT_CONFIRMED = ('Two-factor was not switched on: enter the code your authenticator app shows for the '
+                 'key of this set-up.')
 
 # Loads the script with stand-ins for the browser and Angular and uses the Modify User controller the
 # way the page does. Each step is one thing a person does, or the server answering the oldest request
@@ -61,6 +61,7 @@ const seen = input.steps.map(function (step) {
     if (step[0] === 'answer') { open.shift().done({data: step[1]}); }
     if (step[0] === 'unreachable') { open.shift().failed({}); }
     if (step[0] === 'save') { $scope.modifyUser(); }
+    if (step[0] === 'set') { $scope[step[1]] = step[2]; }
     return {key: $scope.secretKey, shown: $scope.formattedSecretKey, codeHidden: $scope.qrHidden,
             ticked: $scope.twofa, note: Boolean($scope.twofa && $scope.twofaEnrolled),
             drawn: drawn.length ? drawn[drawn.length - 1] : null, draws: drawn.length,
@@ -114,10 +115,11 @@ def details(user, set_up=False, actor=1, admin=True):
     return call('fetchUserDetails', user, body, actor, admin)
 
 
-def save(user, twofa, actor=1, admin=True):
-    return call('saveModifications', user, {'accountUsername': user.userName, 'firstName': 'Site',
-                                            'lastName': 'Owner', 'email': user.email, 'twofa': twofa},
-                actor, admin)
+def save(user, twofa, actor=1, admin=True, **extra):
+    body = {'accountUsername': user.userName, 'firstName': 'Site', 'lastName': 'Owner', 'email': user.email,
+            'twofa': twofa}
+    body.update(extra)
+    return call('saveModifications', user, body, actor, admin)
 
 
 def secret_of(reply):
@@ -148,11 +150,24 @@ class ReplyTests(unittest.TestCase):
         self.assertNotIn(user.secretKey, json.dumps(reply))
         self.assertIn('CyberPanel', address)
         user.save.assert_called_once_with()
-        # Asked again before saving, it is the same secret: the code already scanned stays right.
-        stored = user.secretKey
+        # Every set-up gets a new secret, replacing the one not yet confirmed.
+        earlier = user.secretKey
         user.save.reset_mock()
-        self.assertEqual([stored], secret_of(details(user, set_up=True)))
-        user.save.assert_not_called()
+        again = secret_of(details(user, set_up=True))
+        self.assertNotEqual([earlier], again)
+        self.assertEqual([user.secretKey], again)
+        user.save.assert_called_once_with()
+
+    def test_secret_of_a_set_up_seen_by_another_is_not_the_one_the_account_enrols_with(self):
+        user = stored_user('fresh', 'None', owner=5)
+        seen_by_owner = secret_of(details(user, True, actor=5, admin=False))[0]
+        own = secret_of(details(user, True, actor=2, admin=False))[0]
+        self.assertNotEqual(seen_by_owner, own)
+        self.assertEqual(own, user.secretKey)
+        self.assertEqual(NOT_CONFIRMED, save(user, 1, actor=2, admin=False,
+                                             twofaCode=pyotp.TOTP(seen_by_owner).now())['error_message'])
+        self.assertEqual(1, save(user, 1, actor=2, admin=False, twofaCode=pyotp.TOTP(own).now())['saveStatus'])
+        self.assertEqual((1, own), (user.twoFA, user.secretKey))
 
     def test_account_with_two_factor_never_sends_its_secret(self):
         user = stored_user('enrolled', pyotp.random_base32(), twofa=1)
@@ -192,16 +207,30 @@ class ReplyTests(unittest.TestCase):
 class SaveTests(unittest.TestCase):
     def test_two_factor_is_not_switched_on_without_a_set_up(self):
         user = stored_user('fresh', 'None')
-        self.assertEqual({'status': 0, 'saveStatus': 0, 'error_message': NOT_SET_UP}, save(user, 1))
+        for code in ({}, {'twofaCode': '123456'}):
+            self.assertEqual({'status': 0, 'saveStatus': 0, 'error_message': NOT_CONFIRMED}, save(user, 1, **code))
         self.assertEqual((0, 'None'), (user.twoFA, user.secretKey))
         user.save.assert_not_called()
 
-    def test_two_factor_is_switched_on_with_the_secret_of_the_set_up(self):
+    def test_two_factor_is_not_switched_on_without_a_right_code(self):
         user = stored_user('fresh', 'None')
         details(user, set_up=True)
-        secret = user.secretKey
-        self.assertEqual(1, save(user, 1)['saveStatus'])
-        self.assertEqual((1, secret), (user.twoFA, user.secretKey))
+        user.save.reset_mock()
+        right = pyotp.TOTP(user.secretKey).now()
+        wrong = '%06d' % ((int(right) + 500000) % 1000000)
+        for code in ({}, {'twofaCode': ''}, {'twofaCode': None}, {'twofaCode': wrong}, {'twofaCode': right[:5]},
+                     {'twofaCode': right + '0'}, {'twofaCode': [right]}, {'twofaCode': 'abcdef'}):
+            self.assertEqual({'status': 0, 'saveStatus': 0, 'error_message': NOT_CONFIRMED}, save(user, 1, **code), code)
+        self.assertEqual(0, user.twoFA)
+        user.save.assert_not_called()
+
+    def test_two_factor_is_switched_on_with_a_code_of_the_secret_of_the_set_up(self):
+        for code in (lambda secret: pyotp.TOTP(secret).now(), lambda secret: ' %s ' % pyotp.TOTP(secret).now()):
+            user = stored_user('fresh', 'None')
+            details(user, set_up=True)
+            secret = user.secretKey
+            self.assertEqual(1, save(user, 1, twofaCode=code(secret))['saveStatus'])
+            self.assertEqual((1, secret), (user.twoFA, user.secretKey))
 
     def test_switching_off_discards_the_secret_and_kept_two_factor_is_saved(self):
         user = stored_user('enrolled', pyotp.random_base32(), twofa=1)
@@ -316,11 +345,37 @@ class ControllerTests(unittest.TestCase):
     def test_saving_takes_the_key_off_the_page(self):
         user = stored_user('fresh', 'None')
         page = self.run_page([['choose', 'fresh'], ['answer', details(user)], ['box', True],
-                              ['answer', details(user, True)], ['save'], ['answer', {'status': 1, 'saveStatus': 1}]])
+                              ['answer', details(user, True)], ['set', 'twofaCode', '123456'], ['save'],
+                              ['answer', {'status': 1, 'saveStatus': 1}]])
         self.assertEqual({'accountUsername': 'fresh', 'firstName': 'Site', 'lastName': 'Owner',
-                          'email': user.email, 'securityLevel': 'HIGH', 'twofa': True},
+                          'email': user.email, 'securityLevel': 'HIGH', 'twofa': True, 'twofaCode': '123456'},
                          page['sent'][-1]['data'])
         self.assertEqual(('', True), (page['seen'][-1]['key'], page['seen'][-1]['codeHidden']))
+
+    def test_two_factor_is_sent_only_when_the_box_was_changed_on_the_page(self):
+        fresh, enrolled = stored_user('fresh', 'None'), stored_user('enrolled', pyotp.random_base32(), twofa=1)
+        page = self.run_page([['choose', 'fresh'], ['answer', details(fresh)], ['set', 'firstName', 'New'], ['save'],
+                              ['answer', {'status': 1, 'saveStatus': 1}],
+                              ['choose', 'enrolled'], ['answer', details(enrolled)], ['save'],
+                              ['answer', {'status': 1, 'saveStatus': 1}],
+                              ['choose', 'enrolled'], ['answer', details(enrolled)], ['box', False], ['save'],
+                              ['answer', {'status': 1, 'saveStatus': 1}],
+                              ['choose', 'fresh'], ['answer', details(fresh)], ['box', True],
+                              ['answer', {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}], ['save']])
+        saves = [sent['data'] for sent in page['sent'] if sent['url'] == '/users/saveModifications']
+        self.assertEqual(['New', 'Site', 'Site', 'Site'], [body['firstName'] for body in saves])
+        self.assertEqual([None, None, False, None], [body.get('twofa') for body in saves])
+        self.assertEqual([None, None, None, None], [body.get('twofaCode') for body in saves])
+
+    def test_two_factor_switched_on_elsewhere_is_shown_on_and_left_on(self):
+        user = stored_user('fresh', 'None')
+        loaded = details(user)
+        user.twoFA, user.secretKey = 1, pyotp.random_base32()
+        page = self.run_page([['choose', 'fresh'], ['answer', loaded], ['box', True], ['answer', details(user, True)],
+                              ['save']])
+        after = page['seen'][3]
+        self.assertEqual((True, True, '', True), (after['ticked'], after['note'], after['key'], after['codeHidden']))
+        self.assertNotIn('twofa', page['sent'][-1]['data'])
 
     def test_key_is_read_from_the_secret_of_an_address_only(self):
         secret = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP'
