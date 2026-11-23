@@ -4,7 +4,9 @@ Commands are answered by fakes; nothing here runs WP-CLI, touches a
 database or writes outside a temporary folder.
 """
 import ast
+import json
 import os
+import re
 from pathlib import Path
 import secrets
 import shlex
@@ -153,13 +155,42 @@ class StagingCopyTests(unittest.TestCase):
     def test_the_source_is_read_before_anything_is_created_and_must_make_sense(self):
         for overrides, message in (
                 ({' core version ': (1, 'PHP Warning: x\n6.8.3\n')}, 'The WordPress version of the site could not'),
-                ({' core version ': (1, "6.8'; rm -rf /\n")}, 'The WordPress version of the site is not one'),
                 ({' theme path ': (1, 'Fatal error in a drop-in\n')}, 'The content folder of the site could not'),
                 ({'config get table_prefix': (0, '')}, 'The table prefix of the site could not')):
             site = FakeSite(**overrides)
             with self.assertRaises(CloneFailed) as raised:
                 StagingCopy(as_site_user(site), self.statuses.append).read_source('/php', '/home/live.example/public_html')
             self.assertTrue(str(raised.exception).startswith(message), str(raised.exception))
+
+    def test_a_version_that_cannot_be_downloaded_falls_back_to_the_latest_release_with_a_note(self):
+        for version, failure in (('6.9-alpha-60123-src', {' core download --version=': (1, 'Error: Release not found.')}),
+                                 ("6.8'; rm -rf /", {})):
+            site = FakeSite(**dict(failure, **{' core version ': (1, version + '\n')}))
+            copy = StagingCopy(as_site_user(site), self.statuses.append)
+            facts = copy.read_source('/php', '/home/live.example/public_html')
+            notes = copy.run('/php', '/home/live.example/public_html', facts, '/home/live.example/stage.live.example',
+                             self.database, '/home/live.example/.staging-1.sql', 'live.example', 'stage.live.example')
+            self.assertEqual(1, len(notes))
+            self.assertTrue(notes[0].startswith('WordPress %s of the site could not be downloaded (' % version), notes)
+            self.assertTrue(notes[0].endswith('the copy runs the latest release'), notes)
+            self.assertTrue(site.ran(' core download --skip-content --force '))
+            self.assertEqual(bool(failure), bool(site.ran(' core download --version=')))
+
+    def test_a_release_the_site_runs_is_downloaded_without_a_note(self):
+        for version in ('6.8.3', '6.9-RC1', '6.9-beta2'):
+            site = FakeSite(**{' core version ': (1, version + '\n')})
+            copy = StagingCopy(as_site_user(site), self.statuses.append)
+            facts = copy.read_source('/php', '/home/live.example/public_html')
+            self.assertEqual([], copy.run('/php', '/home/live.example/public_html', facts,
+                                          '/home/live.example/stage.live.example', self.database,
+                                          '/home/live.example/.staging-1.sql', 'live.example', 'stage.live.example'))
+            self.assertTrue(site.ran(' core download --version=%s --skip-content ' % version))
+            self.assertFalse(site.ran(' --force '))
+
+    def test_the_dump_is_written_for_the_site_user_alone(self):
+        site = FakeSite()
+        self.copy(site)
+        self.assertTrue(site.ran(' db export ')[0].startswith('umask 077 && '))
 
     def test_an_htaccess_that_the_site_does_not_have_is_skipped_by_the_shell_not_failed(self):
         site = FakeSite()
@@ -185,10 +216,11 @@ class StagingJobTests(unittest.TestCase):
         self.domains = []
         self.createResult = 'Domain successfully created. [200]\n'
         self.present = False
-        self.listing = '-rw-r--r-- 1 liveuser liveuser 3100 wp-config.php'
         self.dropped = mock.Mock(return_value=1)
         self.registry = mock.Mock()
-        self.permissions = mock.Mock()
+        self.events = []
+        self.permissions = mock.Mock(side_effect=lambda domain: self.events.append('repair %s' % domain))
+        self.deployment = None
         self.childRemoval = mock.Mock(return_value='The domain stage.live.example that was created for this job '
                                                    'has been removed again.')
 
@@ -197,7 +229,10 @@ class StagingJobTests(unittest.TestCase):
         class Installer(object):
             LOCALHOST = 'localhost'
             PORT = '3306'
-            siteCommand = staticmethod(lambda command, user, withErrors=True: test.site(command, user, withErrors))
+            @staticmethod
+            def siteCommand(command, user, withErrors=True):
+                test.events.append(command)
+                return test.site(command, user, withErrors)
 
             def __init__(self, *args):
                 pass
@@ -224,7 +259,17 @@ class StagingJobTests(unittest.TestCase):
             return 1
 
         def outputExecutioner(command, user=None):
-            return 'WP-CLI root dir: phar://wp-cli.phar' if command == 'wp --info' else self.listing
+            self.rootCommands.append(command)
+            return 'WP-CLI root dir: phar://wp-cli.phar'
+
+        self.rootCommands = []
+
+        def deployment(owner):
+            if self.deployment is None:
+                raise LookupError('no WordPress Manager record')
+            return NS(config=json.dumps(self.deployment))
+        models = types.ModuleType('cloudAPI.models')
+        models.WPDeployments = NS(objects=NS(get=deployment))
 
         def statusWriter(path, message, append=None):
             with open(path, 'w') as status:
@@ -232,14 +277,15 @@ class StagingJobTests(unittest.TestCase):
 
         empty = NS(exists=lambda: False)
         stubs = {'managePHP.phpManager': NS(PHPManager=NS(getPHPString=lambda selection: '82')),
-                 'cloudAPI.models': types.ModuleType('cloudAPI.models'),
+                 'cloudAPI.models': models,
                  'filemanager.filemanager': NS(FileManager=lambda *args: NS(fixPermissions=self.permissions)),
                  'plogical.installUtilities': NS(installUtilities=NS(reStartLiteSpeed=mock.Mock())),
                  'databases.models': NS(Databases=NS(objects=NS(filter=self.registry)))}
         patcher = mock.patch.dict(sys.modules, stubs)
         patcher.start()
         self.addCleanup(patcher.stop)
-        from plogical.wordpressInstallerUtilities import worker_failure_reason
+        from plogical.wordpressInstallerUtilities import brief_output, worker_failure_reason
+        from websiteFunctions.wordpressRestore import validate_restore_path
         namespace = {
             'multi': threading, 'shlex': shlex, 'subprocess': subprocess, 'os': os, 'secrets': secrets,
             'logging': NS(statusWriter=statusWriter, writeToFile=mock.Mock()),
@@ -249,7 +295,8 @@ class StagingJobTests(unittest.TestCase):
             'ChildDomains': NS(objects=NS(filter=lambda domain: empty)),
             'ApplicationInstaller': Installer, 'mysqlUtilities': NS(deleteDatabase=self.dropped),
             'stored_php_selection': lambda value: value, 'StagingCopy': StagingCopy,
-            'worker_failure_reason': worker_failure_reason}
+            'worker_failure_reason': worker_failure_reason, 'brief_output': brief_output,
+            'validate_restore_path': validate_restore_path}
         self.job = staging_class(namespace)('startCloning', {
             'tempStatusPath': self.status, 'masterDomain': 'live.example', 'domain': 'stage.live.example',
             'admin': NS(userName='admin')})
@@ -266,11 +313,61 @@ class StagingJobTests(unittest.TestCase):
         # The database passed through a file outside every document root, removed afterwards.
         removal = [command for command, _ in self.site.calls if command.startswith('rm -f -- /home/live.example/.staging-')]
         self.assertEqual(1, len(removal))
+        # Nothing of the site is read or run as root apart from the WP-CLI check.
+        self.assertEqual(['wp --info'], self.rootCommands)
 
-    def test_a_permission_repair_that_fails_after_a_complete_copy_is_no_failure(self):
+    def test_the_site_is_repaired_before_its_files_are_copied(self):
+        self.assertEqual('Completed,[200]', self.finalStatus())
+        repair = self.events.index('repair live.example')
+        copy = next(i for i, event in enumerate(self.events) if ' cp -R ' in unquoted(event))
+        self.assertLess(repair, copy)
+
+    def test_a_permission_repair_that_fails_is_no_failure_and_the_copy_names_what_it_could_not_read(self):
         self.permissions.side_effect = RuntimeError('Permission repair failed. Check the panel log before retrying.')
         self.assertEqual('Completed,[200]', self.finalStatus())
         self.childRemoval.assert_not_called()
+        self.permissions.side_effect = RuntimeError('Permission repair failed.')
+        self.site = FakeSite(**{' cp -R ': (0, "cp: cannot open '/home/live.example/public_html/wp-content/"
+                                                "uploads/old.sql' for reading: Permission denied")})
+        final = self.finalStatus()
+        self.assertIn("could not be copied: cp: cannot open '/home/live.example/public_html/wp-content/uploads/"
+                      "old.sql' for reading: Permission denied.", final)
+
+    def test_a_stale_dump_of_a_stopped_clone_is_removed_by_the_next_one(self):
+        self.finalStatus()
+        sweep = [event for event in self.events if event.startswith('find ')]
+        self.assertEqual(["find /home/live.example -maxdepth 1 -regextype posix-extended -type f -regex "
+                          "'/home/live\\.example/\\.staging-[0-9a-f]{32}\\.sql' -mmin +1440 -delete"], sweep)
+        pattern = re.compile(shlex.split(sweep[0])[9].replace('\\.', '[.]'))
+        self.assertTrue(pattern.fullmatch('/home/live.example/.staging-%s.sql' % ('ab12' * 8)))
+        for other in ('/home/live.example/.staging-ab12.sql', '/home/live.example/staging-%s.sql' % ('ab12' * 8),
+                      '/home/live.example/.staging-%s.sql.bak' % ('ab12' * 8), '/home/live.example/db.sql'):
+            self.assertIsNone(pattern.fullmatch(other), other)
+
+    def test_a_version_that_cannot_be_downloaded_is_named_in_the_final_status(self):
+        self.site = FakeSite(**{' core version ': (1, '6.9-alpha-60123-src\n'),
+                                ' core download --version=': (1, 'Error: Release not found.')})
+        final = self.finalStatus()
+        self.assertTrue(final.startswith('Completed. Note: WordPress 6.9-alpha-60123-src of the site could not '
+                                         'be downloaded ('), final)
+        self.assertTrue(final.endswith('the copy runs the latest release.,[200]'), final)
+
+    def test_a_wordpress_folder_recorded_for_the_site_is_used_when_it_is_plain(self):
+        self.deployment = {'path': 'blog'}
+        self.assertEqual('Completed,[200]', self.finalStatus())
+        self.assertTrue(self.site.ran(' test -f /home/live.example/public_html/blog/wp-config.php '))
+        self.assertTrue(self.site.ran(' search-replace live.example/blog stage.live.example '))
+
+    def test_a_recorded_folder_that_leaves_the_document_root_or_carries_shell_text_is_refused(self):
+        for recorded in ('../../etc', '/etc', 'blog;id', 'blog$(id)', 'a b', 'blog/../..', 'x\n'):
+            self.deployment = {'path': recorded}
+            self.site = FakeSite()
+            self.events[:] = []
+            final = self.finalStatus()
+            self.assertTrue(final.startswith('The WordPress folder recorded for live.example is not a folder '
+                                             'inside its document root'), (recorded, final))
+            self.assertEqual([], self.site.calls)
+            self.assertEqual([], self.domains)
 
     def test_a_failure_after_creation_removes_this_jobs_domain_and_database_and_says_so(self):
         self.site = FakeSite(**{' db import ': (1, "ERROR 1064 (42000) at line 1: syntax\nSuccess: Imported.")})
@@ -318,10 +415,11 @@ class StagingJobTests(unittest.TestCase):
         self.childRemoval.assert_not_called()
 
     def test_a_site_without_wordpress_is_still_refused_as_before(self):
-        self.listing = "ls: cannot access '/home/live.example/public_html/wp-config.php': No such file or directory"
+        self.site = FakeSite(**{' test -f ': (0, '')})
         self.assertEqual('WordPress is not detected. [404]', self.finalStatus())
         self.assertEqual([], self.domains)
-        self.assertEqual([], self.site.calls)
+        self.assertEqual(["test -f /home/live.example/public_html/wp-config.php"],
+                         [command for command, _ in self.site.calls])
 
 
 def method(path, cls, name):

@@ -8,12 +8,13 @@ from plogical.processUtilities import ProcessUtilities
 from .models import Websites, ChildDomains
 from plogical.applicationInstaller import ApplicationInstaller
 from plogical.mysqlUtilities import mysqlUtilities
-from plogical.wordpressInstallerUtilities import worker_failure_reason
+from plogical.wordpressInstallerUtilities import brief_output, worker_failure_reason
 from random import randint
 import os
 import secrets
 from managePHP.phpConfig import stored_php_selection
 from .stagingClone import StagingCopy
+from .wordpressRestore import validate_restore_path
 
 
 class StagingSetup(multi.Thread):
@@ -46,13 +47,17 @@ class StagingSetup(multi.Thread):
         installer = ApplicationInstaller(None, None)
         made = {}
         try:
-            self.cloneWebsite(installer, made)
+            notes = self.cloneWebsite(installer, made)
         except BaseException as msg:
             logging.writeToFile('%s [StagingSetup.startCloning]' % str(msg))
             removal = self.removeCloneParts(installer, made)
             logging.statusWriter(tempStatusPath, '%s. %s[404]' % (worker_failure_reason(str(msg)), removal))
             return 0
-        logging.statusWriter(tempStatusPath, 'Completed,[200]')
+        if notes:
+            # The status page shows a final line of this form as it is.
+            logging.statusWriter(tempStatusPath, 'Completed. Note: %s.,[200]' % '; '.join(notes))
+        else:
+            logging.statusWriter(tempStatusPath, 'Completed,[200]')
         return 0
 
     def cloneWebsite(self, installer, made):
@@ -69,16 +74,24 @@ class StagingSetup(multi.Thread):
         php = PHPManager.getPHPString(website.phpSelection)
         FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
+        # The folder WordPress Manager recorded for the site's WordPress. It
+        # was typed in by the customer and goes into commands and into the
+        # address that is rewritten, so it has to be a plain folder inside
+        # the document root.
+        documentRoot = '/home/%s/public_html' % (masterDomain)
         try:
             import json
             from cloudAPI.models import WPDeployments
-            wpd = WPDeployments.objects.get(owner=website)
-            path = json.loads(wpd.config)['path']
-            masterPath = '/home/%s/public_html/%s' % (masterDomain, path)
-            replaceDomain = '%s/%s' % (masterDomain, path)
-        except:
-            masterPath = '/home/%s/public_html' % (masterDomain)
-            replaceDomain = masterDomain
+            recorded = json.loads(WPDeployments.objects.get(owner=website).config).get('path') or ''
+        except Exception:
+            recorded = ''
+        try:
+            subfolder = validate_restore_path(documentRoot, recorded)[0]
+        except ValueError:
+            raise BaseException('The WordPress folder recorded for %s is not a folder inside its document root: %s' % (
+                masterDomain, brief_output(recorded, 80)))
+        masterPath = documentRoot + ('/' + subfolder if subfolder else '')
+        replaceDomain = masterDomain + ('/' + subfolder if subfolder else '')
 
         ### Check WP CLI
 
@@ -91,18 +104,13 @@ class StagingSetup(multi.Thread):
         except subprocess.CalledProcessError:
             installer.installWPCLI()
 
-        configPath = '%s/wp-config.php' % (masterPath)
+        def site(command, withErrors=True):
+            return ApplicationInstaller.siteCommand(command, user, withErrors)
 
         ## Check if WP Detected on Main Site
 
-        command = 'ls -la %s' % (configPath)
-        output = ProcessUtilities.outputExecutioner(command)
-
-        if output.find('No such file or') > -1:
+        if site('test -f %s' % shlex.quote(masterPath + '/wp-config.php'), False)[0] != 1:
             raise BaseException('WordPress is not detected')
-
-        def site(command, withErrors=True):
-            return ApplicationInstaller.siteCommand(command, user, withErrors)
 
         copy = StagingCopy(site, lambda message: logging.statusWriter(tempStatusPath, message))
 
@@ -166,30 +174,36 @@ class StagingSetup(multi.Thread):
         dbNameRestore, dbUser, dbPassword = created
         made['database'] = (dbNameRestore, dbUser)
 
+        # Files of the site that its user cannot read (left by an earlier job
+        # that ran as root) would stop the copy, which runs as that user. A
+        # repair that fails is no failure: the copy then names what it could
+        # not read.
+        logging.statusWriter(tempStatusPath, 'Fixing permissions..,17')
+        try:
+            from filemanager.filemanager import FileManager
+            FileManager(None, None).fixPermissions(masterDomain)
+        except BaseException as msg:
+            logging.writeToFile('Before the staging copy %s the permissions of %s could not be repaired: %s' % (
+                domain, masterDomain, str(msg)))
+
         # The site's database passes through a file of the site's user that
         # no one can find: outside every document root, under a random name.
-        dump = '/home/%s/.staging-%s.sql' % (masterDomain, secrets.token_hex(16))
+        # Such a file left by a clone that was stopped is removed a day later.
+        home = '/home/%s' % masterDomain
+        site('find %s -maxdepth 1 -regextype posix-extended -type f -regex %s -mmin +1440 -delete' % (
+            shlex.quote(home), shlex.quote(home.replace('.', '\\.') + r'/\.staging-[0-9a-f]{32}\.sql')))
+        dump = '%s/.staging-%s.sql' % (home, secrets.token_hex(16))
         try:
-            copy.run(FinalPHPPath, masterPath, facts, path,
+            notes = copy.run(FinalPHPPath, masterPath, facts, path,
                      (dbNameRestore, dbUser, dbPassword,
                       '%s:%s' % (ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT)),
                      dump, replaceDomain, domain)
         finally:
             site('rm -f -- %s' % shlex.quote(dump))
 
-        logging.statusWriter(tempStatusPath, 'Fixing permissions..,90')
-
-        # The copy is complete and was made by the site's own user: a repair
-        # that fails leaves it working, so it is logged and is no failure.
-        try:
-            from filemanager.filemanager import FileManager
-            FileManager(None, None).fixPermissions(masterDomain)
-        except BaseException as msg:
-            logging.writeToFile('Staging site %s was created; the permissions of %s could not be repaired: %s' % (
-                domain, masterDomain, str(msg)))
-
         from plogical.installUtilities import installUtilities
         installUtilities.reStartLiteSpeed()
+        return notes
 
     def removeCloneParts(self, installer, made):
         """Remove what a failed clone created; return the sentences that say what became of it."""

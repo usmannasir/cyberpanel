@@ -54,6 +54,13 @@ class StatusReaderProgressTests(unittest.TestCase):
             self.assertEqual((1, 1, '100'), (result['abort'], result['installStatus'],
                                              result['installationProgress']), final)
 
+    def test_a_finished_clone_with_a_note_shows_the_note(self):
+        note = 'Completed. Note: WordPress 6.9-alpha of the site could not be downloaded; the copy runs the latest release.'
+        result = self.status(note + ',[200]\n')
+        self.assertEqual((1, '100', note), (result['installStatus'], result['installationProgress'],
+                                            result['currentStatus']))
+        self.assertEqual('Successfully Installed.', self.status('Completed. [200]\n')['currentStatus'])
+
     def test_a_running_job_shows_the_number_of_its_last_line(self):
         for line, progress in (('Creating Website...,10', '10'), ('Installing WordPress....,30', '30'),
                                ('WordPress installed..,70', '70')):

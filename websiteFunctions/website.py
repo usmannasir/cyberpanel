@@ -4752,7 +4752,8 @@ Require valid-user
                 subprocess.call(shlex.split(command))
                 data_ret = {'abort': 1, 'installStatus': 1, 'installationProgress': "100",
                             'currentStatus': (lastLine.split(',[200]', 1)[0]
-                                              if lastLine.startswith('Completed. Recovery backup: ')
+                                              if lastLine.startswith(('Completed. Recovery backup: ',
+                                                                      'Completed. Note: '))
                                               else 'Successfully Installed.')}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
