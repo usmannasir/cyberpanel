@@ -4,6 +4,29 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.17 (build 17) — 2026-11-24
+
+Upgrade reliability and Multi-Server Manager wording.
+
+### Upgrade
+- An upgrade no longer stops with "An unmanaged OLS process is also
+  running" (code 78) on a busy server. A graceful restart or reload of
+  OpenLiteSpeed starts a new main process, and the previous one keeps
+  running until its open connections end; `systemctl stop lshttpd` does not
+  stop it, so every retry stopped again, including right after the
+  upgrade's own configuration reload. The upgrade now gives such a previous
+  generation 60 seconds to finish, then ends exactly those processes and
+  names them in its log. Any other unexpected OpenLiteSpeed process still
+  stops the upgrade before it changes anything.
+
+### Multi-Server Manager
+- The controller's page is called Managed servers and shows the four steps
+  to add a server, each server's status in plain words with what to do next,
+  and actions named by what they do (Pause, Remove this server, Delete from
+  this list only). The role page has a getting-started list, and the
+  pairing and managed-server pages use the same names. Nothing about how
+  pairing works changed.
+
 ## v3.0.16 (build 16) — 2026-11-23
 
 Installer, upgrade and File Manager reliability release.
