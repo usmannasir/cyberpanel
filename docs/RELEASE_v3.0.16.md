@@ -1,6 +1,6 @@
 # CyberPanel v3.0.16 (build 16) — installer reliability and File Manager
 
-_Release candidate._
+_Released 2026-11-23._
 
 The installer waits while another apt process holds a package lock instead
 of failing at once, a delete in the File Manager no longer makes the
