@@ -4,6 +4,31 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.15 (build 15) — 2026-11-23
+
+Installer and first-administrator release.
+
+### Panel sign-in
+- The sign-in page never creates an administrator with a known password. A
+  panel that has no administrator gets "admin" with a generated password of
+  20 letters and digits, made once under a lock by
+  `adminPass.py --first-administrator` and stored for root only in
+  `/etc/cyberpanel/adminPass`. Until "admin" signs in, the page says that the
+  password was generated and where it is stored; if no administrator could be
+  made, the page says to run `adminPass` on the server.
+
+### Installer
+- An installation is reported complete only when the panel's service is set
+  to start at boot; otherwise it ends as failed (`panel_setup`) with the
+  command that sets it.
+- A run that fails after the administrator's password was confirmed says
+  that the panel is stopped and which two commands start it.
+- `cyberpanel.sh` enables the panel's service itself, after the password
+  check, and tells `install.py` to leave the service alone; other callers of
+  `install.py` behave as before.
+- `-v <serial> -v ols` installs OpenLiteSpeed without passing the earlier
+  serial number on to `install.py`.
+
 ## v3.0.14 (build 14) — 2026-11-23
 
 Reliability release. It corrects the eleven Medium and Low defects found in
