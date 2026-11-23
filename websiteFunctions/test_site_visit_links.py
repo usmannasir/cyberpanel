@@ -9,6 +9,8 @@ from siteVisitURL().
 """
 from pathlib import Path
 import re
+import shutil
+import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -86,6 +88,14 @@ class SiteVisitLinkTests(unittest.TestCase):
             helpers.append(text[start:text.index('\n}\n', start)])
         self.assertEqual(helpers[0], helpers[1])
 
+
+    @unittest.skipUnless(shutil.which('node'), 'Node.js is not installed: siteVisitURL() behaviour was not run.')
+    def test_site_visit_url_behaviour_in_both_script_copies(self):
+        script = ROOT / 'websiteFunctions' / 'test_site_visit_url.js'
+        result = subprocess.run(['node', str(script)], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                universal_newlines=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('both copies give absolute http:// addresses', result.stdout)
 
 if __name__ == '__main__':
     unittest.main()
