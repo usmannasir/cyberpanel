@@ -135,8 +135,11 @@ class PageDefaultTests(unittest.TestCase):
             self.assertEqual(1, reply['status'], reply)
 
     def test_the_page_loads_the_changed_script(self):
+        # The page asks for the script under a suffix of its own, so browsers fetch the version with the
+        # memory defaults (and anything changed later) instead of an older cached copy.
         template = (ROOT / 'websiteFunctions/templates/websiteFunctions/CreateDockerSite.html').read_text()
-        self.assertIn("websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20261122-docker-ram", template)
+        self.assertRegex(template, r"websiteFunctions/websiteFunctions\.js' %\}\?v=\{\{ CP_VERSION \}\}-2026\d{4}-docker-")
+        self.assertNotIn("websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}\"", template)
 
 
 OOM_LOG = b'''Initializing n8n process
