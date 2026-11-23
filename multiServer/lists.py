@@ -43,7 +43,7 @@ def _source_rows(category, admin, source):
         try:
             label = links.check_label(node.label)
         except links.InvalidLabel:
-            label = 'Unnamed node'
+            label = 'Unnamed server'
         label += ' · ' + (authority or node.pk[:8])
         yield node.pk, label, 'https://' + authority, snapshot and snapshot[category], status
 

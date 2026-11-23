@@ -7,7 +7,7 @@
   {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
 
   <h2>Allow a controller</h2>
-  <p>Enter the IP address your controller connects from. You get a pairing code to paste on the controller (Nodes, Add a server). The code works once, for ten minutes, and only from that address.</p>
+  <p>Enter the IP address your controller connects from. You get a pairing code to paste on the controller (Managed servers, Add a server). The code works once, for ten minutes, and only from that address.</p>
   <form method="post" action="{% url 'multiServerControllerControl' %}">
     {% csrf_token %}
     <input type="hidden" name="action" value="allow">
@@ -19,7 +19,7 @@
 
   <h2>Waiting for your approval</h2>
   {% if waiting %}
-  <p>The controller shows an eight-digit number for its request. Read it on the controller's Nodes page and type it here. After {{ wrong_numbers }} wrong numbers the request is closed.</p>
+  <p>The controller shows an eight-digit number for its request. Read it on the controller's Managed servers page and type it here. After {{ wrong_numbers }} wrong numbers the request is closed.</p>
   <div class="table-responsive"><table class="table table-striped">
     <thead><tr><th scope="col">Controller address</th><th scope="col">Request</th><th scope="col">Code made by</th><th scope="col">Asked</th><th scope="col">Open until</th><th scope="col">Decide</th></tr></thead>
     <tbody>{% for asking in waiting %}<tr>

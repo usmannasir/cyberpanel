@@ -40,7 +40,7 @@ USAGE = 'usage: msctl.py status | role off|controller|node | disable | revoke LI
 NOT_ROOT = 'Run this as root.'
 ROLE_SET = 'This server is now: %s.'
 ROLE_KEPT = 'This server already is: %s.'
-HAS_SERVERS = ('This controller still has servers. Remove each of them on the Nodes page first, then change '
+HAS_SERVERS = ('This controller still has servers. Remove each of them on the Managed servers page first, then change '
                'the role.')
 HAS_CONTROLLERS = ('This server is still managed by a controller. End each link on the Controllers page '
                    'first, then change the role.')
@@ -48,7 +48,7 @@ CANNOT_CHECK = ('The role was not changed: the Multi-Server tables could not be 
                 'exist. "role off" works without them.')
 BUSY = 'A server is being paired at this moment. Try again in a minute.'
 TURN_SECONDS = 35  # longer than one pairing exchange may take
-NOT_A_NODE = 'Only a managed server ends a link here. On a controller, remove the server on the Nodes page.'
+NOT_A_NODE = 'Only a managed server ends a link here. On a controller, remove the server on the Managed servers page.'
 ENDED = 'The link is ended. Its controller can no longer manage this server.'
 ALREADY_ENDED = 'This link was ended before.'
 NO_SUCH_LINK = 'There is no such link on this server.'
