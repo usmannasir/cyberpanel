@@ -16,6 +16,8 @@ from django.http import HttpResponse
 from django.utils import translation
 from cyberpanel_version import BUILD, VERSION
 from CyberCP.sessionSecurity import get_client_ip, session_ip_key
+from loginSystem.first_administrator import (ensure_first_administrator, forget_generated_password_notice,
+                                             generated_password_notice)
 # Create your views here.
 
 
@@ -149,6 +151,10 @@ def verifyLogin(request):
                 # Persist before the browser follows the login response with a
                 # dashboard request.  This is important with multiple workers.
                 request.session.save()
+                if getattr(admin, 'userName', None) == 'admin':
+                    # The generated password was used: the sign-in page stops
+                    # saying where it is. Never a reason for a sign-in to fail.
+                    forget_generated_password_notice()
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
                 response.write(json_data)
@@ -189,7 +195,6 @@ def loadLoginPage(request):
         from firewall.models import FirewallRules
 
         numberOfAdministrator = Administrator.objects.count()
-        password = hashPassword.hash_password('1234567')
         noOfRules = FirewallRules.objects.count()
 
         if noOfRules == 0:
@@ -238,44 +243,25 @@ def loadLoginPage(request):
             newFWRule = FirewallRules(name="quic", proto="udp", port="443")
             newFWRule.save()
 
-        if numberOfAdministrator == 0:
-            ACLManager.createDefaultACLs()
-            acl = ACL.objects.get(name='admin')
+        # The panel creates no account. Without an administrator it has the
+        # first one made on the server, with a password nobody chose that only
+        # root there can read, and the page says where it is.
+        context = {}
+        if numberOfAdministrator == 0 and not ensure_first_administrator():
+            context['no_administrator'] = True
+        elif generated_password_notice():
+            context['generated_password'] = True
 
-            token = hashPassword.generateToken('admin', '1234567')
-
-            email = 'admin@cyberpanel.net'
-            admin = Administrator(userName="admin", password=password, type=1, email=email,
-                                  firstName="Cyber", lastName="Panel", acl=acl, token=token)
-            admin.save()
-
-            vers = version(currentVersion=VERSION, build=BUILD)
-            vers.save()
-
-            package = Package(admin=admin, packageName="Default", diskSpace=1000, bandwidth=1000, ftpAccounts=1000,
-                              dataBases=1000, emailAccounts=1000, allowedDomains=20)
-            package.save()
-
-            ### Load Custom CSS
-            try:
-                from baseTemplate.models import CyberPanelCosmetic
-                cosmetic = CyberPanelCosmetic.objects.get(pk=1)
-            except:
-                from baseTemplate.models import CyberPanelCosmetic
-                cosmetic = CyberPanelCosmetic()
-                cosmetic.save()
-
-            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
-        else:
-            ### Load Custom CSS
-            try:
-                from baseTemplate.models import CyberPanelCosmetic
-                cosmetic = CyberPanelCosmetic.objects.get(pk=1)
-            except:
-                from baseTemplate.models import CyberPanelCosmetic
-                cosmetic = CyberPanelCosmetic()
-                cosmetic.save()
-            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
+        ### Load Custom CSS
+        try:
+            from baseTemplate.models import CyberPanelCosmetic
+            cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+        except:
+            from baseTemplate.models import CyberPanelCosmetic
+            cosmetic = CyberPanelCosmetic()
+            cosmetic.save()
+        context['cosmetic'] = cosmetic
+        return render(request, 'loginSystem/login.html', context)
 
 
 @ensure_csrf_cookie

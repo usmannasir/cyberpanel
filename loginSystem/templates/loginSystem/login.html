@@ -109,6 +109,16 @@
             border-bottom: 1px solid rgb(51, 204, 204);
         }
 
+        .cp-first-administrator {
+            text-align: center;
+            margin: 1em 2em 1em 2em;
+            padding: 1em;
+        }
+
+        .cp-first-administrator code {
+            white-space: nowrap;
+        }
+
         .alert.alert-danger {
             text-align: center;
             margin: 1em 2em 1em 2em;
@@ -297,6 +307,17 @@
                     CyberPanel
                 </h1>
                 <h4 class="text-muted text-center mb-10">Web Hosting Control Panel</h4>
+                {% if generated_password %}
+                <div id="cp-generated-password" class="alert alert-info cp-first-administrator" role="status">
+                    <p>{% trans "The administrator of this panel was created with a generated password." %}</p>
+                    <p>{% blocktrans %}It is stored on the server in <code>/etc/cyberpanel/adminPass</code>, readable by root only. Sign in with the user <code>admin</code> and that password, or set your own on the server with <code>adminPass 'a new password'</code>.{% endblocktrans %}</p>
+                </div>
+                {% elif no_administrator %}
+                <div id="cp-no-administrator" class="alert alert-warning cp-first-administrator" role="status">
+                    <p>{% trans "This panel has no administrator yet." %}</p>
+                    <p>{% blocktrans %}On the server, as root, run <code>adminPass 'a password of your choice'</code>, then reload this page.{% endblocktrans %}</p>
+                </div>
+                {% endif %}
                 <div class="">
                     <div class="mx-30">
                         <div class="content-box-wrapper panel-body my-10 mx-30">

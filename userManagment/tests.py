@@ -18,8 +18,11 @@ class TestUserManagement(TestCase):
         self.adminLogin = reverse('adminLogin')
         self.verifyLogin = reverse('verifyLogin')
 
-        ## Create Login User
+        ## Create Login User. The sign-in page creates no account: the first
+        ## administrator is made the way adminPass.py makes it.
 
+        from loginSystem.first_administrator import create_first_administrator
+        create_first_administrator('1234567')
         response = self.client.get(self.adminLogin)
 
         #
