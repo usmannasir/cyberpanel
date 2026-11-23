@@ -6086,6 +6086,19 @@ pm.max_spare_servers = 3
         from plogical.cloudflareSudo import provision as provision_cloudflare_sudo
         provision_cloudflare_sudo()
 
+        # From 3.0.9 to 3.0.15 a delete in the File Manager made the website's
+        # whole home immutable; uploads and the website's own writes failed.
+        try:
+            from plogical.fileManagerLockRepair import repair as repair_file_manager_locks
+            unlocked, failed = repair_file_manager_locks()
+            for home in unlocked:
+                Upgrade.stdOut('Unlocked %s: a File Manager delete had made it immutable.' % home, 0)
+            for home in failed:
+                Upgrade.stdOut('WARNING: %s is immutable and could not be fully unlocked; run '
+                               '"find -P %s \\( -type f -o -type d \\) -exec chattr -i {} +".' % (home, home), 0)
+        except Exception as error:
+            Upgrade.stdOut('WARNING: Website homes locked by the File Manager were not checked: ' + str(error), 0)
+
         ##
 
         Upgrade.upgradeVersion()
