@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load static %}
-{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20260909"></script>{% endblock %}
+{% block module_scripts %}<script defer src="{% static 'websiteFunctions/websiteFunctions.js' %}?v={{ CP_VERSION }}-20261123-visit-link"></script>{% endblock %}
 {% load i18n %}
 {% block title %}{% trans "Install WordPress - CyberPanel" %}{% endblock %}
 {% block content %}
@@ -528,7 +528,7 @@
                                 <i class="fas fa-check-circle"></i>
                                 <p>
                                     {% trans "Installation successful. Visit:" %} 
-                                    <a href="{$ installationURL $}" target="_blank" style="font-weight: 600;">
+                                    <a ng-href="{$ installationURL $}" target="_blank" rel="noopener noreferrer" style="font-weight: 600;">
                                         {$ installationURL $}
                                     </a> 
                                     {% trans "or perform" %} 
