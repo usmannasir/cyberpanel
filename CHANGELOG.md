@@ -4,6 +4,33 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.19 (build 19) — 2026-11-25
+
+Multi-Server Manager: connecting a server takes three steps.
+
+### Multi-Server Manager
+- A server is connected to a controller from its own Multi-Server page in
+  one form, "Connect this server to a controller": the controller's address
+  and the password. The server becomes a managed server and shows a pairing
+  code. Pasted on the controller (Managed servers, Add a server), the two
+  servers are connected at once: there is no eight-digit number to type back
+  on the managed server and no "check now" to press. The code works once,
+  for ten minutes, only from the controller address that was entered, and
+  only while the administrator who made it is still a full administrator.
+- Two-factor login is needed only to make a server a controller, because a
+  controller opens the panels of all its servers. A managed server asks for
+  the password, and a code only from an account that has two-factor login.
+- After a sign-in or a confirmation, the same browser session is not asked
+  for the password again for 15 minutes. A confirmation without a code never
+  counts where a code is needed, and a new password or two-factor key ends it.
+- The role page shows the two ways to start side by side, the controller's
+  page shows the address to enter on the other servers, and a server added
+  without a name is named after its address.
+- Mixed versions keep working: a 3.0.19 controller still shows the number
+  for a managed server of 3.0.18 or older, and a 3.0.18 controller connects
+  a 3.0.19 server with one "I approved it, check now". Links that were
+  waiting for a number before the upgrade can still be approved with it.
+
 ## v3.0.18 (build 18) — 2026-11-24
 
 Upgrade reliability on servers that keep the vendor OpenLiteSpeed, and a
