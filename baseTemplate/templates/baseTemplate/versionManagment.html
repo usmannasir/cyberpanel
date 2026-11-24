@@ -407,18 +407,24 @@
                 {% trans "CyberPanel upgrade completed." %} {% trans "Refresh this page to see the installed version." %}
             </div>
             <div class="alert alert-warning" role="status" ng-show="!updateFinish && upgradeIncomplete.length" ng-cloak>
-                {% trans "CyberPanel was upgraded, but these steps did not complete:" %}
-                <ul style="margin: .5rem 0 .5rem 1.25rem;">
-                    <li ng-repeat="step in upgradeIncomplete track by $index" ng-bind="step"></li>
-                </ul>
-                {% trans "Running the upgrade again repeats them." %} {% trans "Refresh this page to see the installed version." %}
+                <div>
+                    {% trans "CyberPanel was upgraded, but these steps did not complete:" %}
+                    <ul style="margin: .5rem 0 .5rem 1.25rem;">
+                        <li ng-repeat="step in upgradeIncomplete track by $index" ng-bind="step"></li>
+                    </ul>
+                    {% trans "Running the upgrade again repeats them." %} {% trans "Refresh this page to see the installed version." %}
+                </div>
             </div>
             <div class="alert alert-warning" role="status" ng-show="upgradeCanStop" ng-cloak>
-                {% trans "The upgrade has written nothing to its log for" %} <span ng-bind="upgradeIdleMinutes"></span> {% trans "minutes. It is stopped automatically after 30 minutes without progress." %}
-                <button type="button" class="btn btn-secondary" ng-click="stopUpgrade()" style="margin-left: .5rem;"
-                        data-confirm="{% trans "Stop the upgrade now? If it already replaced the installed version, the previous one is put back." %}">
-                    {% trans "Stop the upgrade" %}
-                </button>
+                <div>
+                    {% trans "The upgrade has written nothing to its log for" %} <span ng-bind="upgradeIdleMinutes"></span> {% trans "minutes. It is stopped automatically after 30 minutes without progress." %}
+                    <div style="margin-top: .5rem;">
+                        <button type="button" class="btn btn-secondary" ng-click="stopUpgrade()"
+                                data-confirm="{% trans "Stop the upgrade now? If it already replaced the installed version, the previous one is put back." %}">
+                            {% trans "Stop the upgrade" %}
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="alert alert-info" role="status" ng-show="stopMessage" ng-cloak>
                 <span ng-bind="stopMessage"></span>
