@@ -13,20 +13,26 @@
    signed with the one-time key: a new link id and the controller's new public
    key for the link.
 3. The managed server (node_receive) checks the request, uses the code up and
-   records the link as pending, in one step, and answers with its identity
+   records the link as active, in one step, and answers with its identity
    key, its value for this pairing and the address it will take the
    controller's requests from, all three under its signature over the request.
+   Making the code was the approval: an administrator of this server asked
+   for it, with the password, for exactly that controller address, and the
+   request is accepted only from that address, signed with the code's
+   one-time key, once, within CODE_LIFETIME.
 4. The controller checks that key against the fingerprint in the code, and the
-   value against the commitment in the code, and keeps the link. It now shows
-   eight digits (confirmation_number), which both servers can work out from
-   what they keep of the pairing. The managed server never shows them: its
-   administrator reads them on the controller and types them into approve(),
-   which makes the link active only for the right number. Until then the link
-   can do nothing, and MAX_WRONG_NUMBERS wrong numbers close it. So nobody
-   approves a link without having seen the controller it belongs to.
-5. The controller learns of the approval by asking: links.confirm() sends the
-   first signed request on the link, and the answer the managed server now
-   gives makes the controller's record active too. There is no other message.
+   value against the commitment in the code, and keeps the link.
+5. The controller then asks at once: links.confirm() sends the first signed
+   request on the link, and the answer the managed server gives makes the
+   controller's record active too. There is no other message.
+
+A managed server of CyberPanel 3.0.18 or older records the link as pending
+instead, and makes it active only when its administrator types the eight
+digits the controller shows (confirmation_number) into approve(). Both
+servers can work out the number from what they keep of the pairing, and
+MAX_WRONG_NUMBERS wrong numbers close the link. So a controller shows the
+number whenever its first request is not answered, and links made here
+before an upgrade can still be approved that way.
 
 The number is taken from the link id, the one-time public key, the controller's
 key, the identity key and the managed server's value for the pairing
@@ -364,9 +370,9 @@ def _decode(text):
 def issue_code(admin_id, controller_ip, host=None, port=None):
     """A new pairing code for the controller at controller_ip; PairingError when it cannot be given.
 
-    The caller has already demanded the administrator's password and a fresh
-    code of the second factor; here the account only has to have a second
-    factor. host and port are where the controller reaches this panel; left
+    The caller has already demanded the administrator's password (and a fresh
+    code of the second factor if the account has one); here the account only
+    has to be a full administrator. host and port are where the controller reaches this panel; left
     out, they are the address the panel reports as its own and the port it
     listens on. The code is returned once and is not kept here.
     """
@@ -454,7 +460,7 @@ def _accept(request, source):
     (link_id, pairing_key, controller_key, timestamp, nonce), signature, host = _parse(request)
     from django.db import IntegrityError, transaction
     from django.db.models import F
-    from multiServer.models import PENDING, Link, PairingCode
+    from multiServer.models import ACTIVE, Link, PairingCode
     now = _now()
     codes = PairingCode.objects.filter(pk=pairing_key)
     code = codes.first()
@@ -467,6 +473,11 @@ def _accept(request, source):
     if source is None or addresses.listed(code.controller_ip) != (source,):
         count_failure.update(failures=F('failures') + 1)
         raise _no('source_ip')
+    from multiServer import views
+    issuer = views.active_full_administrator(code.admin_id)
+    if issuer is None:
+        # Whoever made the code is no longer a full administrator here: their approval no longer stands.
+        raise _no('admin')
     identity, generation = keys.identity_key(), keys.generation()
     if identity is None or generation < 1:
         raise _no('internal')
@@ -491,10 +502,12 @@ def _accept(request, source):
                 # hexadecimal, the address in the form of addresses.py, this server's current
                 # generation, and no request accepted yet.
                 Link.objects.create(link_id=link_id, controller_key=controller_key, pairing_key=pairing_key,
-                                    allowed_ips=addresses.joined((source,)), admin_id=code.admin_id, status=PENDING,
-                                    generation=generation, created_at=now, updated_at=now,
-                                    expires_at=now + PENDING_LIFETIME, last_request_at=0)
-                if audit.record('pairing', link_id=link_id, source_ip=source, status=200) is not True:
+                                    allowed_ips=addresses.joined((source,)), admin_id=code.admin_id, status=ACTIVE,
+                                    generation=generation, created_at=now, updated_at=now, activated_at=now,
+                                    expires_at=now + LINK_LIFETIME, last_request_at=0)
+                if (audit.record('pairing', link_id=link_id, source_ip=source, status=200) is not True
+                        or audit.record('link_approve', link_id=link_id, actor=issuer.userName,
+                                        source_ip=source) is not True):
                     raise _no('internal', link_id)
     except IntegrityError:
         raise _no('replay', link_id) from None
@@ -667,9 +680,11 @@ def _wrong_number(waiting, link_id, actor, now):
 def _administrator(event, admin_id):
     """The acting administrator of a managed server; anyone else, or any other server, is refused.
 
-    A full administrator who signs in without a second factor is refused too:
-    whoever takes over such an account could otherwise hand this server to a
-    controller of their own.
+    A second factor is not required here: whoever holds a full administrator's
+    password can already do anything on this server, and every action that
+    reaches this asked for that password first (stepup.check). The controller
+    is the server that needs two-factor login, as it opens the panels of all
+    its servers.
     """
     if switch.active_role() != keys.NODE:
         _refuse(event, 'role', 'This server is not a managed server.')
@@ -678,9 +693,6 @@ def _administrator(event, admin_id):
     administrator = views.full_administrator(types.SimpleNamespace(session={'userID': admin_id}))
     if administrator is None:
         _refuse(event, 'admin', 'Only a full administrator of this server may do this.')
-    if not views.two_factor_enrolled(administrator):
-        _refuse(event, 'two_factor', 'Turn on two-factor authentication for your account first.',
-                actor=administrator.userName)
     return administrator
 
 

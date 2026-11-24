@@ -1,9 +1,11 @@
 """A managed server and the controllers that may manage it: the Controllers page, and ending a link.
 
-Whoever uses the page is a full administrator of this server, signed in here
-with a second factor (nodes.administrator). A session that was opened through
-a link never reaches it: such a session belongs to a controller, and this page
-decides which controllers there are.
+Whoever uses the page is a full administrator of this server in a session of
+their own (administrator). A second factor is not needed on a managed server;
+each action asks for the password (and a code, if the account has two-factor
+login) unless the administrator confirmed in the last minutes (stepup.check).
+A session that was opened through a link never reaches it: such a session
+belongs to a controller, and this page decides which controllers there are.
 """
 import datetime
 import re
@@ -16,12 +18,12 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 
-from multiServer import addresses, audit, keys, links, models, msctl, nodes, pairing, stepup
+from multiServer import addresses, audit, keys, links, models, msctl, pairing, stepup, views
 
 MAX_LISTED = 100  # links shown, newest first
 
-ALLOWED = ('Approved. That controller now manages this server. On the controller, press "Check approval" to '
-           'finish.')
+ALLOWED = ('Approved. That controller now manages this server. On the controller, press "I approved it, check '
+           'now" to finish.')
 REJECTED = 'Rejected. That controller was not let in.'
 ENDED = 'The link is ended. That controller can no longer manage this server.'
 NOT_ENDED = ('The link could not be ended. Try again, or run "msctl.py revoke" as root on this server '
@@ -140,6 +142,15 @@ def summary(link, now, counter, names):
     }
 
 
+def administrator(request):
+    """The signed-in full administrator of this managed server in a session of their own, else None."""
+    from multiServer import role
+    admin = role.administrator(request)
+    if admin is None or not getattr(request.session, 'session_key', None):
+        return None
+    return admin
+
+
 def _page(request):
     from plogical.httpProc import httpProc
     now, counter = int(time.time()), keys.generation()
@@ -150,14 +161,16 @@ def _page(request):
               'addresses': ', '.join(addresses.listed(asking.controller_ip)),
               'by': names.get(asking.admin_id, ''), 'at': _date(asking.created_at),
               'until': _date(asking.expires_at)} for asking in waiting]
+    admin = administrator(request)
     return httpProc(request, 'multiServer/controllers.html',
                     {'waiting': asked, 'links': [summary(row, now, counter, names) for row in rows],
-                     'wrong_numbers': pairing.MAX_WRONG_NUMBERS}).render()
+                     'wrong_numbers': pairing.MAX_WRONG_NUMBERS, 'enrolled': views.two_factor_enrolled(admin),
+                     'recent': stepup.recent(request, admin, two_factor=False)}).render()
 
 
 @never_cache
 def index(request):
-    if not nodes.administrator(request):
+    if not administrator(request):
         raise Http404()
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
@@ -168,7 +181,7 @@ def index(request):
 @csrf_protect
 @sensitive_post_parameters('password', 'code', 'number')
 def control(request):
-    admin = nodes.administrator(request)
+    admin = administrator(request)
     if not admin:
         raise Http404()
     if request.method != 'POST':
@@ -195,12 +208,12 @@ def control(request):
 
 
 def _confirmed(request, admin, event, **named):
-    """Whether the password and a new code were given; a refusal is put on record and said."""
-    reason = stepup.confirm(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
+    """Whether the administrator confirmed recently or does now; a refusal is put on record and said."""
+    reason = stepup.check(request, admin, two_factor=False)
     if reason is None:
         return True
     audit.record(event, outcome='refused', reason=reason, actor=admin.userName, **named)
-    messages.error(request, stepup.message(reason))
+    messages.error(request, stepup.message(reason, admin))
     return False
 
 
@@ -212,15 +225,24 @@ def _allow(request, admin):
         return redirect('multiServerControllers')
     if not _confirmed(request, admin, 'pairing_code'):
         return redirect('multiServerControllers')
+    return issue(request, admin, controller_ip, 'multiServerControllers')
+
+
+def issue(request, admin, controller_ip, back):
+    """The page with a new pairing code for that controller; the caller has checked the address and the password.
+
+    On a refusal, the reason is said and the browser goes back to the page named `back`.
+    """
     try:
         code = pairing.issue_code(admin.pk, controller_ip)
     except pairing.PairingError as error:
         messages.error(request, (OWN_ADDRESS if error.reason == 'not_allowed' else '') + str(error))
-        return redirect('multiServerControllers')
+        return redirect(back)
     from plogical.httpProc import httpProc
     # Shown once, in the answer to this request, and kept nowhere on this server.
     return httpProc(request, 'multiServer/code.html',
-                    {'pairing_code': code, 'minutes': pairing.CODE_LIFETIME // 60}).render()
+                    {'pairing_code': code, 'minutes': pairing.CODE_LIFETIME // 60,
+                     'controller_ip': addresses.entry(controller_ip)}).render()
 
 
 def _end(request, admin, link_id):

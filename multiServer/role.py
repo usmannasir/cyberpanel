@@ -8,15 +8,23 @@ decides, and it decides it by naming one of the three roles: nothing a visitor
 types becomes part of a command.
 
 Seeing the page takes a full administrator in a session of their own on this
-server. Changing the role also takes two-factor login on that account, and the
-password with a fresh code again (stepup.py).
+server. Changing the role takes the password again, and a fresh code for an
+account with two-factor login, unless the administrator confirmed in the last
+minutes (stepup.check). Only the controller role needs two-factor login on the
+account, because a controller opens the panels of all its servers.
 
-An administrator without two-factor login sets it up here: the page shows the
-key of a new set-up as a QR code, and one form takes a code from the app, the
-password and the role. Nobody has to sign out. Wherever the password and a
-fresh code were checked here, this session counts as a sign-in made with them,
-as the sign-in page records it (sso.remember_login); the controller pages ask
-for that (and offer the same check, action 'confirm', instead of a new sign-in).
+A server becomes a managed server in one step (action 'connect'): the
+administrator names the controller's address and confirms, the role is set
+if it is not yet, and the page shows the pairing code to paste on the
+controller.
+
+An administrator without two-factor login sets it up here to make the server
+a controller: the page shows the key of a new set-up as a QR code, and one
+form takes a code from the app and the password. Nobody has to sign out.
+Wherever the password and a fresh code were checked here, this session counts
+as a sign-in made with them, as the sign-in page records it
+(sso.remember_login); the controller pages ask for that (and offer the same
+check, action 'confirm', instead of a new sign-in).
 """
 from django.contrib import messages
 from django.db import DatabaseError
@@ -85,11 +93,11 @@ def page(request):
     context = {
         'role': role, 'role_name': NAMES[role], 'running': switch.active_role() == role,
         'enrolled': enrolled, 'licensed': entitlement.allowed(),
-        # Shown as cards, the role most people come for first.
         'choices': [(value, NAMES[value]) for value in sorted(msctl.ROLES, key=CARD_ORDER.index)],
-        # What the form starts with: a server that is off is most likely being made a controller.
-        'suggested': keys.CONTROLLER if role == keys.OFF else role,
-        'buy_url': entitlement.purchase_url(),
+        'buy_url': entitlement.purchase_url(), 'address': entitlement.server_address() or '',
+        # Whether a form may leave out the password (and the code) because the administrator just gave them.
+        'recent': stepup.recent(request, admin, two_factor=False),
+        'recent_with_code': stepup.recent(request, admin),
     }
     shown = None if enrolled or request.session.get(SETUP) != admin.pk else stepup.setup(admin, _label(admin))
     if shown is not None:
@@ -107,12 +115,13 @@ def _label(admin):
 
 def _change(request, admin):
     wanted = request.POST.get('role', '')
-    if wanted not in msctl.ROLE_COMMANDS or not views.two_factor_enrolled(admin):
+    controller = wanted == keys.CONTROLLER
+    if wanted not in msctl.ROLE_COMMANDS or (controller and not views.two_factor_enrolled(admin)):
         raise Http404()
-    reason = stepup.confirm(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
+    reason = stepup.check(request, admin, two_factor=controller)
     if reason is not None:
         audit.record('role', outcome='refused', reason=reason, actor=admin.userName)
-        messages.error(request, stepup.message(reason))
+        messages.error(request, stepup.message(reason, admin))
         return redirect('multiServerRole')
     _apply(request, admin, wanted)
     _signed_in(request, admin.pk)
@@ -152,10 +161,12 @@ def _enrol(request, admin):
     reason = stepup.enrol(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
     if reason is not None:
         audit.record('two_factor', outcome='refused', reason=reason, actor=admin.userName)
-        messages.error(request, stepup.message(reason))
+        messages.error(request, stepup.message(reason))  # the set-up asks for a code too
         return redirect('multiServerRole')
     request.session.pop(SETUP, None)
     audit.record('two_factor', actor=admin.userName)
+    from loginSystem.models import Administrator
+    stepup.remember(request, Administrator.objects.get(pk=admin.pk), True)
     messages.success(request, TWO_FACTOR_ON)
     if wanted != keys.role():
         _apply(request, admin, wanted)
@@ -167,10 +178,10 @@ def _confirm_sign_in(request, admin):
     """The controller pages' replacement for signing out and in again: the same two checks, here."""
     if not views.two_factor_enrolled(admin):
         raise Http404()
-    reason = stepup.confirm(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
+    reason = stepup.check(request, admin)
     if reason is not None:
         audit.record('sign_in', outcome='refused', reason=reason, actor=admin.userName)
-        messages.error(request, stepup.message(reason))
+        messages.error(request, stepup.message(reason, admin))
     else:
         _signed_in(request, admin.pk)
         audit.record('sign_in', actor=admin.userName)
@@ -184,8 +195,35 @@ def _signed_in(request, admin_id):
     from multiServer import sso
     request.session.cycle_key()
     request.session.pop('ms_local_login', None)
-    if keys.role() == keys.CONTROLLER and request.is_secure():
-        sso.remember_login(request, Administrator.objects.get(pk=admin_id))
+    admin = Administrator.objects.get(pk=admin_id)
+    # Only a check that took a code counts as such a sign-in: an account without two-factor gave its password alone.
+    if keys.role() == keys.CONTROLLER and request.is_secure() and views.two_factor_enrolled(admin):
+        sso.remember_login(request, admin)
 
 
-ACTIONS = {'role': _change, 'setup': _start_setup, 'enrol': _enrol, 'confirm': _confirm_sign_in}
+def _connect(request, admin):
+    """Make this server a managed server, if it is not one yet, and show a pairing code for the controller named."""
+    from multiServer import addresses, controllers, pairing
+    if keys.role() == keys.CONTROLLER:
+        raise Http404()
+    controller_ip = request.POST.get('controller_ip', '').strip()
+    if addresses.entry(controller_ip) is None:
+        # Said before the password is looked at: a slip of the keyboard costs no attempt.
+        messages.error(request, pairing.NOT_AN_ADDRESS)
+        return redirect('multiServerRole')
+    reason = stepup.check(request, admin, two_factor=False)
+    if reason is not None:
+        audit.record('pairing_code', outcome='refused', reason=reason, actor=admin.userName)
+        messages.error(request, stepup.message(reason, admin))
+        return redirect('multiServerRole')
+    if keys.role() != keys.NODE:
+        _apply(request, admin, keys.NODE)
+        if keys.role() != keys.NODE:
+            return redirect('multiServerRole')
+        # Said on the code page instead: the role is part of what that page tells.
+        list(messages.get_messages(request))
+    return controllers.issue(request, admin, controller_ip, 'multiServerRole')
+
+
+ACTIONS = {'role': _change, 'setup': _start_setup, 'enrol': _enrol, 'confirm': _confirm_sign_in,
+           'connect': _connect}

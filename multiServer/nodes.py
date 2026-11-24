@@ -84,9 +84,11 @@ def index(request):
     from plogical.httpProc import httpProc
     # The sealed text is read only for a server that waits for approval, to show its number.
     rows = models.Node.objects.defer('sealed').order_by('label', 'link_id')
+    admin = administrator(request)
     return httpProc(request, 'multiServer/nodes.html',
                     {'nodes': [summary(row) for row in rows], 'licensed': entitlement.allowed(),
-                     'buy_url': entitlement.purchase_url()}).render()
+                     'buy_url': entitlement.purchase_url(), 'address': entitlement.server_address() or '',
+                     'recent': stepup.recent(request, admin)}).render()
 
 
 @never_cache
@@ -125,7 +127,7 @@ def control(request):
             audit.record(event, outcome='refused', link_id=link_id, actor=admin.userName, reason='not_allowed')
             messages.error(request, 'Confirm the action and enter your current password and verification code.')
             return redirect('multiServerNodes')
-        reason = stepup.confirm(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
+        reason = stepup.check(request, admin)
         if reason:
             audit.record(event, outcome='refused', link_id=link_id, actor=admin.userName, reason=reason)
             messages.error(request, stepup.message(reason))
@@ -155,8 +157,10 @@ def control(request):
     return redirect('multiServerNodes')
 
 
-PAIRED = ('Code accepted. Now, on that server, open Multi-Server, Controllers, type the eight-digit number shown '
-          'below and press Approve. Then press "I approved it, check now" here.')
+CONNECTED = 'Connected: %s. You can open its panel from the list below.'
+PAIRED = ('Code accepted. That server runs CyberPanel 3.0.18 or older, so it still asks for a number: on that '
+          'server open Multi-Server, Controllers, type the eight-digit number shown below and press Approve. Then '
+          'press "I approved it, check now" here.')
 
 
 @never_cache
@@ -165,10 +169,13 @@ PAIRED = ('Code accepted. Now, on that server, open Multi-Server, Controllers, t
 def add(request):
     """Add a server from its pairing code, in two steps.
 
-    The first shows what the code says and connects to nothing. The second,
-    with the password and a fresh verification code, pairs. The pairing code
-    goes from the first form to the second in the page itself and is kept
-    nowhere on this server.
+    The first shows what the code says and connects to nothing. The second
+    pairs and asks the server at once whether the link works (links.confirm);
+    it needs the password and a fresh verification code unless the
+    administrator confirmed in the last minutes (stepup.check). The pairing
+    code goes from the first form to the second in the page itself and is
+    kept nowhere on this server. Without a name, the server is named after
+    the address in its code.
     """
     from multiServer import pairing, stepup
     admin = administrator(request)
@@ -182,8 +189,9 @@ def add(request):
     code = ''.join(request.POST.get('pairing_code', '').split())
     label = request.POST.get('label', '').strip()
     try:
-        links.check_label(label)
         target = pairing.read_code(code)
+        label = label or _name(target.host)
+        links.check_label(label)
     except (links.InvalidLabel, pairing.PairingError) as error:
         messages.error(request, str(error))  # a fixed text of links.py, pairing.py or transport.py
         return redirect('multiServerNodes')
@@ -191,19 +199,32 @@ def add(request):
         from plogical.httpProc import httpProc
         return httpProc(request, 'multiServer/add.html', {
             'pairing_code': code, 'label': label, 'host': target.host, 'port': target.port,
-            'identity': _groups(target.node_id), 'certificate': _groups(target.tls_pin)}).render()
-    reason = stepup.confirm(admin.pk, request.POST.get('password', ''), request.POST.get('code', ''))
+            'identity': _groups(target.node_id), 'certificate': _groups(target.tls_pin),
+            'recent': stepup.recent(request, admin)}).render()
+    reason = stepup.check(request, admin)
     if reason:
         audit.record('pairing', outcome='refused', reason=reason, actor=admin.userName)
         messages.error(request, stepup.message(reason))
         return redirect('multiServerNodes')
     try:
-        pairing.start(code, label, admin.userName)
+        paired = pairing.start(code, label, admin.userName)
     except pairing.PairingError as error:
         messages.error(request, str(error))
         return redirect('multiServerNodes')
-    messages.success(request, PAIRED)
+    # A managed server of 3.0.19 or later made the link active when it accepted the code; an older one waits
+    # for its administrator to type the number, and then this check is the button on the list.
+    if links.confirm(paired.link_id, admin.userName).ok:
+        messages.success(request, CONNECTED % label)
+    else:
+        # Such a server is expected not to answer yet: the audit trail has the attempt, the list says no problem.
+        models.Node.objects.filter(pk=paired.link_id, status=models.PENDING).update(last_error='', last_error_at=None)
+        messages.info(request, PAIRED)
     return redirect('multiServerNodes')
+
+
+def _name(host):
+    """A name for a server from the address in its code: a label has no colons, so an IPv6 address gets dashes."""
+    return host.replace(':', '-').strip('-')[:64]
 
 
 def _groups(fingerprint):

@@ -8,7 +8,7 @@
   <div class="ms-head">
     <div>
       <h1>Controllers</h1>
-      <p class="ms-sub">This server is a <strong>managed server</strong>. Here you let a controller manage it, approve its request, or end its link.</p>
+      <p class="ms-sub">This server is a <strong>managed server</strong>. Here you connect it to a controller, or end a controller's link.</p>
     </div>
     <div class="ms-head-actions"><p class="ms-pill">{% if links %}{{ links|length }} link{{ links|length|pluralize }}{% else %}No controller yet{% endif %}</p></div>
   </div>
@@ -16,23 +16,23 @@
   {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
 
   <div class="ms-card">
-    <h2 class="ms-step-title"><span class="ms-num">1</span>Allow a controller</h2>
-    <p>Enter the IP address your controller connects from. You get a pairing code to paste on the controller (Managed servers, Add a server). The code works once, for ten minutes, and only from that address.</p>
+    <h2 class="ms-step-title"><i class="fas fa-plus" aria-hidden="true"></i>Connect to a controller</h2>
+    <p>Enter the IP address of your controller. You get a pairing code to paste on the controller (Managed servers, Add a server), and the two servers connect at once. The code works once, for ten minutes, and only from that address.</p>
     <form method="post" action="{% url 'multiServerControllerControl' %}">
       {% csrf_token %}
       <input type="hidden" name="action" value="allow">
       <div class="ms-fields">
-        <label class="ms-field">IP address of the controller <input class="form-control" type="text" name="controller_ip" maxlength="45" autocomplete="off" required></label>
-        <label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
-        <label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+        <label class="ms-field">IP address of the controller <input class="form-control" type="text" name="controller_ip" maxlength="45" autocomplete="off" spellcheck="false" required></label>
+        {% if not recent %}<label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
+        {% if enrolled %}<label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>{% endif %}{% endif %}
       </div>
-      <button class="btn btn-primary" type="submit">Get a pairing code</button>
+      <button class="btn btn-primary" type="submit">Get the pairing code</button>
     </form>
   </div>
 
+  {% if waiting %}
   <div class="ms-card">
-    <h2 class="ms-step-title"><span class="ms-num">2</span>Waiting for your approval</h2>
-    {% if waiting %}
+    <h2 class="ms-step-title"><i class="fas fa-hourglass-half" aria-hidden="true"></i>Waiting for your approval</h2>
     <p>The controller shows an eight-digit number for its request. Read it on the controller's Managed servers page and type it here. After {{ wrong_numbers }} wrong numbers the request is closed.</p>
     <div class="table-responsive"><table class="table ms-table">
       <thead><tr><th scope="col">Controller address</th><th scope="col">Request</th><th scope="col">Code made by</th><th scope="col">Asked</th><th scope="col">Open until</th><th scope="col">Decide</th></tr></thead>
@@ -54,8 +54,8 @@
         </td>
       </tr>{% endfor %}</tbody>
     </table></div>
-    {% else %}<div class="ms-empty"><i class="fas fa-inbox" aria-hidden="true"></i>No controller is waiting.</div>{% endif %}
   </div>
+  {% endif %}
 
   <div class="ms-card">
     <h2>Links</h2>
@@ -72,10 +72,10 @@
             {% csrf_token %}
             <input type="hidden" name="action" value="end"><input type="hidden" name="link_id" value="{{ link.id }}">
             <p>The controller at {{ link.addresses|default:"this address" }} can no longer manage this server, and people it signed in here are signed out. This cannot be undone: to connect it again, pair the two servers again.</p>
-            <div class="ms-fields">
+            {% if not recent %}<div class="ms-fields">
               <label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
-              <label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
-            </div>
+              {% if enrolled %}<label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>{% endif %}
+            </div>{% endif %}
             <label class="ms-check"><input type="checkbox" name="confirm" value="end" required> End the link {{ link.short }}</label>
             <button class="btn btn-danger btn-sm" type="submit">End this link</button>
           </form>

@@ -8,18 +8,18 @@
   <div class="ms-head">
     <div>
       <h1>Pairing code</h1>
-      <p class="ms-sub">Copy this code now. It is shown only once and is not kept on this server.</p>
+      <p class="ms-sub">This server is a managed server. Copy this code: it is shown only once and is not kept on this server.</p>
     </div>
   </div>
   <div class="ms-card">
     <p><textarea class="form-control ms-key" rows="5" readonly aria-label="Pairing code">{{ pairing_code }}</textarea></p>
     <ol class="ms-steps">
-      <li>On the controller, open Managed servers, choose "Add a server" and paste the code. It works once, for {{ minutes }} minutes.</li>
-      <li>The controller then shows an eight-digit number.</li>
-      <li>Come back to Controllers on this server, type that number and press Approve.</li>
+      <li>On the controller{% if controller_ip %} ({{ controller_ip }}){% endif %}, open <strong>Managed servers</strong> and paste the code under <strong>Add a server</strong>. It works once, for {{ minutes }} minutes.</li>
+      <li>That's all: the two servers connect at once, and you can open this server's panel from the controller.</li>
     </ol>
-    <p class="ms-muted">Send the code only to the person who runs your controller. Whoever has it can ask to manage this server, from the controller address you entered, until you approve or reject the request.</p>
-    <p><a class="btn btn-primary" href="{% url 'multiServerControllers' %}">Back to Controllers</a></p>
+    <p class="ms-muted">If the controller still runs CyberPanel 3.0.18 or older, it shows an eight-digit number instead and you press "I approved it, check now" there. Nothing needs to be typed on this server.</p>
+    <p class="ms-muted">Send the code only to the person who runs your controller. It works only from the controller address you entered.</p>
+    <p><a class="btn btn-primary" href="{% url 'multiServerControllers' %}">See the controllers of this server</a></p>
   </div>
 </div>
 </div>

@@ -287,6 +287,17 @@ class Servers(Base):
     def pair(self, code):
         return pairing.start(code, 'Frankfurt 1', 'admin')
 
+    def pair_as_before(self, code):
+        """Pair, then leave the link as a managed server of 3.0.18 or older made it: waiting for the number.
+
+        Such links can still be on a server when it is upgraded, and are approved the old way.
+        """
+        paired = self.pair(code)
+        self.database.run("UPDATE ms_links SET status = 'pending', activated_at = NULL, expires_at = created_at + %d "
+                          "WHERE link_id = '%s'" % (pairing.PENDING_LIFETIME, paired.link_id))
+        self.database.run("DELETE FROM ms_audit WHERE event = 'link_approve' AND link_id = '%s'" % paired.link_id)
+        return paired
+
     def not_paired(self, code, reason='signature', because=REFUSED):
         with self.assertRaises(pairing.PairingError) as caught:
             self.pair(code)
@@ -320,7 +331,7 @@ class Servers(Base):
 
 
 class PairingTests(Servers):
-    def test_a_correct_pairing_makes_one_pending_link_and_approval_makes_it_active(self):
+    def test_a_correct_pairing_makes_one_active_link_at_once(self):
         code = self.issue()
         self.assertEqual(262, len(code))
         self.assertEqual(('127.0.0.1', self.node.port, crypto.node_id(self.node_key), pin('node')),
@@ -335,14 +346,16 @@ class PairingTests(Servers):
         # The same keys on both sides: the server holds the public half of the key the controller kept.
         controller_key = crypto.public_key(private_key).hex()
         pairing_key = crypto.public_key(pairing._decode(code)[2]).hex()
-        self.assertEqual(((link_id, controller_key, pairing_key, '127.0.0.1', ADMIN, 'pending', GENERATION, NOW, NOW,
-                           None, NOW + 600, 0),), self.links())
+        # Making the code was the approval: the link is active from the answer on, for its whole lifetime.
+        self.assertEqual(((link_id, controller_key, pairing_key, '127.0.0.1', ADMIN, 'active', GENERATION, NOW, NOW,
+                           NOW, NOW + pairing.LINK_LIFETIME, 0),), self.links())
         self.assertEqual(((0, 1),), self.codes())
         transport.Link(link_id, paired.node_id, host, port, node_key, private_key, tls_pin,
                        allow_loopback_for_tests=True)
-        # The controller shows the number; the managed server lists the link without it and asks for it.
+        # Nothing waits for a number on the managed server. The controller can still work one out, for a
+        # managed server of 3.0.18 or older, which asks for it.
         with on_the_node():
-            self.assertEqual([pairing.Pending(link_id, '127.0.0.1', ADMIN, NOW, NOW + 600)], pairing.pending())
+            self.assertEqual([], pairing.pending())
         self.assertRegex(paired.confirmation, '^[0-9]{8}$')
         # The number is made of what both keep and of the server's own value, which only its answer told.
         value = crypto.pair_value(self.identity[0], pairing_key)
@@ -350,16 +363,30 @@ class PairingTests(Servers):
         self.assertEqual(paired.confirmation, pairing.confirmation_number(crypto.pair_confirmation_message(
             link_id, pairing_key, controller_key, self.node_key.hex(), value)))
         self.assertNotIn(value, repr(self.links()) + repr(self.database.run('SELECT * FROM ms_pairing_codes')))
-        self.clock[0] = NOW + 599
-        with on_the_node():
-            self.assertIsNone(pairing.approve(link_id, ADMIN, paired.confirmation))
-            self.assertEqual([], pairing.pending())
-        self.assertEqual(((link_id, controller_key, pairing_key, '127.0.0.1', ADMIN, 'active', GENERATION, NOW,
-                           NOW + 599, NOW + 599, NOW + 599 + 90 * 24 * 60 * 60, 0),), self.links())
+        self.assertEqual(90 * 24 * 60 * 60, pairing.LINK_LIFETIME)
+        # A link that is active already is not approved again.
+        with self.assertRaises(pairing.PairingError) as caught, on_the_node():
+            pairing.approve(link_id, ADMIN, paired.confirmation)
+        self.assertEqual('not_allowed', caught.exception.reason)
         self.assertEqual([('pairing_code', 'ok', '', '', 'admin', '127.0.0.1', None),
                           ('pairing', 'ok', '', link_id, '', '127.0.0.1', 200),
+                          ('link_approve', 'ok', '', link_id, 'admin', '127.0.0.1', None),
                           ('pairing', 'ok', '', link_id, 'admin', '', None),
-                          ('link_approve', 'ok', '', link_id, 'admin', '', None)], self.audited())
+                          ('link_approve', 'refused', 'not_allowed', link_id, 'admin', '', None)], self.audited())
+
+    def test_a_code_made_by_an_administrator_who_is_no_longer_one_makes_no_link(self):
+        code = self.issue()
+        self.acl.return_value = {'admin': 0}
+        self.not_paired(code)
+        # The managed server's reason; the controller only learns that the code was not accepted.
+        self.assertEqual([('pairing', 'refused', 'admin', '', '', '127.0.0.1', 403),
+                          ('pairing', 'refused', 'signature', '', 'admin', '', None)], self.audited()[-2:])
+        self.assertEqual((), self.links())
+        # The code is not used up by the refusal, and works once its maker is an administrator again.
+        self.assertEqual(((0, 0),), self.codes())
+        self.acl.return_value = {'admin': 1}
+        self.pair(code)
+        self.assertEqual(['active'], [link[5] for link in self.links()])
 
     def test_the_managed_server_keeps_the_public_half_of_a_code_and_nothing_else(self):
         code = self.issue('2A01:04F8:0:0:0:0:0:9')
@@ -409,7 +436,8 @@ class PairingTests(Servers):
         paired = self.pair(code)
         self.assertEqual(('::1', [(paired.link_id, '::1')]),
                          (paired.host, [(link[0], link[3]) for link in self.links()]))
-        self.assertEqual(('pairing', 'ok', '', paired.link_id, '', '::1', 200), self.audited()[-2])
+        self.assertEqual([('pairing', 'ok', '', paired.link_id, '', '::1', 200),
+                          ('link_approve', 'ok', '', paired.link_id, 'admin', '::1', None)], self.audited()[-3:-1])
         self.assertEqual(b'[::1]:%d' % node.port, node.finished()['seen'].headers[0][1].encode())
         # The same server reached over IPv4 is not the address the code was made for.
         other = self.issue('::1')
@@ -448,7 +476,8 @@ class PairingTests(Servers):
         self.assertTrue(hasattr(elsewhere.wsgi_request, 'session'))
         self.assertEqual([attempt.link_id], [link[0] for link in self.links()])
         self.assertEqual([('pairing', 'refused', 'signature', '', '', '127.0.0.1', 403),
-                          ('pairing', 'ok', '', attempt.link_id, '', '127.0.0.1', 200)], self.audited()[-2:])
+                          ('pairing', 'ok', '', attempt.link_id, '', '127.0.0.1', 200),
+                          ('link_approve', 'ok', '', attempt.link_id, 'admin', '127.0.0.1', None)], self.audited()[-3:])
 
     def test_the_panels_request_scanner_lets_a_pasted_code_through(self):
         from CyberCP.secMiddleware import secMiddleware
@@ -487,7 +516,8 @@ class PairingTests(Servers):
         elsewhere = [(name, value.replace('127.0.0.1', '203.0.113.9')) for name, value in forged]
         self.assertTrue(self.send(attempt, headers=elsewhere).startswith(b'HTTP/1.1 200 OK\r\n'))
         self.assertEqual([attempt.link_id], [link[0] for link in self.links()])
-        self.assertEqual(('pairing', 'ok', '', attempt.link_id, '', '127.0.0.1', 200), self.audited()[-1])
+        self.assertEqual([('pairing', 'ok', '', attempt.link_id, '', '127.0.0.1', 200),
+                          ('link_approve', 'ok', '', attempt.link_id, 'admin', '127.0.0.1', None)], self.audited()[-2:])
 
 
 class AddressTests(Servers):
@@ -499,7 +529,9 @@ class AddressTests(Servers):
         code = self.issue('127.0.0.1')
         paired = self.pair(code)
         self.assertEqual([(paired.link_id, '127.0.0.1')], [(link[0], link[3]) for link in self.links()])
-        self.assertEqual(('pairing', 'ok', '', paired.link_id, '', '127.0.0.1', 200), self.audited()[-2])
+        self.assertEqual([('pairing', 'ok', '', paired.link_id, '', '127.0.0.1', 200),
+                          ('link_approve', 'ok', '', paired.link_id, 'admin', '127.0.0.1', None)],
+                         self.audited()[-3:-1])
         # And refuses everybody else, whatever the spelling, each counted against the code.
         other = self.issue('127.0.0.1')
         self.node.reports = lambda address: '::FFFF:7f00:2'
@@ -549,12 +581,23 @@ class AddressTests(Servers):
 class LinkRowTests(Servers):
     """What pairing writes is the row the gateway reads (multiServer/nodeGateway.py)."""
 
-    def test_an_approved_link_is_one_the_gateway_carries_requests_on_and_a_pending_one_is_not(self):
+    def test_a_new_link_is_one_the_gateway_carries_requests_on_at_once(self):
+        from multiServer import models, nodeGateway
+        default = models.Link._meta.get_field('last_request_at')
+        with mock.patch.object(default, 'default', NOW - 5):
+            paired = self.pair(self.issue())
+        link = models.Link.objects.get(pk=paired.link_id)
+        self.assertEqual((0, GENERATION, 'active'), (link.last_request_at, link.generation, link.status))
+        self.assertIsNone(nodeGateway._unusable(link, GENERATION, NOW))
+        self.assertEqual('expired', nodeGateway._unusable(link, GENERATION, NOW + pairing.LINK_LIFETIME))
+        self.assertEqual('generation', nodeGateway._unusable(link, GENERATION + 1, NOW))
+
+    def test_a_link_made_before_the_upgrade_is_carried_only_once_approved(self):
         from multiServer import models, nodeGateway
         default = models.Link._meta.get_field('last_request_at')
         # Whatever the column would hold by itself, pairing says that no request was accepted yet.
         with mock.patch.object(default, 'default', NOW - 5):
-            paired = self.pair(self.issue())
+            paired = self.pair_as_before(self.issue())
         link = models.Link.objects.get(pk=paired.link_id)
         self.assertEqual((0, GENERATION, 'pending'), (link.last_request_at, link.generation, link.status))
         self.assertRegex(link.link_id, r'\A[0-9a-f]{32}\Z')
@@ -917,13 +960,13 @@ class CodeIssuingTests(Servers):
         self.find.side_effect = RuntimeError('Administrator matching query does not exist.')
         self.refused('admin', nobody, 99, '127.0.0.1')
         self.find.side_effect = None
-        # A full administrator who signs in with a password alone is refused, by name.
-        for two_factor, secret in ((0, SECOND_FACTOR), (1, 'None'), (1, ''), (1, None), (1, 'not base32 !'),
-                                   (2, SECOND_FACTOR), ('1', SECOND_FACTOR)):
+        # A full administrator without two-factor login gets a code: the page asked for the password.
+        for two_factor, secret in ((0, SECOND_FACTOR), (1, 'None'), (0, 'None')):
             self.administrator.twoFA, self.administrator.secretKey = two_factor, secret
-            row = self.refused('two_factor', 'Turn on two-factor authentication for your account first.', ADMIN,
-                               '127.0.0.1')
-            self.assertEqual('admin', row[4])
+            with on_the_node():
+                pairing.issue_code(ADMIN, '127.0.0.1', host='127.0.0.1', port=self.node.port)
+            self.assertEqual(('pairing_code', 'ok', '', '', 'admin', '127.0.0.1', None), self.audited()[-1])
+        self.database.run('DELETE FROM ms_pairing_codes')
         self.administrator.twoFA, self.administrator.secretKey = 1, SECOND_FACTOR
         with self.assertRaises(pairing.PairingError) as caught:
             pairing.issue_code(ADMIN, '127.0.0.1', host='127.0.0.1', port=self.node.port)
@@ -999,7 +1042,7 @@ class DecisionTests(Servers):
 
     def setUp(self):
         super().setUp()
-        self.paired = self.pair(self.issue())
+        self.paired = self.pair_as_before(self.issue())
         self.link_id = self.paired.link_id
         self.number = self.paired.confirmation
         self.other = '%08d' % ((int(self.number) + 1) % 10 ** 8)
@@ -1048,12 +1091,6 @@ class DecisionTests(Servers):
             self.find.side_effect = RuntimeError('Administrator matching query does not exist.')
             self.refused('admin', nobody, decide, admin_id=99, actor='')
             self.find.side_effect = None
-            # Nor does an administrator who signs in with a password alone.
-            self.administrator.twoFA = 0
-            self.refused('two_factor', 'Turn on two-factor authentication for your account first.', decide)
-            self.administrator.twoFA, self.administrator.secretKey = 1, 'None'
-            self.refused('two_factor', 'Turn on two-factor authentication for your account first.', decide)
-            self.administrator.secretKey = SECOND_FACTOR
             with self.assertRaises(pairing.PairingError) as caught:
                 # On the controller.
                 decide(*((self.link_id, ADMIN, self.number) if decide is pairing.approve else (self.link_id, ADMIN)))
@@ -1121,7 +1158,7 @@ class DecisionTests(Servers):
         self.assertIsNone(self.approve())
 
     def test_the_number_of_another_link_is_a_wrong_number(self):
-        second = self.pair(self.issue())
+        second = self.pair_as_before(self.issue())
         self.assertNotEqual(self.number, second.confirmation)
         self.refused('number', self.WRONG, number=second.confirmation, changes=True)
         self.assertEqual((1, 0), (self.failures(), self.failures(second.link_id)))
@@ -1215,7 +1252,7 @@ class DecisionTests(Servers):
             self.assertLessEqual(self.failures(), 5)
 
     def setUp_link(self):
-        self.paired = self.pair(self.issue())
+        self.paired = self.pair_as_before(self.issue())
         self.link_id, self.number = self.paired.link_id, self.paired.confirmation
         self.other = '%08d' % ((int(self.number) + 1) % 10 ** 8)
 
@@ -1282,7 +1319,7 @@ class DecisionTests(Servers):
 
     def test_a_link_nobody_approved_in_ten_minutes_is_closed(self):
         self.assertEqual(600, pairing.PENDING_LIFETIME)
-        late = self.pair(self.issue())
+        late = self.pair_as_before(self.issue())
         self.clock[0] = NOW + 600
         self.refused('expired', 'This link was not approved in time. Pair the two servers again.')
         self.assertEqual([(link_id, 'pending') for link_id in sorted((self.link_id, late.link_id))],
@@ -1314,7 +1351,7 @@ class DecisionTests(Servers):
         self.assertEqual([(self.link_id, 'active')], self.status())
 
     def test_the_managed_server_lists_every_waiting_link_and_never_its_number(self):
-        second = self.pair(self.issue())
+        second = self.pair_as_before(self.issue())
         self.assertNotEqual(self.number, second.confirmation)
         with on_the_node():
             waiting = pairing.pending()
