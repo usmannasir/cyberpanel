@@ -77,8 +77,10 @@ class CompletionReportTests(Fixture):
         body = method_text('upgrade')
         last = body.rindex('Upgrade.reportIncomplete()')
         self.assertLess(body.rindex('requireCSFMigration()'), last)
-        # Only the next method's decorator follows.
-        self.assertEqual(['Upgrade.reportIncomplete()', '@staticmethod'], body[last:].split())
+        # At most the next method's decorator follows (before Python 3.8 a method
+        # starts at its decorator, so the text ends without it).
+        self.assertEqual(['Upgrade.reportIncomplete()'],
+                         [word for word in body[last:].split() if word != '@staticmethod'])
 
     def test_failures_of_optional_steps_are_reported_not_only_logged(self):
         for step in ('The panel web worker was not rebuilt', 'The automatic update timer was not refreshed',
