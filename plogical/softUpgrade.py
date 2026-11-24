@@ -348,6 +348,18 @@ def supervise(process, outputs, job=None, clock=time.monotonic, wall=time.time, 
             raise Stopped(reason)
 
 
+def upgrade_staging(parent=None):
+    """Names of the upgrader's staging directories (.cyberpanel-upgrade-*) beside the installation."""
+    return {directory.name for directory in (parent or INSTALLATION.parent).glob('.cyberpanel-upgrade-*')}
+
+
+def remove_upgrade_staging(known, parent=None):
+    """A stopped upgrader cannot remove the source it was staging; remove what this run created."""
+    for directory in (parent or INSTALLATION.parent).glob('.cyberpanel-upgrade-*'):
+        if directory.name not in known and directory.is_dir() and not directory.is_symlink():
+            shutil.rmtree(str(directory), ignore_errors=True)
+
+
 def read_report(path):
     """The steps the upgrader reported as not completed; empty when it reported none."""
     try:
@@ -389,12 +401,16 @@ def run(branch, lock_fd=None, commit=None, job=None):
             # The service manager can terminate the launcher independently.
             # The running upgrader must retain the same flock until it exits.
             inherited = (lock_fd,) if lock_fd is not None else ()
+            staging = upgrade_staging()
             process = subprocess.Popen([sys.executable, '-u', str(stage / 'upgrade.py'),
                                         'SoftUpgrade,' + branch], cwd=stage, stdout=output, stderr=errors,
                                        pass_fds=inherited, env=environment, start_new_session=True)
             outputs = [(output or sys.stdout).fileno(), errors.fileno(), '/home/cyberpanel/upgrade_logs']
             try:
                 returncode = supervise(process, outputs, job)
+            except Stopped:
+                remove_upgrade_staging(staging)
+                raise
             finally:
                 if job is not None:
                     try:

@@ -111,6 +111,31 @@ class SupervisionTests(Fixture):
         self.assertFalse(softUpgrade.stop_path(JOB).exists(), 'a declined request must not wait for later')
 
 
+class StagingTests(Fixture):
+    def test_a_stopped_run_removes_only_the_staging_it_created(self):
+        local = Path(self.base.name, 'local')
+        (local / 'CyberCP').mkdir(parents=True)
+        (local / '.cyberpanel-upgrade-older').mkdir()
+        (local / '.cyberpanel-previous-kept' / 'CyberCP').mkdir(parents=True)
+
+        class Started:
+            pid = 0
+
+        def popen(command, **options):
+            # What the upgrader does before it hangs in the clone.
+            (local / '.cyberpanel-upgrade-thisrun' / 'CyberCP').mkdir(parents=True)
+            return Started()
+        with mock.patch.object(softUpgrade, 'INSTALLATION', local / 'CyberCP'), \
+                mock.patch.object(softUpgrade, 'resolve_release', return_value='1' * 40), \
+                mock.patch.object(softUpgrade, 'stage_release'), \
+                mock.patch.object(softUpgrade.subprocess, 'Popen', popen), \
+                mock.patch.object(softUpgrade, 'supervise', side_effect=softUpgrade.Stopped('stopped')):
+            with self.assertRaises(softUpgrade.Stopped):
+                softUpgrade.run('v3.0.18', job=JOB)
+        self.assertEqual(['.cyberpanel-previous-kept', '.cyberpanel-upgrade-older', 'CyberCP'],
+                         sorted(os.listdir(str(local))))
+
+
 class StopRequestTests(Fixture):
     def running(self, active):
         softUpgrade.record_status(JOB, 'running', active=active)
