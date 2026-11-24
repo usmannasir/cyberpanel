@@ -7,6 +7,7 @@ import re
 import hashlib
 import shutil
 import http.client
+import signal
 import socket
 import ssl
 import stat
@@ -15,6 +16,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 
@@ -35,11 +37,37 @@ HELPERS = (
 STATUS_ROOT = Path('/run/cyberpanel-soft-upgrades')
 INSTALLATION = Path('/usr/local/CyberCP')
 
+# The longest step that writes nothing, the panel's web worker build, has a
+# limit of 15 minutes. An upgrade that wrote nothing for twice that is stopped;
+# from the page an administrator may stop one that wrote nothing for 5 minutes.
+IDLE_LIMIT = 30 * 60
+STOP_AFTER = 5 * 60
+LONGEST = 4 * 3600
+# git waits on a stalled HTTPS transfer for as long as the connection stays open.
+GIT_ENVIRONMENT = {'GIT_HTTP_LOW_SPEED_LIMIT': '1000', 'GIT_HTTP_LOW_SPEED_TIME': '60',
+                   'GIT_TERMINAL_PROMPT': '0'}
+# What git prints when it got no complete answer from GitHub.
+UNREACHABLE = re.compile(r'unable to access|Could not resolve|Failed to connect|timed out|too slow|'
+                         r'Connection (?:reset|refused)|RPC failed|early EOF|remote end hung up|'
+                         r'returned error: (?:5[0-9][0-9]|429)|SSL|TLS|gnutls', re.I)
+
 
 def status_path(job):
     if not re.fullmatch(r'[0-9a-f]{32}', job):
         raise ValueError('Invalid upgrade run identifier.')
     return STATUS_ROOT / job
+
+
+def stop_path(job):
+    return Path(str(status_path(job)) + '.stop')
+
+
+def idle_seconds(record, clock=time.time):
+    """How long a running upgrade has written nothing, or None when unknown."""
+    active = record.get('active')
+    if isinstance(active, bool) or not isinstance(active, (int, float)):
+        return None
+    return max(0, int(clock() - active))
 
 
 def live_start_ticks(stat):
@@ -63,16 +91,23 @@ def read_status(job):
             observed = None
         if not observed or observed != record.get('start_ticks'):
             return {'state': 'failed', 'message': 'The upgrade launcher stopped before reporting completion. Check the upgrade log and service state before retrying.'}
+        idle = idle_seconds(record)
+        if idle is not None:
+            record.update(idle=idle, stoppable=idle >= STOP_AFTER)
     return record
 
 
-def record_status(job, state, message='', activation=None):
+def record_status(job, state, message='', activation=None, active=None, incomplete=None):
     path = status_path(job)
     STATUS_ROOT.mkdir(exist_ok=True, mode=0o755)
     with tempfile.NamedTemporaryFile(mode='w', dir=STATUS_ROOT, delete=False) as output:
         record = {'state': state, 'message': message}
         if activation is not None:
             record['activation'] = activation
+        if active is not None:
+            record['active'] = active
+        if incomplete:
+            record['incomplete'] = incomplete
         if state in ('starting', 'running'):
             record['pid'] = os.getpid()
             record['start_ticks'] = live_start_ticks(Path('/proc/self/stat').read_text())
@@ -113,11 +148,46 @@ def refuse_older_release(branch, installed):
                          'Choose the installed release or a newer one.')
 
 
+def from_github(action, what, attempts=3, pause=10, sleep=time.sleep):
+    """`action()`, asked again after a short pause while GitHub does not answer.
+
+    A longer outage ends the upgrade before anything was changed, with a
+    message saying so instead of a git exit status.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            return action()
+        except HTTPError as error:
+            if error.code < 500 and error.code != 429:
+                raise  # A missing file is not an outage.
+            failure = 'HTTP %d' % error.code
+        except subprocess.CalledProcessError as error:
+            # git says "not our ref" or "Repository not found" when GitHub answered.
+            said = [line.strip() for line in (error.stderr or '').splitlines() if line.strip()]
+            if not said or not UNREACHABLE.search(said[-1]):
+                raise
+            failure = said[-1][:300]
+        except subprocess.TimeoutExpired as error:
+            failure = 'no answer within %d seconds' % error.timeout
+        except (URLError, socket.timeout, ConnectionError) as error:
+            failure = str(getattr(error, 'reason', error))[:300]
+        if attempt < attempts:
+            sleep(pause)
+    raise RuntimeError('GitHub could not be reached for %s (%s). Nothing was changed on this server; '
+                       'try again later.' % (what, failure))
+
+
+def git_environment():
+    return dict(os.environ, **GIT_ENVIRONMENT)
+
+
 def resolve_release(branch):
     validate_branch(branch)
     ref = 'refs/heads/' + branch
-    result = subprocess.run(['git', 'ls-remote', '--exit-code', REPOSITORY, ref],
-                            check=True, stdout=subprocess.PIPE, universal_newlines=True, timeout=30)
+    result = from_github(lambda: subprocess.run(
+        ['git', 'ls-remote', '--exit-code', REPOSITORY, ref], check=True, stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=30,
+        env=git_environment()), 'the release ' + branch)
     match = re.fullmatch(r'([0-9a-f]{40})\s+' + re.escape(ref), result.stdout.strip())
     if not match:
         raise ValueError('Could not resolve the selected CyberPanel release.')
@@ -137,10 +207,10 @@ def verified_source(directory, commit):
     def git(*arguments):
         return subprocess.run(['git', '-C', directory] + list(arguments), check=True, timeout=300,
                               stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              universal_newlines=True).stdout.strip()
+                              universal_newlines=True, env=git_environment()).stdout.strip()
 
     git('init', '--quiet')
-    git('fetch', '--quiet', '--depth', '1', REPOSITORY, commit)
+    from_github(lambda: git('fetch', '--quiet', '--depth', '1', REPOSITORY, commit), 'the signed release')
     git('checkout', '--quiet', '--detach', commit)
     if git('rev-parse', 'HEAD') != commit:
         raise RuntimeError('The fetched source is not the signed release commit.')
@@ -154,12 +224,15 @@ def verified_source(directory, commit):
 
 
 def stage_release(stage, revision, read=None):
+    def download(path):
+        with urlopen('%s/%s/%s' % (RAW, revision, path), timeout=30) as response:
+            return response.read(2 * 1024 * 1024 + 1)
+
     def fetch(path):
         if read is not None:
             content = read(path)
         else:
-            with urlopen('%s/%s/%s' % (RAW, revision, path), timeout=30) as response:
-                content = response.read(2 * 1024 * 1024 + 1)
+            content = from_github(lambda: download(path), path)
         if len(content) > 2 * 1024 * 1024:
             raise ValueError('Unexpected release file size: ' + path)
         if path == 'CPScripts/watchdog.sh':
@@ -203,31 +276,136 @@ def readable_failure(text):
     return text
 
 
-def run(branch, lock_fd=None, commit=None):
-    """Upgrade to the branch's current commit or, with `commit`, to exactly that one."""
+class Stopped(RuntimeError):
+    """The upgrader was stopped before it finished."""
+
+
+def written(paths):
+    """A value that changes whenever the upgrader writes to one of its outputs."""
+    seen = []
+    for path in paths:
+        try:
+            info = os.fstat(path) if isinstance(path, int) else os.stat(str(path))
+            seen.append((info.st_size, info.st_mtime_ns))
+        except OSError:
+            seen.append(None)
+    return tuple(seen)
+
+
+def end_session(process, grace=30):
+    """Stop the upgrader and what it started in its session (a hung git or apt)."""
+    for number, wait in ((signal.SIGTERM, grace), (signal.SIGKILL, 10)):
+        try:
+            os.killpg(process.pid, number)
+        except ProcessLookupError:
+            break
+        try:
+            process.wait(timeout=wait)
+        except subprocess.TimeoutExpired:
+            pass
+    process.wait()
+
+
+def supervise(process, outputs, job=None, clock=time.monotonic, wall=time.time, pause=5,
+              idle_limit=IDLE_LIMIT, stop_after=STOP_AFTER, longest=LONGEST):
+    """Wait for the upgrader; stop it after too long without output, or on request.
+
+    An upgrade that hangs (GitHub accepting connections but sending nothing,
+    a package manager waiting on a lock) otherwise holds the upgrade lock
+    and the page's "running" state until the server restarts.
+    """
+    started = active = clock()
+    seen = written(outputs)
+    noted = None
+    while True:
+        try:
+            return process.wait(timeout=pause)
+        except subprocess.TimeoutExpired:
+            pass
+        now = clock()
+        current = written(outputs)
+        if current != seen:
+            seen, active = current, now
+        idle = now - active
+        if job is not None and (noted is None or now - noted >= 15):
+            record_status(job, 'running', active=wall() - idle)
+            noted = now
+        reason = None
+        if idle >= idle_limit:
+            reason = 'The upgrade wrote nothing for %d minutes and was stopped.' % (idle // 60)
+        elif now - started >= longest:
+            reason = 'The upgrade was still running after %d hours and was stopped.' % (longest // 3600)
+        elif job is not None and stop_path(job).exists():
+            try:
+                stop_path(job).unlink()
+            except OSError:
+                pass
+            if idle >= stop_after:
+                reason = ('The upgrade was stopped from the panel after it wrote nothing for %d minutes.'
+                          % (idle // 60))
+        if reason:
+            end_session(process)
+            raise Stopped(reason)
+
+
+def read_report(path):
+    """The steps the upgrader reported as not completed; empty when it reported none."""
+    try:
+        with open(str(path)) as source:
+            incomplete = json.load(source).get('incomplete', [])
+    except (OSError, ValueError, AttributeError):
+        return []
+    if not isinstance(incomplete, list):
+        return []
+    return [str(step)[:600] for step in incomplete[:30]]
+
+
+def run(branch, lock_fd=None, commit=None, job=None):
+    """Upgrade to the branch's current commit or, with `commit`, to exactly that one.
+
+    Returns the steps the upgrader reported as not completed.
+    """
     validate_branch(branch)
     with tempfile.TemporaryDirectory(prefix='cyberpanel-soft-upgrade-') as directory:
         stage = Path(directory)
-        environment = None
+        environment = dict(os.environ, **GIT_ENVIRONMENT)
         if commit is None:
             stage_release(stage, resolve_release(branch))
         else:
             with tempfile.TemporaryDirectory(prefix='cyberpanel-release-') as checkout:
                 stage_release(stage, commit, read=verified_source(checkout, commit))
             # The upgrader installs this commit and nothing newer on the branch.
-            environment = dict(os.environ, CYBERPANEL_UPGRADE_COMMIT=commit)
-        with tempfile.TemporaryFile() as errors:
+            environment['CYBERPANEL_UPGRADE_COMMIT'] = commit
+        report = stage / 'report.json'
+        environment['CYBERPANEL_UPGRADE_REPORT'] = str(report)
+        with tempfile.TemporaryFile() as errors, tempfile.TemporaryFile() as quiet:
+            # The upgrade page's worker keeps the upgrader's output in its own
+            # log; an unattended run has none, so it is collected here to see
+            # that the upgrader is still working.
+            try:
+                output = None if stat.S_ISREG(os.fstat(1).st_mode) else quiet
+            except OSError:
+                output = quiet
             # The service manager can terminate the launcher independently.
             # The running upgrader must retain the same flock until it exits.
             inherited = (lock_fd,) if lock_fd is not None else ()
-            result = subprocess.run([sys.executable, '-u', str(stage / 'upgrade.py'),
-                                     'SoftUpgrade,' + branch], cwd=stage, stderr=errors,
-                                    pass_fds=inherited, env=environment)
-            if result.returncode:
+            process = subprocess.Popen([sys.executable, '-u', str(stage / 'upgrade.py'),
+                                        'SoftUpgrade,' + branch], cwd=stage, stdout=output, stderr=errors,
+                                       pass_fds=inherited, env=environment, start_new_session=True)
+            outputs = [(output or sys.stdout).fileno(), errors.fileno(), '/home/cyberpanel/upgrade_logs']
+            try:
+                returncode = supervise(process, outputs, job)
+            finally:
+                if job is not None:
+                    try:
+                        stop_path(job).unlink()
+                    except OSError:
+                        pass
+            if returncode:
                 errors.seek(max(0, errors.tell() - 16384))
                 diagnostic = readable_failure(errors.read().decode('utf-8', errors='replace'))
-                raise RuntimeError('Upgrade exited with code %s. %s' % (result.returncode, diagnostic))
-        return 0
+                raise RuntimeError('Upgrade exited with code %s. %s' % (returncode, diagnostic))
+        return read_report(report)
 
 
 SYSTEMCTL = '/usr/bin/systemctl'
@@ -592,11 +770,11 @@ def run_panel_job(branch, job, require_admission=False):
             record_status(job, 'running')
             known = kept_installations()
             try:
-                run(branch, lock_fd=lock.fileno())
+                incomplete = run(branch, lock_fd=lock.fileno(), job=job)
                 activation = activate_panel_runtime(lock.fileno())
             except Exception as error:
                 raise RuntimeError(recover_from_failure(known, lock.fileno(), error))
-            record_status(job, 'complete', activation=activation)
+            record_status(job, 'complete', activation=activation, incomplete=incomplete)
             return 0
     except Exception as error:
         record_status(job, 'failed', str(error))
@@ -619,20 +797,41 @@ def run_unattended(branch, commit, job):
         record_status(job, 'running')
         known = kept_installations()
         try:
-            run(branch, lock_fd=lock.fileno(), commit=commit)
+            incomplete = run(branch, lock_fd=lock.fileno(), commit=commit, job=job)
             activation = activate_panel_runtime(lock.fileno())
         except Exception as error:
             # Nobody is watching: a server must not be left on a half-installed release.
             message = recover_from_failure(known, lock.fileno(), error)
             record_status(job, 'failed', message)
             raise RuntimeError(message)
-        record_status(job, 'complete', activation=activation)
+        record_status(job, 'complete', activation=activation, incomplete=incomplete)
         return activation
+
+
+def request_stop(job, clock=time.time):
+    """Ask a running upgrade to stop; the answer is what the upgrade page shows.
+
+    Only an upgrade that has written nothing for STOP_AFTER can be stopped: one
+    that is still working may be in the middle of a package transaction.
+    """
+    status = read_status(job)
+    if status.get('state') not in ('starting', 'running'):
+        return {'stopped': 0, 'message': 'This upgrade is not running any more.'}
+    idle = idle_seconds(status, clock)
+    if idle is None or idle < STOP_AFTER:
+        return {'stopped': 0, 'message': 'The upgrade is still writing to its log. It can be stopped once it '
+                                         'has written nothing for %d minutes.' % (STOP_AFTER // 60)}
+    descriptor = os.open(str(stop_path(job)), os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    os.close(descriptor)
+    return {'stopped': 1, 'message': 'The upgrade is being stopped. If it had already replaced the installed '
+                                     'version, the previous one is put back.'}
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--status':
         print(json.dumps(read_status(sys.argv[2])))
+    elif len(sys.argv) == 3 and sys.argv[1] == '--stop':
+        print(json.dumps(request_stop(sys.argv[2])))
     elif len(sys.argv) == 4 and sys.argv[1] == '--worker':
         status_path(sys.argv[3])
         require_job_scope(sys.argv[3])

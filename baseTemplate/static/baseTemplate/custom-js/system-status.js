@@ -670,19 +670,45 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     $scope.couldNotConnect = true;
     var CHECKING = 'The panel is restarting or cannot be reached. This page keeps checking.';
     $scope.connectionMessage = CHECKING;
+    // Steps the upgrade reported as not completed, and a run that has gone quiet.
+    $scope.upgradeIncomplete = [];
+    $scope.upgradeCanStop = false;
+    $scope.upgradeIdleMinutes = 0;
+    $scope.stopMessage = '';
+
+    function confirmed(selector) {
+        var button = document.querySelector(selector);
+        var question = button && button.getAttribute('data-confirm');
+        return !(question && typeof window !== 'undefined' && window.confirm && !window.confirm(question));
+    }
+
+    // Only a run that has written nothing for a while can be stopped; the
+    // server checks that again before it stops anything.
+    $scope.stopUpgrade = function () {
+        if (!confirmed('button[ng-click="stopUpgrade()"]')) return;
+        $scope.stopMessage = '';
+        $http.post('/base/upgradeStop', {}, {headers: {'X-CSRFToken': getCookie('csrftoken')}}).then(function (response) {
+            var data = response.data || {};
+            $scope.stopMessage = data.error_message || '';
+            if (data.stopped === 1) $scope.upgradeCanStop = false;
+        }, function () {
+            $scope.stopMessage = 'The panel could not be reached. Try again in a moment.';
+        });
+    };
 
 
     $scope.upgrade = function () {
 
         // An upgrade restarts services; it must not start from a stray click.
-        var button = document.querySelector('button[ng-click="upgrade()"]');
-        var question = button && button.getAttribute('data-confirm');
-        if (question && typeof window !== 'undefined' && window.confirm && !window.confirm(question)) {
+        if (!confirmed('button[ng-click="upgrade()"]')) {
             return;
         }
 
         failedPolls = 0;
         unclearPolls = 0;
+        $scope.upgradeIncomplete = [];
+        $scope.upgradeCanStop = false;
+        $scope.stopMessage = '';
         $scope.connectionMessage = CHECKING;
         $scope.upgradeLoading = false;
         $scope.updateError = true;
@@ -791,6 +817,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                 $scope.upgradeLoading = true;
                 $scope.updateStarted = true;
                 $scope.updateFinish = true;
+                $scope.upgradeCanStop = false;
                 $scope.errorMessage = data.error_message;
                 if (data.upgradeLog) {
                     $scope.upgradelogBox = false;
@@ -809,10 +836,17 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
                     $scope.updateStarted = true;
                     $scope.updateFinish = false;
                     $scope.couldNotConnect = true;
+                    $scope.upgradeCanStop = false;
+                    // A completed upgrade whose optional steps failed is not a plain success.
+                    $scope.upgradeIncomplete = Array.isArray(data.incomplete) ? data.incomplete.filter(function (step) {
+                        return typeof step === 'string';
+                    }) : [];
 
                 } else {
                     $scope.upgradelogBox = false;
                     $scope.upgradeLog = response.data.upgradeLog;
+                    $scope.upgradeCanStop = data.canStop === 1;
+                    $scope.upgradeIdleMinutes = typeof data.idleMinutes === 'number' ? data.idleMinutes : 0;
                     schedulePoll(2000);
                 }
             }

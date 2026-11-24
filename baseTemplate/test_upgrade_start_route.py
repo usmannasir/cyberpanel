@@ -119,6 +119,56 @@ class UpgradeStatusTests(SimpleTestCase):
         self.assertEqual(405, response.status_code)
         self.assertEqual(0, json.loads(response.content)['upgradeStatus'])
 
+    def test_a_completed_run_names_the_steps_that_did_not_complete(self):
+        response, _ = self.poll({'state': 'complete', 'incomplete': ['The panel web worker was not rebuilt: x']})
+        self.assertEqual(['The panel web worker was not rebuilt: x'], json.loads(response.content)['incomplete'])
+        for record in ({'state': 'complete'}, {'state': 'complete', 'incomplete': 'x'}):
+            response, _ = self.poll(record)
+            self.assertEqual([], json.loads(response.content)['incomplete'])
+
+    def test_a_quiet_run_tells_the_page_how_long_and_whether_it_can_be_stopped(self):
+        response, _ = self.poll({'state': 'running', 'idle': 400, 'stoppable': True})
+        answer = json.loads(response.content)
+        self.assertEqual((6, 1), (answer['idleMinutes'], answer['canStop']))
+        response, _ = self.poll({'state': 'running', 'idle': 30, 'stoppable': False})
+        self.assertEqual(0, json.loads(response.content)['canStop'])
+        # A record of an older launcher has no activity time.
+        response, _ = self.poll({'state': 'running', 'pid': 1, 'start_ticks': '1'})
+        self.assertNotIn('canStop', json.loads(response.content))
+
+
+class UpgradeStopTests(SimpleTestCase):
+    def stop(self, helper_answer=None, session=None, admin=1, method='post'):
+        factory = RequestFactory()
+        request = factory.get('/base/upgradeStop') if method == 'get' else \
+            factory.post('/base/upgradeStop', data='{}', content_type='application/json')
+        request.session = dict({'userID': 1, 'softUpgradeRun': JOB}, **(session or {}))
+        with patch.object(views.ACLManager, 'loadedACL', return_value={'admin': admin}), \
+                patch.object(views.ACLManager, 'loadErrorJson', return_value=HttpResponse('{"denied": 1}')), \
+                patch.object(views.ProcessUtilities, 'outputExecutioner', return_value=helper_answer) as helper:
+            response = views.upgradeStop(request)
+        return response, json.loads(response.content), helper
+
+    def test_the_sessions_own_upgrade_is_asked_to_stop_by_the_root_helper(self):
+        _, answer, helper = self.stop((1, json.dumps({'stopped': 1, 'message': 'The upgrade is being stopped.'})))
+        self.assertEqual({'stopped': 1, 'error_message': 'The upgrade is being stopped.'}, answer)
+        self.assertTrue(helper.call_args[0][0].endswith('softUpgrade.py --stop ' + JOB))
+        _, answer, _ = self.stop((1, json.dumps({'stopped': 0, 'message': 'The upgrade is still writing to its log.'})))
+        self.assertEqual(0, answer['stopped'])
+
+    def test_nothing_is_asked_without_an_administrator_a_post_or_a_valid_run(self):
+        for options in ({'admin': 0}, {'method': 'get'}, {'session': {'softUpgradeRun': '../x'}},
+                        {'session': {'softUpgradeRun': None}}):
+            with self.subTest(options):
+                _, answer, helper = self.stop((1, json.dumps({'stopped': 1, 'message': 'x'})), **options)
+                self.assertNotEqual(1, answer.get('stopped'))
+                helper.assert_not_called()
+
+    def test_an_unreadable_helper_answer_is_not_taken_for_a_stop(self):
+        for helper_answer in (None, (0, ''), (1, 'not json'), (1, '{}')):
+            response, answer, _ = self.stop(helper_answer)
+            self.assertEqual((503, 0), (response.status_code, answer['stopped']))
+
 
 class VersionRowTests(SimpleTestCase):
     def call(self, session, admin=1):

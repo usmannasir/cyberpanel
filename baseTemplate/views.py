@@ -401,6 +401,38 @@ def upgrade(request):
         return HttpResponse(json_data)
 
 
+def upgradeStop(request):
+    """Stop this session's upgrade once it has written nothing for a while.
+
+    The root helper decides (softUpgrade.request_stop): one that is still
+    working may be in the middle of a package transaction and is not stopped.
+    """
+    try:
+        currentACL = ACLManager.loadedACL(request.session['userID'])
+    except KeyError:
+        return HttpResponse(json.dumps({'stopped': 0, 'error_message': 'Please login or refresh this page.'}))
+    if currentACL['admin'] != 1:
+        return ACLManager.loadErrorJson('stopped', 0)
+    if request.method != 'POST':
+        return HttpResponse(json.dumps({'stopped': 0, 'error_message': 'Use the Version Management page.'}),
+                            status=405)
+    job = request.session.get('softUpgradeRun')
+    from plogical.softUpgrade import status_path
+    try:
+        status_path(job or '')
+    except ValueError:
+        return HttpResponse(json.dumps({'stopped': 0, 'error_message': 'No upgrade started from this session is running.'}))
+    command = '/usr/local/CyberPanel/bin/python -I /usr/local/CyberCP/plogical/softUpgrade.py --stop ' + job
+    result = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
+    try:
+        answer = json.loads(result[1]) if result and result[0] else None
+        stopped, message = answer['stopped'], answer['message']
+    except (ValueError, KeyError, TypeError, IndexError):
+        return HttpResponse(json.dumps({'stopped': 0, 'error_message': 'The upgrade could not be asked to stop.'}),
+                            status=503)
+    return HttpResponse(json.dumps({'stopped': int(stopped == 1), 'error_message': str(message)}))
+
+
 def upgradeStatus(request):
     try:
         val = request.session['userID']
@@ -447,8 +479,15 @@ def upgradeStatus(request):
                     if status['state'] == 'failed':
                         return HttpResponse(json.dumps({'finished': 1, 'upgradeStatus': 0,
                                             'error_message': status['message'], 'upgradeLog': log}))
-                    return HttpResponse(json.dumps({'finished': int(status['state'] == 'complete'),
-                                        'upgradeStatus': 1, 'upgradeLog': log, 'error_message': 'None'}))
+                    answer = {'finished': int(status['state'] == 'complete'),
+                              'upgradeStatus': 1, 'upgradeLog': log, 'error_message': 'None'}
+                    if status['state'] == 'complete':
+                        # Steps the upgrader reported as not completed (softUpgrade.read_report).
+                        steps = status.get('incomplete')
+                        answer['incomplete'] = [str(step) for step in steps[:30]] if isinstance(steps, list) else []
+                    elif isinstance(status.get('idle'), int) and not isinstance(status.get('idle'), bool):
+                        answer.update(idleMinutes=status['idle'] // 60, canStop=int(status.get('stoppable') is True))
+                    return HttpResponse(json.dumps(answer))
                 path = '/home/cyberpanel/upgrade_logs'
 
                 try:

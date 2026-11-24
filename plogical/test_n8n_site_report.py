@@ -39,7 +39,9 @@ def report(output='', error=None, timeout=False, log_fails=False):
         process.communicate.return_value = (output, None)
     runner = SimpleNamespace(Popen=mock.Mock(return_value=process, side_effect=error), PIPE=subprocess.PIPE,
                              DEVNULL=subprocess.DEVNULL, TimeoutExpired=subprocess.TimeoutExpired)
-    namespace = {'subprocess': runner, 'Upgrade': SimpleNamespace(stdOut=log)}
+    # Upgrade.warn logs the step as a warning and keeps it for the closing report.
+    namespace = {'subprocess': runner,
+                 'Upgrade': SimpleNamespace(stdOut=log, warn=lambda message: log('WARNING: ' + message, 0))}
     exec(compile(ast.parse(textwrap.dedent(method_source())), 'upgrade.py', 'exec'), namespace)
     result = namespace['reportN8NSites']()
     return SimpleNamespace(result=result, printed=printed, runner=runner, process=process)

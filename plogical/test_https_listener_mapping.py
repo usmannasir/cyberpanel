@@ -1055,6 +1055,8 @@ class UpgradeStepTests(ServerTestCase):
         self.server.listener('SSL', '*:443', 'a.test')
         self.server.listener('SSL IPv6', '[ANY]:443', 'b.test')
         self.upgrade = mock.Mock()
+        # Upgrade.warn logs the step as a warning and keeps it for the closing report.
+        self.upgrade.warn.side_effect = lambda message: self.upgrade.stdOut('WARNING: ' + message, 0)
         self.apply = mock.Mock(side_effect=write_like_the_upgrade)
         self.running = mock.Mock(return_value=True)
         self.installed = True

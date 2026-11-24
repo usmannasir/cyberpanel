@@ -1328,7 +1328,7 @@ class UpgradeSourceTests(unittest.TestCase):
         step = self.text[self.text.index('correct_proxy_backends_on_upgrade('):]
         self.assertTrue(step[step.index('        except '):].startswith(
             "        except OLSUpgradeFailure:\n            raise\n        except Exception as error:\n"
-            "            Upgrade.stdOut('WARNING: The Apache backends of OpenLiteSpeed were not corrected: '"))
+            "            Upgrade.warn('The Apache backends of OpenLiteSpeed were not corrected: '"))
 
 
 if __name__ == '__main__':

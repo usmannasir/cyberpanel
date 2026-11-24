@@ -106,6 +106,58 @@ test('a short loss of the session store during an upgrade does not end the wait'
     assert.equal(ui.scope.updateError, true);
 });
 
+test('a completed upgrade with steps that did not complete is not shown as a plain success', () => {
+    const ui = upgradeScreen(true);
+    ui.scope.upgrade();
+    ui.requests[0].success({data: {upgrade: 1}});
+    ui.requests[1].success({data: {finished: 1, upgradeStatus: 1, upgradeLog: 'done',
+                                   incomplete: ['The panel web worker was not rebuilt: no network', 7]}});
+    assert.equal(ui.scope.updateFinish, false);
+    assert.deepEqual(Array.from(ui.scope.upgradeIncomplete), ['The panel web worker was not rebuilt: no network']);
+    assert.match(template, /ng-hide="updateFinish \|\| upgradeIncomplete\.length"[^>]*>\s*\{% trans "CyberPanel upgrade completed\." %\}/);
+    assert.match(template, /ng-show="!updateFinish && upgradeIncomplete\.length"[\s\S]*?ng-repeat="step in upgradeIncomplete/);
+    // A clean run, and a new run after one with failures, show the plain success.
+    const clean = upgradeScreen(true);
+    clean.scope.upgrade();
+    clean.requests[0].success({data: {upgrade: 1}});
+    clean.requests[1].success({data: {finished: 1, upgradeStatus: 1, upgradeLog: 'done'}});
+    assert.deepEqual(Array.from(clean.scope.upgradeIncomplete), []);
+    ui.scope.upgrade();
+    assert.deepEqual(Array.from(ui.scope.upgradeIncomplete), []);
+});
+
+test('a quiet run offers the stop button, which asks first and then asks the server', () => {
+    const ui = upgradeScreen(true);
+    ui.scope.upgrade();
+    ui.requests[0].success({data: {upgrade: 1}});
+    ui.requests[1].success({data: {finished: 0, upgradeStatus: 1, upgradeLog: 'cloning', idleMinutes: 2, canStop: 0}});
+    assert.equal(ui.scope.upgradeCanStop, false);
+    ui.timers[0].handler();
+    ui.requests[2].success({data: {finished: 0, upgradeStatus: 1, upgradeLog: 'cloning', idleMinutes: 6, canStop: 1}});
+    assert.equal(ui.scope.upgradeCanStop, true);
+    assert.equal(ui.scope.upgradeIdleMinutes, 6);
+    assert.match(template, /ng-click="stopUpgrade\(\)"[\s\S]*?data-confirm="\{% trans "Stop the upgrade now\?[^"]*" %\}"/);
+    const questions = ui.questions.length;
+    ui.scope.stopUpgrade();
+    assert.equal(ui.questions.length, questions + 1);
+    assert.equal(ui.requests[3].url, '/base/upgradeStop');
+    ui.requests[3].success({data: {stopped: 1, error_message: 'The upgrade is being stopped.'}});
+    assert.equal(ui.scope.upgradeCanStop, false);
+    assert.equal(ui.scope.stopMessage, 'The upgrade is being stopped.');
+    // The run then ends as a failure with its reason; the button is gone.
+    ui.timers[1].handler();
+    ui.requests[4].success({data: {finished: 1, upgradeStatus: 0, upgradeLog: 'x',
+                                   error_message: 'The upgrade was stopped from the panel after it wrote nothing for 6 minutes.'}});
+    assert.equal(ui.scope.upgradeCanStop, false);
+    assert.match(ui.scope.errorMessage, /stopped from the panel/);
+});
+
+test('a declined stop question sends nothing', () => {
+    const ui = upgradeScreen(false);
+    ui.scope.stopUpgrade();
+    assert.equal(ui.requests.length, 0);
+});
+
 test('the page keeps checking through a slow restart and says when it stops', () => {
     const ui = upgradeScreen(true);
     ui.scope.upgrade();

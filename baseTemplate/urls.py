@@ -16,6 +16,7 @@ urlpatterns = [
     re_path(r'^RestartCyberPanel$', views.RestartCyberPanel, name='RestartCyberPanel'),
     re_path(r'^runonboarding$', views.runonboarding, name='runonboarding'),
     re_path(r'^UpgradeStatus$', views.upgradeStatus, name='UpgradeStatus'),
+    re_path(r'^upgradeStop$', views.upgradeStop, name='upgradeStop'),
     re_path(r'^autoUpdate$', views.autoUpdate, name='autoUpdate'),
     re_path(r'^upgradeVersion$', views.upgradeVersion, name='upgradeVersion'),
     re_path(r'^getDashboardStats$', views.getDashboardStats, name='getDashboardStats'),

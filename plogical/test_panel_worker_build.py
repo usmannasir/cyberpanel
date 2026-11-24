@@ -204,7 +204,7 @@ class UpgraderTests(unittest.TestCase):
         block = upgrader[upgrader.rindex('\n        if Upgrade.SoftUpgrade:\n', 0, position):
                          upgrader.index('\n        if Upgrade.SoftUpgrade == 0:\n', position)]
         self.assertIn('            try:\n                from plogical.panelWorkerBuild import rebuild as rebuild_panel_worker\n', block)
-        self.assertIn('            except Exception as error:\n                Upgrade.stdOut(\'WARNING: The panel web worker was not rebuilt', block)
+        self.assertIn('            except Exception as error:\n                Upgrade.warn(\'The panel web worker was not rebuilt', block)
         self.assertNotIn('raise', block)
 
     def test_helper_runs_on_the_oldest_supported_python(self):

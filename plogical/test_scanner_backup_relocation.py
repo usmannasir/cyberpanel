@@ -343,8 +343,8 @@ class CallSiteTests(unittest.TestCase):
         method = upgrader[start:upgrader.index('    @staticmethod', start)]
         self.assertIn('from plogical.scannerBackupRelocation import run as relocate_scanner_backups', method)
         self.assertIn('connect=Upgrade.setupConnection, log=Upgrade.stdOut', method)
-        self.assertIn("except Exception as error:\n            Upgrade.stdOut('WARNING: AI Scanner backups of "
-                      "earlier releases were not looked for: ' + str(error), 0)", method)
+        self.assertIn("except Exception as error:\n            Upgrade.warn('AI Scanner backups of "
+                      "earlier releases were not looked for: ' + str(error))", method)
         self.assertLess(method.index('        try:'), method.index('from plogical.scannerBackupRelocation'))
         # Called once in the upgrade itself, after the repair of the database grants.
         self.assertEqual(1, upgrader.count('Upgrade.relocateScannerBackups()'))

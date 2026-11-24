@@ -66,7 +66,7 @@ class PanelUpgradeTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def test_release_helpers_work_without_installed_helper(self):
-        self.assertEqual(softUpgrade.run('v3.0.8'), 0)
+        self.assertEqual(softUpgrade.run('v3.0.8'), [])
         self.assertEqual(self.receipt.read_text(), 'SoftUpgrade,v3.0.8 ' + self.expected)
 
     def test_stages_watchdog_from_service_helpers_selected_revision(self):
