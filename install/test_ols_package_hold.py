@@ -255,6 +255,64 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
         self.assertNotIn('lsphp73', result.stdout)
         self.assert_no_apt()
 
+    STANZA = '\nmodule cyberpanel_ols {\n  ls_enabled          1\n}\n'
+
+    def stale_declaration(self):
+        """A vendor core, no module, and the declaration an earlier installer wrote."""
+        if self.module.exists() or self.module.is_symlink():
+            self.module.unlink()
+        self.core.write_text('#!/bin/bash\necho "$VALIDATION_OUTPUT"\nexit "${VALIDATION_STATUS:-0}"\n')
+        (self.lsws / 'conf/httpd_config.conf').write_text('serverName example\n' + self.STANZA)
+        return ('2026-11-24 07:52:07.891010 [ERROR] [200193] Failed to load module [cyberpanel_ols], error: '
+                '%s//modules/cyberpanel_ols.so: cannot open shared object file: No such file or directory' % self.lsws)
+
+    def test_a_declaration_of_the_missing_module_does_not_stop_the_upgrade(self):
+        for websites in ('', '\n' + self.SITE_ERRORS):
+            with self.subTest(websites=websites):
+                output = self.stale_declaration() + websites  # the fake apt replaced the core
+                self.events.write_text('')
+                result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=output)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('declared the CyberPanel OpenLiteSpeed module', result.stdout)
+                self.assertIn('upgrade -y', self.events.read_text())
+                self.assertEqual(self.holds.read_text(), 'other-package\n')
+        # The launcher leaves the configuration to the upgrader.
+        self.assertIn('module cyberpanel_ols', (self.lsws / 'conf/httpd_config.conf').read_text())
+
+    def test_mixed_states_with_the_missing_module_still_stop_before_package_changes(self):
+        listener = '[ERROR] [config:server:listener:SSL] failed to load the certificate'
+        cases = {
+            'another global error': ({}, '\n' + listener),
+            'module file present': ({'module': 'ELF without the marker'}, ''),
+            'no declaration': ({'config': 'serverName example\n'}, ''),
+            'two declarations': ({'config': 'serverName example\n' + self.STANZA + self.STANZA}, ''),
+            'crashed test': ({'status': '3'}, ''),
+        }
+        for name, (change, extra) in cases.items():
+            with self.subTest(name):
+                missing = self.stale_declaration()
+                if 'module' in change:
+                    self.module.write_text(change['module'])
+                if 'config' in change:
+                    (self.lsws / 'conf/httpd_config.conf').write_text(change['config'])
+                self.events.write_text('')
+                result = self.run_upgrade(VALIDATION_STATUS=change.get('status', '2'), VALIDATION_OUTPUT=missing + extra)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('no package changes attempted', result.stdout)
+                self.assertNotIn('declared the CyberPanel OpenLiteSpeed module', result.stdout)
+                self.assert_no_apt()
+
+    def test_an_unobtainable_classifier_keeps_the_refusal_and_says_why(self):
+        missing = self.stale_declaration()
+        self.guard = self.guard.replace(str(ROOT / 'plogical'), str(self.root / 'no-such-dir'))
+        (self.bin / 'curl').write_text('#!/bin/bash\nexit 7\n')
+        (self.bin / 'curl').chmod(0o755)
+        result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=missing)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Cannot obtain the checksum-verified OpenLiteSpeed state classifier', result.stdout)
+        self.assertIn('no package changes attempted', result.stdout)
+        self.assert_no_apt()
+
     def test_valid_stock_configuration_keeps_the_normal_package_upgrade(self):
         self.stock_core()
         result = self.run_upgrade(VALIDATION_STATUS='1', VALIDATION_OUTPUT='[WARN] harmless')
@@ -458,7 +516,7 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
     def test_classifier_pin_matches_the_published_helper(self):
         import hashlib
         helper = ROOT / 'plogical/olsStockClassifier.py'
-        pin = re.search(r'OLS_Split_State\(\) \(\n.*\n  local pin=(\S+)\n  local blob=(\S+)\n', SOURCE)
+        pin = re.search(r'OLS_Classifier\(\) \{\n  local pin=(\S+)\n  local blob=(\S+)\n', SOURCE)
         self.assertEqual(pin.group(1), hashlib.sha256(helper.read_bytes()).hexdigest())
         data = helper.read_bytes()
         self.assertEqual(pin.group(2), hashlib.sha1(b'blob %d\0' % len(data) + data).hexdigest())
