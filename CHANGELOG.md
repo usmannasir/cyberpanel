@@ -4,6 +4,33 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.18 (build 18) — 2026-11-24
+
+Upgrade reliability: servers that keep the vendor OpenLiteSpeed.
+
+### Upgrade
+- An upgrade no longer stops with "OpenLiteSpeed configuration failed
+  validation" and "Failed to load module [cyberpanel_ols] ...
+  cyberpanel_ols.so: cannot open shared object file". Earlier versions
+  declared the CyberPanel OpenLiteSpeed module in httpd_config.conf also
+  where they did not install it: fresh installs on systems without a
+  CyberPanel OpenLiteSpeed build (ARM servers, Ubuntu before 22.04, systems
+  the installer did not recognise) and upgrades from November 2025 to
+  November 2026 whose download failed. OpenLiteSpeed served websites
+  normally, but every upgrade since 3.0.8 stopped there. The upgrade now
+  recognises exactly that state. Where a CyberPanel OpenLiteSpeed build
+  exists for the system it installs the module, so the declaration becomes
+  valid; elsewhere it removes only that declaration, keeps a copy of the
+  previous file beside it, tests the configuration and puts the previous
+  file back if the test fails. The terminal upgrade, the panel's upgrade
+  page and automatic updates decide the same way. Any other configuration
+  error still stops the upgrade before it changes anything.
+
+### Installer
+- A fresh install that keeps the vendor OpenLiteSpeed no longer declares
+  the CyberPanel module, and the module is declared only beside the
+  CyberPanel OpenLiteSpeed core and module.
+
 ## v3.0.17 (build 17) — 2026-11-24
 
 Upgrade reliability and Multi-Server Manager wording.
