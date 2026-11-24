@@ -1,7 +1,9 @@
 {% extends "baseTemplate/index.html" %}
+{% load static %}
 {% block title %}{{ inventory_title }} · All servers – CyberPanel{% endblock %}
 {% block content %}
 <section class="container-fluid" ng-non-bindable>
+<link rel="stylesheet" href="{% static 'multiServer/multiserver.css' %}?v={{ CP_VERSION }}">
   <h1>{{ inventory_title }} <small>All servers</small></h1>
   {% if licensed %}
   {% include 'multiServer/inventory_nav.html' %}

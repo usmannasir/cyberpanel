@@ -1,0 +1,110 @@
+/* Multi-Server Manager pages. Colours come from the panel's theme variables, so
+   every colour scheme and the dark theme apply; the values after the commas are
+   the Evergreen defaults for a panel that does not define them. No script. */
+.ms-page { max-width: 1100px; padding: 8px 0 32px; color: var(--text-primary, #13251b); }
+.ms-page h1 { font-size: 24px; font-weight: 600; margin: 0 0 4px; }
+.ms-page h2 { font-size: 17px; font-weight: 600; margin: 0 0 12px; }
+.ms-page p { line-height: 1.6; }
+.ms-sub { color: var(--text-secondary, #4b5b51); margin: 0; }
+.ms-muted { color: var(--text-muted, #6b776f); font-size: 13px; }
+
+.ms-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.ms-head-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.ms-pill { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 5px 12px; border-radius: 999px; font-size: 13px;
+  background: var(--bg-card, #fffdf9); border: 1px solid var(--border-color, #dfe3d6); color: var(--text-secondary, #4b5b51); white-space: nowrap; }
+.ms-pill strong { color: var(--text-primary, #13251b); }
+.ms-pill--ok { background: var(--success-soft-bg, #dceddc); border-color: transparent; color: var(--success-soft-text, #194b33); }
+.ms-pill--warn { background: var(--warn-soft-bg, #fbefd5); border-color: transparent; color: var(--warn-soft-text, #7a4b06); }
+
+.ms-card { background: var(--bg-card, #fffdf9); border: 1px solid var(--border-color, #dfe3d6); border-radius: var(--cp-radius-lg, 12px);
+  padding: 20px 22px; margin-bottom: 16px; }
+.ms-card--warn { background: var(--warn-soft-bg, #fbefd5); border-color: transparent; color: var(--warn-soft-text, #7a4b06); }
+.ms-card--info { background: var(--accent-soft-bg, #dceddc); border-color: transparent; }
+.ms-card--info .ms-num { background: var(--bg-card, #fffdf9); }
+.ms-card > :last-child { margin-bottom: 0; }
+
+.ms-step-title { display: flex; align-items: center; gap: 10px; }
+.ms-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; flex: none;
+  background: var(--accent-soft-bg, #dceddc); color: var(--accent-color, #194b33); font-size: 13px; font-weight: 600; }
+
+/* Role cards: a radio button styled as a card. Keyboard focus shows on the card. */
+.ms-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.ms-role { position: relative; display: block; margin: 0; font-weight: normal; cursor: pointer; }
+.ms-role-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ms-role-card { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 16px; border-radius: var(--cp-radius-lg, 12px);
+  background: var(--bg-card, #fffdf9); border: 2px solid var(--border-color, #dfe3d6); transition: border-color .15s, background .15s; }
+.ms-role:hover .ms-role-card { border-color: var(--border-hover, #b9c3b0); }
+.ms-role-input:checked + .ms-role-card { border-color: var(--accent-color, #194b33); background: var(--accent-bg, #e5efdf); }
+.ms-role-input:focus-visible + .ms-role-card { box-shadow: 0 0 0 3px var(--accent-shadow, rgb(25 75 51 / 20%)); }
+.ms-role-top { display: flex; justify-content: space-between; align-items: center; }
+.ms-role-icon { font-size: 22px; color: var(--accent-color, #194b33); }
+.ms-role-check { display: none; color: var(--accent-color, #194b33); font-size: 18px; }
+.ms-role-input:checked + .ms-role-card .ms-role-check { display: inline; }
+.ms-role-name { font-size: 16px; font-weight: 600; color: var(--text-primary, #13251b); }
+.ms-role-text { font-size: 13px; color: var(--text-secondary, #4b5b51); line-height: 1.5; flex: 1; }
+.ms-role-static { cursor: default; }
+.ms-role-static .ms-role-card { border-width: 1px; padding: 17px; }
+.ms-role-current .ms-role-card { border-color: var(--accent-color, #194b33); }
+.ms-tag { align-self: flex-start; display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px;
+  background: var(--bg-muted, #f3f3eb); color: var(--text-secondary, #4b5b51); }
+.ms-tag--ok { background: var(--success-soft-bg, #dceddc); color: var(--success-soft-text, #194b33); }
+.ms-tag a { color: inherit; text-decoration: underline; }
+.ms-role-input:checked + .ms-role-card .ms-tag { background: var(--bg-card, #fffdf9); }
+
+/* Confirmation with password and code, and the two-factor set-up beside it. */
+.ms-confirm { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.ms-confirm--qr { grid-template-columns: 220px minmax(0, 1fr); }
+.ms-qr { text-align: center; }
+.ms-qr svg { display: block; width: 200px; height: 200px; margin: 0 auto 8px; border-radius: 8px; border: 1px solid var(--border-color, #dfe3d6); }
+.ms-key { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; letter-spacing: .5px; word-break: normal;
+  background: var(--bg-code, #edf0e7); color: var(--text-primary, #13251b); padding: 4px 8px; border-radius: 6px; }
+.ms-qr .ms-key { display: inline-block; max-width: 200px; line-height: 1.7; }
+.ms-qr .ms-muted { display: block; margin-bottom: 4px; }
+.ms-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 12px 0 16px; max-width: 560px; }
+.ms-field { display: flex; flex-direction: column; gap: 4px; margin: 0; font-weight: 500; font-size: 13px; color: var(--text-secondary, #4b5b51); }
+.ms-field .form-control { font-weight: normal; }
+.ms-field small { font-weight: normal; color: var(--text-muted, #6b776f); }
+.ms-check { display: flex; gap: 8px; align-items: center; font-weight: normal; margin: 0 0 12px; }
+.ms-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Numbered steps. */
+.ms-steps { list-style: none; counter-reset: ms-step; padding: 0; margin: 0 0 16px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.ms-steps > li { counter-increment: ms-step; position: relative; padding: 14px 14px 14px 50px; border-radius: 10px;
+  background: var(--bg-muted, #f3f3eb); font-size: 13px; line-height: 1.5; color: var(--text-secondary, #4b5b51); }
+.ms-steps > li::before { content: counter(ms-step); position: absolute; left: 14px; top: 13px; width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;
+  background: var(--accent-color, #194b33); color: var(--text-on-accent, #ffffff); }
+.ms-steps strong { color: var(--text-primary, #13251b); }
+
+/* Folded sections. */
+.ms-more { margin-bottom: 10px; }
+.ms-more > summary { cursor: pointer; font-weight: 600; color: var(--text-primary, #13251b); padding: 6px 0; }
+.ms-more[open] > summary { margin-bottom: 8px; }
+details.ms-card > summary { cursor: pointer; font-size: 17px; font-weight: 600; list-style-position: outside; }
+details.ms-card[open] > summary { margin-bottom: 14px; }
+
+/* Lists of servers and links. */
+.ms-table { margin: 0; }
+.ms-table > thead > tr > th { border-bottom-width: 1px; font-size: 12px; font-weight: 600; color: var(--text-muted, #6b776f); }
+.ms-table > tbody > tr > th, .ms-table > tbody > tr > td { vertical-align: top; padding-top: 12px; padding-bottom: 12px; }
+.ms-table form { display: inline-block; margin: 0 6px 6px 0; vertical-align: top; }
+.ms-table details form { display: block; }
+.ms-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: var(--text-muted, #6b776f); }
+.ms-dot--ok { background: var(--success-color, #2f7d4f); }
+.ms-dot--wait { background: var(--warning-color, #c98a14); }
+.ms-dot--bad { background: var(--danger-color, #b42318); }
+.ms-danger > summary { color: var(--danger-color, #b42318); font-size: 13px; cursor: pointer; }
+.ms-empty { text-align: center; padding: 28px 12px; color: var(--text-secondary, #4b5b51); }
+.ms-empty i { font-size: 28px; color: var(--text-muted, #6b776f); display: block; margin-bottom: 8px; }
+
+.ms-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 18px; }
+.ms-tabs a { padding: 7px 14px; border-radius: 999px; font-size: 13px; text-decoration: none;
+  background: var(--bg-card, #fffdf9); border: 1px solid var(--border-color, #dfe3d6); color: var(--text-primary, #13251b); }
+.ms-tabs a:hover, .ms-tabs a:focus { border-color: var(--accent-color, #194b33); }
+
+@media (max-width: 720px) {
+  .ms-confirm--qr { grid-template-columns: minmax(0, 1fr); }
+  .ms-card { padding: 16px; }
+}

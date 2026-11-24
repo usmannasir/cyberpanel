@@ -1,45 +1,88 @@
 {% extends "baseTemplate/index.html" %}
+{% load static %}
 {% block title %}Multi-Server Manager – CyberPanel{% endblock %}
 {% block content %}
 <div class="container-fluid" ng-non-bindable>
-  <h1>Multi-Server Manager</h1>
-  <p>Manage all your CyberPanel servers from one panel. Choose one server as the <strong>controller</strong>: you work from its panel. Your other servers become <strong>managed servers</strong>, and you open them from the controller without signing in to each one.</p>
+<link rel="stylesheet" href="{% static 'multiServer/multiserver.css' %}?v={{ CP_VERSION }}">
+<div class="ms-page">
+  <div class="ms-head">
+    <div>
+      <h1>Multi-Server Manager</h1>
+      <p class="ms-sub">Manage all your CyberPanel servers from one panel. One server is the controller; you open the others from it without signing in to each one.</p>
+    </div>
+    <div class="ms-head-actions">
+      <p class="ms-pill">This server is: <strong>{{ role_name }}</strong></p>
+      {% if role == 'controller' and running %}<a class="btn btn-primary" href="{% url 'multiServerNodes' %}">Go to your managed servers</a>{% endif %}
+      {% if role == 'node' and running %}<a class="btn btn-primary" href="{% url 'multiServerControllers' %}">Go to Controllers</a>{% endif %}
+    </div>
+  </div>
   {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
-  <p>This server is: <strong>{{ role_name }}</strong></p>
-  {% if role != 'off' and not running %}<p class="alert alert-warning">Multi-Server Manager is not running on this server yet: its database tables are missing, or this system cannot sign requests. Upgrade CyberPanel, then open this page again.</p>{% endif %}
-  {% if role == 'off' %}<div class="alert alert-info">
-    <strong>Getting started</strong>
-    <ol>
-      <li>On the server you will work from, choose <strong>Controller</strong> below. It needs a licence.</li>
-      <li>On each other server, choose <strong>Managed server</strong> below. No licence is needed there.</li>
-      <li>On the controller, open <em>Managed servers</em> and follow the steps under <em>Add a server</em>.</li>
-    </ol>
-  </div>{% endif %}
-  {% if role == 'controller' and running %}<p><a class="btn btn-primary" href="{% url 'multiServerNodes' %}">Go to your managed servers</a></p>{% endif %}
-  {% if role == 'node' and running %}<p><a class="btn btn-primary" href="{% url 'multiServerControllers' %}">Go to Controllers: allow or end a controller</a></p>{% endif %}
-  <h2>Change the role</h2>
-  <ul>
-    <li><strong>Controller</strong>: you manage your other servers from this one. It needs a Multi-Server Manager licence. <a href="{{ buy_url }}" target="_blank" rel="noopener">Get a licence for this server</a></li>
-    <li><strong>Managed server</strong>: a controller that you allow can manage this server. No licence is needed here.</li>
-    <li><strong>Off</strong>: Multi-Server Manager is not used on this server.</li>
-  </ul>
-  <p>A server has only one role. To switch between controller and managed server, first remove its servers (on a controller) or end its controllers (on a managed server).</p>
-  <p>Choosing Off pauses Multi-Server Manager but keeps its connections: choose the same role again and they work as before. To end a connection for good, remove the server on the controller's <em>Managed servers</em> page, or end the link on the managed server's <em>Controllers</em> page.</p>
-  {% if enrolled %}
-  <form method="post" action="{% url 'multiServerRole' %}">
+  {% if role != 'off' and not running %}<div class="ms-card ms-card--warn">Multi-Server Manager is not running on this server yet: its database tables are missing, or this system cannot sign requests. Upgrade CyberPanel, then open this page again.</div>{% endif %}
+
+  {% if enrolled or qr_runs %}<form method="post" action="{% url 'multiServerRole' %}">
     {% csrf_token %}
-    <fieldset>
-      <legend>Role of this server</legend>
-      {% for value, name in choices %}<label><input type="radio" name="role" value="{{ value }}" required{% if value == role %} checked{% endif %}> {{ name }}</label> {% endfor %}
-    </fieldset>
-    <p>To confirm, enter your password and the six-digit code from your authenticator app.</p>
-    <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
-    <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
-    <button class="btn btn-primary" type="submit">Change role</button>
+    {% if not enrolled %}<input type="hidden" name="action" value="enrol">{% endif %}
+  {% endif %}
+  <h2 class="ms-step-title"><span class="ms-num">1</span>{% if enrolled or qr_runs %}Choose what this server does{% else %}What this server can do{% endif %}</h2>
+  <div class="ms-roles">
+    {% for value, name in choices %}<label class="ms-role{% if not enrolled and not qr_runs %} ms-role-static{% if value == role %} ms-role-current{% endif %}{% endif %}">
+      {% if enrolled or qr_runs %}<input class="ms-role-input" type="radio" name="role" value="{{ value }}" required{% if value == suggested %} checked{% endif %}>{% endif %}
+      <span class="ms-role-card">
+        <span class="ms-role-top"><i class="fas {% if value == 'controller' %}fa-network-wired{% elif value == 'node' %}fa-server{% else %}fa-power-off{% endif %} ms-role-icon" aria-hidden="true"></i><i class="fas fa-circle-check ms-role-check" aria-hidden="true"></i></span>
+        <span class="ms-role-name">{{ name }}</span>
+        <span class="ms-role-text">{% if value == 'controller' %}You work from this panel and open your other servers from here.{% elif value == 'node' %}A controller that you allow manages this server.{% else %}Not used. Its connections are kept: choose the same role again and they work as before.{% endif %}</span>
+        {% if value == 'controller' %}{% if licensed %}<span class="ms-tag ms-tag--ok"><i class="fas fa-check" aria-hidden="true"></i> Licence active</span>{% else %}<span class="ms-tag">Needs a licence · <a href="{{ buy_url }}" target="_blank" rel="noopener">Get a licence for this server</a></span>{% endif %}{% elif value == 'node' %}<span class="ms-tag">No licence needed</span>{% endif %}
+        {% if value == role %}<span class="ms-tag">Current role</span>{% endif %}
+      </span>
+    </label>{% endfor %}
+  </div>
+
+  {% if enrolled or qr_runs %}
+    <div class="ms-card">
+      <h2 class="ms-step-title"><span class="ms-num">2</span>{% if qr_runs %}Turn on two-factor login{% else %}Confirm it's you{% endif %}</h2>
+      <div class="ms-confirm{% if qr_runs %} ms-confirm--qr{% endif %}">
+        {% if qr_runs %}<div class="ms-qr">
+          <svg role="img" aria-label="QR code of the key" width="200" height="200" viewBox="-4 -4 {{ qr_view }} {{ qr_view }}" shape-rendering="crispEdges"><rect x="-4" y="-4" width="{{ qr_view }}" height="{{ qr_view }}" fill="#ffffff"/>{% for x, y, width in qr_runs %}<rect x="{{ x }}" y="{{ y }}" width="{{ width }}" height="1" fill="#000000"/>{% endfor %}</svg>
+          <span class="ms-muted">Can't scan it? Type this key:</span><code class="ms-key">{{ setup_key }}</code>
+        </div>{% endif %}
+        <div>
+          {% if qr_runs %}<p>Changing the role needs two-factor login, because a controller can open the panels of all its servers. Scan this code with an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, Authy, 1Password and others), or type the key into it. Then enter the code the app shows.</p>
+          {% else %}<p>Enter your password and the six-digit code from your authenticator app.</p>{% endif %}
+          <div class="ms-fields">
+            <label class="ms-field">{% if qr_runs %}Code from the app{% else %}Verification code{% endif %} <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+            <label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
+          </div>
+          <button class="btn btn-primary" type="submit">{% if qr_runs %}Turn on two-factor login and save the role{% else %}Save the role{% endif %}</button>
+          {% if qr_runs %}<p class="ms-muted">You stay signed in. From then on you sign in to this panel with your password and a code from the app.</p>{% endif %}
+        </div>
+      </div>
+    </div>
   </form>
   {% else %}
-  <p class="alert alert-info">To change the role, first turn on two-factor authentication for your own account (Users, Modify User), then sign in again.</p>
+  <div class="ms-card ms-card--info">
+    <h2 class="ms-step-title"><span class="ms-num">2</span>Turn on two-factor login</h2>
+    <p>Choosing a role needs two-factor login on your account, because a controller can open the panels of all its servers. Set it up right here, in about a minute, with an authenticator app on your phone. You stay signed in.</p>
+    <form method="post" action="{% url 'multiServerRole' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="setup">
+      <button class="btn btn-primary" type="submit"><i class="fas fa-shield-halved" aria-hidden="true"></i> Set up two-factor login</button>
+    </form>
+  </div>
   {% endif %}
-  <p>If the panel cannot be used, root can do the same on the command line: <code>/usr/local/CyberCP/bin/python /usr/local/CyberCP/multiServer/msctl.py status</code></p>
+
+  <details class="ms-more"{% if role == 'off' %} open{% endif %}>
+    <summary>How it works</summary>
+    <ol class="ms-steps">
+      <li>On the server you will work from, choose <strong>Controller</strong>. It needs a licence.</li>
+      <li>On each other server, choose <strong>Managed server</strong>. No licence is needed there.</li>
+      <li>On the controller, open <strong>Managed servers</strong> and follow the steps under <strong>Add a server</strong>.</li>
+    </ol>
+    <p class="ms-muted">A server has only one role. To switch between controller and managed server, first remove its servers (on a controller) or end its controllers (on a managed server). Choosing Off pauses Multi-Server Manager but keeps its connections. To end a connection for good, remove the server on the controller's Managed servers page, or end the link on the managed server's Controllers page.</p>
+  </details>
+  <details class="ms-more">
+    <summary>Using the command line</summary>
+    <p>If the panel cannot be used, root can do the same on the command line: <code>/usr/local/CyberCP/bin/python /usr/local/CyberCP/multiServer/msctl.py status</code></p>
+  </details>
+</div>
 </div>
 {% endblock %}
