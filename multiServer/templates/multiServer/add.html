@@ -1,37 +1,55 @@
 {% extends "baseTemplate/index.html" %}
+{% load static %}
 {% block title %}Add a server – CyberPanel{% endblock %}
 {% block content %}
 <div class="container-fluid" ng-non-bindable>
-  <h1>Add a server: is this the right one?</h1>
-  <p>Nothing has been sent yet. This is the server the pairing code belongs to. Check that the address is your server before you connect.</p>
-  <table class="table">
-    <tbody>
-      <tr><th scope="row">Name on this controller</th><td>{{ label }}</td></tr>
-      <tr><th scope="row">Address</th><td>{{ host }}</td></tr>
-      <tr><th scope="row">Panel port</th><td>{{ port }}</td></tr>
-    </tbody>
-  </table>
-  <details>
-    <summary>Security details (optional to check)</summary>
-    <table class="table">
+<link rel="stylesheet" href="{% static 'multiServer/multiserver.css' %}?v={{ CP_VERSION }}">
+<div class="ms-page">
+  <div class="ms-head">
+    <div>
+      <h1>Add a server: is this the right one?</h1>
+      <p class="ms-sub">Nothing has been sent yet. This is the server the pairing code belongs to. Check that the address is your server before you connect.</p>
+    </div>
+    <div class="ms-head-actions"><p class="ms-pill">Step 2 of 4</p></div>
+  </div>
+  <div class="ms-card">
+    <table class="table ms-table">
       <tbody>
-        <tr><th scope="row">Fingerprint of the server's identity key</th><td><code>{{ identity }}</code></td></tr>
-        <tr><th scope="row">Fingerprint of the server's certificate</th><td><code>{{ certificate }}</code></td></tr>
+        <tr><th scope="row">Name on this controller</th><td>{{ label }}</td></tr>
+        <tr><th scope="row">Address</th><td>{{ host }}</td></tr>
+        <tr><th scope="row">Panel port</th><td>{{ port }}</td></tr>
       </tbody>
     </table>
-    <p>This controller will connect only to that address, and only if the server presents that certificate.</p>
-  </details>
-  <p>After you connect, this controller shows an eight-digit number. Type it on that server (Multi-Server, Controllers) to approve.</p>
-  <form method="post" action="{% url 'multiServerNodeAdd' %}">
-    {% csrf_token %}
-    <input type="hidden" name="step" value="connect">
-    <input type="hidden" name="label" value="{{ label }}">
-    <input type="hidden" name="pairing_code" value="{{ pairing_code }}">
-    <p>To confirm, enter your password and the six-digit code from your authenticator app.</p>
-    <label>Current password <input type="password" name="password" autocomplete="current-password" required></label>
-    <label>Verification code <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
-    <button class="btn btn-primary" type="submit">Connect to this server</button>
-    <a class="btn btn-default" href="{% url 'multiServerNodes' %}">Cancel</a>
-  </form>
+    <details class="ms-more">
+      <summary>Security details (optional to check)</summary>
+      <table class="table ms-table">
+        <tbody>
+          <tr><th scope="row">Fingerprint of the server's identity key</th><td><code>{{ identity }}</code></td></tr>
+          <tr><th scope="row">Fingerprint of the server's certificate</th><td><code>{{ certificate }}</code></td></tr>
+        </tbody>
+      </table>
+      <p class="ms-muted">This controller will connect only to that address, and only if the server presents that certificate.</p>
+    </details>
+  </div>
+  <div class="ms-card">
+    <h2 class="ms-step-title"><i class="fas fa-lock" aria-hidden="true"></i>Connect</h2>
+    <p>After you connect, this controller shows an eight-digit number. Type it on that server (Multi-Server, Controllers) to approve.</p>
+    <form method="post" action="{% url 'multiServerNodeAdd' %}">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="connect">
+      <input type="hidden" name="label" value="{{ label }}">
+      <input type="hidden" name="pairing_code" value="{{ pairing_code }}">
+      <p class="ms-muted">To confirm, enter your password and the six-digit code from your authenticator app.</p>
+      <div class="ms-fields">
+        <label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
+        <label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+      </div>
+      <div class="ms-actions">
+        <button class="btn btn-primary" type="submit">Connect to this server</button>
+        <a class="btn btn-default" href="{% url 'multiServerNodes' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
 </div>
 {% endblock %}

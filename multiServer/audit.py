@@ -48,6 +48,8 @@ EVENTS = (
     'node_remove',
     'licence',
     'role',
+    'two_factor',       # two-factor login was switched on from the role page
+    'sign_in',          # a controller's administrator confirmed the sign-in with password and code
 )
 OUTCOMES = ('ok', 'refused', 'error')
 REASONS = (

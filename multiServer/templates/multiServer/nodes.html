@@ -1,81 +1,106 @@
 {% extends "baseTemplate/index.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "Managed servers" %} – CyberPanel{% endblock %}
 {% block content %}
 <div class="container-fluid" ng-non-bindable>
-  <h1>{% trans "Managed servers" %}</h1>
-  <p>This server is the <strong>controller</strong>. From this page you add your other CyberPanel servers, open their panels without signing in again, and pause or remove them.</p>
+<link rel="stylesheet" href="{% static 'multiServer/multiserver.css' %}?v={{ CP_VERSION }}">
+<div class="ms-page">
+  <div class="ms-head">
+    <div>
+      <h1>{% trans "Managed servers" %}</h1>
+      <p class="ms-sub">This server is the <strong>controller</strong>. Add your other CyberPanel servers, open their panels without signing in again, and pause or remove them.</p>
+    </div>
+    <div class="ms-head-actions">
+      {% if licensed %}<p class="ms-pill ms-pill--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> Licence active</p>
+      {% else %}<p class="ms-pill ms-pill--warn"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> No licence</p>{% endif %}
+    </div>
+  </div>
   {% if licensed %}
-  <p><span class="label label-success">Licence active</span></p>
   {% include "multiServer/inventory_nav.html" %}
   {% else %}
-  <p class="alert alert-warning"><strong>This controller has no active Multi-Server Manager licence.</strong> Until it has one you cannot add servers or open their panels from here. You can still pause or remove the servers listed below. <a href="{{ buy_url }}" target="_blank" rel="noopener">Get a licence for this controller</a></p>
+  <div class="ms-card ms-card--warn"><strong>This controller has no active Multi-Server Manager licence.</strong> Until it has one you cannot add servers or open their panels from here. You can still pause or remove the servers listed below. <a href="{{ buy_url }}" target="_blank" rel="noopener">Get a licence for this controller</a></div>
   {% endif %}
-  {% if licensed and not ms_server %}<p class="alert alert-info">To open a server's panel from here, sign out and sign in to this controller again with your password and verification code.</p>{% endif %}
+  {% if licensed and not ms_server %}<form method="post" action="{% url 'multiServerRole' %}" class="ms-card ms-card--info">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="confirm">
+    <h2 class="ms-step-title"><i class="fas fa-lock" aria-hidden="true"></i>Confirm it's you</h2>
+    <p>To open your servers' panels from here, confirm with your password and a code from your authenticator app.</p>
+    <div class="ms-fields">
+      <label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
+      <label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+    </div>
+    <button class="btn btn-primary" type="submit">Confirm</button>
+  </form>{% endif %}
   {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
 
   {% if licensed %}
-  <details{% if not nodes %} open{% endif %} ng-non-bindable>
-    <summary><strong>Add a server</strong> (four steps, about two minutes)</summary>
-    <ol>
-      <li><strong>On the server you want to add:</strong> open Multi-Server, set its role to <em>Managed server</em>, then open <em>Controllers</em>. Under <em>Allow a controller</em>, enter the IP address of this controller and press <em>Get a pairing code</em>. Copy the code.</li>
-      <li><strong>Here:</strong> give the server a name you will recognise, paste the code below and press <em>Check the code</em>. You will see the server's address before anything is connected. A code works once, for ten minutes.</li>
+  <details class="ms-card"{% if not nodes %} open{% endif %}>
+    <summary><i class="fas fa-plus" aria-hidden="true"></i> Add a server</summary>
+    <p class="ms-muted">Four steps, about two minutes.</p>
+    <ol class="ms-steps">
+      <li><strong>On the server you want to add:</strong> open Multi-Server, choose <em>Managed server</em>, then open <em>Controllers</em>. Under <em>Allow a controller</em>, enter the IP address of this controller and press <em>Get a pairing code</em>. Copy the code.</li>
+      <li><strong>Here:</strong> give the server a name you will recognise, paste the code below and press <em>Check the code</em>. You see the server's address before anything is connected. A code works once, for ten minutes.</li>
       <li><strong>Back on that server:</strong> in <em>Controllers</em>, type the eight-digit number that this page then shows, and press <em>Approve</em>.</li>
       <li><strong>Here:</strong> press <em>I approved it, check now</em>. The server shows as <em>Connected</em>.</li>
     </ol>
     <form method="post" action="{% url 'multiServerNodeAdd' %}">{% csrf_token %}
       <input type="hidden" name="step" value="read">
-      <label>Name for the server <small>(letters, digits, spaces, dots, dashes)</small> <input type="text" name="label" maxlength="64" pattern="[A-Za-z0-9]([A-Za-z0-9 ._-]{0,62}[A-Za-z0-9])?" autocomplete="off" required></label>
-      <label>Pairing code from that server <input type="text" name="pairing_code" maxlength="1024" autocomplete="off" spellcheck="false" required></label>
+      <div class="ms-fields">
+        <label class="ms-field">Name for the server <input class="form-control" type="text" name="label" maxlength="64" pattern="[A-Za-z0-9]([A-Za-z0-9 ._-]{0,62}[A-Za-z0-9])?" autocomplete="off" required><small>Letters, digits, spaces, dots, dashes</small></label>
+        <label class="ms-field">Pairing code from that server <input class="form-control" type="text" name="pairing_code" maxlength="1024" autocomplete="off" spellcheck="false" required></label>
+      </div>
       <button class="btn btn-primary" type="submit">Check the code</button>
     </form>
   </details>
   {% endif %}
 
-  <h2>Your servers</h2>
-  {% if nodes %}
-  <div class="table-responsive"><table class="table table-striped">
-    <thead><tr><th scope="col">Server</th><th scope="col">Status</th><th scope="col">Last contact</th><th scope="col">What you can do</th></tr></thead>
-    <tbody>{% for node in nodes %}<tr>
-      <th scope="row">{{ node.label }}</th>
-      <td>{% if node.status == 'pending' %}<strong>Waiting for approval on that server</strong>{% if node.number %}<br>Number to type there: <strong>{{ node.number }}</strong><br><small>On that server open Multi-Server, Controllers, type this number and press Approve. Then press "I approved it, check now" here.</small>{% endif %}
-        {% elif node.status == 'active' %}<span class="text-success"><strong>Connected</strong></span>
-        {% elif node.status == 'paused' %}<strong>Paused</strong><br><small>You paused it here. This controller sends it nothing and cannot open its panel until you resume it.</small>
-        {% elif node.status == 'revoking' %}<strong>Being removed</strong><br><small>That server has not confirmed the removal yet. Make sure it is online and press "Remove this server" again.</small>
-        {% elif node.status == 'revoked' %}<strong>Removed</strong>
-        {% else %}<strong>Unknown</strong>{% endif %}
-        {% if node.error %}<br><span class="text-danger">Last problem: {{ node.error }}{% if node.error_at %} ({{ node.error_at|date:"Y-m-d H:i T" }}){% endif %}</span>{% endif %}
-        {% if node.version or node.capabilities %}<details><summary><small>Details</small></summary><small>CyberPanel {{ node.version|default:"version unknown" }}<br>Features it offers: {{ node.capabilities|default:"—" }}</small></details>{% endif %}
-      </td>
-      <td>{{ node.seen|date:"Y-m-d H:i T"|default:"Never" }}</td>
-      <td>{% if node.id %}
-        {% if ms_server and node.can_login %}<form method="post" action="{% url 'msSelect' %}" target="_blank" rel="noopener">{% csrf_token %}
-          <input type="hidden" name="server" value="{{ node.id }}"><input type="hidden" name="page" value="index">
-          <button class="btn btn-primary" type="submit">Open its panel</button>
-        </form>{% endif %}
-        {% if node.status == 'pending' and licensed %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
-          <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-primary" name="action" value="confirm">I approved it, check now</button>
-        </form>{% endif %}
-        {% if node.status == 'active' or node.status == 'paused' and licensed %}
-        <form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
-          <input type="hidden" name="link_id" value="{{ node.id }}">
-          {% if node.status == 'active' %}<button class="btn btn-default" name="action" value="pause" title="Stop managing it for now and sign out the sessions opened from here. Nothing is deleted.">Pause</button>
-          {% else %}<button class="btn btn-default" name="action" value="resume" title="Manage this server again.">Resume</button>{% endif %}
-        </form>{% endif %}
-        {% if node.status == 'active' and licensed %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
-          <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-default" name="action" value="refresh" title="Ask the server again for its version and features, for example after you upgraded it.">Update server info</button>
-        </form>{% endif %}
-        {% if node.status == 'paused' %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
-          <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-default" name="action" value="pause" title="Ask the server again to sign out every session opened from this controller.">Sign out open sessions</button>
-        </form>{% endif %}
-        {% if node.status == 'active' or node.status == 'paused' or node.status == 'pending' or node.status == 'revoking' %}
-          {% include 'multiServer/confirm.html' with action='revoke' title='Remove this server' notice='This controller stops managing the server, and the server is asked to delete the link too. If the server cannot be reached now, it stays listed as "Being removed" and you can try again. To manage it again later, add it again.' %}
-        {% endif %}
-        {% include 'multiServer/confirm.html' with action='forget' title='Delete from this list only' notice='Use this only when the server no longer exists or can never be reached. The server is not told: if it still exists, it keeps trusting this controller until you end the link there (Multi-Server, Controllers, End this link).' %}
-      {% endif %}</td>
-    </tr>{% endfor %}</tbody>
-  </table></div>
-  {% else %}<p>No servers yet.{% if licensed %} Open <em>Add a server</em> above and follow the four steps.{% endif %}</p>{% endif %}
-  <p><a href="{% url 'multiServerRole' %}">Change the role of this server</a></p>
+  <div class="ms-card">
+    <h2>Your servers</h2>
+    {% if nodes %}
+    <div class="table-responsive"><table class="table ms-table">
+      <thead><tr><th scope="col">Server</th><th scope="col">Status</th><th scope="col">Last contact</th><th scope="col">What you can do</th></tr></thead>
+      <tbody>{% for node in nodes %}<tr>
+        <th scope="row">{{ node.label }}</th>
+        <td>{% if node.status == 'pending' %}<span class="ms-dot ms-dot--wait" aria-hidden="true"></span><strong>Waiting for approval on that server</strong>{% if node.number %}<br>Number to type there: <strong>{{ node.number }}</strong><br><small>On that server open Multi-Server, Controllers, type this number and press Approve. Then press "I approved it, check now" here.</small>{% endif %}
+          {% elif node.status == 'active' %}<span class="ms-dot ms-dot--ok" aria-hidden="true"></span><span class="text-success"><strong>Connected</strong></span>
+          {% elif node.status == 'paused' %}<span class="ms-dot" aria-hidden="true"></span><strong>Paused</strong><br><small>You paused it here. This controller sends it nothing and cannot open its panel until you resume it.</small>
+          {% elif node.status == 'revoking' %}<span class="ms-dot ms-dot--wait" aria-hidden="true"></span><strong>Being removed</strong><br><small>That server has not confirmed the removal yet. Make sure it is online and press "Remove this server" again.</small>
+          {% elif node.status == 'revoked' %}<span class="ms-dot" aria-hidden="true"></span><strong>Removed</strong>
+          {% else %}<span class="ms-dot" aria-hidden="true"></span><strong>Unknown</strong>{% endif %}
+          {% if node.error %}<br><span class="text-danger"><span class="ms-dot ms-dot--bad" aria-hidden="true"></span>Last problem: {{ node.error }}{% if node.error_at %} ({{ node.error_at|date:"Y-m-d H:i T" }}){% endif %}</span>{% endif %}
+          {% if node.version or node.capabilities %}<details><summary><small>Details</small></summary><small>CyberPanel {{ node.version|default:"version unknown" }}<br>Features it offers: {{ node.capabilities|default:"—" }}</small></details>{% endif %}
+        </td>
+        <td>{{ node.seen|date:"Y-m-d H:i T"|default:"Never" }}</td>
+        <td>{% if node.id %}
+          {% if ms_server and node.can_login %}<form method="post" action="{% url 'msSelect' %}" target="_blank" rel="noopener">{% csrf_token %}
+            <input type="hidden" name="server" value="{{ node.id }}"><input type="hidden" name="page" value="index">
+            <button class="btn btn-primary btn-sm" type="submit"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i> Open its panel</button>
+          </form>{% endif %}
+          {% if node.status == 'pending' and licensed %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
+            <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-primary btn-sm" name="action" value="confirm">I approved it, check now</button>
+          </form>{% endif %}
+          {% if node.status == 'active' or node.status == 'paused' and licensed %}
+          <form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
+            <input type="hidden" name="link_id" value="{{ node.id }}">
+            {% if node.status == 'active' %}<button class="btn btn-default btn-sm" name="action" value="pause" title="Stop managing it for now and sign out the sessions opened from here. Nothing is deleted.">Pause</button>
+            {% else %}<button class="btn btn-default btn-sm" name="action" value="resume" title="Manage this server again.">Resume</button>{% endif %}
+          </form>{% endif %}
+          {% if node.status == 'active' and licensed %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
+            <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-default btn-sm" name="action" value="refresh" title="Ask the server again for its version and features, for example after you upgraded it.">Update server info</button>
+          </form>{% endif %}
+          {% if node.status == 'paused' %}<form method="post" action="{% url 'multiServerNodeControl' %}">{% csrf_token %}
+            <input type="hidden" name="link_id" value="{{ node.id }}"><button class="btn btn-default btn-sm" name="action" value="pause" title="Ask the server again to sign out every session opened from this controller.">Sign out open sessions</button>
+          </form>{% endif %}
+          {% if node.status == 'active' or node.status == 'paused' or node.status == 'pending' or node.status == 'revoking' %}
+            {% include 'multiServer/confirm.html' with action='revoke' title='Remove this server' notice='This controller stops managing the server, and the server is asked to delete the link too. If the server cannot be reached now, it stays listed as "Being removed" and you can try again. To manage it again later, add it again.' %}
+          {% endif %}
+          {% include 'multiServer/confirm.html' with action='forget' title='Delete from this list only' notice='Use this only when the server no longer exists or can never be reached. The server is not told: if it still exists, it keeps trusting this controller until you end the link there (Multi-Server, Controllers, End this link).' %}
+        {% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="ms-empty"><i class="fas fa-server" aria-hidden="true"></i>No servers yet.{% if licensed %} Open <strong>Add a server</strong> above and follow the four steps.{% endif %}</div>{% endif %}
+  </div>
+  <p><a href="{% url 'multiServerRole' %}"><i class="fas fa-sliders" aria-hidden="true"></i> Change the role of this server</a></p>
+</div>
 </div>
 {% endblock %}

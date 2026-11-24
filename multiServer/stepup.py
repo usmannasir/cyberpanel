@@ -15,6 +15,12 @@ written under a lock on that row:
 The count and the last half minute are one small entry (KEPT_AS) in the JSON
 text of Administrator.config. Nothing here writes a password or a code
 anywhere, and no error holds one.
+
+An administrator without two-factor login sets it up on the role page itself
+(start, setup, enrol), as on Users > Modify User: every set-up gets a new key,
+and two-factor is switched on only with a code from the app the key was added
+to. Switching it on also takes the account's password and follows the two
+rules above, so the code of the set-up is not accepted again afterwards.
 """
 import hmac
 import json
@@ -50,12 +56,59 @@ def confirm(admin_id, password, code):
         return 'internal'
 
 
+def enrol(admin_id, password, code):
+    """Switch on two-factor login with the key of its set-up: None when done, otherwise why not.
+
+    The reasons are those of confirm(); 'admin' also when the account already
+    has two-factor login or has no key of a set-up. Never raises.
+    """
+    try:
+        from django.db import transaction
+        with transaction.atomic():
+            return _confirm(admin_id, password, code, int(time.time()), enrolling=True)
+    except Exception:
+        return 'internal'
+
+
+def start(admin_id):
+    """Give a full administrator without two-factor login the new key of a set-up; True when done. Never raises."""
+    try:
+        import pyotp
+        from django.db import transaction
+        from loginSystem.models import Administrator
+        from multiServer import views
+        with transaction.atomic():
+            if views.active_full_administrator(admin_id) is None:
+                return False
+            rows = Administrator.objects.filter(pk=admin_id)
+            if views.two_factor_enrolled(rows.select_for_update().get()):
+                return False
+            # Off until a code from the app proves the key was added: the account is not shut out meanwhile.
+            return rows.update(twoFA=0, secretKey=pyotp.random_base32()) == 1
+    except Exception:
+        return False
+
+
+def setup(admin, label):
+    """(key, otpauth address) of the set-up of an account without two-factor login, or None. Never raises."""
+    try:
+        from multiServer import views
+        if views.two_factor_enrolled(admin) or admin.twoFA == 1:
+            return None
+        import pyotp
+        totp = pyotp.TOTP(admin.secretKey)
+        totp.byte_secret()
+        return admin.secretKey, totp.provisioning_uri(name=label, issuer_name='CyberPanel')
+    except Exception:
+        return None
+
+
 def message(reason):
     """What to tell the administrator for a reason confirm() gave; a fixed text."""
     return LOCKED if reason == 'not_allowed' else WRONG
 
 
-def _confirm(admin_id, password, code, now):
+def _confirm(admin_id, password, code, now, enrolling=False):
     from loginSystem.models import Administrator
     from multiServer import views
     from plogical import hashPassword
@@ -65,7 +118,9 @@ def _confirm(admin_id, password, code, now):
     # The row is locked from here to the end of the transaction: attempts made at the same moment in
     # other workers wait, and each of them then sees the count this one leaves.
     administrator = rows.select_for_update().get()
-    if not views.two_factor_enrolled(administrator):
+    if views.two_factor_enrolled(administrator) == enrolling:
+        return 'admin'
+    if enrolling and setup(administrator, '') is None:
         return 'admin'
     config = json.loads(administrator.config or '{}')
     if type(config) is not dict:
@@ -91,7 +146,10 @@ def _confirm(admin_id, password, code, now):
         config[KEPT_AS] = [0, 0, step]
     else:
         config[KEPT_AS] = [failures + 1, since if failures else now, last]
-    rows.update(config=json.dumps(config))
+    if reason is None and enrolling:
+        rows.update(config=json.dumps(config), twoFA=1)
+    else:
+        rows.update(config=json.dumps(config))
     return reason
 
 

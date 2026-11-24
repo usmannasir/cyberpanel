@@ -34,6 +34,7 @@ PASSWORD = 'correct horse; battery $taple'
 LINK = test_gateway.LINK
 IDENTITY, NODE_KEY, NODE = test_gateway.IDENTITY, test_gateway.NODE_KEY, test_gateway.NODE
 PIN = 'd4' * 32
+SIGNED_IN_TEXT = 'Confirmed. You can open your servers from here now.'
 ADDRESS = '93.184.216.34'  # where a managed server is, as its pairing code says
 CALLER = '203.0.113.9'  # the address a controller calls from
 TEMPLATES = Path(__file__).resolve().parent / 'templates' / 'multiServer'
@@ -107,6 +108,21 @@ class TemplateTests(unittest.TestCase):
         # The price is the platform's to say, not the panel's.
         for name in ('role.html', 'nodes.html', 'inventory.html'):
             self.assertNotIn('$', (TEMPLATES / name).read_text(), name)
+
+    def test_two_factor_is_set_up_on_the_role_page_and_nothing_asks_to_sign_out(self):
+        role = (TEMPLATES / 'role.html').read_text()
+        for action in ('setup', 'enrol'):
+            self.assertEqual(1, role.count('<input type="hidden" name="action" value="%s">' % action), action)
+        # The code is drawn as squares from the server: no script, no image from elsewhere.
+        self.assertIn('{% for x, y, width in qr_runs %}', role)
+        self.assertNotIn('<img', role)
+        # A licensed server is not offered a licence.
+        self.assertLess(role.index('{% if licensed %}'), role.index('buy_url'))
+        nodes = (TEMPLATES / 'nodes.html').read_text()
+        self.assertIn('<input type="hidden" name="action" value="confirm">', nodes)
+        for name in ('role.html', 'nodes.html'):
+            self.assertNotRegex((TEMPLATES / name).read_text().lower(), r'sign out and sign in|sign in again|then sign in', name)
+        self.assertNotIn('SIGN_IN_AGAIN', (TEMPLATES.parent.parent / 'role.py').read_text())
 
     def test_the_base_template_includes_the_selector_only_when_there_is_one(self):
         source = (TEMPLATES.parent.parent.parent / 'baseTemplate' / 'templates' / 'baseTemplate' / 'index.html'
@@ -260,6 +276,7 @@ class RolePageTests(Pages):
     def setUp(self):
         super().setUp()
         self.role.return_value = keys.OFF
+        self.start(patch.object(entitlement, 'allowed', return_value=False))
 
     def change(self, role, follow=True, **fields):
         return self.post('/multiserver/role', follow=follow, **self.confirmed(role=role, **fields))
@@ -363,7 +380,7 @@ class RolePageTests(Pages):
                 # A full administrator sees the role and is told what to do first, and can change nothing.
                 self.assertEqual(200, shown.status_code, name)
                 self.assertNotIn('name="role"', self.text(shown), name)
-                self.assertIn('two-factor authentication', self.text(shown), name)
+                self.assertIn('name="action" value="setup"', self.text(shown), name)
             else:
                 self.assertEqual(404, shown.status_code, name)
             self.assertEqual(404, changed.status_code, name)
@@ -399,6 +416,178 @@ class RolePageTests(Pages):
         self.assertEqual(403, self.post('/multiserver/role', client=strict, **self.confirmed(role='node')).status_code)
         self.assertEqual(before[:-1], self.state()[:-1])
         self.assertEqual([], self.commands)
+
+
+@unittest.skipIf(SKIP, SKIP)
+class TwoFactorSetUpTests(Pages):
+    """A licensed administrator without two-factor login starts using the feature on one page, without signing out."""
+    ROLE, NODES = '/multiserver/role', '/multiserver/nodes'
+
+    def setUp(self):
+        super().setUp()
+        self.role.return_value = keys.OFF
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=0, secretKey='None')
+        self.licensed = self.start(patch.object(entitlement, 'allowed', return_value=True))
+        self.start(patch.object(keys, 'master_key', return_value=test_links.MASTER))
+        # The revision of the root-owned role file, which these tests do not write: like the file, it
+        # names the role, and a role set again (which raises the counter) is a new revision.
+        def revision(expected):
+            if self.role.return_value != expected:
+                raise ValueError('Multi-Server role changed.')
+            return 'revision-%d' % self.generation.return_value
+        self.start(patch.object(keys, 'role_revision', side_effect=revision))
+
+    def account(self):
+        return Administrator.objects.get(pk=self.administrator.pk)
+
+    def app_code(self):
+        """What the authenticator app shows for the key of the set-up, in the next half minute."""
+        import pyotp
+        self.time.now += 30
+        return pyotp.TOTP(self.account().secretKey).generate_otp(self.time.now // 30)
+
+    def send(self, path=ROLE, follow=True, **fields):
+        return self.client.post(path, data=fields, follow=follow, secure=True)
+
+    def set_up(self):
+        return self.text(self.send(action='setup'))
+
+    def enrol(self, **fields):
+        return self.text(self.send(**dict(dict(action='enrol', role='controller', password=PASSWORD,
+                                               code=self.app_code()), **fields)))
+
+    def nodes_page(self):
+        return self.text(self.client.get(self.NODES, secure=True))
+
+    def test_looking_at_the_page_offers_the_set_up_and_changes_nothing(self):
+        before = self.state()
+        page = self.text(self.client.get(self.ROLE, secure=True))
+        self.assertIn('<input type="hidden" name="action" value="setup">', page)
+        self.assertNotIn('<svg', page)
+        self.assertNotIn('name="role"', page)
+        self.assertNotIn('Get a licence for this server', page)  # this server is licensed
+        self.assertEqual(before, self.state())
+        self.assertEqual('None', self.account().secretKey)
+
+    def test_one_page_switches_on_two_factor_and_makes_this_server_a_controller(self):
+        page = self.set_up()
+        account = self.account()
+        self.assertEqual(0, account.twoFA)
+        key = account.secretKey
+        self.assertRegex(key, r'^[A-Z2-7]{32}$')
+        self.assertIn('<svg', page)
+        self.assertIn(' '.join(key[start:start + 4] for start in range(0, 32, 4)), page)
+        self.assertIn('name="role" value="controller" required checked', page)
+        from django.conf import settings
+        session_before = self.client.cookies[settings.SESSION_COOKIE_NAME].value
+        before = self.last_audit_id()
+        page = self.enrol()
+        self.assertIn('Two-factor login is on for your account.', page)
+        self.assertIn('This server is now: Controller.', page)
+        self.assertEqual((1, key), (self.account().twoFA, self.account().secretKey))
+        self.assertEqual([msctl.ROLE_COMMANDS['controller']], self.commands)
+        self.assertEqual([('two_factor', 'ok', '', '', 'admin'), ('role', 'ok', '', '', 'admin')],
+                         self.audited(before))
+        # The password and a fresh code were checked, as at sign-in: this session is such a sign-in now.
+        self.assertNotEqual(session_before, self.client.cookies[settings.SESSION_COOKIE_NAME].value)
+        page = self.nodes_page()
+        self.assertNotIn('name="action" value="confirm"', page)
+        self.assertNotIn('Get a licence for this controller', page)
+        self.nowhere(PASSWORD, key)
+
+    def test_the_code_of_the_set_up_works_once(self):
+        self.set_up()
+        code = self.app_code()
+        self.enrol(code=code, role='node')
+        self.assertEqual(keys.NODE, self.role.return_value)
+        page = self.text(self.send(role='off', password=PASSWORD, code=code))
+        self.assertIn(stepup.WRONG, page)
+        self.assertEqual(keys.NODE, self.role.return_value)
+
+    def test_wrong_answers_change_nothing_and_five_shut_the_set_up_out(self):
+        self.set_up()
+        before = self.last_audit_id()
+        for name, fields in (('a wrong password', dict(password='not it')), ('no password', dict(password='')),
+                             ('a wrong code', dict(code='000000')), ('no code', dict(code='')),
+                             ('letters', dict(code='abcdef'))):
+            page = self.enrol(**fields)
+            self.assertIn(stepup.WRONG, page, name)
+            self.assertEqual(0, self.account().twoFA, name)
+            self.assertEqual(keys.OFF, self.role.return_value, name)
+        self.assertEqual(['password', 'password', 'two_factor', 'two_factor', 'two_factor'],
+                         [reason for event, outcome, reason, link, actor in self.audited(before)])
+        self.assertIn(stepup.LOCKED, self.enrol())
+        self.assertEqual((0, []), (self.account().twoFA, self.commands))
+        self.nowhere('not it', PASSWORD)
+
+    def test_the_set_up_is_only_for_an_account_without_two_factor_that_started_it_in_this_session(self):
+        # Without a set-up started in this session, no key is taken.
+        before = self.state()
+        self.assertEqual(404, self.send(follow=False, action='enrol', role='controller', password=PASSWORD,
+                                        code='123456').status_code)
+        self.assertEqual(before, self.state())
+        # A set-up started in another session is not this one's.
+        self.set_up()
+        other = Client()
+        self.sign_in(other)
+        response = other.post(self.ROLE, data=dict(action='enrol', role='controller', password=PASSWORD,
+                                                   code=self.app_code()), secure=True)
+        self.assertEqual(404, response.status_code)
+        self.assertEqual(0, self.account().twoFA)
+        # An account that has two-factor login sets nothing up here: its key stays.
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=1, secretKey=SECRET)
+        for action in ('setup', 'enrol'):
+            response = self.send(follow=False, action=action, role='controller', password=PASSWORD, code=self.fresh())
+            self.assertEqual(404, response.status_code, action)
+            self.assertEqual((1, SECRET), (self.account().twoFA, self.account().secretKey), action)
+        # A role that is not one of the three is not a request this page knows.
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=0, secretKey='None')
+        self.set_up()
+        for role in ('', 'Controller', 'controller ', 'both'):
+            self.assertEqual(404, self.send(follow=False, action='enrol', role=role, password=PASSWORD,
+                                            code=self.app_code()).status_code, role)
+        self.assertEqual((0, []), (self.account().twoFA, self.commands))
+
+    def test_nobody_else_starts_a_set_up(self):
+        for name, client in self.everyone_else():
+            if 'without a second factor' in name or 'no secret' in name:
+                continue  # the administrator of these tests, who may
+            before = self.state()
+            response = client.post(self.ROLE, data=dict(action='setup'), secure=True)
+            self.assertEqual(404, response.status_code, name)
+            self.assertEqual(before, self.state(), name)
+
+    def test_a_controller_confirms_its_sign_in_on_the_list_of_its_servers(self):
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=1, secretKey=SECRET)
+        self.role.return_value = keys.CONTROLLER
+        page = self.nodes_page()
+        self.assertIn('<input type="hidden" name="action" value="confirm">', page)
+        before = self.last_audit_id()
+        page = self.text(self.send(action='confirm', password='not it', code=self.fresh()))
+        self.assertIn(stepup.WRONG, page)
+        self.assertIn('name="action" value="confirm"', page)  # back on the list, still asked
+        # The client follows the redirect without HTTPS, where no controller sign-in counts: look again over HTTPS.
+        self.assertIn(SIGNED_IN_TEXT, self.text(self.send(action='confirm', password=PASSWORD, code=self.fresh())))
+        self.assertNotIn('name="action" value="confirm"', self.nodes_page())
+        self.assertEqual([('sign_in', 'refused', 'password', '', 'admin'), ('sign_in', 'ok', '', '', 'admin')],
+                         self.audited(before))
+        self.assertEqual([], self.commands)
+        # Changing the role here confirms the sign-in too.
+        Session.objects.all().delete()
+        self.sign_in()
+        self.role.return_value = keys.OFF
+        self.text(self.send(role='controller', password=PASSWORD, code=self.fresh()))
+        self.assertNotIn('name="action" value="confirm"', self.nodes_page())
+
+    def test_without_https_the_sign_in_is_not_marked(self):
+        self.set_up()
+        import pyotp
+        self.time.now += 30
+        code = pyotp.TOTP(self.account().secretKey).generate_otp(self.time.now // 30)
+        page = self.text(self.client.post(self.ROLE, data=dict(action='enrol', role='controller', password=PASSWORD,
+                                                               code=code), follow=True))
+        self.assertIn('This server is now: Controller.', page)
+        self.assertIn('name="action" value="confirm"', self.text(self.client.get(self.NODES, secure=True)))
 
 
 @unittest.skipIf(SKIP, SKIP)
@@ -653,7 +842,9 @@ class ControllersPageTests(Pages):
         self.assertNotIn('<b>{$', page)
         self.assertNotIn('<script>alert(1)</script>', page)
         content = page[page.index('<h1>Controllers</h1>'):]
-        self.assertLess(page.index('ng-non-bindable>\n  <h1>Controllers</h1>'), page.index('&lt;b&gt;{$'))
+        container = page.index('<div class="container-fluid" ng-non-bindable>')
+        self.assertLess(container, page.index('<h1>Controllers</h1>'))
+        self.assertLess(container, page.index('&lt;b&gt;{$'))
         self.assertNotIn('<script', content[:content.index('Role of this server')])
 
 
