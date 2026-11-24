@@ -316,6 +316,9 @@ class BundleFixture:
             def settled_state(self):
                 return self.state()
 
+            def wait_for_unit(self):
+                pass  # The fixture has no systemd job to wait for.
+
             def verify_mapped_bundle(self, state):
                 pass  # Real mapped-image verification runs in the native controller fixture.
 

@@ -34,6 +34,8 @@ RECOVERED_JAMMY_BUNDLE = (
 RECOVERY_POLICY_NAME = '.cyberpanel-stock-recovery-policy'
 RECOVERY_POLICY_BYTES = b'CYBERPANEL_STOCK_RECOVERY_V1\nAUTO_SSL=disabled\n'
 RECOVERY_POLICY_DIAGNOSTIC = '[StockRecovery] Native AutoSSL remains inactive to preserve stock behavior'
+# OpenLiteSpeed's own process titles: its main, its workers and its CGI daemon.
+PROCESS_TITLE = re.compile(rb'openlitespeed \((?:lshttpd - (?:main|#[0-9]+)|lscgid)\)\x00*')
 
 
 def recovery_policy_identity(root):
@@ -229,6 +231,14 @@ def process_owner(cgroup):
     return owner
 
 
+def started_before(ticks, other):
+    """Whether a process start time (clock ticks, as text) is earlier than another; unknown is not earlier."""
+    try:
+        return int(ticks) < int(other)
+    except (TypeError, ValueError):
+        return False
+
+
 def run(args, timeout=30):
     return subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                           universal_newlines=True, timeout=timeout)
@@ -254,6 +264,24 @@ class OLSPreviousGeneration(RuntimeError):
                          % ', '.join(str(pid) for pid in sorted(self.generation)))
 
 
+class OLSRestarting(RuntimeError):
+    """OpenLiteSpeed's restart marker exists: a graceful restart is in progress (about 0.1 s)."""
+
+
+class OLSStartedDuringStop(RuntimeError):
+    """The service was started again while the upgrade's stop was still in progress.
+
+    The vendor unit stops with KillMode=none and `lswsctrl delay-stop`: systemd
+    reports the unit stopped at once, while OpenLiteSpeed counts down two seconds
+    before it ends. A `systemctl restart lsws` (CyberPanel restarts OpenLiteSpeed
+    that way after many panel actions) in that window runs `lswsctrl start`, which
+    sends SIGUSR1 to the main still counting down: a new main takes over.
+    """
+    def __init__(self, master):
+        self.master = master
+        super().__init__('OpenLiteSpeed was started again (main PID %d) while the upgrade was stopping it' % master)
+
+
 class OLSService:
     def __init__(self, root='/usr/local/lsws', proc='/proc', unit=None):
         self.root = Path(root)
@@ -267,6 +295,7 @@ class OLSService:
         self.draining = None
         self._observed_processes = {}
         self._draining_processes = {}
+        self._draining_cgroup = None  # control group text of the master our stop action addressed
         self.watch_lock = None
         self._reviewed_stock_controller = None
         self._recovery_policy = None
@@ -283,9 +312,13 @@ class OLSService:
         """{pid: start ticks} when every stray belongs to an earlier generation of this service, else None.
 
         The master must belong to a vendor OLS service. Each stray's tree must
-        end in a process whose parent is init, with the master's own command
-        line, started before the master, and every stray must sit in exactly
-        the master's control group. Anything else stays an unmanaged process.
+        end in a process whose parent is init, started before the master, and
+        every stray must sit in exactly the master's control group. That root
+        is the old main (the master's own command line) or, once the old main
+        has exited, one of its workers or its CGI daemon left under init (an
+        OpenLiteSpeed process title). A process that is exiting has already lost
+        its command line and control group; it is waited for, never ended (see
+        _end_previous_generation). Anything else stays an unmanaged process.
         """
         try:
             master_cmdline = (self.proc / str(master) / 'cmdline').read_bytes()
@@ -303,18 +336,28 @@ class OLSService:
                 seen.add(root)
                 root = processes[root][0]
             try:
-                if (processes[root][0] != 1 or int(processes[root][1]) >= int(processes[master][1])
-                        or (self.proc / str(root) / 'cmdline').read_bytes() != master_cmdline
-                        or (self.proc / str(root) / 'cgroup').read_text() != master_cgroup
-                        or (self.proc / str(pid) / 'cgroup').read_text() != master_cgroup):
+                if processes[root][0] != 1 or int(processes[root][1]) >= int(processes[master][1]):
                     return None
-            except (FileNotFoundError, ProcessLookupError, ValueError):
+                for member in (root, pid):
+                    cmdline = (self.proc / str(member) / 'cmdline').read_bytes()
+                    cgroup = (self.proc / str(member) / 'cgroup').read_text()
+                    if not cmdline and cgroup in ('', master_cgroup):
+                        continue  # exiting
+                    if cgroup != master_cgroup or (member == root and cmdline != master_cmdline
+                                                   and not PROCESS_TITLE.fullmatch(cmdline)):
+                        return None
+            except (FileNotFoundError, ProcessLookupError):
+                continue  # Gone since the scan; the next one decides.
+            except ValueError:
                 return None
             generation[pid] = processes[pid][1]
         return generation
 
     def _end_previous_generation(self, generation):
-        """SIGKILL exactly the processes observed, each identified again by start time and binary first."""
+        """SIGKILL exactly the processes observed, each identified again by start time and binary first.
+
+        A process that is exiting (no command line any more) cannot be identified further and ends by itself.
+        """
         ended = []
         for pid, ticks in sorted(generation.items()):
             entry = self.proc / str(pid)
@@ -322,6 +365,8 @@ class OLSService:
                 if (entry / 'stat').read_text().rsplit(')', 1)[1].split()[19] != ticks:
                     continue
                 if not os.path.samefile(str(entry / 'exe'), str(self.binary)):
+                    continue
+                if not (entry / 'cmdline').read_bytes():
                     continue
                 self.kill(pid, signal.SIGKILL)
                 ended.append(pid)
@@ -507,9 +552,10 @@ class OLSService:
                  else digest(self.control) not in CONTROLLER_HASHES) or env.is_symlink() or
                 not env.is_file() or digest(env) != ENV_HASH):
             raise RuntimeError('The OLS controller or its PID configuration cannot be verified')
-        if (os.path.lexists(str(self.root / 'admin/tmp/.restart')) or
-                os.path.lexists(str(directory / 'get_trial_key.sh')) or os.getenv('WSWATCH')):
+        if os.path.lexists(str(directory / 'get_trial_key.sh')) or os.getenv('WSWATCH'):
             raise RuntimeError('An OLS restart marker, trial hook or watchdog is active')
+        if os.path.lexists(str(self.root / 'admin/tmp/.restart')):
+            raise OLSRestarting('An OLS restart marker, trial hook or watchdog is active')
 
     def verify_unit_claims(self, pid, owner):
         if not Path('/run/systemd/system').is_dir():
@@ -579,18 +625,59 @@ class OLSService:
     def state(self):
         return self.inspect_state(allow_legacy=False)
 
-    def verified_draining_workers(self, processes):
-        """Only wait for identities observed before our verified stop action."""
+    def draining_leftovers(self, processes):
+        """What remains while our verified stop drains: None when anything unaccounted for is present.
+
+        Identities observed before our stop action are waited for. A process of the
+        generation before the master being stopped (see _earlier_than_draining) is
+        returned as {pid: start ticks} so that change() ends it with the service; {}
+        means only our own processes remain.
+        """
         if not self.draining or not self._draining_processes:
-            return False
-        for pid, (_, ticks) in processes.items():
-            if self._draining_processes.get(pid) != ticks:
-                return False
+            return None
+        earlier = {}
+        for pid, (parent, ticks) in processes.items():
+            known = self._draining_processes.get(pid) == ticks
+            if not known and not started_before(ticks, self.draining[1]):
+                return None  # Started with or after the master being stopped and not seen before.
             try:
-                owner = process_owner((self.proc / str(pid) / 'cgroup').read_text())
+                cgroup = (self.proc / str(pid) / 'cgroup').read_text()
+                if known:
+                    if process_owner(cgroup) != self.draining[2]:
+                        return None
+                    continue
+                if not self._earlier_than_draining(pid, processes, cgroup):
+                    return None
             except (FileNotFoundError, ProcessLookupError):
                 continue  # Disappearance still requires a fresh empty snapshot.
-            if owner != self.draining[2]:
+            earlier[pid] = ticks
+        return earlier
+
+    def _earlier_than_draining(self, pid, processes, cgroup):
+        """An orphaned process of the generation before the master being stopped.
+
+        A graceful restart shortly before our stop leaves the old main's workers or
+        CGI daemon under init until their connections end. Its tree's root has init as
+        parent, started before the master being stopped, carries an OpenLiteSpeed process
+        title, and every member sits in exactly that master's control group. A member
+        that is exiting has lost its command line and control group.
+        """
+        if self._draining_cgroup is None:
+            return False
+        root, seen = pid, set()
+        while processes[root][0] in processes:
+            if root in seen:
+                return False
+            seen.add(root)
+            root = processes[root][0]
+        if processes[root][0] != 1 or not started_before(processes[root][1], self.draining[1]):
+            return False
+        for member in (pid, root):
+            text = cgroup if member == pid else (self.proc / str(member) / 'cgroup').read_text()
+            cmdline = (self.proc / str(member) / 'cmdline').read_bytes()
+            if not cmdline and text in ('', self._draining_cgroup):
+                continue  # exiting
+            if text != self._draining_cgroup or (member == root and not PROCESS_TITLE.fullmatch(cmdline)):
                 return False
         return True
 
@@ -624,8 +711,12 @@ class OLSService:
             raise RuntimeError('A partially placed OLS bundle is not independently stopped')
         if not master:
             if processes:
-                if self.draining and not self.verified_draining_workers(processes):
-                    raise RuntimeError('An unverified OLS process appeared during shutdown')
+                if self.draining:
+                    earlier = self.draining_leftovers(processes)
+                    if earlier is None:
+                        raise RuntimeError('An unverified OLS process appeared during shutdown')
+                    if earlier:
+                        raise OLSPreviousGeneration(earlier)
                 raise OLSWorkersRemain('OLS status missed a running process')
             self.verify_unit_claims(None, None)
             self.systemd(None)
@@ -644,9 +735,11 @@ class OLSService:
                 self.systemd(None)
                 self._observed_processes = {}
                 return None
-            if (dead and self.draining and master == self.draining[0] and
-                    (master_fields is None or master_fields[19] == self.draining[1]) and
-                    self.verified_draining_workers(processes)):
+            earlier = (self.draining_leftovers(processes) if dead and self.draining and master == self.draining[0]
+                       and (master_fields is None or master_fields[19] == self.draining[1]) else None)
+            if earlier:
+                raise OLSPreviousGeneration(earlier)
+            if earlier is not None:
                 # The PID file may outlive the master while its known workers
                 # finish exiting. This is a pending stop, never a stopped state.
                 raise OLSWorkersRemain('Original OLS master exited while its verified workers drain')
@@ -664,7 +757,7 @@ class OLSService:
                 current = processes[current][0]
         previous, roots = None, []
         if strays:
-            generation = None if self.draining is not None else self._previous_generation(master, processes, strays)
+            generation = self._previous_generation(master, processes, strays)
             if generation is None:
                 raise RuntimeError('An unmanaged OLS process is also running')
             # Raised only after the master's own unit checks below have passed.
@@ -674,14 +767,23 @@ class OLSService:
             owner = process_owner((self.proc / str(master) / 'cgroup').read_text())
         except (FileNotFoundError, ProcessLookupError):
             if (self.draining is not None and (master, processes[master][1]) == self.draining[:2]
-                    and self.verified_draining_workers(processes)):
+                    and self.draining_leftovers(processes) is not None):
                 # The verified master can exit after the /proc scan but before
                 # this read. Never infer quiescence from that race: the bounded
                 # stop loop must obtain a fresh empty snapshot with unit proof.
                 raise OLSWorkersRemain('Original OLS master exited during ownership inspection')
             raise
-        if self.draining is not None and (master, processes[master][1], owner) == self.draining:
-            raise OLSWorkersRemain('Original OLS master is draining after its verified stop action')
+        if self.draining is not None:
+            if (master, processes[master][1], owner) == self.draining:
+                if previous is not None:
+                    # A graceful restart shortly before our stop left processes of the
+                    # generation before; they end with the service (see change()).
+                    raise previous
+                raise OLSWorkersRemain('Original OLS master is draining after its verified stop action')
+            if owner == self.draining[2] and started_before(self.draining[1], processes[master][1]):
+                raise OLSStartedDuringStop(master)
+            if previous is not None:
+                raise RuntimeError('An unmanaged OLS process is also running')
         self._unit_check(lambda pid: self.verify_unit_claims(pid, owner), master, roots)
         if self.manager_identified and owner != self.unit:
             raise RuntimeError('OLS changed its service manager')
@@ -699,7 +801,7 @@ class OLSService:
         while True:
             try:
                 return self.settle_previous_generation(self.state) if retire_previous else self.state()
-            except OLSWorkersRemain:
+            except (OLSWorkersRemain, OLSRestarting):
                 if time.monotonic() >= deadline:
                     raise
                 time.sleep(0.25)
@@ -723,7 +825,12 @@ class OLSService:
                     raise RuntimeError('Live OLS module differs from the installed bundle')
                 checked.add(identity)
 
-    def change(self, action, expected):
+    def change(self, action, expected, again=False):
+        """Stop or start the service and wait until it is verified so.
+
+        A stop that the service outlives because it was started again (see
+        OLSStartedDuringStop) is repeated once on the instance that took over.
+        """
         if action not in ('stop', 'start') or self.state() != expected:
             raise RuntimeError('OLS changed state before the ' + action + ' action')
         wanted_running = action == 'start'
@@ -737,20 +844,51 @@ class OLSService:
             return expected
         self.verify_mapped_bundle(expected)
         observed = dict(self._observed_processes)
+        try:
+            cgroup = (self.proc / str(expected[0]) / 'cgroup').read_text() if action == 'stop' else None
+        except (FileNotFoundError, ProcessLookupError):
+            cgroup = None
         command = ['systemctl', action, self.unit] if self.unit else [str(self.control), action]
         result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         if result.returncode:
             raise RuntimeError('OpenLiteSpeed service %s failed' % action)
         self.draining = expected if action == 'stop' else None
         self._draining_processes = observed if action == 'stop' else {}
+        self._draining_cgroup = cgroup
         try:
             deadline = time.monotonic() + 25
             while time.monotonic() < deadline:
                 try:
                     state = self.state()
+                except OLSStartedDuringStop as started:
+                    if again:
+                        raise RuntimeError('%s, and again after the upgrade stopped it once more; nothing was '
+                                           'replaced. Something on this server restarts OpenLiteSpeed during the '
+                                           'upgrade: run it again when the server is quiet' % started)
+                    print(str(started) + '; stopping it once more', flush=True)
+                    break
+                except OLSRestarting:
+                    if action != 'stop':
+                        raise
+                    time.sleep(0.25)  # a restart of the instance being stopped (see OLSStartedDuringStop)
+                    continue
                 except OLSWorkersRemain:
                     # Master PID removal can precede worker exit. A pending
                     # transition is never evidence that files may be replaced.
+                    time.sleep(0.25)
+                    continue
+                except OLSPreviousGeneration as previous:
+                    if action != 'stop':
+                        raise
+                    # The vendor stop (KillMode=none, delay-stop) lets OpenLiteSpeed
+                    # end by itself after systemctl returns. Processes of the
+                    # generation before it, left by a graceful restart, end with the
+                    # service as its own connections do; the next snapshot must
+                    # still come back empty before any file is replaced.
+                    ended = self._end_previous_generation(previous.generation)
+                    if ended:
+                        print('Ended processes of the previous OpenLiteSpeed generation with the stop: PIDs %s'
+                              % ', '.join(str(pid) for pid in ended), flush=True)
                     time.sleep(0.25)
                     continue
                 if bool(state) == wanted_running:
@@ -761,10 +899,34 @@ class OLSService:
                         self.verify_mapped_bundle(state)
                     return state
                 time.sleep(1)
-            raise RuntimeError('OpenLiteSpeed did not ' + action)
+            else:
+                raise RuntimeError('OpenLiteSpeed did not ' + action)
         finally:
             self.draining = None
             self._draining_processes = {}
+            self._draining_cgroup = None
+        # The instance that took over is settled (systemd finishes its start job,
+        # the stopped one its countdown) and verified like any other before it is stopped.
+        self.wait_for_unit()
+        return self.change('stop', self.settled_state(), again=True)
+
+    def wait_for_unit(self, timeout=60):
+        """Wait while systemd still runs a job of the unit (activating, deactivating, reloading).
+
+        `lswsctrl start` keeps the unit activating for seconds after it sent SIGUSR1;
+        its claims on the main PID are verifiable only once that job has finished.
+        """
+        if self.unit is None or not Path('/run/systemd/system').is_dir():
+            return
+        deadline = time.monotonic() + timeout
+        while True:
+            result = run(['systemctl', 'show', self.unit, '--property=ActiveState'])
+            state = result.stdout.strip().partition('=')[2]
+            if result.returncode or state not in ('activating', 'deactivating', 'reloading'):
+                return
+            if time.monotonic() >= deadline:
+                raise RuntimeError('The OpenLiteSpeed unit is still %s after %d seconds' % (state, timeout))
+            time.sleep(0.5)
 
     def reload(self, expected):
         if expected is None or self.state() != expected:

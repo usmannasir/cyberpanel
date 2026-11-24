@@ -1635,6 +1635,8 @@ class Upgrade:
                 except Exception as error:
                     Upgrade.stdOut('ERROR: %s; restoring the previous OLS bundle' % error, 0)
                     try:
+                        # A start or stop job of the unit may still run (see OLSStartedDuringStop).
+                        service.wait_for_unit()
                         current = service.settled_state()
                         if touched or security_assets.touched or (policy is not None and policy.created is not None):
                             if current:

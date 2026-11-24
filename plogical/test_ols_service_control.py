@@ -527,7 +527,8 @@ class PreviousGenerationTests(unittest.TestCase):
             patcher = patch.object(self.service, target, return_value=None)
             patcher.start()
             self.addCleanup(patcher.stop)
-        patcher = patch.object(control, 'run', return_value=SimpleNamespace(stdout='litespeed is running with PID 200.'))
+        patcher = patch.object(control, 'run', return_value=SimpleNamespace(
+            returncode=0, stdout='litespeed is running with PID 200.'))
         patcher.start()
         self.addCleanup(patcher.stop)
         self.killed = []
@@ -593,11 +594,65 @@ class PreviousGenerationTests(unittest.TestCase):
                     self.service._native_state()
                 self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
 
-    def test_a_known_stop_in_progress_keeps_the_strict_rule(self):
+    def test_during_our_stop_an_earlier_generation_beside_the_stopping_master_is_reported_for_ending(self):
         self.service.draining = (200, '500', 'lshttpd.service')
+        with self.assertRaises(control.OLSPreviousGeneration) as raised:
+            self.service._native_state()
+        self.assertEqual(raised.exception.generation, {100: '300', 101: '301'})
+
+    def test_during_our_stop_anything_else_stays_unmanaged(self):
+        def other_master():
+            self.service.draining = (999, '500', 'lshttpd.service')
+        def younger():
+            self.remove(100); self.remove(101); self.process(300, 1, '900')
+        def other_group():
+            self.remove(101); self.process(101, 100, '301', group='other.service')
+        for name, mutate in [('a master other than the one being stopped', other_master),
+                             ('started after the master being stopped', younger),
+                             ('in another control group', other_group)]:
+            with self.subTest(name):
+                self.setUp()
+                self.service.draining = (200, '500', 'lshttpd.service')
+                mutate()
+                with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process') as raised:
+                    self.service._native_state()
+                self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
+
+    def test_workers_and_cgi_daemon_left_under_init_by_a_graceful_restart_are_an_earlier_generation(self):
+        # The old main has exited; its busy worker and its CGI daemon were reparented to init.
+        self.remove(101); self.remove(100)
+        self.process(101, 1, '301', cmdline=b'openlitespeed (lshttpd - #03)\x00')
+        self.process(102, 1, '299', cmdline=b'openlitespeed (lscgid)\x00')
+        with self.assertRaises(control.OLSPreviousGeneration) as raised:
+            self.service._native_state()
+        self.assertEqual(raised.exception.generation, {101: '301', 102: '299'})
+        self.clock()
+        with patch('builtins.print'):
+            self.assertEqual(self.service.settled_state()[0], 200)
+        self.assertEqual(sorted(self.killed), [101, 102])
+
+    def test_an_orphan_without_an_openlitespeed_title_stays_unmanaged(self):
+        self.remove(101); self.remove(100)
+        self.process(101, 1, '301', cmdline=b'openlitespeed -d\x00')
         with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process') as raised:
             self.service._native_state()
         self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
+
+    def test_an_exiting_process_is_waited_for_and_never_killed(self):
+        # Caught between exit and reaping: no command line and no control group any more.
+        self.remove(101); self.remove(100)
+        self.process(101, 1, '301', cmdline=b'')
+        (self.proc / '101/cgroup').write_text('')
+        now = self.clock()
+        start = now[0]
+
+        def check():
+            if now[0] - start >= control.OLSService.PREVIOUS_GENERATION_WAIT + 10 and (self.proc / '101').exists():
+                self.remove(101)
+            return self.service._native_state()
+        with patch('builtins.print'):
+            self.assertEqual(self.service.settle_previous_generation(check)[0], 200)
+        self.assertEqual(self.killed, [])
 
     def test_a_generation_that_finishes_on_its_own_is_never_killed(self):
         now = self.clock()
@@ -783,3 +838,188 @@ class PreviousGenerationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'Conflicting OLS systemd manager or PID') as raised:
             self.service._native_state()
         self.assertNotIsInstance(raised.exception, control.OLSPreviousGeneration)
+
+
+class StopBesideEarlierGenerationTests(unittest.TestCase):
+    """The upgrade stops OLS shortly after a graceful restart (3.0.19 gate, AlmaLinux 9, 24 Nov 2026).
+
+    The vendor unit stops with KillMode=none and `lswsctrl delay-stop`: systemctl
+    returns at once and OpenLiteSpeed ends by itself about two seconds later. The
+    old main's CGI daemon, left under init by the restart, was seen beside the master
+    being stopped, and the upgrade refused with "An unmanaged OLS process is also running".
+    """
+    setUp = PreviousGenerationTests.setUp
+    process = PreviousGenerationTests.process
+    remove = PreviousGenerationTests.remove
+    kill = PreviousGenerationTests.kill
+
+    def stop(self, during_stop, after_master):
+        """change('stop') on master 200: during_stop() as systemctl returns (the master is still
+        counting down); at the first pause the master exits and after_master() leaves what remains."""
+        for pid in (100, 101):
+            self.remove(pid)
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]):
+            original = self.service.state()
+        steps = [lambda: (self.master_exits(), after_master())]
+
+        def systemctl(command, **options):
+            self.assertEqual(command, ['systemctl', 'stop', 'lshttpd.service'])
+            during_stop()
+            return SimpleNamespace(returncode=0)
+
+        def pause(delay):
+            if steps:
+                steps.pop(0)()
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(self.service, 'verify_mapped_bundle'), \
+                patch.object(control.subprocess, 'run', side_effect=systemctl), \
+                patch.object(control.time, 'sleep', side_effect=pause), patch('builtins.print'):
+            return self.service.change('stop', original)
+
+    def master_exits(self):
+        for pid in (200, 201, 202):
+            if (self.proc / str(pid)).exists():
+                self.remove(pid)
+        control.run.return_value = SimpleNamespace(stdout='litespeed is not running.')
+
+    def test_the_earlier_generations_cgi_daemon_is_ended_with_the_stop(self):
+        def old_cgid():
+            self.process(150, 1, '400', cmdline=b'openlitespeed (lscgid)\x00')
+        self.assertIsNone(self.stop(old_cgid, lambda: None))
+        self.assertEqual(self.killed, [150])
+
+    def test_an_earlier_worker_still_there_after_the_master_exited_is_ended_too(self):
+        def old_worker_after_exit():
+            self.process(150, 1, '400', cmdline=b'openlitespeed (lshttpd - #02)\x00')
+        self.assertIsNone(self.stop(lambda: None, old_worker_after_exit))
+        self.assertEqual(self.killed, [150])
+
+    def test_a_process_younger_than_the_stopping_master_still_refuses(self):
+        def newer():
+            self.process(150, 1, '900', cmdline=b'openlitespeed (lscgid)\x00')
+        with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process'):
+            self.stop(newer, lambda: None)
+        self.assertEqual(self.killed, [])
+
+    def test_after_the_master_exited_an_unknown_process_still_refuses(self):
+        def newer_after_exit():
+            self.process(150, 1, '900', cmdline=b'openlitespeed (lshttpd - #01)\x00')
+        with self.assertRaisesRegex(RuntimeError, 'unverified OLS process appeared during shutdown'):
+            self.stop(lambda: None, newer_after_exit)
+        self.assertEqual(self.killed, [])
+
+    def restart_during_stop(self, restarts, group='lshttpd.service'):
+        """change('stop') on master 200 while `systemctl restart lsws` runs during the countdown `restarts` times."""
+        for pid in (100, 101):
+            self.remove(pid)
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]):
+            original = self.service.state()
+        stops = []
+
+        def systemctl(command, **options):
+            self.assertEqual(command, ['systemctl', 'stop', 'lshttpd.service'])
+            stops.append(command)
+            if len(stops) <= restarts:
+                # SIGUSR1 to the main still counting down: it and its workers end, its CGI
+                # daemon is left under init, and a new main takes over (as on AlmaLinux 9).
+                old, new = (200, 300) if len(stops) == 1 else (300, 400)
+                for pid in (old, old + 1):
+                    if (self.proc / str(pid)).exists():
+                        self.remove(pid)
+                if (self.proc / '202').exists():
+                    self.remove(202)
+                self.process(old + 2, 1, '%d' % (int(old) * 3 + 2), cmdline=b'openlitespeed (lscgid)\x00')
+                self.process(new, 1, '%d' % (new * 3), group=group)
+                self.process(new + 1, new, '%d' % (new * 3 + 1), cmdline=b'openlitespeed (lshttpd - #01)\x00', group=group)
+                control.run.return_value = SimpleNamespace(returncode=0, stdout='litespeed is running with PID %d.' % new)
+                getattr(self, 'marker', []).append(True)
+            return SimpleNamespace(returncode=0)
+
+        def pause(delay):
+            leftovers = [pid for pid in (202, 302) if (self.proc / str(pid)).exists()]
+            if leftovers:
+                self.remove(leftovers[0])  # the stopped instance's CGI daemon finishes
+            elif len(stops) > restarts:
+                for pid in sorted(int(entry.name) for entry in self.proc.iterdir()):
+                    self.remove(pid)
+                control.run.return_value = SimpleNamespace(returncode=0, stdout='litespeed is not running.')
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(self.service, 'verify_mapped_bundle'), \
+                patch.object(control.subprocess, 'run', side_effect=systemctl), \
+                patch.object(control.time, 'sleep', side_effect=pause), patch('builtins.print') as said:
+            return self.service.change('stop', original), stops, said
+
+    def test_a_restart_during_the_stop_is_stopped_once_more(self):
+        # 3.0.19 gate, AlmaLinux 9: "An unmanaged OLS process is also running" two seconds into the stop.
+        result, stops, said = self.restart_during_stop(1)
+        self.assertIsNone(result)
+        self.assertEqual(2, len(stops))
+        self.assertEqual([], self.killed)
+        self.assertIn('OpenLiteSpeed was started again (main PID 300) while the upgrade was stopping it; '
+                      'stopping it once more', said.call_args_list[0][0][0])
+
+    def test_a_second_restart_during_the_stop_refuses_with_its_reason(self):
+        with self.assertRaisesRegex(RuntimeError, r'started again \(main PID 400\) while the upgrade was stopping it, '
+                                                  r'and again after the upgrade stopped it once more; nothing was replaced'):
+            self.restart_during_stop(2)
+
+    def test_a_newer_master_outside_the_stopping_unit_is_not_taken_for_a_restart(self):
+        with self.assertRaisesRegex(RuntimeError, 'unmanaged OLS process') as raised:
+            self.restart_during_stop(1, group='other.service')
+        self.assertNotIsInstance(raised.exception, control.OLSStartedDuringStop)
+
+    def test_the_units_own_start_job_is_waited_for_before_the_second_stop(self):
+        answers = iter(['ActiveState=activating\n', 'ActiveState=activating\n', 'ActiveState=active\n'])
+        asked = []
+
+        def systemctl_show(arguments, timeout=30):
+            asked.append(arguments)
+            return SimpleNamespace(returncode=0, stdout=next(answers))
+        self.service.unit = 'lshttpd.service'
+        with patch.object(control, 'run', side_effect=systemctl_show), \
+                patch.object(control.time, 'sleep') as sleep:
+            self.service.wait_for_unit()
+        self.assertEqual(3, len(asked))
+        self.assertEqual(['systemctl', 'show', 'lshttpd.service', '--property=ActiveState'], asked[0])
+        self.assertEqual(2, sleep.call_count)
+
+    def test_a_unit_job_that_does_not_end_refuses(self):
+        self.service.unit = 'lshttpd.service'
+        now = [0.0]
+        with patch.object(control, 'run', return_value=SimpleNamespace(returncode=0, stdout='ActiveState=deactivating\n')), \
+                patch.object(control.time, 'monotonic', side_effect=lambda: now[0]), \
+                patch.object(control.time, 'sleep', side_effect=lambda delay: now.__setitem__(0, now[0] + delay)):
+            with self.assertRaisesRegex(RuntimeError, 'still deactivating after 60 seconds'):
+                self.service.wait_for_unit()
+
+    def test_the_restart_marker_of_the_racing_restart_is_waited_for(self):
+        # The graceful restart's marker (about 0.1 s) is seen by the first check after the race.
+        marker = []
+        self.marker = marker
+
+        def controller():
+            if marker:
+                marker.pop()
+                raise control.OLSRestarting('An OLS restart marker, trial hook or watchdog is active')
+        self.service.controller.side_effect = controller
+        result, stops, said = self.restart_during_stop(1)
+        self.assertIsNone(result)
+        self.assertEqual(2, len(stops))
+
+    def test_outside_a_stop_the_restart_marker_still_refuses_and_settling_waits_for_it(self):
+        calls = []
+
+        def controller():
+            calls.append(1)
+            if len(calls) == 1:
+                raise control.OLSRestarting('An OLS restart marker, trial hook or watchdog is active')
+        self.service.controller.side_effect = controller
+        with self.assertRaisesRegex(RuntimeError, 'restart marker'):
+            self.service.state()
+        calls.clear()
+        for pid in (100, 101):
+            self.remove(pid)
+        with patch.object(control.time, 'sleep'), \
+                patch.object(control.watchdog, 'inspect_watchdog', return_value=[]):
+            self.assertEqual(200, self.service.settled_state()[0])
+        self.assertEqual(2, len(calls))
