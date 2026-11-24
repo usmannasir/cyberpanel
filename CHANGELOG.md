@@ -6,7 +6,8 @@ https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
 ## v3.0.18 (build 18) — 2026-11-24
 
-Upgrade reliability: servers that keep the vendor OpenLiteSpeed.
+Upgrade reliability on servers that keep the vendor OpenLiteSpeed, and a
+simpler Multi-Server Manager set-up.
 
 ### Upgrade
 - An upgrade no longer stops with "OpenLiteSpeed configuration failed
@@ -30,6 +31,17 @@ Upgrade reliability: servers that keep the vendor OpenLiteSpeed.
 - A fresh install that keeps the vendor OpenLiteSpeed no longer declares
   the CyberPanel module, and the module is declared only beside the
   CyberPanel OpenLiteSpeed core and module.
+
+### Multi-Server Manager
+- Two-factor login can be set up on the role page itself: an account
+  without it presses Set up two-factor login, scans the QR code (drawn on
+  the server, so it works offline) or types the key, and saves the role with
+  the app's code and the password. No sign-out is needed afterwards:
+  changing the role counts as a sign-in with password and code, and where
+  Managed servers still needs that it asks for them in place.
+- The role page no longer offers to buy a licence once the server has one.
+- New page design for the role, Managed servers, Controllers and Add a
+  server pages, using the panel's theme colours in light and dark mode.
 
 ## v3.0.17 (build 17) — 2026-11-24
 
