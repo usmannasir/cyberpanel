@@ -372,7 +372,12 @@ class InstallCyberPanel:
             return True
 
     def installCustomOLSBinaries(self):
-        """Install custom OpenLiteSpeed binaries with PHP config support"""
+        """Install custom OpenLiteSpeed binaries with PHP config support
+
+        True: the CyberPanel bundle is installed. 'stock': no CyberPanel build
+        exists for this architecture or system, so the vendor core stays and the
+        CyberPanel module must not be declared. False: the installation failed.
+        """
         try:
             InstallCyberPanel.stdOut("Installing Custom OpenLiteSpeed Binaries", 1)
             InstallCyberPanel.stdOut("=" * 50, 1)
@@ -382,7 +387,7 @@ class InstallCyberPanel:
                 InstallCyberPanel.stdOut("WARNING: Custom binaries only available for x86_64", 1)
                 InstallCyberPanel.stdOut("Skipping custom binary installation", 1)
                 InstallCyberPanel.stdOut("Standard OLS will be used", 1)
-                return True  # Not a failure, just skip
+                return 'stock'
 
             # Detect platform
             platform = self.detectPlatform()
@@ -392,7 +397,7 @@ class InstallCyberPanel:
             # where the binary's GLIBC requirement isn't met) and keep stock OLS.
             if platform == 'skip':
                 InstallCyberPanel.stdOut("Custom binary installation skipped for this platform; using standard OLS", 1)
-                return True  # Not a failure, just skip
+                return 'stock'
 
             # Paired security core 2.5.7 and unchanged paid module 2.7.7 release artifacts.
             # Includes: PHPConfig API, Origin Header Forwarding, ReadApacheConf (with Portmap), Auto-SSL (ACME v2), ModSecurity ABI Compatibility
@@ -440,7 +445,7 @@ class InstallCyberPanel:
             if not config:
                 InstallCyberPanel.stdOut(f"ERROR: No binaries available for platform {platform}", 1)
                 InstallCyberPanel.stdOut("Skipping custom binary installation", 1)
-                return True  # Not fatal
+                return 'stock'
 
             if platform in ('rhel8', 'rhel9', 'rhel10'):
                 # Every EL core links libaio.so.1. EL9 and EL10 receive it
@@ -642,12 +647,20 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut('ERROR: Custom OLS overlay aborted: %s; existing bundle retained' % error, 1)
             return False
 
-    def configureCustomModule(self):
+    def configureCustomModule(self, root='/usr/local/lsws'):
         """Configure CyberPanel module in OpenLiteSpeed config"""
         try:
             InstallCyberPanel.stdOut("Configuring CyberPanel module...", 1)
 
-            CONFIG_FILE = "/usr/local/lsws/conf/httpd_config.conf"
+            # A declaration without the CyberPanel core and module makes every
+            # configuration test fail and stops every later upgrade.
+            from plogical.olsStockClassifier import module_declarable
+            if not module_declarable(root):
+                InstallCyberPanel.stdOut("The CyberPanel OpenLiteSpeed build is not installed; "
+                                         "the CyberPanel module is not declared", 1)
+                return True
+
+            CONFIG_FILE = os.path.join(root, "conf/httpd_config.conf")
 
             if not os.path.exists(CONFIG_FILE):
                 InstallCyberPanel.stdOut("WARNING: Config file not found", 1)
@@ -706,11 +719,14 @@ module cyberpanel_ols {
 
             # Install custom binaries with PHP config support
             # This replaces the standard binary with enhanced version
-            if not self.installCustomOLSBinaries():
+            installed = self.installCustomOLSBinaries()
+            if installed is True:
+                self.configureCustomModule()
+            elif installed == 'stock':
+                InstallCyberPanel.stdOut('Stock OpenLiteSpeed kept for this platform; '
+                                         'the CyberPanel module is not declared', 1)
+            else:
                 raise RuntimeError("Custom OLS bundle installation failed; installation stopped before further configuration changes. Check the install log and any rollback diagnostics.")
-
-            # Configure the custom module
-            self.configureCustomModule()
 
             # The vendor package still owns the replaced files. Without a lasting
             # hold the next operating-system update restores the stock core.

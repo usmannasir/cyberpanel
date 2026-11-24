@@ -92,7 +92,9 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
     A vendor core beside a self-disabled CyberPanel module (a package update
     replaced only the core) is refused unless `split` allows it: True returns
     the baseline of a state the bundle transaction may repair, and a baseline
-    accepts only that same state again, as the rollback target.
+    accepts only that same state again, as the rollback target. The same holds
+    for a vendor core whose configuration declares a CyberPanel module that was
+    never installed (olsStockClassifier.stale_module_stanza).
 
     Errors that OpenLiteSpeed confines to one website do not refuse an
     upgrade: the server runs with them and they were there before it. The
@@ -142,6 +144,12 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
                 if stock is not None and isinstance(error, getattr(stock, 'SplitStateRefused', ())):
                     raise OLSUpgradeFailure(str(error)) from error
                 baseline = None  # A broken helper never waives the refusal below.
+        elif 'Failed to load module [cyberpanel_ols]' in output:
+            try:
+                baseline = load_ols_diagnostic_helper('olsStockClassifier.py').stale_module_stanza(
+                    binary, result.returncode, output)
+            except Exception:
+                baseline = None  # A broken helper never waives the refusal below.
         if baseline is not None and split in (True, baseline):
             return accepted(baseline)
         if split is not True:
@@ -172,6 +180,89 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
         raise OLSUpgradeFailure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: '
                                 + ('\n'.join(blocking) or output)[-2000:] + hint)
     return accepted(None)
+
+
+def remove_stale_module_stanza(baseline, binary='/usr/local/lsws/bin/openlitespeed'):
+    """Remove the declaration of a CyberPanel module that this server never received.
+
+    Only for a server that keeps the vendor core: an earlier CyberPanel version
+    declared the module although no CyberPanel build was installed. The vendor
+    core cannot load the missing file, so the running server does not use the
+    declaration and nothing is reloaded. The block is the only change. The
+    configuration test must then pass, or the previous file is put back.
+    Returns the path of the copy of the previous file.
+    """
+    import stat
+    import tempfile
+    import time
+    classifier = load_ols_diagnostic_helper('olsStockClassifier.py')
+    validator = load_ols_diagnostic_helper('olsNativeValidation.py')
+    config = os.path.join(os.path.dirname(os.path.dirname(binary)), 'conf', 'httpd_config.conf')
+    try:
+        result = validator.validate(binary)
+    except Exception as error:
+        raise OLSUpgradeFailure('Cannot verify OpenLiteSpeed configuration: ' + str(error)) from error
+    output = (result.stdout or '') + (result.stderr or '')
+    if classifier.stale_module_stanza(binary, result.returncode, output) != baseline:
+        raise OLSUpgradeFailure('The OpenLiteSpeed configuration changed during the upgrade; the declaration '
+                                'of the CyberPanel module was not removed:\n' + output[-2000:])
+    with open(config, 'rb') as source:
+        original = source.read()
+    text = original.decode('utf-8')
+    span = classifier.module_stanza(text)
+    if span is None:
+        raise OLSUpgradeFailure('The declaration of the CyberPanel module could not be located again; '
+                                'nothing was changed.')
+    updated = classifier.without_module_stanza(text, span).encode('utf-8')
+    backup = '%s.cyberpanel-%s.before-module-removal' % (config, time.strftime('%Y%m%d-%H%M%S'))
+    Upgrade.copyOLSBackup(config, backup)
+    with open(backup, 'rb') as copy:
+        if copy.read() != original:
+            raise OLSUpgradeFailure('The copy of the OpenLiteSpeed configuration does not match; nothing was changed.')
+    info = os.lstat(config)
+
+    def replace(data):
+        descriptor, temporary = tempfile.mkstemp(prefix='.httpd_config.', dir=os.path.dirname(config))
+        try:
+            with os.fdopen(descriptor, 'wb') as target:
+                target.write(data)
+                target.flush()
+                os.fsync(target.fileno())
+            os.chmod(temporary, stat.S_IMODE(info.st_mode))
+            os.chown(temporary, info.st_uid, info.st_gid)
+            os.replace(temporary, config)
+        except BaseException:
+            if os.path.lexists(temporary):
+                os.remove(temporary)
+            raise
+
+    try:
+        replace(updated)
+        check = validator.validate(binary)
+        after = (check.stdout or '') + (check.stderr or '')
+        blocking = classifier.blocking_errors(after, classifier.site_errors(output))
+        if blocking or classifier.status_refused(check.returncode, after):
+            raise OLSUpgradeFailure('\n'.join(blocking) or ('exit status %s: %s' % (check.returncode, after[-2000:])))
+    except Exception as error:
+        if not isinstance(error, OLSUpgradeFailure):
+            # The file was not replaced, or the test could not run.
+            with open(config, 'rb') as current:
+                if current.read() == original:
+                    raise OLSUpgradeFailure('The declaration of the CyberPanel module was not removed: %s' % error) from error
+        try:
+            replace(original)
+            with open(config, 'rb') as current:
+                restored = current.read() == original
+        except Exception:
+            restored = False
+        if not restored:
+            raise OLSUpgradeFailure('Removing the declaration of the CyberPanel module failed and the previous '
+                                    'configuration could not be put back; it is kept in %s: %s' % (backup, error)) from error
+        raise OLSUpgradeFailure('Removing the declaration of the CyberPanel module failed validation; the previous '
+                                'configuration was restored (copy: %s): %s' % (backup, error)) from error
+    Upgrade.stdOut('Removed the declaration of the CyberPanel OpenLiteSpeed module, which this server does not '
+                   'have; the previous configuration is kept in ' + backup, 0)
+    return backup
 
 
 def ols_site_error_notice():
@@ -1290,12 +1381,16 @@ class Upgrade:
         os.chown(destination, info.st_uid, info.st_gid, follow_symlinks=False)
 
     @staticmethod
-    def installCustomOLSBinaries(split=None):
+    def installCustomOLSBinaries(split=None, accepted=None):
         """Install custom OpenLiteSpeed binaries with PHP config support
 
         `split` is the baseline returned by validate_ols_configuration(split=True)
         when a package update left a vendor core beside the CyberPanel module.
+        `accepted` is the baseline of another state that the existing files may
+        be in and be restored to: a vendor core whose configuration declares the
+        CyberPanel module that was never installed.
         """
+        recorded = split if split is not None else accepted
         try:
             Upgrade.stdOut("Installing Custom OpenLiteSpeed Binaries", 0)
             Upgrade.stdOut("=" * 50, 0)
@@ -1471,7 +1566,7 @@ class Upgrade:
                 with open(os.path.join(backup_dir, 'security_assets_backup.json'), 'w') as receipt:
                     json.dump({'backup_dir': security_assets.backup_dir,
                                'was_running': bool(initial_state), 'unit': service.unit,
-                               'split': split}, receipt)
+                               'split': recorded}, receipt)
                     receipt.flush()
                     os.fsync(receipt.fileno())
 
@@ -1479,7 +1574,7 @@ class Upgrade:
                     raise RuntimeError('OpenLiteSpeed service changed during staging')
                 # Downloads and PHP verification can take minutes. Ensure the
                 # on-disk original remains a valid rollback before stopping it.
-                validate_ols_configuration(OLS_BINARY_PATH, split)
+                validate_ols_configuration(OLS_BINARY_PATH, recorded)
                 lifecycle.verify_originals(originals)
                 stopped = False
                 start_attempted = False
@@ -1547,7 +1642,7 @@ class Upgrade:
                         if initial_state and stopped and not service.state():
                             # A restored vendor core is restarted only in the exact
                             # state recorded before the repair began.
-                            validate_ols_configuration(OLS_BINARY_PATH, split)
+                            validate_ols_configuration(OLS_BINARY_PATH, recorded)
                             service.change('start', None)
                     except Exception as rollback_error:
                         Upgrade.stdOut('ERROR: OLS rollback requires attention: %s; backup: %s' %
@@ -1643,6 +1738,13 @@ class Upgrade:
         """Configure CyberPanel module in OpenLiteSpeed config"""
         try:
             Upgrade.stdOut("Configuring CyberPanel module...", 0)
+
+            # A declaration without the CyberPanel core and module makes every
+            # configuration test fail and stops every later upgrade.
+            if not load_ols_diagnostic_helper('olsStockClassifier.py').module_declarable():
+                Upgrade.stdOut("The CyberPanel OpenLiteSpeed build is not installed; "
+                               "the CyberPanel module is not declared", 0)
+                return True
 
             CONFIG_FILE = "/usr/local/lsws/conf/httpd_config.conf"
 
@@ -5821,16 +5923,28 @@ pm.max_spare_servers = 3
                 # A vendor core left beside our module by a package update is
                 # repaired by the bundle transaction; any other invalid state stops here.
                 split = validate_ols_configuration(split=True)
+                # An earlier version declared the CyberPanel module on a server that
+                # never received it. The bundle transaction supplies the module
+                # where a CyberPanel build exists; elsewhere the declaration goes.
+                stale = None
+                if isinstance(split, dict) and split.get('state') == 'stale-module-stanza':
+                    stale, split = split, None
+                    Upgrade.stdOut('An earlier CyberPanel version declared the CyberPanel OpenLiteSpeed module '
+                                   'on this server, but the module was never installed. This upgrade installs '
+                                   'it where a CyberPanel OpenLiteSpeed build exists for this system, and '
+                                   'otherwise removes the declaration.')
                 notice = ols_site_error_notice()
                 if notice:
                     Upgrade.stdOut(notice)
                 # The transaction owns validation, rollback and service state.
                 # Preserve administrator-selected module and AutoSSL settings.
-                installed = Upgrade.installCustomOLSBinaries(split)
+                installed = Upgrade.installCustomOLSBinaries(split, accepted=stale)
                 if installed is False:
                     raise OLSUpgradeFailure("Custom OLS bundle installation failed; upgrade stopped before further service changes. Check the upgrade log and any rollback diagnostics.")
                 if split is not None and installed is None:
                     raise OLSUpgradeFailure("A vendor OpenLiteSpeed core is installed beside a disabled CyberPanel module and no CyberPanel OpenLiteSpeed bundle is available for this platform; nothing was changed.")
+                if stale is not None and installed is None:
+                    remove_stale_module_stanza(stale)
 
         if branch.find('SoftUpgrade') > -1:
             Upgrade.SoftUpgrade = 1

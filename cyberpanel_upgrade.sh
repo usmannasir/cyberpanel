@@ -311,26 +311,47 @@ if hint:
 ' "$work/$file" "$core" "$status" "$method" "$wrapper" "$checksum" "$mode"
 )
 
+# The checksum-verified OpenLiteSpeed state classifier
+# (plogical/olsStockClassifier.py), written to the path given.
+OLS_Classifier() {
+  local pin=37dcbc65702e1b3516fc48df05c9b8669d1cf29f93e696e97d5a152ab9681ca2
+  local blob=b1588d98fbda2e2c9f24ba9bc1ae859277d55a7b
+  OLS_Pinned_Helper "$1" olsStockClassifier.py "$pin" \
+      "https://api.github.com/repos/usmannasir/cyberpanel/git/blobs/$blob" ||
+    OLS_Pinned_Helper "$1" olsStockClassifier.py "$pin" \
+      https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/olsStockClassifier.py
+}
+
 # A package update can replace only the core and leave the CyberPanel module,
 # which then disables itself. The bundle transaction of this upgrade restores
 # the core. Status 0: repairable; anything else: the reason is on stdout.
 OLS_Split_State() (
   local core="$1" status="$2" output="$3" work
-  local pin=a6be2dd8d431bcda6edc10bc01582eab8c456ab3c9f972f1a8aab45269fe85cf
-  local blob=fd537e414451ce0a23a71ccdbeee7342d4b81169
   work=$(mktemp -d) || exit 78
   trap 'rm -rf -- "$work"' EXIT
   if ! OLS_Pinned_Helper "$work/olsParserRecovery.py" olsParserRecovery.py \
        26bf65c5744286f5dcc85fef1b1f59372ced87a004d9efd20ad5217d8b19ef4f \
        https://cyberpanel.net/ols-parser-classifier-2.5.7-r5.py ||
-     { ! OLS_Pinned_Helper "$work/olsStockClassifier.py" olsStockClassifier.py "$pin" \
-         "https://api.github.com/repos/usmannasir/cyberpanel/git/blobs/$blob" &&
-       ! OLS_Pinned_Helper "$work/olsStockClassifier.py" olsStockClassifier.py "$pin" \
-         https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/olsStockClassifier.py; }; then
+     ! OLS_Classifier "$work/olsStockClassifier.py"; then
     echo 'Cannot obtain the checksum-verified OpenLiteSpeed state classifier. Check access to github.com and cyberpanel.net, then run the upgrade again.'
     exit 78
   fi
   printf '%s\n' "$output" | python3 -IB "$work/olsStockClassifier.py" --split-state "$core" "$status" /etc/os-release
+)
+
+# An earlier CyberPanel version declared the CyberPanel module on a server that
+# never received it; the vendor core cannot load it. The upgrade installs the
+# module where a CyberPanel build exists and otherwise removes the declaration.
+# Status 0: that state; 3: not that state; anything else: the reason is on stdout.
+OLS_Stale_Module_Stanza() (
+  local core="$1" status="$2" output="$3" work
+  work=$(mktemp -d) || exit 78
+  trap 'rm -rf -- "$work"' EXIT
+  if ! OLS_Classifier "$work/olsStockClassifier.py"; then
+    echo 'Cannot obtain the checksum-verified OpenLiteSpeed state classifier. Check access to github.com, then run the upgrade again.'
+    exit 78
+  fi
+  printf '%s\n' "$output" | python3 -IB "$work/olsStockClassifier.py" --stale-module-stanza "$core" "$status"
 )
 
 # Holds set while a vendor core is installed are kept only when the CyberPanel
@@ -392,7 +413,7 @@ Protect_Custom_OLS_From_Packages() {
   # hold and exclude only verified RPM owners during this CyberPanel upgrade.
   local distro_id family core module validation validation_status held package package_status query_status
   local custom_core=0 legacy_core=0 core_digest module_digest
-  local split_core=0 split_reason split_status policy_vendor_core=0 blocking
+  local split_core=0 split_reason split_status policy_vendor_core=0 blocking stale_reason stale_status
   OLS_RPM_EXCLUDES=()
   OLS_SPLIT_HOLDS=()
   local packages=(openlitespeed)
@@ -454,6 +475,15 @@ Protect_Custom_OLS_From_Packages() {
     validation=$(LSWS_HOME="${core%/bin/*}/" timeout 30 "$core" -t 2>&1)
     validation_status=$?
     if OLS_Validation_Refused "$validation_status" "$validation"; then
+      if [[ "$validation" == *'Failed to load module [cyberpanel_ols]'* ]]; then
+        stale_reason=$(OLS_Stale_Module_Stanza "$core" "$validation_status" "$validation")
+        stale_status=$?
+        if [[ "$stale_status" -eq 0 ]]; then
+          echo 'An earlier CyberPanel version declared the CyberPanel OpenLiteSpeed module on this server, but the module was never installed. This upgrade installs it where a CyberPanel OpenLiteSpeed build exists for this system, and otherwise removes the declaration.'
+          return 0
+        fi
+        [[ "$stale_status" -eq 3 || -z "$stale_reason" ]] || printf '%s\n' "$stale_reason"
+      fi
       blocking=$(OLS_Blocking_Errors "$validation")
       echo 'ERROR: OpenLiteSpeed configuration failed validation; no package changes attempted. Correct the errors below and run the upgrade again.'
       blocking=${blocking:-$validation}

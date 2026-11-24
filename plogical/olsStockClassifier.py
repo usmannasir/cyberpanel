@@ -359,14 +359,135 @@ def split_state(binary, returncode, output, parser=None, os_release='/etc/os-rel
                              if line is disabled[0] or '[ERROR]' in line or '[FATAL]' in line)}
 
 
+# --- A declaration of the CyberPanel module on a server that never received it ---
+#
+# Until 3.0.18 the installer declared the module also when it kept the vendor
+# core (no CyberPanel build for the architecture or system), and upgrades from
+# November 2025 to November 2026 did the same after a failed download. The
+# vendor core reports that it cannot load the missing file and keeps serving.
+# Where a CyberPanel build exists, the bundle transaction supplies the module
+# and the declaration becomes valid; elsewhere the upgrade removes it.
+# The Ubuntu 2.5.0 / 2.7.3 core predates the ABI marker; the launcher treats it
+# as a CyberPanel core.
+LEGACY_UBUNTU_CORE = '2a836d4bf17fe5152d15dd60fd3817c1d3c294b48b35f12b776fa2efb7771422'
+STALE_MODULE_ERROR = re.compile(
+    r'(?:\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d+ )?\[ERROR\] (?:\[\d+\] )?Failed to load module '
+    r'\[cyberpanel_ols\], error: (/\S+): cannot open shared object file: No such file or directory\s*')
+_STANZA_OPEN = re.compile(r'[ \t]*module[ \t]+cyberpanel_ols[ \t]*\{[ \t]*')
+_STANZA_BODY = re.compile(r'[ \t]*(?:ls_enabled[ \t]+[01][ \t]*)?')
+_STANZA_CLOSE = re.compile(r'[ \t]*\}[ \t]*')
+
+
+def module_stanza(text):
+    """(first, last) line index of the one top-level `module cyberpanel_ols` block, or None.
+
+    A narrow brace/backtick scanner like olsParserRecovery.top_level_group, not
+    an OLS parser. Only the block the installer writes is recognised: its own
+    lines, with nothing in it but `ls_enabled 0|1`. Anything ambiguous (two
+    blocks, a block inside another, unbalanced braces, the name anywhere else,
+    including comments and opaque rule text) yields None.
+    """
+    lines = text.split('\n')
+    depth, opaque, spans, start = 0, False, [], None
+    for number, line in enumerate(lines):
+        ticks = line.count('`')
+        if opaque:
+            if ticks % 2:
+                opaque = False
+            continue
+        if start is not None:
+            if _STANZA_CLOSE.fullmatch(line):
+                spans.append((start, number))
+                start = None
+            elif not _STANZA_BODY.fullmatch(line):
+                return None
+            continue
+        if ticks:
+            if ticks % 2:
+                opaque = True
+            continue
+        if line.lstrip().startswith('#'):
+            continue
+        if depth == 0 and _STANZA_OPEN.fullmatch(line):
+            start = number
+            continue
+        opens, closes = line.count('{'), line.count('}')
+        if opens > 1 or closes > 1:
+            return None
+        depth += opens - closes
+        if depth < 0:
+            return None
+    if opaque or depth or start is not None or len(spans) != 1:
+        return None
+    first, last = spans[0]
+    if any('cyberpanel_ols' in line for line in lines[:first] + lines[last + 1:]):
+        return None
+    return first, last
+
+
+def without_module_stanza(text, span):
+    """The configuration with exactly the lines of that block taken out."""
+    lines = text.split('\n')
+    first, last = span
+    return '\n'.join(lines[:first] + lines[last + 1:])
+
+
+def stale_module_stanza(binary, returncode, output):
+    """Classify `-t` output of a vendor core whose configuration declares the missing module.
+
+    Returns None when this is not that state (the ordinary validation applies)
+    and otherwise a baseline that identifies the same state in a later run.
+    """
+    binary = Path(binary).absolute()
+    root = binary.parent.parent
+    if binary.is_symlink() or not binary.is_file() or has_marker(binary):
+        return None
+    if digest(binary) == LEGACY_UBUNTU_CORE:
+        return None
+    module = root / 'modules/cyberpanel_ols.so'
+    if os.path.lexists(str(module)) or os.path.lexists(str(root / '.cyberpanel-stock-recovery-policy')):
+        return None
+    if returncode not in (0, 1, 2):
+        return None
+    blocking = blocking_errors(output)
+    match = STALE_MODULE_ERROR.fullmatch(blocking[0]) if len(blocking) == 1 else None
+    if not match or os.path.normpath(match.group(1)) != str(module):
+        return None
+    config = root / 'conf/httpd_config.conf'
+    if config.is_symlink() or not config.is_file():
+        return None
+    try:
+        text = config.read_bytes().decode('utf-8')
+    except (OSError, UnicodeDecodeError):
+        return None
+    if module_stanza(text) is None:
+        return None
+    return {'state': 'stale-module-stanza', 'returncode': returncode,
+            'errors': sorted(_STAMP.sub(r'\1 ', line.strip()) for line in output.splitlines()
+                             if '[ERROR]' in line or '[FATAL]' in line)}
+
+
+def module_declarable(root='/usr/local/lsws'):
+    """Whether the CyberPanel core and module are both installed, so the module may be declared."""
+    root = Path(root)
+    return has_marker(root / 'bin/openlitespeed') and has_marker(root / 'modules/cyberpanel_ols.so')
+
+
 if __name__ == '__main__':
     # olsStockClassifier.py --split-state BINARY RETURNCODE OS_RELEASE < output-of-BINARY-t
     # 0: repairable split bundle, 3: not that state, 4: refused (reason on stdout).
-    if len(sys.argv) != 5 or sys.argv[1] != '--split-state':
+    # olsStockClassifier.py --stale-module-stanza BINARY RETURNCODE < output-of-BINARY-t
+    # 0: declaration of the missing module, 3: not that state.
+    # Both: 64 wrong arguments, 78 the state could not be classified.
+    mode = sys.argv[1] if len(sys.argv) > 1 else ''
+    if (mode, len(sys.argv)) not in (('--split-state', 5), ('--stale-module-stanza', 4)):
         sys.exit(64)
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     try:
-        state = split_state(sys.argv[2], int(sys.argv[3]), sys.stdin.read(), os_release=sys.argv[4])
+        if mode == '--split-state':
+            state = split_state(sys.argv[2], int(sys.argv[3]), sys.stdin.read(), os_release=sys.argv[4])
+        else:
+            state = stale_module_stanza(sys.argv[2], int(sys.argv[3]), sys.stdin.read())
     except SplitStateRefused as refusal:
         print(refusal)
         sys.exit(4)
