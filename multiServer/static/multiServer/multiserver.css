@@ -89,6 +89,10 @@ details.ms-card[open] > summary { margin-bottom: 14px; }
 .ms-table { margin: 0; }
 .ms-table > thead > tr > th { border-bottom-width: 1px; font-size: 12px; font-weight: 600; color: var(--text-muted, #6b776f); }
 .ms-table > tbody > tr > th, .ms-table > tbody > tr > td { vertical-align: top; padding-top: 12px; padding-bottom: 12px; }
+/* A server's name as it was given. The theme makes every table header a shaded capital, with !important. */
+#main-content .ms-table > tbody > tr > th { text-transform: none !important; letter-spacing: normal !important;
+  background: transparent !important; font-size: 14px !important; font-weight: 600 !important;
+  color: var(--text-primary, #13251b) !important; }
 .ms-table form { display: inline-block; margin: 0 6px 6px 0; vertical-align: top; }
 .ms-table details form { display: block; }
 .ms-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: var(--text-muted, #6b776f); }
@@ -108,3 +112,10 @@ details.ms-card[open] > summary { margin-bottom: 14px; }
   .ms-confirm--qr { grid-template-columns: minmax(0, 1fr); }
   .ms-card { padding: 16px; }
 }
+
+/* The two ways to start on the role page, side by side. */
+.ms-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 8px; }
+.ms-option { display: flex; flex-direction: column; margin-bottom: 0; }
+.ms-option .ms-role-text { flex: none; margin-bottom: 8px; }
+.ms-option .ms-confirm--qr { grid-template-columns: minmax(0, 1fr); }
+.ms-fields--stack { grid-template-columns: minmax(0, 1fr); max-width: 360px; }

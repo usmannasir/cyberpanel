@@ -7,10 +7,9 @@
 <div class="ms-page">
   <div class="ms-head">
     <div>
-      <h1>Add a server: is this the right one?</h1>
-      <p class="ms-sub">Nothing has been sent yet. This is the server the pairing code belongs to. Check that the address is your server before you connect.</p>
+      <h1>Add this server?</h1>
+      <p class="ms-sub">Nothing has been sent yet. This is the server the pairing code belongs to.</p>
     </div>
-    <div class="ms-head-actions"><p class="ms-pill">Step 2 of 4</p></div>
   </div>
   <div class="ms-card">
     <table class="table ms-table">
@@ -32,20 +31,18 @@
     </details>
   </div>
   <div class="ms-card">
-    <h2 class="ms-step-title"><i class="fas fa-lock" aria-hidden="true"></i>Connect</h2>
-    <p>After you connect, this controller shows an eight-digit number. Type it on that server (Multi-Server, Controllers) to approve.</p>
     <form method="post" action="{% url 'multiServerNodeAdd' %}">
       {% csrf_token %}
       <input type="hidden" name="step" value="connect">
       <input type="hidden" name="label" value="{{ label }}">
       <input type="hidden" name="pairing_code" value="{{ pairing_code }}">
-      <p class="ms-muted">To confirm, enter your password and the six-digit code from your authenticator app.</p>
+      {% if not recent %}<p class="ms-muted">To confirm, enter your password and the six-digit code from your authenticator app.</p>
       <div class="ms-fields">
         <label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
         <label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
-      </div>
+      </div>{% endif %}
       <div class="ms-actions">
-        <button class="btn btn-primary" type="submit">Connect to this server</button>
+        <button class="btn btn-primary" type="submit">Connect</button>
         <a class="btn btn-default" href="{% url 'multiServerNodes' %}">Cancel</a>
       </div>
     </form>

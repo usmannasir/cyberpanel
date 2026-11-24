@@ -146,6 +146,14 @@ def verifyLogin(request):
                     if keys.role() == keys.CONTROLLER and request.is_secure():
                         from multiServer.sso import remember_login
                         remember_login(request, admin)
+                try:
+                    # Multi-Server forms do not ask for the password again for a while after a sign-in.
+                    from multiServer import keys as ms_keys
+                    if ms_keys.role() != ms_keys.OFF:
+                        from multiServer.stepup import remember
+                        remember(request, admin, verified_totp)
+                except Exception:
+                    pass  # never a reason for a sign-in to fail
 
                 request.session.set_expiry(43200)
                 # Persist before the browser follows the login response with a

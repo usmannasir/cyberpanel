@@ -215,5 +215,133 @@ class ConfirmTests(Base):
         self.assertIsNone(self.confirm())
 
 
+
+@unittest.skipIf(SKIP, SKIP)
+class PasswordOnlyTests(Base):
+    """An administrator without a second factor, as on a managed server."""
+
+    def setUp(self):
+        super().setUp()
+        from plogical import hashPassword
+        Administrator.objects.filter(pk=self.administrator.pk).update(
+            password=hashPassword.hash_password(PASSWORD), twoFA=0, secretKey='None', config='{}')
+        self.time = self.start(patch.object(stepup, 'time', Clock()))
+
+    def kept(self):
+        return json.loads(Administrator.objects.get(pk=self.administrator.pk).config).get(stepup.KEPT_AS)
+
+    def test_the_password_alone_passes_only_where_a_second_factor_is_not_required(self):
+        self.assertEqual('admin', stepup.confirm(self.administrator.pk, PASSWORD, ''))
+        self.assertIsNone(stepup.confirm(self.administrator.pk, PASSWORD, '', two_factor=False))
+        self.assertEqual([0, 0, 0], self.kept())
+        # Passes again: there is no code to be used up.
+        self.assertIsNone(stepup.confirm(self.administrator.pk, PASSWORD, '', two_factor=False))
+
+    def test_a_wrong_password_is_counted_and_the_fifth_shuts_the_account_out(self):
+        for unused in range(5):
+            self.assertEqual('password', stepup.confirm(self.administrator.pk, 'wrong', '', two_factor=False))
+        self.assertEqual('not_allowed', stepup.confirm(self.administrator.pk, PASSWORD, '', two_factor=False))
+        self.time.now = NOW + stepup.WINDOW
+        self.assertIsNone(stepup.confirm(self.administrator.pk, PASSWORD, '', two_factor=False))
+
+    def test_an_account_with_a_second_factor_still_needs_a_code_where_it_is_not_required(self):
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=1, secretKey=SECRET)
+        self.assertEqual('two_factor', stepup.confirm(self.administrator.pk, PASSWORD, '', two_factor=False))
+        self.assertIsNone(stepup.confirm(self.administrator.pk, PASSWORD, code(NOW // 30), two_factor=False))
+
+    def test_the_message_asks_for_a_code_only_from_an_account_that_has_one(self):
+        admin = Administrator.objects.get(pk=self.administrator.pk)
+        self.assertEqual(stepup.WRONG_PASSWORD, stepup.message('password', admin))
+        self.assertEqual(stepup.LOCKED, stepup.message('not_allowed', admin))
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=1, secretKey=SECRET)
+        self.assertEqual(stepup.WRONG, stepup.message('password', Administrator.objects.get(pk=self.administrator.pk)))
+
+
+class Request(object):
+    """What check() reads of a request: the session, the form, and whether it came over HTTPS."""
+
+    def __init__(self, **post):
+        self.session, self.POST = {}, post
+
+    def is_secure(self):
+        return False
+
+
+@unittest.skipIf(SKIP, SKIP)
+class RecentTests(Base):
+    """A confirmation counts for RECENT seconds in its own session, for its own account, as it was made."""
+
+    def setUp(self):
+        super().setUp()
+        from plogical import hashPassword
+        Administrator.objects.filter(pk=self.administrator.pk).update(
+            password=hashPassword.hash_password(PASSWORD), twoFA=1, secretKey=SECRET, config='{}')
+        self.time = self.start(patch.object(stepup, 'time', Clock()))
+        self.request = Request(password=PASSWORD, code=code(NOW // 30))
+
+    def admin(self):
+        return Administrator.objects.get(pk=self.administrator.pk)
+
+    def test_after_a_check_nothing_is_asked_for_the_window_and_then_it_is_asked_again(self):
+        self.assertFalse(stepup.recent(self.request, self.admin()))
+        self.assertIsNone(stepup.check(self.request, self.admin()))
+        self.assertTrue(stepup.recent(self.request, self.admin()))
+        self.request.POST = {}
+        self.time.now = NOW + stepup.RECENT - 1
+        self.assertIsNone(stepup.check(self.request, self.admin()))
+        self.time.now = NOW + stepup.RECENT
+        self.assertFalse(stepup.recent(self.request, self.admin()))
+        self.assertEqual('password', stepup.check(self.request, self.admin()))
+
+    def test_it_counts_for_that_account_only_and_ends_with_a_new_password_or_second_factor(self):
+        self.assertIsNone(stepup.check(self.request, self.admin()))
+        other = self.admin()
+        other.pk += 100
+        self.assertFalse(stepup.recent(self.request, other))
+        from plogical import hashPassword
+        Administrator.objects.filter(pk=self.administrator.pk).update(password=hashPassword.hash_password('new one'))
+        self.assertFalse(stepup.recent(self.request, self.admin()))
+        Administrator.objects.filter(pk=self.administrator.pk).update(password=hashPassword.hash_password(PASSWORD))
+        self.request.POST = {'password': PASSWORD, 'code': code(NOW // 30 + 1)}
+        self.assertIsNone(stepup.check(self.request, self.admin()))
+        Administrator.objects.filter(pk=self.administrator.pk).update(secretKey='KRSXG5CTMVRXEZLUKRSXG5CTMVRXEZLU')
+        self.assertFalse(stepup.recent(self.request, self.admin()))
+
+    def test_a_check_with_the_password_alone_never_stands_in_for_one_that_needs_a_code(self):
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=0, secretKey='None')
+        self.request.POST = {'password': PASSWORD}
+        self.assertIsNone(stepup.check(self.request, self.admin(), two_factor=False))
+        self.assertTrue(stepup.recent(self.request, self.admin(), two_factor=False))
+        self.assertFalse(stepup.recent(self.request, self.admin()))
+        # Turning two-factor on in the same session does not make that check one made with a code.
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=1, secretKey=SECRET)
+        self.assertFalse(stepup.recent(self.request, self.admin()))
+        self.assertFalse(stepup.recent(self.request, self.admin(), two_factor=False))
+
+    def test_an_account_with_a_second_factor_is_never_let_through_by_a_check_without_a_code(self):
+        # As a sign-in that skipped the code would leave it: the same account, a check without a code.
+        stepup.remember(self.request, self.admin(), False)
+        self.assertFalse(stepup.recent(self.request, self.admin(), two_factor=False))
+        self.request.POST = {}
+        self.assertEqual('password', stepup.check(self.request, self.admin(), two_factor=False))
+
+    def test_what_is_kept_is_checked_and_holds_nothing_typed(self):
+        self.assertIsNone(stepup.check(self.request, self.admin()))
+        kept = self.request.session[stepup.SESSION_KEY]
+        self.assertEqual([self.administrator.pk, NOW, True], kept[:3])
+        for typed in (PASSWORD, code(NOW // 30)):
+            self.assertNotIn(typed, repr(kept))
+        for broken in (None, [], kept[:3], [str(kept[0])] + kept[1:], [kept[0], NOW + 1.5] + kept[2:],
+                       kept[:2] + [1] + kept[3:], kept[:3] + ['x' * 64], kept[:1] + [NOW + 60] + kept[2:]):
+            self.request.session[stepup.SESSION_KEY] = broken
+            self.assertFalse(stepup.recent(self.request, self.admin()), repr(broken))
+        stepup.forget(self.request)
+        self.assertNotIn(stepup.SESSION_KEY, self.request.session)
+
+    def test_a_refused_check_remembers_nothing(self):
+        self.request.POST = {'password': 'wrong', 'code': code(NOW // 30)}
+        self.assertEqual('password', stepup.check(self.request, self.admin()))
+        self.assertNotIn(stepup.SESSION_KEY, self.request.session)
+
 if __name__ == '__main__':
     unittest.main()

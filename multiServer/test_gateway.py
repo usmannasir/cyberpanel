@@ -1753,7 +1753,8 @@ class PairingThroughTheGatewayTests(Panel):
                                               '127.0.0.1')
         self.assertTrue(crypto.verify(NODE_KEY, bytes.fromhex(response['X-CPMS-Signature']), signed))
         link = models.Link.objects.get(pk=fields['link_id'])
-        self.assertEqual((models.PENDING, '127.0.0.1', self.administrator.pk, fields['controller_key'], 0),
+        # Making the code was the approval: the link carries requests from the answer on.
+        self.assertEqual((models.ACTIVE, '127.0.0.1', self.administrator.pk, fields['controller_key'], 0),
                          (link.status, link.allowed_ips, link.admin_id, link.controller_key, link.last_request_at))
 
     def assert_refused(self, response, reason, link_id=''):
@@ -1763,7 +1764,7 @@ class PairingThroughTheGatewayTests(Panel):
                          (response.status_code, response.content, list(response.items())))
         self.assertEqual(('pairing', 'refused', reason, link_id, '127.0.0.1', 403), self.pairing_rows()[-1])
 
-    def test_a_pairing_request_is_answered_by_pairing_and_makes_the_pending_link(self):
+    def test_a_pairing_request_is_answered_by_pairing_and_makes_the_link(self):
         fields, body, signature = self.asking()
         key = self.sign_in()
         response = self.post(body, signature, HTTP_COOKIE='%s=%s' % (settings.SESSION_COOKIE_NAME, key),

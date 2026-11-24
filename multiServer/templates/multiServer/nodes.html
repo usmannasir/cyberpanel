@@ -24,11 +24,11 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="confirm">
     <h2 class="ms-step-title"><i class="fas fa-lock" aria-hidden="true"></i>Confirm it's you</h2>
-    <p>To open your servers' panels from here, confirm with your password and a code from your authenticator app.</p>
-    <div class="ms-fields">
+    <p>To open your servers' panels from here, confirm{% if not recent %} with your password and a code from your authenticator app{% endif %}.</p>
+    {% if not recent %}<div class="ms-fields">
       <label class="ms-field">Current password <input class="form-control" type="password" name="password" autocomplete="current-password" required></label>
       <label class="ms-field">Verification code <input class="form-control" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
-    </div>
+    </div>{% endif %}
     <button class="btn btn-primary" type="submit">Confirm</button>
   </form>{% endif %}
   {% for message in messages %}<p role="status" class="alert {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'warning' %}alert-warning{% else %}alert-success{% endif %}">{{ message }}</p>{% endfor %}
@@ -36,20 +36,17 @@
   {% if licensed %}
   <details class="ms-card"{% if not nodes %} open{% endif %}>
     <summary><i class="fas fa-plus" aria-hidden="true"></i> Add a server</summary>
-    <p class="ms-muted">Four steps, about two minutes.</p>
     <ol class="ms-steps">
-      <li><strong>On the server you want to add:</strong> open Multi-Server, choose <em>Managed server</em>, then open <em>Controllers</em>. Under <em>Allow a controller</em>, enter the IP address of this controller and press <em>Get a pairing code</em>. Copy the code.</li>
-      <li><strong>Here:</strong> give the server a name you will recognise, paste the code below and press <em>Check the code</em>. You see the server's address before anything is connected. A code works once, for ten minutes.</li>
-      <li><strong>Back on that server:</strong> in <em>Controllers</em>, type the eight-digit number that this page then shows, and press <em>Approve</em>.</li>
-      <li><strong>Here:</strong> press <em>I approved it, check now</em>. The server shows as <em>Connected</em>.</li>
+      <li><strong>On the server you want to add:</strong> open Multi-Server, choose <em>Connect this server to a controller</em> and enter this controller's address{% if address %}: <code class="ms-key">{{ address }}</code>{% endif %}. Copy the code it shows.</li>
+      <li><strong>Here:</strong> paste the code below and press <em>Add</em>. The server is connected at once.</li>
     </ol>
     <form method="post" action="{% url 'multiServerNodeAdd' %}">{% csrf_token %}
       <input type="hidden" name="step" value="read">
       <div class="ms-fields">
-        <label class="ms-field">Name for the server <input class="form-control" type="text" name="label" maxlength="64" pattern="[A-Za-z0-9]([A-Za-z0-9 ._-]{0,62}[A-Za-z0-9])?" autocomplete="off" required><small>Letters, digits, spaces, dots, dashes</small></label>
         <label class="ms-field">Pairing code from that server <input class="form-control" type="text" name="pairing_code" maxlength="1024" autocomplete="off" spellcheck="false" required></label>
+        <label class="ms-field">Name (optional) <input class="form-control" type="text" name="label" maxlength="64" pattern="[A-Za-z0-9]([A-Za-z0-9 ._-]{0,62}[A-Za-z0-9])?" autocomplete="off"><small>Its address if you leave this empty</small></label>
       </div>
-      <button class="btn btn-primary" type="submit">Check the code</button>
+      <button class="btn btn-primary" type="submit">Add</button>
     </form>
   </details>
   {% endif %}

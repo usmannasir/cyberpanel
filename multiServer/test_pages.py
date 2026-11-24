@@ -149,6 +149,8 @@ class Pages(Base):
         Administrator.objects.filter(pk=self.administrator.pk).update(
             password=hashPassword.hash_password(PASSWORD), twoFA=1, secretKey=SECRET)
         self.time = self.start(patch.object(stepup, 'time', Clock()))
+        # Every check asks again, unless a test is about the minutes in which it does not (WindowTests).
+        self.start(patch.object(stepup, 'RECENT', 0))
         self.start(patch('plogical.httpProc.httpProc', Shown))
         self.directory = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.directory)
@@ -286,8 +288,11 @@ class RolePageTests(Pages):
         self.assertEqual(200, response.status_code)
         page = self.text(response)
         self.assertIn('This server is: <strong>Off</strong>', page)
-        for role in ('off', 'controller', 'node'):
-            self.assertIn('name="role" value="%s"' % role, page)
+        # Two ways to start: make this the controller, or connect it to one.
+        self.assertIn('<input type="hidden" name="action" value="role"><input type="hidden" name="role" '
+                      'value="controller">', page)
+        self.assertIn('<input type="hidden" name="action" value="connect">', page)
+        self.assertNotIn('name="role" value="off"', page)  # it is off
         self.assertIn('no-cache', response['Cache-Control'])
         self.assertIn('href="/multiserver/role"', page)  # the sidebar entry
         self.assertIn('<a href="%s" target="_blank" rel="noopener">Get a licence for this server</a>'
@@ -375,9 +380,9 @@ class RolePageTests(Pages):
         for name, client in self.everyone_else():
             before = self.state()
             shown = client.get('/multiserver/role')
-            changed = self.post('/multiserver/role', client=client, **self.confirmed(role='node'))
+            changed = self.post('/multiserver/role', client=client, **self.confirmed(role='controller'))
             if 'without a second factor' in name or 'no secret' in name:
-                # A full administrator sees the role and is told what to do first, and can change nothing.
+                # A full administrator sees the page and is told what a controller needs first.
                 self.assertEqual(200, shown.status_code, name)
                 self.assertNotIn('name="role"', self.text(shown), name)
                 self.assertIn('name="action" value="setup"', self.text(shown), name)
@@ -477,7 +482,8 @@ class TwoFactorSetUpTests(Pages):
         self.assertRegex(key, r'^[A-Z2-7]{32}$')
         self.assertIn('<svg', page)
         self.assertIn(' '.join(key[start:start + 4] for start in range(0, 32, 4)), page)
-        self.assertIn('name="role" value="controller" required checked', page)
+        self.assertIn('<input type="hidden" name="action" value="enrol"><input type="hidden" name="role" '
+                      'value="controller">', page)
         from django.conf import settings
         session_before = self.client.cookies[settings.SESSION_COOKIE_NAME].value
         before = self.last_audit_id()
@@ -613,8 +619,11 @@ class ControllersPageTests(Pages):
         (code,) = CODE.findall(self.text(response))
         return code
 
-    def asks(self, code, source=CALLER):
-        """A controller that has the code asks for a link; (link id, the number its page shows)."""
+    def asks(self, code, source=CALLER, as_before=False):
+        """A controller that has the code asks for a link; (link id, the number its page shows).
+
+        as_before leaves the link as a managed server of 3.0.18 or older made it: waiting for the number.
+        """
         endpoint, node_id, seed, commitment = pairing._decode(code)
         key = crypto.generate_private_key()
         fields = dict(link_id=secrets.token_hex(16), pairing_key=crypto.public_key(seed).hex(),
@@ -628,6 +637,11 @@ class ControllersPageTests(Pages):
         self.assertEqual(200, answer.status_code)
         node_key, value, allowed = answer.content.decode('ascii').split('\n')
         self.assertEqual(commitment, crypto.pair_commitment(value, endpoint.authority, endpoint.tls_pin, allowed))
+        if as_before:
+            link = models.Link.objects.get(pk=fields['link_id'])
+            models.Link.objects.filter(pk=link.link_id).update(status=models.PENDING, activated_at=None,
+                                                               expires_at=link.created_at + pairing.PENDING_LIFETIME)
+            models.AuditEntry.objects.filter(event='link_approve', link_id=link.link_id).delete()
         return fields['link_id'], pairing.confirmation_number(crypto.pair_confirmation_message(
             fields['link_id'], fields['pairing_key'], fields['controller_key'], node_key, value))
 
@@ -715,9 +729,21 @@ class ControllersPageTests(Pages):
         self.assertIn('A controller cannot reach this server at the address the panel has for it. '
                       'A link may not connect to this address (private).', page)
 
-    def test_the_number_from_the_controller_approves_the_link_and_the_next_signed_request_is_answered(self):
+    def test_the_controller_that_uses_the_code_is_let_in_at_once(self):
+        before = self.last_audit_id()
         link_id, number = self.asks(self.code())
+        self.assertEqual('active', self.status(link_id))
+        self.assertEqual([('pairing', 'ok', '', link_id, ''), ('link_approve', 'ok', '', link_id, 'admin')],
+                         self.audited(before)[1:])
+        page = self.text(self.client.get('/multiserver/controllers'))
+        self.assertIn('<th scope="row">%s</th><td>%s</td><td>Active</td>' % (CALLER, link_id[:8]), page)
+        self.assertNotIn('Waiting for your approval', page)
+        self.assertIn('This link is not waiting for a decision.', self.decide('approve', link_id, number=number))
+
+    def test_the_number_from_the_controller_approves_a_link_made_before_the_upgrade(self):
+        link_id, number = self.asks(self.code(), as_before=True)
         self.assertEqual('pending', self.status(link_id))
+        self.assertIn('Waiting for your approval', self.text(self.client.get('/multiserver/controllers')))
         before = self.last_audit_id()
         page = self.decide('approve', link_id, number=number[:4] + ' ' + number[4:])
         self.assertIn('Approved. That controller now manages this server.', page)
@@ -727,7 +753,7 @@ class ControllersPageTests(Pages):
         self.nowhere(number, number[:4] + ' ' + number[4:])
 
     def test_wrong_digits_are_counted_and_the_fifth_closes_the_request(self):
-        link_id, number = self.asks(self.code())
+        link_id, number = self.asks(self.code(), as_before=True)
         wrong = '%08d' % ((int(number) + 1) % 10 ** 8)
         for attempt in range(1, 5):
             page = self.decide('approve', link_id, number=wrong)
@@ -747,7 +773,7 @@ class ControllersPageTests(Pages):
         self.nowhere(number, wrong)
 
     def test_a_request_can_be_rejected_and_then_no_number_approves_it(self):
-        link_id, number = self.asks(self.code())
+        link_id, number = self.asks(self.code(), as_before=True)
         self.assertIn('Rejected. That controller was not let in.', self.decide('reject', link_id))
         self.assertEqual('revoked', self.status(link_id))
         self.assertIn('This link is not waiting for a decision.', self.decide('approve', link_id, number=number))
@@ -795,10 +821,12 @@ class ControllersPageTests(Pages):
         self.assertEqual(('active', 200), (self.status(LINK), self.call()[0].status_code))
 
     def test_nobody_else_gets_anything_from_these_pages(self):
-        link_id, number = self.asks(self.code())
+        link_id, number = self.asks(self.code(), as_before=True)
         forms = (dict(action='allow', controller_ip=CALLER), dict(action='approve', link_id=link_id, number=number),
                  dict(action='reject', link_id=link_id), dict(action='end', link_id=LINK, confirm='end'))
         for name, client in self.everyone_else():
+            if 'without a second factor' in name or 'no secret' in name:
+                continue  # a full administrator of a managed server needs no second factor (ManagedWithoutTwoFactorTests)
             before = self.state()
             self.assertEqual(404, client.get('/multiserver/controllers').status_code, name)
             for form in forms:
@@ -810,7 +838,7 @@ class ControllersPageTests(Pages):
         self.assertEqual(302, Client().get('/multiserver/controllers').status_code)
 
     def test_a_form_the_request_filter_refuses_is_not_written_to_the_log(self):
-        link_id, number = self.asks(self.code())
+        link_id, number = self.asks(self.code(), as_before=True)
         del self.log[:]
         for form in (dict(action='allow', controller_ip='203.0.113.9;id', password='planted-password', code='314159'),
                      dict(action='approve', link_id=link_id, number=number + '$'),
@@ -825,7 +853,7 @@ class ControllersPageTests(Pages):
         self.assertEqual(1, len(CODE.findall(self.text(self.allow()))))
 
     def test_the_forms_are_refused_without_the_token_of_the_page(self):
-        link_id, number = self.asks(self.code())
+        link_id, number = self.asks(self.code(), as_before=True)
         strict = Client(enforce_csrf_checks=True)
         self.sign_in(strict)
         before = self.state()
@@ -861,6 +889,9 @@ class AddServerTests(Pages):
         self.licensed = self.start(patch.object(entitlement, 'allowed', return_value=True))
         self.sent = []
         self.exchange = self.start(patch.object(transport, 'exchange', side_effect=self.node_answers))
+        # The first signed request after pairing: a managed server of 3.0.18 or older does not answer it
+        # until its administrator typed the number. NewServerTests answers it as a newer one does.
+        self.asked = self.start(patch.object(transport, 'send', side_effect=transport.BadSignature('unsigned')))
         self.seed = crypto.generate_private_key()
         self.pairing_key = crypto.public_key(self.seed).hex()
         self.value = crypto.pair_value(IDENTITY, self.pairing_key)
@@ -913,7 +944,7 @@ class AddServerTests(Pages):
         for fields, said in ((dict(pairing_code=self.code[:-1]), 'This is not a pairing code, or not all of one.'),
                              (dict(pairing_code='CPMS1-PAIR-AAAA'), 'This is not a pairing code, or not all of one.'),
                              (dict(pairing_code=''), 'This is not a pairing code, or not all of one.'),
-                             (dict(label=''), 'A label is 1 to 64 letters'), (dict(label='x' * 65), 'A label is'),
+                             (dict(label='x' * 65), 'A label is 1 to 64 letters'),
                              (dict(label='-Frankfurt'), 'A label is')):
             for step in ('read', 'connect'):
                 page = self.text(self.post(self.ADD, follow=True, **self.confirmed(**dict(
@@ -927,20 +958,25 @@ class AddServerTests(Pages):
         self.exchange.assert_not_called()
         self.assertEqual(0, models.Node.objects.count())
 
-    def test_with_the_password_and_a_new_code_the_servers_are_paired_and_the_number_is_shown_while_it_waits(self):
+    def test_a_server_that_still_asks_for_the_number_is_paired_and_the_number_is_shown_while_it_waits(self):
         page = self.text(self.connect())
         self.assertEqual(1, self.exchange.call_count)
+        self.assertEqual(1, self.asked.call_count)  # asked at once whether the link works: not yet
         (row,) = models.Node.objects.all()
         self.assertEqual(('Frankfurt 1', 'pending', self.sent[0][0]), (row.label, row.status, row.link_id))
         number = self.number()
         shown = number[:4] + ' ' + number[4:]
-        self.assertIn('Code accepted. Now, on that server', page)
+        self.assertIn('Code accepted. That server runs CyberPanel 3.0.18 or older', page)
+        # Not answering yet is what such a server does: no problem is shown for it.
+        self.assertEqual(('', None), (row.last_error, row.last_error_at))
+        self.assertNotIn('Last problem', page)
         self.assertIn('Waiting for approval on that server</strong><br>Number to type there: <strong>%s</strong>' % shown, page)
         self.assertIn('name="action" value="confirm"', page)
         # It is shown again whenever the page is opened, and it is written down nowhere.
         self.assertIn(shown, self.text(self.client.get(self.NODES)))
         self.nowhere(number, shown, self.code, self.seed.hex(), self.value)
-        self.assertEqual([('pairing', 'ok', '', row.link_id, 'admin')], self.audited())
+        self.assertEqual(('pairing', 'ok', '', row.link_id, 'admin'), self.audited()[0])
+        self.assertNotIn(('link_approve', 'ok'), [audit[:2] for audit in self.audited()])
 
     def test_nothing_is_connected_without_the_password_and_a_new_code(self):
         used = self.fresh()
@@ -1014,6 +1050,27 @@ class AddServerTests(Pages):
             self.assertEqual(before, self.state(), name)
         self.exchange.assert_not_called()
 
+    def test_a_newer_server_is_connected_at_once_and_no_number_is_asked_for(self):
+        self.asked.side_effect = None
+        self.asked.return_value = (200, 'application/json', self.HELLO)
+        page = self.text(self.connect())
+        (row,) = models.Node.objects.all()
+        self.assertEqual(('Frankfurt 1', 'active'), (row.label, row.status))
+        self.assertIn('Connected: Frankfurt 1. You can open its panel from the list below.', page)
+        self.assertNotIn('Number to type there', page)
+        self.assertNotIn('Code accepted.', page)
+        self.assertEqual(1, self.asked.call_count)
+
+    def test_a_server_added_without_a_name_is_named_after_its_address(self):
+        page = self.text(self.read(label=''))
+        self.assertIn('<td>%s</td>' % ADDRESS, page)
+        self.assertIn('name="label" value="%s"' % ADDRESS, page)
+        self.connect(label='')
+        self.assertEqual([ADDRESS], [row.label for row in models.Node.objects.all()])
+        from multiServer import nodes
+        self.assertEqual('2a01-4f8--9', nodes._name('2a01:4f8::9'))
+        self.assertEqual('server.example.com', nodes._name('server.example.com'))
+
     def test_a_form_the_request_filter_refuses_is_not_written_to_the_log(self):
         for form in (dict(step='read', label='Frankfurt; 1', pairing_code=self.code),
                      dict(step='connect', label='Frankfurt 1', pairing_code=self.code + '$',
@@ -1023,6 +1080,159 @@ class AddServerTests(Pages):
         self.nowhere(self.code, 'planted-password', '314159')
         self.exchange.assert_not_called()
 
+
+
+class _ManagedServer(object):
+    """What a managed server's pages need: its certificate, its address and its panel port."""
+
+    def managed_server(self):
+        from plogical import softUpgrade
+        self.start(patch.object(pairing, '_certificate_fingerprint', return_value=PIN))
+        self.start(patch.object(entitlement, 'server_address', return_value=ADDRESS))
+        self.start(patch.object(softUpgrade, 'panel_endpoint', return_value=('0.0.0.0', 8090)))
+
+
+@unittest.skipIf(SKIP, SKIP)
+class ConnectTests(_ManagedServer, Pages):
+    """A server is connected to a controller from the role page in one step."""
+    ROLE = '/multiserver/role'
+
+    def setUp(self):
+        super().setUp()
+        self.managed_server()
+        self.role.return_value = keys.OFF
+        self.start(patch.object(entitlement, 'allowed', return_value=False))
+
+    def connect(self, follow=False, **fields):
+        return self.post(self.ROLE, follow=follow, **dict(dict(action='connect', controller_ip=CALLER), **fields))
+
+    def test_a_server_that_is_off_becomes_a_managed_server_and_shows_the_code_in_one_step(self):
+        before = self.last_audit_id()
+        page = self.text(self.connect(**self.confirmed()))
+        (code,) = CODE.findall(page)
+        self.assertEqual((ADDRESS, 8090, NODE, PIN), tuple(pairing.read_code(code)))
+        self.assertIn('This server is a managed server.', page)
+        self.assertIn('On the controller (%s)' % CALLER, page)
+        self.assertEqual(([msctl.ROLE_COMMANDS['node']], keys.NODE), (self.commands, self.role.return_value))
+        self.assertEqual([('role', 'ok', '', '', 'admin'), ('pairing_code', 'ok', '', '', 'admin')],
+                         self.audited(before))
+        # Once it is a managed server, connecting again changes no role.
+        self.assertEqual(1, len(CODE.findall(self.text(self.connect(**self.confirmed())))))
+        self.assertEqual(1, len(self.commands))
+        self.nowhere(code, PASSWORD)
+
+    def test_an_administrator_without_two_factor_login_connects_with_the_password_alone(self):
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=0, secretKey='None')
+        page = self.text(self.client.get(self.ROLE))
+        self.assertIn('<input type="hidden" name="action" value="connect">', page)
+        self.assertNotIn('autocomplete="one-time-code"', page)
+        self.assertEqual(1, len(CODE.findall(self.text(self.connect(password=PASSWORD)))))
+        self.assertEqual(keys.NODE, self.role.return_value)
+        self.assertEqual((0, 'None'), Administrator.objects.filter(pk=self.administrator.pk).values_list(
+            'twoFA', 'secretKey')[0])
+
+    def test_nothing_changes_without_the_password_or_for_what_is_not_one_address(self):
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=0, secretKey='None')
+        before = self.last_audit_id()
+        self.assertIn(stepup.WRONG_PASSWORD, self.text(self.connect(follow=True, password='wrong')))
+        self.assertIn(stepup.WRONG_PASSWORD, self.text(self.connect(follow=True)))
+        self.assertEqual([('pairing_code', 'refused', 'password', '', 'admin')] * 2, self.audited(before))
+        for address in ('controller.example.com', '203.0.113.9/32', ''):
+            page = self.text(self.connect(follow=True, controller_ip=address, password=PASSWORD))
+            self.assertIn('The controller&#x27;s address must be one IPv4 or IPv6 address.', page, address)
+        self.assertEqual(([], keys.OFF, 0), (self.commands, self.role.return_value,
+                                             models.PairingCode.objects.count()))
+        self.nowhere('wrong', PASSWORD)
+
+    def test_a_controller_is_not_connected_to_another_controller(self):
+        self.role.return_value = keys.CONTROLLER
+        before = self.state()
+        self.assertEqual(404, self.connect(**self.confirmed()).status_code)
+        self.assertEqual(before[:-1], self.state()[:-1])
+
+    def test_what_root_refuses_stops_before_any_code_is_made(self):
+        self.role_refusal = msctl.HAS_SERVERS
+        page = self.text(self.connect(follow=True, **self.confirmed()))
+        self.assertIn(msctl.HAS_SERVERS.replace('"', '&quot;'), page)
+        self.assertEqual((keys.OFF, 0), (self.role.return_value, models.PairingCode.objects.count()))
+        self.assertEqual([], CODE.findall(page))
+
+    def test_nobody_else_connects_the_server(self):
+        for name, client in self.everyone_else():
+            if 'without a second factor' in name or 'no secret' in name:
+                continue  # may: test_an_administrator_without_two_factor_login_connects_with_the_password_alone
+            before = self.state()
+            response = self.post(self.ROLE, client=client, **self.confirmed(action='connect', controller_ip=CALLER))
+            self.assertNotEqual(200, response.status_code, name)
+            self.assertEqual(before, self.state(), name)
+
+
+@unittest.skipIf(SKIP, SKIP)
+class ManagedWithoutTwoFactorTests(_ManagedServer, Pages):
+    """A managed server's administrator without two-factor login uses the Controllers page with the password."""
+    CONTROL = '/multiserver/controllers/control'
+
+    def setUp(self):
+        super().setUp()
+        self.managed_server()
+        self.start(patch.object(controllers, 'time', self.clock))
+        Administrator.objects.filter(pk=self.administrator.pk).update(twoFA=0, secretKey='None')
+
+    def test_the_password_alone_gets_a_code_and_ends_a_link(self):
+        page = self.text(self.client.get('/multiserver/controllers'))
+        self.assertIn('name="controller_ip"', page)
+        self.assertNotIn('autocomplete="one-time-code"', page)
+        self.assertEqual(1, len(CODE.findall(self.text(self.post(self.CONTROL, action='allow', controller_ip=CALLER,
+                                                                 password=PASSWORD)))))
+        self.assertIn(stepup.WRONG_PASSWORD, self.text(self.post(self.CONTROL, follow=True, action='allow',
+                                                                 controller_ip=CALLER, password='wrong')))
+        page = self.text(self.post(self.CONTROL, follow=True, action='end', link_id=LINK, confirm='end',
+                                   password=PASSWORD))
+        self.assertIn('The link is ended. That controller can no longer manage this server.', page)
+        self.assertEqual([msctl.revoke_command(LINK, self.administrator.pk)], self.commands)
+
+    def test_a_controller_still_needs_two_factor_login(self):
+        self.role.return_value = keys.CONTROLLER
+        self.assertEqual(404, self.client.get('/multiserver/nodes').status_code)
+        self.role.return_value = keys.OFF
+        page = self.text(self.client.get('/multiserver/role'))
+        self.assertIn('<input type="hidden" name="action" value="setup">', page)
+        self.assertNotIn('name="role" value="controller"', page)
+        self.assertEqual(404, self.post('/multiserver/role', role='controller', password=PASSWORD).status_code)
+        self.assertEqual([], self.commands)
+
+
+@unittest.skipIf(SKIP, SKIP)
+class WindowTests(_ManagedServer, Pages):
+    """After the password (and code) were given, the same session is not asked again for RECENT seconds."""
+    CONTROL = '/multiserver/controllers/control'
+
+    def setUp(self):
+        super().setUp()
+        self.managed_server()
+        self.start(patch.object(stepup, 'RECENT', 15 * 60))
+
+    def allow(self, client=None, **fields):
+        return self.text(self.post(self.CONTROL, follow=True, client=client, action='allow', controller_ip=CALLER,
+                                   **fields))
+
+    def test_a_second_code_within_the_window_needs_no_password_and_after_it_one_is_asked_for(self):
+        self.assertIn('autocomplete="current-password"', self.text(self.client.get('/multiserver/controllers')))
+        self.assertEqual(1, len(CODE.findall(self.allow(**self.confirmed()))))
+        self.assertNotIn('autocomplete="current-password"', self.text(self.client.get('/multiserver/controllers')))
+        self.assertEqual(1, len(CODE.findall(self.allow())))
+        self.time.now += 15 * 60
+        self.assertIn(stepup.WRONG, self.allow())
+        self.assertIn('autocomplete="current-password"', self.text(self.client.get('/multiserver/controllers')))
+
+    def test_the_window_belongs_to_its_session_and_ends_with_a_new_password(self):
+        self.allow(**self.confirmed())
+        other = Client()
+        self.sign_in(other)
+        self.assertIn(stepup.WRONG, self.allow(client=other))
+        from plogical import hashPassword
+        Administrator.objects.filter(pk=self.administrator.pk).update(password=hashPassword.hash_password('new'))
+        self.assertIn(stepup.WRONG, self.allow())
 
 if __name__ == '__main__':
     unittest.main()
