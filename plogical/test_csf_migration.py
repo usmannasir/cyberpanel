@@ -56,6 +56,8 @@ class CSFMigrationTests(unittest.TestCase):
                 exists=lambda p: self.csf.exists() if p == '/etc/csf' else False,
             ),
             chdir=Mock(),
+            # The upgrade sets git's stall limits in its own environment.
+            environ={},
         )
         namespace = {'os': self.os, 'sys': sys, 'subprocess': self.process, 'shlex': shlex,
                      'preserving_csf': lambda: False}

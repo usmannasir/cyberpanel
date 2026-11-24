@@ -392,7 +392,7 @@ class UpgradeEntryPointTests(unittest.TestCase):
                                            if isinstance(node, ast.ClassDef) and node.name == 'Upgrade'))
         upgrade_class.body = [node for node in upgrade_class.body
                               if isinstance(node, ast.FunctionDef)
-                              and node.name in ('downloadAndUpgrade', 'backupCriticalFiles')]
+                              and node.name in ('downloadAndUpgrade', 'backupCriticalFiles', 'warn')]
         tree = ast.fix_missing_locations(TestPaths().visit(
             ast.Module(body=[upgrade_class], type_ignores=[])))
         # Never execute a relocated installer test while a live installation path remains.
@@ -410,6 +410,7 @@ class UpgradeEntryPointTests(unittest.TestCase):
         exec(compile(tree, 'upgrade.py', 'exec'), self.globals)
         self.upgrade = self.globals['Upgrade']
         self.upgrade.stdOut = lambda *args: None
+        self.upgrade.Incomplete = []
         self.upgrade.staticContent = lambda: None
         for method in ('ensurePostfixLoopbackNetworks', 'ensurePostfixDomainLookup',
                        'ensureDovecot24LdaConfig', 'restoreImunify360', 'finalImunifyPermissions'):
@@ -643,11 +644,12 @@ class MultiServerTablesTests(unittest.TestCase):
         upgrade_class = copy.deepcopy(next(node for node in parsed_source.body
                                            if isinstance(node, ast.ClassDef) and node.name == 'Upgrade'))
         upgrade_class.body = [node for node in upgrade_class.body
-                              if isinstance(node, ast.FunctionDef) and node.name == 'multiServerMigrations']
+                              if isinstance(node, ast.FunctionDef) and node.name in ('multiServerMigrations', 'warn')]
         scope = {}
         exec(compile(ast.fix_missing_locations(ast.Module(body=[upgrade_class], type_ignores=[])),
                      'upgrade.py', 'exec'), scope)
         self.upgrade = scope['Upgrade']
+        self.upgrade.Incomplete = []
         self.messages = []
         self.connections = []
         self.upgrade.stdOut = lambda message, do_exit=0: self.messages.append((message, do_exit))
