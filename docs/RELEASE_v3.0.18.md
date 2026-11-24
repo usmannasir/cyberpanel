@@ -1,11 +1,12 @@
-# CyberPanel v3.0.18 (build 18) — upgrades on servers that keep the vendor OpenLiteSpeed
+# CyberPanel v3.0.18 (build 18) — upgrades on servers that keep the vendor OpenLiteSpeed, Multi-Server Manager set-up
 
 _Released 2026-11-24._
 
 An upgrade no longer stops at the OpenLiteSpeed check on a server whose
 configuration declares the CyberPanel module that was never installed, and a
-fresh install no longer writes that declaration. The changes are listed in
-CHANGELOG.md.
+fresh install no longer writes that declaration. Multi-Server Manager sets
+up two-factor login on its role page and needs no sign-out. The changes are
+listed in CHANGELOG.md.
 
 ## Release gates
 
@@ -19,6 +20,10 @@ CHANGELOG.md.
   removes only the declaration and the configuration test passes afterwards.
 - Mixed states (a module file of any kind, another server-wide error, two
   declarations) still stop before any package change.
+- Multi-Server Manager: the whole Multi-Server test collection passes on a
+  server with a panel database, and a browser walk sets up two-factor on the
+  role page, becomes a controller and opens Managed servers without signing
+  out.
 - Run the whole test collection against the published v3.0.17 tree on
   Ubuntu 22.04, AlmaLinux 9 and AlmaLinux 8 (Python 3.6); no test may fail
   that passed there.
