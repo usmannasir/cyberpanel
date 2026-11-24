@@ -306,7 +306,7 @@ class Updater:
         state['attempt'] = {'commit': release['commit'], 'branch': release['branch'], 'job': job,
                             'started': int(self.clock())}
         self.save_state(state)
-        status, message = self.upgrade(job)
+        status, message, incomplete = self.upgrade(job)
         if status == BUSY:
             # Somebody is upgrading from the panel right now; this was not an attempt.
             del state['attempt']
@@ -323,6 +323,12 @@ class Updater:
             attempt.update(result='installed', message='')
             state['summary'] = 'Version %s was installed automatically on %s.' % (label(release), when(attempt['finished']))
             subject = 'version %s was installed' % label(release)
+            if incomplete:
+                # Installed, but not a plain success: say which steps to look at.
+                attempt['incomplete'] = incomplete
+                state['summary'] += (' These steps did not complete; running the upgrade again from Version '
+                                     'Management repeats them: ' + '; '.join(incomplete))
+                subject += ', but some steps did not complete'
         else:
             attempt.update(result='failed', message=(message or 'the upgrade ended with status %s' % status)[:1000])
             state['summary'] = failed_summary(release, attempt['message'])
@@ -331,16 +337,21 @@ class Updater:
         self.report(settings, subject, state['summary'])
 
     def upgrade_in_scope(self, job):
-        """Run the upgrade as the panel's own upgrade page does: in an independent scope."""
+        """Run the upgrade as the panel's own upgrade page does: in an independent scope.
+
+        Gives the exit status, the failure message and the steps that did not complete.
+        """
         from plogical import softUpgrade
         result = subprocess.run([SYSTEMD_RUN, '--scope', '--quiet', '--slice=system.slice',
                                  '--unit=cyberpanel-auto-update-' + job, '--',
                                  sys.executable, '-I', str(Path(__file__).resolve()), 'install', job],
                                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        message = ''
-        if result.returncode not in (0, BUSY):
-            message = softUpgrade.read_status(job).get('message', '')
-        return result.returncode, message
+        if result.returncode == BUSY:
+            return BUSY, '', []
+        record = softUpgrade.read_status(job)
+        incomplete = record.get('incomplete') if result.returncode == 0 else None
+        return (result.returncode, record.get('message', '') if result.returncode else '',
+                [str(step) for step in incomplete] if isinstance(incomplete, list) else [])
 
     def install_job(self, job):
         """The upgrade to the one commit recorded for this job. Runs inside the scope."""

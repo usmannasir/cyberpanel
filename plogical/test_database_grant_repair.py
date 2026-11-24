@@ -426,8 +426,8 @@ class CallSiteTests(unittest.TestCase):
         method = upgrader[start:upgrader.index('    @staticmethod', start)]
         self.assertIn('from plogical.databaseGrantRepair import run as repair_database_grants', method)
         self.assertIn('connect=Upgrade.setupConnection, log=Upgrade.stdOut', method)
-        self.assertIn("except Exception as error:\n            Upgrade.stdOut('WARNING: Database grants were not "
-                      "checked: ' + str(error), 0)", method)
+        self.assertIn("except Exception as error:\n            Upgrade.warn('Database grants were not "
+                      "checked: ' + str(error))", method)
         self.assertLess(method.index('        try:'), method.index('from plogical.databaseGrantRepair'))
         # Called once in the upgrade itself, after the new source is in place and the server answers.
         call = '\n        Upgrade.repairDatabaseGrants()\n'

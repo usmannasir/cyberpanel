@@ -157,8 +157,8 @@ class UpgradeCallTests(unittest.TestCase):
         self.assertIn('from plogical.backupStaging import remove_stale_staging', method)
         self.assertIn('remove_stale_staging(log=lambda message: Upgrade.stdOut(message, 0))', method)
         self.assertLess(method.index('        try:'), method.index('from plogical.backupStaging'))
-        self.assertIn("except Exception as error:\n            Upgrade.stdOut('WARNING: Backup work folders of earlier "
-                      "releases were not looked for: ' + str(error), 0)", method)
+        self.assertIn("except Exception as error:\n            Upgrade.warn('Backup work folders of earlier "
+                      "releases were not looked for: ' + str(error))", method)
         self.assertEqual(1, upgrader.count('Upgrade.removeStaleBackupStaging()'))
         self.assertIn('\n        Upgrade.relocateScannerBackups()\n        Upgrade.removeStaleBackupStaging()\n', upgrader)
         # The upgrade script still reads as a program after the step was added.

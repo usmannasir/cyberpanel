@@ -81,14 +81,14 @@ class Fixture(unittest.TestCase):
 
     def upgrade(self, job):
         self.upgrades.append(job)
-        if self.outcome == 'success':
+        if self.outcome in ('success', 'incomplete'):
             git(self.installation, 'checkout', '--quiet', 'v3.0.10')
-            return 0, ''
+            return 0, '', ['The panel web worker was not rebuilt: no network'] if self.outcome == 'incomplete' else []
         if self.outcome == 'busy':
-            return autoUpdate.BUSY, ''
+            return autoUpdate.BUSY, '', []
         if self.outcome == 'wrong commit':
-            return 0, ''
-        return 1, 'Upgrade exited with code 1. MariaDB is unavailable'
+            return 0, '', []
+        return 1, 'Upgrade exited with code 1. MariaDB is unavailable', []
 
     def command(self, *arguments):
         self.commands.append(arguments)
@@ -182,6 +182,17 @@ class InstallTests(Fixture):
         self.updater.run()
         self.assertEqual(1, len(self.upgrades))
         self.assertEqual('This server has the current release (3.0.10).', self.state()['summary'])
+
+    def test_an_installation_whose_steps_did_not_all_complete_says_which(self):
+        self.outcome = 'incomplete'
+        self.configure('install')
+        self.updater.run()
+        state = self.state()
+        self.assertEqual('installed', state['attempt']['result'])
+        self.assertEqual(['The panel web worker was not rebuilt: no network'], state['attempt']['incomplete'])
+        self.assertRegex(state['summary'], r'^Version 3\.0\.10 was installed automatically on .*\. These steps did '
+                                           r'not complete; .*: The panel web worker was not rebuilt: no network$')
+        self.assertIn('version 3.0.10 was installed, but some steps did not complete', self.mails[0][1])
 
     def test_a_failed_installation_is_reported_and_not_repeated(self):
         self.configure('install')

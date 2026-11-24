@@ -923,6 +923,8 @@ class Upgrade:
     FromCloud = 0
     LogPathNew = '/home/cyberpanel/upgrade_logs'
     SoftUpgrade = 0
+    # Steps of this run that did not complete although the upgrade went on.
+    Incomplete = []
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -1040,6 +1042,31 @@ class Upgrade:
 
             if Upgrade.FromCloud == 0:
                 os._exit(1)
+
+    @staticmethod
+    def warn(message):
+        """A step that did not complete; the upgrade goes on and names it when it ends."""
+        Upgrade.Incomplete.append(message)
+        Upgrade.stdOut('WARNING: ' + message, 0)
+
+    @staticmethod
+    def reportIncomplete():
+        """Name the steps that did not complete, at the end of the log and for the launcher.
+
+        Without this the upgrade page and the automatic update report a plain
+        success. A launcher that wants the list names a file in
+        CYBERPANEL_UPGRADE_REPORT; with an older launcher it is in the log only.
+        """
+        if Upgrade.Incomplete:
+            Upgrade.stdOut('The upgrade finished, but %d step(s) did not complete:\n- %s'
+                           % (len(Upgrade.Incomplete), '\n- '.join(Upgrade.Incomplete)), 0)
+        else:
+            Upgrade.stdOut('The upgrade finished and every step completed.', 0)
+        report = os.environ.get('CYBERPANEL_UPGRADE_REPORT')
+        if report:
+            descriptor = os.open(report, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+            with os.fdopen(descriptor, 'w') as output:
+                json.dump({'incomplete': Upgrade.Incomplete}, output)
 
     @staticmethod
     def executioner(command, component, do_exit=0, shell=False, detach_output=False):
@@ -1798,6 +1825,40 @@ module cyberpanel_ols {
             return True  # Non-fatal
 
     @staticmethod
+    def unpackPhpMyAdmin(public, archive='/usr/local/CyberCP/phpmyadmin.zip',
+                         url='https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'):
+        """Put the release's phpMyAdmin in place of the installed one, or raise.
+
+        The release's own tree carries the archive, so GitHub is asked only when
+        it is missing. The installed copy is replaced by a complete one only:
+        before, it was deleted first, and a download that failed while GitHub
+        was unreachable left the panel without phpMyAdmin after a "successful"
+        upgrade.
+        """
+        staging = tempfile.mkdtemp(prefix='.phpmyadmin-', dir=public)
+        try:
+            if not os.path.isfile(archive):
+                archive = os.path.join(staging, 'phpmyadmin.zip')
+                command = 'wget -q --timeout=30 --tries=3 -O %s %s' % (shlex.quote(archive), url)
+                if not Upgrade.executioner_silent(command, 'Download phpMyAdmin'):
+                    raise RuntimeError('the release has no phpMyAdmin archive and it could not be downloaded')
+            command = 'unzip -q %s -d %s' % (shlex.quote(archive), shlex.quote(staging))
+            if not Upgrade.executioner_silent(command, 'Extract phpMyAdmin'):
+                raise RuntimeError('the phpMyAdmin archive could not be unpacked')
+            unpacked = [os.path.join(staging, name) for name in os.listdir(staging)
+                        if name.startswith('phpMyAdmin-') and name.endswith('-all-languages')]
+            if len(unpacked) != 1 or not os.path.isfile(os.path.join(unpacked[0], 'config.sample.inc.php')):
+                raise RuntimeError('the phpMyAdmin archive does not hold one phpMyAdmin release')
+            target = os.path.join(public, 'phpmyadmin')
+            if os.path.isdir(target) and not os.path.islink(target):
+                shutil.rmtree(target)
+            elif os.path.lexists(target):
+                os.unlink(target)
+            os.rename(unpacked[0], target)
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
+
+    @staticmethod
     def download_install_phpmyadmin():
         from install.proxy_identity import ensure_pma_peer_key
         ensure_pma_peer_key()
@@ -1807,25 +1868,9 @@ module cyberpanel_ols {
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            try:
-                shutil.rmtree("/usr/local/CyberCP/public/phpmyadmin")
-            except:
-                pass
-
             Upgrade.stdOut("Installing phpMyAdmin...", 0)
-            
-            command = 'wget -q -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Download phpMyAdmin')
+            Upgrade.unpackPhpMyAdmin('/usr/local/CyberCP/public')
 
-            command = 'unzip -q /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
-            Upgrade.executioner_silent(command, 'Extract phpMyAdmin')
-
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            subprocess.call(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
-            Upgrade.executioner_silent(command, 'Cleanup phpMyAdmin zip')
-            
             Upgrade.stdOut("phpMyAdmin installation completed.", 0)
 
             ## Write secret phrase
@@ -1896,7 +1941,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             os.chdir(cwd)
 
         except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [download_install_phpmyadmin]", 0)
+            Upgrade.warn('The phpMyAdmin setup did not complete: %s. Run the upgrade again.' % msg)
 
     @staticmethod
     def setupComposer():
@@ -2236,7 +2281,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             Upgrade.stdOut('Database grants: ' + repair_database_grants(
                 connect=Upgrade.setupConnection, log=Upgrade.stdOut), 0)
         except Exception as error:
-            Upgrade.stdOut('WARNING: Database grants were not checked: ' + str(error), 0)
+            Upgrade.warn('Database grants were not checked: ' + str(error))
 
     @staticmethod
     def relocateScannerBackups():
@@ -2251,7 +2296,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             Upgrade.stdOut('AI Scanner backups: ' + relocate_scanner_backups(
                 connect=Upgrade.setupConnection, log=Upgrade.stdOut), 0)
         except Exception as error:
-            Upgrade.stdOut('WARNING: AI Scanner backups of earlier releases were not looked for: ' + str(error), 0)
+            Upgrade.warn('AI Scanner backups of earlier releases were not looked for: ' + str(error))
 
     @staticmethod
     def removeStaleBackupStaging():
@@ -2266,7 +2311,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             from plogical.backupStaging import remove_stale_staging
             remove_stale_staging(log=lambda message: Upgrade.stdOut(message, 0))
         except Exception as error:
-            Upgrade.stdOut('WARNING: Backup work folders of earlier releases were not looked for: ' + str(error), 0)
+            Upgrade.warn('Backup work folders of earlier releases were not looked for: ' + str(error))
 
     @staticmethod
     def reportN8NSites():
@@ -2287,8 +2332,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except subprocess.TimeoutExpired:
                 check.kill()
                 check.communicate()
-                Upgrade.stdOut('WARNING: The n8n sites were not checked: the check did not end within two minutes. '
-                               'To run it by hand: ' + ' '.join(command), 0)
+                Upgrade.warn('The n8n sites were not checked: the check did not end within two minutes. '
+                             'To run it by hand: ' + ' '.join(command))
                 return
 
             # Only the lines of the report; anything else the command prints is not for the administrator.
@@ -2302,7 +2347,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                                'run: ' + ' '.join(command), 0)
         except Exception as error:
             try:
-                Upgrade.stdOut('WARNING: The n8n sites were not checked: ' + str(error), 0)
+                Upgrade.warn('The n8n sites were not checked: ' + str(error))
             except Exception:
                 pass
 
@@ -4292,8 +4337,8 @@ passdb {
         except OLSUpgradeFailure:
             raise
         except Exception as msg:
-            Upgrade.stdOut('WARNING: HTTPS listener maps were not reconciled: ' + str(msg)
-                           + ''.join('\n  ' + note for note in notes), 0)
+            Upgrade.warn('HTTPS listener maps were not reconciled: ' + str(msg)
+                         + ''.join('\n  ' + note for note in notes))
 
     @staticmethod
     def pdnsSchemaMigrations():
@@ -4325,8 +4370,8 @@ passdb {
             return ensure_multiserver_tables(lambda: Upgrade.setupConnection('cyberpanel'),
                                              lambda message: Upgrade.stdOut(message, 0))
         except Exception as error:
-            Upgrade.stdOut('WARNING: The Multi-Server Manager tables were not created: %s. The upgrade '
-                           'continues without them and the feature stays off on this server.' % error, 0)
+            Upgrade.warn('The Multi-Server Manager tables were not created: %s. The upgrade '
+                         'continues without them and the feature stays off on this server.' % error)
             return False
 
     @staticmethod
@@ -4688,9 +4733,9 @@ passdb {
                         try:
                             subprocess.check_call([sys.executable, multiserver_identity], cwd=installation)
                         except Exception as error:
-                            Upgrade.stdOut('WARNING: The Multi-Server Manager key directory was not prepared: %s. '
-                                           'The upgrade continues without it and the feature stays off on '
-                                           'this server.' % error, 0)
+                            Upgrade.warn('The Multi-Server Manager key directory was not prepared: %s. '
+                                         'The upgrade continues without it and the feature stays off on '
+                                         'this server.' % error)
                     Upgrade.staticContent()
                 Upgrade.stdOut('Previous installation retained at: ' + previous)
 
@@ -4709,8 +4754,8 @@ passdb {
             for removed_path in removed:
                 Upgrade.stdOut('Removed superseded rollback installation: ' + removed_path)
             for failed_path, error in cleanup_failures:
-                Upgrade.stdOut('WARNING: Could not remove superseded rollback '
-                               'installation %s: %s' % (failed_path, error), 0)
+                Upgrade.warn('Could not remove superseded rollback '
+                             'installation %s: %s' % (failed_path, error))
 
             return 1, None
 
@@ -4719,6 +4764,18 @@ passdb {
 
     @staticmethod
     def installLSCPD(branch):
+        if Upgrade.SoftUpgrade:
+            # The command-line branch below stops the panel for this. In an
+            # upgrade started from the panel the binary is changed only when it
+            # differs, and the panel restarts on it at once (see the helper).
+            try:
+                from plogical.panelRuntime import install_panel_server
+                result = install_panel_server(select_lscpd_binary(), install_binary_atomically)
+                Upgrade.stdOut('Panel server binary %s: %s' % (result['binary'], result['state']), 0)
+            except Exception as error:
+                Upgrade.warn('The panel server binary was not replaced; the installed one stays in use: '
+                             + str(error))
+            return
         try:
 
             if Upgrade.SoftUpgrade == 0:
@@ -5917,6 +5974,13 @@ pm.max_spare_servers = 3
         requireCSFMigration()
         if branch.find('SoftUpgrade') > -1:
             Upgrade.startPanelUpgradeLog()
+        # git waits on a stalled HTTPS transfer for as long as the connection
+        # stays open. When GitHub accepts connections but sends nothing, a
+        # transfer below 1 KB/s for a minute now fails like an unreachable
+        # host, and the clone's retries end in a reported failure.
+        os.environ.setdefault('GIT_HTTP_LOW_SPEED_LIMIT', '1000')
+        os.environ.setdefault('GIT_HTTP_LOW_SPEED_TIME', '60')
+        os.environ.setdefault('GIT_TERMINAL_PROMPT', '0')
         has_ols = os.path.exists('/usr/local/lsws/bin/openlitespeed')
         if has_ols:
             with ols_upgrade_lock():
@@ -6040,6 +6104,20 @@ pm.max_spare_servers = 3
                 (download_error or 'unknown error')
             )
 
+        # cyberpanel_upgrade.sh installs the release's Python requirements in a
+        # command-line upgrade. One started from the panel does it here, before
+        # the migrations run the new code. A release the panel's interpreter
+        # cannot run must not stay live: a failure ends the upgrade, and the
+        # launcher puts the previous installation back.
+        if Upgrade.SoftUpgrade:
+            from plogical.panelRuntime import install_requirements
+            requirements = install_requirements(log=Upgrade.stdOut)
+            Upgrade.stdOut('Python requirements of this release (%s): %s'
+                           % (requirements['file'], requirements['state']), 0)
+            if requirements.get('unconfirmed'):
+                Upgrade.warn('pip reported success, but these Python requirements still look unmet: '
+                             + ', '.join(requirements['unconfirmed']))
+
         # Retire only the exact shipped global session purge. Application-specific
         # expiry cannot be inferred from global PHP settings; preserve all sessions.
         from plogical.phpSessionSafety import report_retirement
@@ -6052,7 +6130,7 @@ pm.max_spare_servers = 3
             notice = patch_webadmin_release_notice()
             Upgrade.stdOut('WebAdmin release notice: ' + notice['status'], 0)
         except Exception as error:
-            Upgrade.stdOut('WARNING: WebAdmin release notice was not updated: ' + str(error), 0)
+            Upgrade.warn('WebAdmin release notice was not updated: ' + str(error))
 
         # The new source provides this helper as well. The vendor package still
         # owns the files of the CyberPanel OpenLiteSpeed bundle, so without a
@@ -6062,14 +6140,14 @@ pm.max_spare_servers = 3
                 from plogical.olsPackageProtection import protect
                 guard = protect()
                 if guard['state'] in ('refused', 'failed'):
-                    Upgrade.stdOut('WARNING: OpenLiteSpeed package protection was not applied (%s): %s '
-                                   'A system package update can replace the CyberPanel OpenLiteSpeed build.'
-                                   % (guard['state'], guard['reason']), 0)
+                    Upgrade.warn('OpenLiteSpeed package protection was not applied (%s): %s '
+                                 'A system package update can replace the CyberPanel OpenLiteSpeed build.'
+                                 % (guard['state'], guard['reason']))
                 else:
                     Upgrade.stdOut('OpenLiteSpeed package protection: %s %s'
                                    % (guard['state'], ' '.join(guard['packages'])), 0)
             except Exception as error:
-                Upgrade.stdOut('WARNING: OpenLiteSpeed package protection was not applied: ' + str(error), 0)
+                Upgrade.warn('OpenLiteSpeed package protection was not applied: ' + str(error))
 
         if Upgrade.waitForDatabaseReady() != 1:
             raise RuntimeError(
@@ -6126,7 +6204,7 @@ pm.max_spare_servers = 3
             from plogical.dovecotSqlDriver import repair as repair_dovecot_sql_driver
             repair_dovecot_sql_driver(log=Upgrade.stdOut)
         except Exception as error:
-            Upgrade.stdOut('WARNING: The Dovecot MySQL driver check did not run: ' + str(error), 0)
+            Upgrade.warn('The Dovecot MySQL driver check did not run: ' + str(error))
         # Earlier releases saved pattern forwarding rules without writing the
         # map Postfix reads them from (see the helper). A server without such
         # rules is left as it is.
@@ -6134,7 +6212,7 @@ pm.max_spare_servers = 3
             from plogical.patternForwardingMap import upgrade as apply_pattern_forwarding
             apply_pattern_forwarding(connect=Upgrade.setupConnection, log=Upgrade.stdOut)
         except Exception as error:
-            Upgrade.stdOut('WARNING: Pattern forwarding rules were not applied to Postfix: ' + str(error), 0)
+            Upgrade.warn('Pattern forwarding rules were not applied to Postfix: ' + str(error))
         Upgrade.setupSieve()
         Upgrade.enableServices()
 
@@ -6156,7 +6234,7 @@ pm.max_spare_servers = 3
                 + list(ChildDomains.objects.values_list('domain', flat=True))
             repair_apache_backend(panel_domains, log=Upgrade.stdOut)
         except Exception as error:
-            Upgrade.stdOut('WARNING: The Apache backend check did not run: ' + str(error), 0)
+            Upgrade.warn('The Apache backend check did not run: ' + str(error))
 
         # Earlier releases added the two Apache backends to OpenLiteSpeed's
         # main configuration again for every Apache website, and an earlier
@@ -6175,7 +6253,7 @@ pm.max_spare_servers = 3
         except OLSUpgradeFailure:
             raise
         except Exception as error:
-            Upgrade.stdOut('WARNING: The Apache backends of OpenLiteSpeed were not corrected: ' + str(error), 0)
+            Upgrade.warn('The Apache backends of OpenLiteSpeed were not corrected: ' + str(error))
 
         ## Fix Apache configuration issues after upgrade
         Upgrade.fixApacheConfiguration()
@@ -6217,10 +6295,10 @@ pm.max_spare_servers = 3
                 Upgrade.stdOut('Unlocked %s: its home folder was immutable, as a File Manager delete in 3.0.9 '
                                'to 3.0.15 left it.' % home, 0)
             for home in failed:
-                Upgrade.stdOut('WARNING: %s is immutable and could not be fully unlocked; run '
-                               '"find -P %s \\( -type f -o -type d \\) -exec chattr -i {} +".' % (home, home), 0)
+                Upgrade.warn('%s is immutable and could not be fully unlocked; run '
+                             '"find -P %s \\( -type f -o -type d \\) -exec chattr -i {} +".' % (home, home))
         except Exception as error:
-            Upgrade.stdOut('WARNING: Website homes locked by the File Manager were not checked: ' + str(error), 0)
+            Upgrade.warn('Website homes locked by the File Manager were not checked: ' + str(error))
 
         ##
 
@@ -6241,8 +6319,8 @@ pm.max_spare_servers = 3
                 from plogical.panelWorkerBuild import rebuild as rebuild_panel_worker
                 Upgrade.stdOut('Panel web worker rebuilt: ' + rebuild_panel_worker()['sha256'], 0)
             except Exception as error:
-                Upgrade.stdOut('WARNING: The panel web worker was not rebuilt; the installed one stays in use: '
-                               + str(error), 0)
+                Upgrade.warn('The panel web worker was not rebuilt; the installed one stays in use: '
+                             + str(error))
 
         # Automatic updates stay off until an administrator turns them on. Where
         # they are on, keep the timer's unit files in step with this release.
@@ -6252,7 +6330,7 @@ pm.max_spare_servers = 3
             if automatic.settings()['mode'] != 'off':
                 automatic.schedule()
         except Exception as error:
-            Upgrade.stdOut('WARNING: The automatic update timer was not refreshed: ' + str(error), 0)
+            Upgrade.warn('The automatic update timer was not refreshed: ' + str(error))
 
         if Upgrade.SoftUpgrade == 0:
             try:
@@ -6356,6 +6434,7 @@ pm.max_spare_servers = 3
         # The CLI wrapper also verifies after its own final service work. Keep
         # direct Python entrypoints from declaring success after policy drift.
         requireCSFMigration()
+        Upgrade.reportIncomplete()
 
     @staticmethod
     def restoreImunify360():
@@ -7223,8 +7302,8 @@ RewriteRule ^(.*)$ https://proxyApacheBackendSSL/$1 [P,L]
                 command = f'systemctl restart {serviceName}'
                 Upgrade.executioner(command, command, 0, True)
             elif apache_family is not None:
-                Upgrade.stdOut('WARNING: Apache was not restarted because it refuses its configuration: '
-                               + said(output), 0)
+                Upgrade.warn('Apache was not restarted because it refuses its configuration: '
+                             + said(output))
 
             # Restart OpenLiteSpeed
             if is_ols:

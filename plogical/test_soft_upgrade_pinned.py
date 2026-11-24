@@ -72,14 +72,20 @@ class PinnedRunTests(unittest.TestCase):
             staged.append((revision, read))
             (stage / 'upgrade.py').write_text('')
 
+        class Finished:
+            pid = 0
+
+            def wait(self, timeout=None):
+                return 0
+
         def launch(command, **options):
             launched.append((command, options))
-            return subprocess.CompletedProcess(command, 0)
+            return Finished()
 
         with mock.patch.object(softUpgrade, 'stage_release', stage), \
                 mock.patch.object(softUpgrade, 'verified_source', return_value='reader') as source, \
                 mock.patch.object(softUpgrade, 'resolve_release', return_value='1' * 40) as resolve, \
-                mock.patch.object(softUpgrade.subprocess, 'run', launch):
+                mock.patch.object(softUpgrade.subprocess, 'Popen', launch):
             softUpgrade.run('v3.0.10', **arguments)
         return staged, launched, source, resolve
 
@@ -98,7 +104,12 @@ class PinnedRunTests(unittest.TestCase):
         staged, launched, source, resolve = self.run_upgrade()
         self.assertEqual([('1' * 40, None)], staged)
         source.assert_not_called()
-        self.assertIsNone(launched[0][1]['env'])
+        environment = launched[0][1]['env']
+        self.assertNotIn('CYBERPANEL_UPGRADE_COMMIT', environment)
+        # A stalled GitHub transfer fails instead of waiting; the upgrader reports skipped steps.
+        self.assertEqual('60', environment['GIT_HTTP_LOW_SPEED_TIME'])
+        self.assertTrue(environment['CYBERPANEL_UPGRADE_REPORT'].endswith('report.json'))
+        self.assertTrue(launched[0][1]['start_new_session'])
 
     def test_branch_is_checked_before_anything_is_fetched(self):
         with mock.patch.object(softUpgrade, 'verified_source') as source:
