@@ -87,7 +87,10 @@ class RecoveredJammyControllerTests(unittest.TestCase):
         replacement = self.root / 'bin/replacement'
         replacement.write_bytes(b'reviewed-controller')
         command = self.root / 'bin/lswsctrl'
-        command.unlink()
+        # Keep the granted link allocated. A link deleted and re-created within one
+        # filesystem clock tick usually gets the same inode number and ctime back,
+        # which no stat() can tell apart (and which names the same verified target).
+        command.rename(self.root / 'bin/lswsctrl.granted')
         command.symlink_to('replacement')
         with self.assertRaises(RuntimeError):
             service.controller()
