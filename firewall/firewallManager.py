@@ -174,7 +174,7 @@ class FirewallManager:
                 return ACLManager.loadErrorJson('reload_status', 0)
 
             command = 'sudo firewall-cmd --reload'
-            res = ProcessUtilities.executioner(command)
+            res = ProcessUtilities.checkedExecutioner(command)
 
             if res == 1:
                 final_dic = {'reload_status': 1, 'error_message': "None"}
@@ -202,7 +202,7 @@ class FirewallManager:
                 return ACLManager.loadErrorJson('start_status', 0)
 
             command = 'sudo systemctl start firewalld'
-            res = ProcessUtilities.executioner(command)
+            res = ProcessUtilities.checkedExecutioner(command)
 
             if res == 1:
                 final_dic = {'start_status': 1, 'error_message': "None"}
@@ -230,7 +230,7 @@ class FirewallManager:
                 return ACLManager.loadErrorJson('stop_status', 0)
 
             command = 'sudo systemctl stop firewalld'
-            res = ProcessUtilities.executioner(command)
+            res = ProcessUtilities.checkedExecutioner(command)
 
             if res == 1:
                 final_dic = {'stop_status': 1, 'error_message': "None"}

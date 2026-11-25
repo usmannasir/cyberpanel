@@ -907,13 +907,13 @@ class MailServerManager(multi.Thread):
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
-            command = 'openssl s_client -connect %s:465' % (ipAddress)
+            command = 'openssl s_client -connect %s:465 </dev/null' % (ipAddress)
             result = ProcessUtilities.outputExecutioner(command)
 
-            if result.find('18 (self signed certificate)') > -1:
-                return 0
-            else:
+            if mailUtilities.mailSSLVerified(result):
                 return 1
+            else:
+                return 0
 
     def RunServerLevelEmailChecks(self):
         try:
@@ -1903,13 +1903,13 @@ protocol sieve {
         except:
             return 0, 'mail.%s does not point to %s.' % (websiteName, ipAddress)
 
-        command = 'openssl s_client -connect mail.%s:993' % (websiteName)
+        command = 'openssl s_client -connect mail.%s:993 </dev/null' % (websiteName)
         result = ProcessUtilities.outputExecutioner(command)
 
-        if result.find('18 (self signed certificate)') > -1:
-            return 0, 'No valid SSL on port 993.'
-        else:
+        if mailUtilities.mailSSLVerified(result):
             return 1, 'All checks are OK.'
+        else:
+            return 0, 'No valid SSL on port 993.'
 
 
     ### emails for sites

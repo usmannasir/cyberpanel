@@ -36,6 +36,35 @@ mail that those releases had stopped runs again after the upgrade.
   from the panel page or by automatic updates does not run it; such an
   upgrade never stopped for this reason.
 
+### Fixed later in build 21 (2026-11-25)
+These fixes were added to the 3.0.21 branch after its release, without a new
+version number. New installs and the upgrade command get them; a server that
+is already on 3.0.21 gets them by running the upgrade command again.
+
+- Dashboard, Recent SSH Logins: on Ubuntu 26.04 (which has no `last` command)
+  the card showed one row "sudo: / command / N/A", the text of the error. It
+  now shows the SSH daemon's accepted logins from the journal there, and never
+  shows error text as a login.
+- Dashboard, Recent SSH Logs: on Ubuntu 26.04 the first word of every line
+  was lost (so "Failed password" and "Accepted password" looked the same), and
+  the panel's own sudo commands filled the list. It now reads both date
+  formats and shows the SSH daemon's lines only.
+- Dashboard, Disk IO: each disk was counted together with its partitions and
+  the CD-ROM drive, about twice the real figure. Each disk now counts once.
+- Dashboard: a user's server card no longer shows made-up hardware (2 cores,
+  4 GB, 100 GB) when its figures cannot be read.
+- Changing a website's SSH/SFTP password, starting, stopping or reloading the
+  firewall, and the service start/stop/restart buttons said "done" also when
+  the command failed: the panel's privileged helper reports the same result
+  for every command that ends, successful or not. These actions now ask the
+  command for its real exit status (`ProcessUtilities.checkedExecutioner`).
+- Email debugger: the mail server SSL check said a certificate was valid when
+  it was self-signed (OpenSSL 3 writes "self-signed", which the check did not
+  recognise) or when the connection failed. It now trusts only OpenSSL's own
+  "Verify return code: 0 (ok)".
+- New installs write OpenLiteSpeed's error log at NOTICE level and keep 14
+  days, instead of DEBUG.
+
 ## v3.0.20 (build 20) — 2026-11-25
 
 Upgrades started from the panel (Version Management → Upgrade) finish like a

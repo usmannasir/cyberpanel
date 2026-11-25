@@ -11,7 +11,9 @@ import requests
 import subprocess
 import shlex
 import os
+import datetime
 import ipaddress
+import re
 import tempfile
 import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
@@ -223,15 +225,16 @@ def getSystemStatus(request):
             return HttpResponse(json_data)
 
     except Exception as e:
-        # Return default values on error
+        # Nothing could be measured: report nothing, not made-up hardware
+        # (the same values SystemInformation gives an administrator on error).
         default_data = {
             'cpuUsage': 0,
             'ramUsage': 0,
             'diskUsage': 0,
-            'cpuCores': 2,
-            'ramTotalMB': 4096,
-            'diskTotalGB': 100,
-            'diskFreeGB': 100,
+            'cpuCores': 0,
+            'ramTotalMB': 0,
+            'diskTotalGB': 0,
+            'diskFreeGB': 0,
             'uptime': 'N/A'
         }
         return HttpResponse(json.dumps(default_data))
@@ -852,6 +855,30 @@ def getTrafficStats(request):
     except Exception as e:
         return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
 
+def is_whole_disk(name, sys_block='/sys/block'):
+    """A physical disk: listed in /sys/block with a device behind it. Its
+    partitions, device-mapper (LVM) and md devices only repeat the disks'
+    I/O, and CD-ROM, loop and RAM devices are not storage in use."""
+    if name.startswith(('loop', 'ram', 'zram', 'sr', 'fd', 'dm-', 'md')):
+        return False
+    return os.path.exists(os.path.join(sys_block, name, 'device'))
+
+
+def disk_io_sectors(diskstats='/proc/diskstats', sys_block='/sys/block'):
+    """Sectors read and written by the server's disks since boot, each disk
+    once."""
+    read_sectors = write_sectors = 0
+    with open(diskstats, 'r') as f:
+        for line in f:
+            parts = line.split()
+            if len(parts) < 14 or not is_whole_disk(parts[2], sys_block):
+                continue
+            # 6th and 10th columns: sectors read/written
+            read_sectors += int(parts[5])
+            write_sectors += int(parts[9])
+    return read_sectors, write_sectors
+
+
 def getDiskIOStats(request):
     try:
         val = request.session['userID']
@@ -861,22 +888,8 @@ def getDiskIOStats(request):
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'status': 0, 'error_message': 'Admin access required', 'admin_only': True}), content_type='application/json')
         
-        # Parse /proc/diskstats for all disks
-        read_sectors = 0
-        write_sectors = 0
-        sector_size = 512  # Most Linux systems use 512 bytes per sector
-        with open('/proc/diskstats', 'r') as f:
-            for line in f:
-                parts = line.split()
-                if len(parts) < 14:
-                    continue
-                # parts[2] is device name, skip loopback/ram devices
-                dev = parts[2]
-                if dev.startswith('loop') or dev.startswith('ram'):
-                    continue
-                # 6th and 10th columns: sectors read/written
-                read_sectors += int(parts[5])
-                write_sectors += int(parts[9])
+        read_sectors, write_sectors = disk_io_sectors()
+        sector_size = 512  # /proc/diskstats always counts 512-byte sectors
         data = {
             'read_bytes': read_sectors * sector_size,
             'write_bytes': write_sectors * sector_size,
@@ -913,6 +926,77 @@ def getCPULoadGraph(request):
     except Exception as e:
         return HttpResponse(json.dumps({'status': 0, 'error_message': str(e)}), content_type='application/json')
 
+LAST_SKIPPED_LINES = ('reboot', 'system boot', 'wtmp begins')
+# "ubuntu   pts/0   206.84.168.7   Sun Jun  1 19:41   still logged in"
+# "ubuntu   pts/0   206.84.169.36  Tue May 27 11:34 - 13:47  (02:13)"
+# "root     tty1                   Tue May 27 11:34 - 13:47  (02:13)"   (console: no address)
+LAST_RECORD = re.compile(
+    r'^(?P<user>\S+)\s+(?P<tty>\S+)\s+(?:(?P<ip>\S+)\s+)?'
+    r'(?P<date>[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} \d{2}:\d{2})(?P<rest>.*)$')
+# journalctl -o short-iso: "2026-11-25T15:02:09+00:00 host sshd-session[812]: Accepted publickey for root from 203.0.113.7 port 50122 ssh2: ..."
+SSHD_ACCEPTED = re.compile(
+    r'^(?P<when>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\S*\s+\S+\s+sshd(?:-session)?\[\d+\]:\s+'
+    r'Accepted \S+ for (?P<user>\S+) from (?P<ip>\S+) port \d+')
+SSHD_JOURNAL = 'journalctl -q --no-pager -o short-iso -t sshd -t sshd-session'
+
+
+def parse_last_logins(output):
+    """Login records in the output of `last`. A line that is not one (an error
+    message, the "wtmp begins" footer, a reboot entry) is left out."""
+    logins = []
+    for line in output.splitlines():
+        if not line.strip() or any(marker in line for marker in LAST_SKIPPED_LINES):
+            continue
+        record = LAST_RECORD.match(line)
+        if not record:
+            continue
+        rest = record.group('rest').strip()
+        if 'still logged in' in rest:
+            session = 'still logged in'
+        elif rest.startswith('- '):
+            session = rest[2:].strip()
+        else:
+            session = rest
+        logins.append({'user': record.group('user'), 'ip': record.group('ip') or '',
+                       'date': record.group('date'), 'session': session, 'raw': line})
+    return logins
+
+
+def parse_sshd_accepted(output, limit=20):
+    """Successful SSH logins in sshd's journal lines, newest first. The journal
+    does not always print entries in time order, so they are sorted."""
+    found = []
+    for position, line in enumerate(output.splitlines()):
+        record = SSHD_ACCEPTED.match(line)
+        if not record:
+            continue
+        when = datetime.datetime.strptime(record.group('when'), '%Y-%m-%dT%H:%M:%S')
+        found.append((when, position, {'user': record.group('user'), 'ip': record.group('ip'),
+                                       'date': when.strftime('%a %b %d %H:%M'), 'session': '', 'raw': line}))
+    found.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    return [login for _, _, login in found[:limit]]
+
+
+def recent_ssh_logins():
+    """The last 20 logins from `last`. Where `last` is not available (Ubuntu
+    26.04 and Debian 13 ship without it and without /var/log/wtmp), sshd's own
+    "Accepted" lines from the journal instead.
+
+    Decided on the output, not the exit status: through the panel's root
+    helper a missing command can come back with status 0. `last` that ran
+    always ends with its "wtmp begins" line; any other text is not logins."""
+    _, output = ProcessUtilities.outputExecutioner('last -n 20', retRequired=True)
+    logins = parse_last_logins(output)
+    if logins or 'wtmp begins' in output:
+        return logins
+    for command in (SSHD_JOURNAL + " -n 200 --grep '^Accepted '", SSHD_JOURNAL + ' -n 5000'):
+        _, output = ProcessUtilities.outputExecutioner(command, retRequired=True)
+        logins = parse_sshd_accepted(output)
+        if logins:
+            return logins
+    return []
+
+
 @csrf_exempt
 @require_GET
 def getRecentSSHLogins(request):
@@ -924,38 +1008,15 @@ def getRecentSSHLogins(request):
         if not currentACL.get('admin', 0):
             return HttpResponse(json.dumps({'error': 'Admin only'}), content_type='application/json', status=403)
 
-        import re, time
-        from collections import OrderedDict
-
-        # Run 'last -n 20' to get recent SSH logins
         try:
-            output = ProcessUtilities.outputExecutioner('last -n 20')
+            records = recent_ssh_logins()
         except Exception as e:
-            return HttpResponse(json.dumps({'error': 'Failed to run last: %s' % str(e)}), content_type='application/json', status=500)
+            return HttpResponse(json.dumps({'error': 'Failed to read SSH logins: %s' % str(e)}), content_type='application/json', status=500)
 
-        lines = output.strip().split('\n')
         logins = []
         ip_cache = {}
-        for line in lines:
-            if not line.strip() or any(x in line for x in ['reboot', 'system boot', 'wtmp begins']):
-                continue
-            # Example: ubuntu   pts/0        206.84.168.7     Sun Jun  1 19:41   still logged in
-            # or:     ubuntu   pts/0        206.84.169.36    Tue May 27 11:34 - 13:47  (02:13)
-            parts = re.split(r'\s+', line, maxsplit=5)
-            if len(parts) < 5:
-                continue
-            user, tty, ip, *rest = parts
-            # Find date/time and session info
-            date_session = rest[-1] if rest else ''
-            # Try to extract date/session
-            date_match = re.search(r'([A-Za-z]{3} [A-Za-z]{3} +\d+ [\d:]+)', line)
-            date_str = date_match.group(1) if date_match else ''
-            session_info = ''
-            if '-' in line:
-                # Session ended
-                session_info = line.split('-')[-1].strip()
-            elif 'still logged in' in line:
-                session_info = 'still logged in'
+        for record in records:
+            ip = record['ip']
             # GeoIP lookup (cache per request)
             country = flag = ''
             if re.match(r'\d+\.\d+\.\d+\.\d+', ip) and ip != '127.0.0.1':
@@ -971,18 +1032,35 @@ def getRecentSSHLogins(request):
                         country, flag = '', ''
             elif ip == '127.0.0.1':
                 country, flag = 'Local', ''
-            logins.append({
-                'user': user,
-                'ip': ip,
-                'country': country,
-                'flag': flag,
-                'date': date_str,
-                'session': session_info,
-                'raw': line
-            })
+            logins.append(dict(record, country=country, flag=flag))
         return HttpResponse(json.dumps({'logins': logins}), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+# "Nov 25 16:31:28 host sshd-session[70630]: Received disconnect ..."             (classic syslog)
+# "2026-11-25T16:28:50.694516+00:00 host sshd-session[78601]: Failed password ..."   (Ubuntu 26.04 rsyslog, journalctl -o short-iso)
+SYSLOG_LINE = re.compile(
+    r'^(?P<when>[A-Z][a-z]{2} +\d{1,2} \d{2}:\d{2}:\d{2}'
+    r'|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)'
+    r'\s+\S+\s+(?P<program>[^\s\[:]+)(?:\[\d+\])?:')
+SSH_PROGRAMS = ('sshd', 'sshd-session')
+
+
+def parse_ssh_log_lines(output, limit=100):
+    """The SSH daemon's lines of a syslog file or of the journal, oldest first,
+    the last `limit` of them. Lines of other programs (the panel's own sudo
+    commands fill the same file) and text that is not a log line are left out."""
+    logs = []
+    for line in output.splitlines():
+        record = SYSLOG_LINE.match(line)
+        if not record or record.group('program') not in SSH_PROGRAMS:
+            continue
+        when = record.group('when')
+        if when[:1].isdigit():
+            when = datetime.datetime.strptime(when[:19], '%Y-%m-%dT%H:%M:%S').strftime('%b %d %H:%M:%S')
+        logs.append({'timestamp': when, 'message': line[record.start('program'):], 'raw': line})
+    return logs[-limit:]
+
 
 @csrf_exempt
 @require_GET
@@ -1001,22 +1079,12 @@ def getRecentSSHLogs(request):
         else:
             log_path = '/var/log/secure'
         try:
-            output = ProcessUtilities.outputExecutioner(f'tail -n 100 {log_path}')
+            logs = parse_ssh_log_lines(ProcessUtilities.outputExecutioner(f'tail -n 2000 {log_path}'))
+            if not logs and not os.path.exists(log_path):
+                # No syslog file on this server: the journal has the same lines.
+                logs = parse_ssh_log_lines(ProcessUtilities.outputExecutioner(SSHD_JOURNAL + ' -n 100'))
         except Exception as e:
             return HttpResponse(json.dumps({'error': f'Failed to read log: {str(e)}'}), content_type='application/json', status=500)
-        lines = output.split('\n')
-        logs = []
-        for line in lines:
-            if not line.strip():
-                continue
-            parts = line.split()
-            if len(parts) > 4:
-                timestamp = ' '.join(parts[:3])
-                message = ' '.join(parts[4:])
-            else:
-                timestamp = ''
-                message = line
-            logs.append({'timestamp': timestamp, 'message': message, 'raw': line})
         return HttpResponse(json.dumps({'logs': logs}), content_type='application/json')
     except Exception as e:
         return HttpResponse(json.dumps({'error': str(e)}), content_type='application/json', status=500)

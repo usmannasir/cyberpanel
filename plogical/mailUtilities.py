@@ -353,6 +353,14 @@ class mailUtilities:
             return 0, str(msg)
 
     @staticmethod
+    def mailSSLVerified(s_client_output):
+        """Whether `openssl s_client` trusted the mail server's certificate.
+        Only "Verify return code: 0 (ok)" means a valid certificate: OpenSSL 3
+        writes "self-signed" where 1.1 wrote "self signed", and a refused
+        connection prints no verify result at all."""
+        return 'Verify return code: 0 (ok)' in (s_client_output or '')
+
+    @staticmethod
     def checkIfDKIMInstalled():
         try:
 
@@ -1668,13 +1676,13 @@ class MailServerManagerUtils(multi.Thread):
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
-            command = 'openssl s_client -connect %s:465' % (ipAddress)
+            command = 'openssl s_client -connect %s:465 </dev/null' % (ipAddress)
             result = ProcessUtilities.outputExecutioner(command)
 
-            if result.find('18 (self signed certificate)') > -1:
-                return 0
-            else:
+            if mailUtilities.mailSSLVerified(result):
                 return 1
+            else:
+                return 0
 
     def RunServerLevelEmailChecks(self):
         try:
@@ -2687,13 +2695,13 @@ milter_default_action = accept
         except:
             return 0, 'mail.%s does not point to %s.' % (websiteName, ipAddress)
 
-        command = 'openssl s_client -connect mail.%s:993' % (websiteName)
+        command = 'openssl s_client -connect mail.%s:993 </dev/null' % (websiteName)
         result = ProcessUtilities.outputExecutioner(command)
 
-        if result.find('18 (self signed certificate)') > -1:
-            return 0, 'No valid SSL on port 993.'
-        else:
+        if mailUtilities.mailSSLVerified(result):
             return 1, 'All checks are OK.'
+        else:
+            return 0, 'No valid SSL on port 993.'
 
 
 

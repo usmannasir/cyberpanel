@@ -26,7 +26,7 @@ class SSHPasswordSecurityTests(unittest.TestCase):
             'websiteFunctions.website.create_system_password_request',
             return_value='a' * 43,
         ) as create_request, mock.patch(
-            'websiteFunctions.website.ProcessUtilities.executioner',
+            'websiteFunctions.website.ProcessUtilities.checkedExecutioner',
             return_value=1,
         ) as execute:
             response = WebsiteManager().saveSSHAccessChanges(
@@ -43,7 +43,7 @@ class SSHPasswordSecurityTests(unittest.TestCase):
 
     def test_non_string_password_is_rejected_without_execution(self):
         with mock.patch(
-            'websiteFunctions.website.ProcessUtilities.executioner',
+            'websiteFunctions.website.ProcessUtilities.checkedExecutioner',
         ) as execute:
             response = WebsiteManager().saveSSHAccessChanges(
                 1,
@@ -60,7 +60,7 @@ class SSHPasswordSecurityTests(unittest.TestCase):
             'websiteFunctions.website.create_system_password_request',
             return_value='a' * 43,
         ), mock.patch(
-            'websiteFunctions.website.ProcessUtilities.executioner',
+            'websiteFunctions.website.ProcessUtilities.checkedExecutioner',
             return_value=0,
         ), mock.patch(
             'websiteFunctions.website.consume_system_password_request',

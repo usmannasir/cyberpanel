@@ -338,8 +338,7 @@ def servicesAction(request):
                             service = 'pure-ftpd'
 
                     command = 'sudo systemctl %s %s' % (action, service)
-                    result = ProcessUtilities.outputExecutioner(command, shell=False, retRequired=True)
-                    if not result or result[0] != 1:
+                    if ProcessUtilities.checkedExecutioner(command) != 1:
                         final_dic = {
                             'serviceAction': 0,
                             'error_message': 'Service command failed. Please check the service status and CyberPanel main log.'
