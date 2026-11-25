@@ -1564,7 +1564,10 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
             # Check if Docker is running and accessible
             command = "systemctl is-active docker"
-            result, docker_status = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+            # is-active answers with 3 for a stopped unit and 4 for a missing one;
+            # the word it prints tells which.
+            result, docker_status = ProcessUtilities.outputExecutioner(command, None, None, None, 1,
+                                                                       okStatuses=(0, 3, 4))
             if result == 0:
                 raise DockerDeploymentError("Failed to check Docker status")
             if docker_status.strip() != "active":

@@ -68,7 +68,7 @@ class WordPressSyncIntegration(unittest.TestCase):
 
     def worker(self, runner=None):
         return StagingSync(runner or self.runner, self.status.append,
-                           str(self.root / 'private-backups'), self.cli)
+                           str(self.root / 'private-backups'), self.cli, lock_root=str(self.root))
 
     def test_full_sync_and_restore_preserve_urls_and_configuration(self):
         old_config = (self.target / 'wp-config.php').read_bytes()

@@ -17,6 +17,20 @@ class ResourceUsageTests(unittest.TestCase):
     def test_disk_command_failure_is_unavailable_not_zero_usage(self):
         self.execute.side_effect=[(0,'permission denied')]
         data=resource.get_website_resource_usage(self.site);self.assertEqual(0,data['status']);self.assertNotIn('disk_used',data)
+    def test_files_that_vanished_during_the_scan_do_not_hide_the_total(self):
+        # du ends with 1 and prints warnings before its total; the total counts.
+        df = (1, 'Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/test 1048576 10 1048566 1% /\n')
+        self.execute.side_effect = [(1, "du: cannot access '/home/domain.example/public_html/wp-content/cache/x': "
+                                        "No such file or directory\n5120\t/home/domain.example/public_html\n"), df]
+        data = resource.get_website_resource_usage(self.site)
+        self.assertEqual(1, data['status'])
+        self.assertEqual(5, data['disk_used'])
+        self.assertEqual((0, 1), self.execute.call_args_list[0].kwargs['okStatuses'])
+    def test_output_without_the_total_line_is_unavailable(self):
+        for output in ("du: cannot read directory '/home/domain.example/public_html/x': Permission denied\n",
+                       '5120\t/home/other.example/public_html\n', ''):
+            self.execute.side_effect = [(1, output)]
+            self.assertEqual(0, resource.get_website_resource_usage(self.site)['status'], output)
     def test_malformed_disk_output_is_unavailable(self):
         self.execute.side_effect=[(1,'not-a-number')];self.assertEqual(0,resource.get_website_resource_usage(self.site)['status'])
     def test_invalid_domain_does_not_run_commands(self):

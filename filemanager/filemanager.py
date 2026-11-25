@@ -1104,12 +1104,22 @@ class FileManager:
         website = Websites.objects.get(domain=domainName)
         externalApp = website.externalApp
 
-        def repair(command, user=None):
+        def repair(command, user=None, okStatuses=(0,)):
             success, output = ProcessUtilities.outputExecutioner(
-                command, user=user, shell=False, retRequired=True)
+                command, user=user, shell=False, retRequired=True, okStatuses=okStatuses)
             if success != 1:
                 logging.writeToFile('Permission repair command failed: %s' % output)
                 raise RuntimeError('Permission repair failed. Check the panel log before retrying.')
+            return output
+
+        def walk(command, user=None):
+            # A walk over a live tree ends with 1 when some entries could not be
+            # reached or changed (a directory its owner cannot enter, a cache file
+            # removed during the walk); everything it reached is repaired. That
+            # is the normal case this repair exists for: log it, keep going.
+            output = repair(command, user, (0, 1)).strip()
+            if output:
+                logging.writeToFile('Permission repair left some entries unchanged: %s' % output[:2000])
 
         def setDirectoryOwner(allowedRoot, directory, group, mode=None):
             command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/secureDirectoryOwner.py' \
@@ -1128,13 +1138,13 @@ class FileManager:
             # itself instead of a "path/*" shell glob: commands that run as root go
             # through subprocess with shell=False, so a glob was handed to chown
             # literally and left restored files owned by root (#1735).
-            repair('chown -R -P %s:%s %s' % (externalApp, externalApp, argument))
+            walk('chown -R -P %s:%s %s' % (externalApp, externalApp, argument))
 
             # Modes are set by the site user: a path it swapped for a link can then
             # reach nothing that user could not change already.
             repair('chmod 750 %s' % argument, externalApp)
-            repair("find %s -mindepth 1 -type d -exec chmod 0755 {} +" % argument, externalApp)
-            repair("find %s -type f -exec chmod 0644 {} +" % argument, externalApp)
+            walk("find %s -mindepth 1 -type d -exec chmod 0755 {} +" % argument, externalApp)
+            walk("find %s -type f -exec chmod 0644 {} +" % argument, externalApp)
 
             # Keep the document root restricted: owner, web server group, 750.
             setDirectoryOwner(homePath, path, groupName, '750')
@@ -1177,6 +1187,11 @@ class FileManager:
         # Child domains, including document roots outside public_html
         for childs in website.childdomains_set.all():
             childPath = childs.path
+
+            # A child domain whose folder its owner removed has nothing to repair.
+            if ProcessUtilities.checkedExecutioner('test -d %s' % self.returnPathEnclosed(childPath)) != 1:
+                logging.writeToFile('Permission repair skipped %s: the folder does not exist.' % childPath)
+                continue
 
             command = 'ls -la %s' % self.returnPathEnclosed(childPath)
             result = ProcessUtilities.outputExecutioner(command)

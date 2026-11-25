@@ -204,6 +204,7 @@ class RemoteRestoreBatchTests(unittest.TestCase):
         acl.commandInjectionCheck.return_value = 0
         env['ACLManager'] = acl
         commands = Mock()
+        commands.checkedExecutioner.return_value = 1  # the log exists
         env['ProcessUtilities'] = commands
         exec(compile(ast.Module(body=[method], type_ignores=[]), str(path), 'exec'), env)
         for status, expected in [('completed[success]', 1), ('Error[Failed]', 0), ('[5009]\ncompleted[success]', 0)]:
@@ -216,6 +217,14 @@ class RemoteRestoreBatchTests(unittest.TestCase):
             result = env['localRestoreStatus'](None, userID=1, data={'backupDir': 'test'})
             self.assertEqual(result['remoteTransferStatus'], 0)
             self.assertEqual(result['complete'], 0)
+        # Polled before the worker has written its log: still starting, keep polling.
+        commands.checkedExecutioner.return_value = 0
+        commands.outputExecutioner.reset_mock()
+        result = env['localRestoreStatus'](None, userID=1, data={'backupDir': 'test'})
+        self.assertEqual((1, 0), (result['remoteTransferStatus'], result['complete']))
+        commands.outputExecutioner.assert_not_called()
+        self.assertEqual("test -e /home/backup/transfer-test/backup_log",
+                         commands.checkedExecutioner.call_args.args[0])
         commands.executioner.assert_not_called()
         commands.normalExecutioner.assert_not_called()
 

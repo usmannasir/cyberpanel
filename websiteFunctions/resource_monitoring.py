@@ -65,6 +65,16 @@ def account_usage(username):
     return values
 
 
+def du_total(output, path):
+    """The total of `du -sk -- path`: its own line, '<KiB>\\t<path>'. Warnings
+    about entries du could not read come before it in the same output."""
+    for line in reversed(output.splitlines()):
+        size, separator, name = line.partition('\t')
+        if separator and name == path and size.isdigit():
+            return int(size)
+    raise ValueError('Disk usage is unavailable.')
+
+
 def get_website_resource_usage(website):
     try:
         # The Unix account name normally differs from the website domain.
@@ -77,11 +87,14 @@ def get_website_resource_usage(website):
             raise ValueError('Website document root is outside its home directory.')
         cpu_percent, memory_percent = account_usage(website.externalApp)
         # Bound expensive disk scans; use argv semantics through the executor.
+        # du ends with 1 when a file vanished during the scan (cache churn) or
+        # could not be read, and still prints the total; 124 is the time limit.
         ok, output = ProcessUtilities.outputExecutioner(
-            '/usr/bin/timeout 5 du -sk -- ' + shlex.quote(path), shell=False, retRequired=True)
+            '/usr/bin/timeout 5 du -sk -- ' + shlex.quote(path), shell=False, retRequired=True,
+            okStatuses=(0, 1))
         if not ok:
             raise ValueError('Disk usage is unavailable or the scan timed out.')
-        disk_used = int(output.split()[0]) / 1024
+        disk_used = du_total(output, path) / 1024
         ok, output = ProcessUtilities.outputExecutioner(
             '/usr/bin/timeout 5 df -Pk -- ' + shlex.quote(path), shell=False, retRequired=True)
         if not ok:

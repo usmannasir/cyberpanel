@@ -65,6 +65,42 @@ is already on 3.0.21 gets them by running the upgrade command again.
 - New installs write OpenLiteSpeed's error log at NOTICE level and keep 14
   days, instead of DEBUG.
 
+### Fixed later in build 21 (2026-11-26)
+Preparation for reporting every command's real exit status (next release):
+the flows below now say which exit statuses are their normal end, so they
+keep working once failures are no longer hidden. Where the panel already sees
+real exit statuses (scheduled jobs run as root) the fixes apply now.
+
+- `ProcessUtilities.outputExecutioner(..., retRequired=True, okStatuses=...)`:
+  the exit statuses that count as success.
+- WordPress backups copy the site with one `rsync -a` as the site user, hidden
+  files included. The old `cp` of `path.[^.]*` failed on a site without any
+  hidden file (scheduled backups failed there), and a site path without a
+  trailing slash was copied into a nested folder. A file that vanished during
+  the copy (rsync 24) is normal; a full disk is not.
+- Staging "deploy to production": a live site that changes while it is
+  archived (tar 1) and a cache file that vanishes during the content copy
+  (rsync 24) no longer stop the deploy. wp-config.php one folder above the
+  WordPress root is accepted, as WordPress does. A failure names the program,
+  not "sudo". The one-deploy-per-site lock is now held by the deploying
+  process, so a worker that died cannot leave a lock that blocks every later
+  deploy.
+- Fix Permissions: a folder its owner cannot enter, or a cache file removed
+  during the walk, no longer stops the repair (find/chown 1, logged); a child
+  domain whose folder was removed is skipped.
+- Website resource usage: files that vanish during the disk scan (du 1) no
+  longer make disk usage "unavailable"; the total line is read even after du's
+  warnings.
+- Remote backup restore progress: a poll that comes before the restore has
+  written its log shows "Starting the restore..." and keeps polling.
+- n8n PostgreSQL setup: one broken package source (`apt-get update` 100) or
+  no EPEL no longer stops it; an initialised data directory is not
+  initialised again; on AlmaLinux "which: no psql in (...)" no longer counts
+  as installed (nor "which: no apt-get" as an apt system); "inactive" no
+  longer counts as running.
+- Docker sites: a stopped Docker service is reported as "Docker service is
+  not running", not as a failed check.
+
 ## v3.0.20 (build 20) — 2026-11-25
 
 Upgrades started from the panel (Version Management → Upgrade) finish like a

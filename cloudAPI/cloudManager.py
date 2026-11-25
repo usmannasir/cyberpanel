@@ -3454,11 +3454,16 @@ class CloudManager:
             import json
             import os
             
+            def found_path(output):
+                # A path, not an error: on AlmaLinux `which` answers
+                # "which: no psql in (...)", which also contains "psql".
+                return bool(output) and output.strip().startswith('/')
+
             # Check if PostgreSQL is installed
             check_postgres = ProcessUtilities.outputExecutioner("which psql", 'root')
             logging.writeToFile(f"[_setupPostgreSQLForN8N] PostgreSQL check result: '{check_postgres}'")
-            
-            if not check_postgres or 'psql' not in check_postgres or 'not found' in check_postgres or check_postgres.strip() == '':
+
+            if not found_path(check_postgres):
                 logging.writeToFile("[_setupPostgreSQLForN8N] PostgreSQL not found, installing...")
                 
                 # Detect OS and use appropriate package manager
@@ -3481,7 +3486,7 @@ class CloudManager:
                 
                 # Additional check - if apt-get exists, force Ubuntu commands
                 apt_check = ProcessUtilities.outputExecutioner("which apt-get", 'root')
-                if apt_check and 'apt-get' in apt_check:
+                if found_path(apt_check):
                     logging.writeToFile("[_setupPostgreSQLForN8N] Found apt-get, using Ubuntu/Debian commands")
                     install_commands = [
                         "DEBIAN_FRONTEND=noninteractive apt-get update",
@@ -3491,8 +3496,19 @@ class CloudManager:
 
                 # Execute installation commands
                 for cmd in install_commands:
+                    if cmd == "postgresql-setup initdb" and ProcessUtilities.checkedExecutioner(
+                            "test -e /var/lib/pgsql/data/PG_VERSION") == 1:
+                        # Already initialised: initdb would refuse and end with 1.
+                        logging.writeToFile("[_setupPostgreSQLForN8N] PostgreSQL data directory already initialised")
+                        continue
                     logging.writeToFile(f"[_setupPostgreSQLForN8N] Running: {cmd}")
                     result, output = ProcessUtilities.outputExecutioner(cmd, 'root', shell=True, retRequired=True)
+                    if result != 1 and (cmd.endswith('apt-get update') or cmd.endswith('epel-release')):
+                        # One broken third-party package source makes apt-get update
+                        # end with 100, and EPEL is not available everywhere (RHEL);
+                        # PostgreSQL installs without either. The install decides.
+                        logging.writeToFile(f"[_setupPostgreSQLForN8N] Command '{cmd}' failed, continuing: {output}")
+                        continue
                     if result != 1:
                         logging.writeToFile(f"[_setupPostgreSQLForN8N] Command '{cmd}' failed with output: {output}")
                         return False, None, f"Failed to install PostgreSQL: {output}"
@@ -3505,20 +3521,20 @@ class CloudManager:
                 logging.writeToFile(f"[_setupPostgreSQLForN8N] PostgreSQL verification result: '{verify_postgres}'")
                 
                 # Also try common PostgreSQL binary locations
-                if not verify_postgres or 'psql' not in verify_postgres:
+                if not found_path(verify_postgres):
                     # Check common locations
                     common_paths = ["/usr/bin/psql", "/usr/local/bin/psql", "/usr/pgsql-*/bin/psql"]
                     for path in common_paths:
                         check_path = ProcessUtilities.outputExecutioner(f"ls {path} 2>/dev/null", 'root')
-                        if check_path and 'psql' in check_path:
+                        if found_path(check_path):
                             verify_postgres = check_path
                             logging.writeToFile(f"[_setupPostgreSQLForN8N] Found psql at: {path}")
                             break
-                
-                if not verify_postgres or ('psql' not in verify_postgres and 'No such' not in verify_postgres):
+
+                if not found_path(verify_postgres):
                     # Try to find psql with find command
                     find_psql = ProcessUtilities.outputExecutioner("find /usr -name psql -type f 2>/dev/null | head -1", 'root')
-                    if find_psql and 'psql' in find_psql:
+                    if found_path(find_psql):
                         verify_postgres = find_psql
                         logging.writeToFile(f"[_setupPostgreSQLForN8N] Found psql using find: {find_psql}")
                     else:
@@ -3640,7 +3656,8 @@ class CloudManager:
             
             # Verify PostgreSQL is running
             status_check = ProcessUtilities.outputExecutioner(f"systemctl is-active {postgres_service}", 'root')
-            if 'active' not in status_check:
+            # The word itself: "inactive" also contains "active".
+            if 'active' not in (status_check or '').split():
                 logging.writeToFile(f"[_setupPostgreSQLForN8N] PostgreSQL service not active: {status_check}")
                 return False, None, "PostgreSQL service failed to start"
             

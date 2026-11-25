@@ -105,25 +105,50 @@ class DirectoryOwnerTests(unittest.TestCase):
 class RepairPlanTests(unittest.TestCase):
     """Which account runs each repair command, and in which order."""
 
-    def plan(self, children=()):
+    def plan(self, children=(), status_of=None, missing=(), log=None):
+        """status_of(command): its exit status, judged against the statuses the
+        repair accepts, as outputExecutioner does. missing: child folders that
+        do not exist."""
         calls = []
 
-        def execute(command, user=None, shell=None, dir=None, retRequired=None):
+        def execute(command, user=None, shell=None, dir=None, retRequired=None, okStatuses=(0,)):
             calls.append((command, user))
-            return (1, '') if retRequired else ''
+            status = status_of(command) if status_of else 0
+            output = 'find: Permission denied' if status else ''
+            return (1 if status in okStatuses else 0, output) if retRequired else ''
 
         process = Mock(centos=0, cent8=1)
         process.decideDistro.return_value = 2
         process.outputExecutioner.side_effect = execute
+        process.checkedExecutioner.side_effect = lambda command: 0 if shlex.split(command)[-1] in missing else 1
         website = Mock(externalApp='examp1234')
         website.childdomains_set.all.return_value = [SimpleNamespace(path=path) for path in children]
         websites = Mock()
         websites.objects.get.return_value = website
         repair = load('filemanager/filemanager.py', 'fixPermissions', dict(
             Websites=websites, ProcessUtilities=process, json=json, HttpResponse=response,
-            logging=Mock(), shlex=shlex), 'FileManager')
+            logging=log or Mock(), shlex=shlex), 'FileManager')
         self.assertIsNone(repair(SimpleNamespace(returnPathEnclosed=shlex.quote), 'example.com'))
         return calls
+
+    def test_walks_that_cannot_reach_every_entry_still_repair_the_rest(self):
+        # find and chown -R end with 1 when an entry could not be reached or changed.
+        walks = lambda command: 1 if command.startswith(('find ', 'chown -R')) else 0
+        log = Mock()
+        calls = self.plan(children=['/home/example.com/shop'], status_of=walks, log=log)
+        self.assertEqual(2, sum('secureDirectoryOwner.py' in c and '--mode 750' in c for c, _ in calls))
+        self.assertTrue(any('left some entries unchanged' in str(call) for call in log.writeToFile.call_args_list))
+        for failing in (lambda command: 2 if command.startswith('find ') else 0,
+                        lambda command: 1 if command.startswith('chmod 750') else 0,
+                        lambda command: 1 if 'secureDirectoryOwner.py' in command else 0):
+            with self.assertRaisesRegex(RuntimeError, 'Permission repair failed'):
+                self.plan(status_of=failing)
+
+    def test_a_child_domain_whose_folder_is_gone_is_skipped(self):
+        calls = self.plan(children=['/home/example.com/gone', '/home/example.com/shop'],
+                          missing=('/home/example.com/gone',))
+        self.assertFalse(any('/home/example.com/gone' in command for command, _ in calls))
+        self.assertIn(('chown -R -P examp1234:examp1234 /home/example.com/shop', None), calls)
 
     def test_no_privileged_command_changes_modes_or_follows_a_link(self):
         calls = self.plan(children=['/home/example.com/shop', "/home/example.com/it's here"])
