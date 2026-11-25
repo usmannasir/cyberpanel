@@ -4,6 +4,38 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.21 (build 21) — 2026-11-25
+
+Upgrades from releases older than 3.0.8 no longer stop at the mail check, and
+mail that those releases had stopped runs again after the upgrade.
+
+### Upgrade
+- Releases before 3.0.8 added a mail TLS block to `/etc/dovecot/dovecot.conf`
+  for every new website, also when the website had no certificate yet.
+  Dovecot cannot load such a file: on 2.x servers mail stopped at once, on
+  3.0.0–3.0.7 at the next restart, and the upgrade command refused to start
+  with "the running Dovecot configuration cannot be reloaded" (seen upgrading
+  2.4.8 and the CyberPanel 3.0.5 Cloud VPS image). The upgrade now removes
+  those blocks, and only blocks exactly as CyberPanel wrote them whose
+  certificate or key file is missing, keeps the previous file as
+  `dovecot.conf.cyberpanel-<time>.before-tls-repair`, and continues. Mail that
+  had stopped for that reason runs again after the upgrade. Any other error
+  in the mail configuration still stops the upgrade, as before.
+
+### Tests
+- The OpenLiteSpeed controller test
+  `test_grant_binds_the_command_symlink_and_not_only_its_old_target` no longer
+  fails at random on Ubuntu 22.04 (a re-created link could get the same inode
+  and change time as the one it replaced).
+- The upgrade service-health tests run on Python 3.6 again (on AlmaLinux 8
+  they had all errored before running).
+
+### When the changes apply
+- The repair is part of the upgrade command (`preUpgrade.sh`), the way the
+  upgrade guide tells servers older than 3.0.9 to upgrade. An upgrade started
+  from the panel page or by automatic updates does not run it; such an
+  upgrade never stopped for this reason.
+
 ## v3.0.20 (build 20) — 2026-11-25
 
 Upgrades started from the panel (Version Management → Upgrade) finish like a
