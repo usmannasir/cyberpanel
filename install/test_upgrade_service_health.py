@@ -49,7 +49,8 @@ exit 0
         definitions = '\n'.join(function(name) for name in (
             'Repair_Dovecot_Missing_SNI', 'Check_Upgrade_Services', 'Verify_Upgrade_Services'))
         return subprocess.run(['/bin/bash','-c',definitions+'\n'+code],
-                              env=dict(self.env,**env),capture_output=True,text=True,timeout=10)
+                              env=dict(self.env,**env),stdout=subprocess.PIPE,stderr=subprocess.PIPE,
+                              universal_newlines=True,timeout=10)
     def test_running_mail_with_invalid_config_stops_before_upgrade_work(self):
         marker=self.root/'upgrade-started'
         result=self.run_shell('Check_Upgrade_Services || exit 1\ntouch '+shlex.quote(str(marker)),
