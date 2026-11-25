@@ -166,6 +166,54 @@ echo -e "\nChecking root privileges..."
   fi
 }
 
+# Releases before 3.0.8 added a mail TLS block to dovecot.conf for every new
+# website, also when the website had no certificate yet. Dovecot cannot load
+# that file again (the running daemon still has its older copy), so mail stops
+# at its next restart. Removes only such blocks, exactly as CyberPanel wrote
+# them, whose certificate or key file is missing; keeps a dated copy and puts
+# the file back unchanged unless Dovecot then accepts it.
+Repair_Dovecot_Missing_SNI() {
+  local conf="${DOVECOT_CONF:-/etc/dovecot/dovecot.conf}" root="${DOVECOT_SNI_ROOT:-}"
+  local backup repaired names
+  [[ -f "$conf" && ! -L "$conf" ]] || return 1
+  repaired=$(mktemp) || return 1
+  names=$(mktemp) || { rm -f "$repaired"; return 1; }
+  if ! awk -v root="$root" -v names="$names" '
+    function missing(path) { return system("test -f \"" root path "\" && test -r \"" root path "\"") != 0 }
+    function flush(   i) { for (i = 1; i <= n; i++) print held[i]; n = 0; name = "" }
+    name == "" && $1 == "local_name" && NF == 3 && $3 == "{" && $2 ~ /^[A-Za-z0-9][A-Za-z0-9.-]*$/ {
+      name = $2; n = 1; held[1] = $0; cert = key = ""; extra = 0; next
+    }
+    name != "" {
+      held[++n] = $0; line = $0; gsub(/[ \t]/, "", line)
+      live = "/etc/letsencrypt/live/" name
+      if (line == "ssl_cert=<" live "/fullchain.pem" || line == "ssl_server_cert_file=" live "/fullchain.pem") cert = live "/fullchain.pem"
+      else if (line == "ssl_key=<" live "/privkey.pem" || line == "ssl_server_key_file=" live "/privkey.pem") key = live "/privkey.pem"
+      else if (line == "}") {
+        if (!extra && n == 4 && cert != "" && key != "" && (missing(cert) || missing(key))) { print name > names; n = 0; name = "" }
+        else flush()
+      }
+      else { extra = 1; if (n > 4) flush() }
+      next
+    }
+    { print }
+    END { flush() }' "$conf" > "$repaired" || [[ ! -s "$names" ]]; then
+    rm -f "$repaired" "$names"; return 1
+  fi
+  backup="$conf.cyberpanel-$(date +%Y%m%d%H%M%S).before-tls-repair"
+  if ! cp -p "$conf" "$backup"; then rm -f "$repaired" "$names"; return 1; fi
+  # Rewrite in place: owner, mode and SELinux label of dovecot.conf stay as they are.
+  cat "$repaired" > "$conf"
+  if doveconf -c "$conf" -n -x >/dev/null 2>&1; then
+    echo "Mail configuration repaired: removed the TLS settings of websites that have no certificate ($(sort -u "$names" | tr '\n' ' ' | sed 's/ $//')) from $conf; previous file kept as $backup."
+    rm -f "$repaired" "$names"
+    return 0
+  fi
+  cat "$backup" > "$conf"
+  rm -f "$repaired" "$names" "$backup"
+  return 1
+}
+
 Check_Upgrade_Services() {
   UPGRADE_ACTIVE_SERVICES=()
   local service
@@ -177,11 +225,19 @@ Check_Upgrade_Services() {
       if [[ "$service" = "dovecot" ]]; then
         # A running Dovecot can still have invalid, not-yet-reloaded config.
         # Detect that before package work or upgrade restarts stop working mail.
-        if ! command -v doveconf >/dev/null 2>&1 || ! doveconf -n -x >/dev/null; then
+        # The one known cause left by older releases is repaired first.
+        if ! command -v doveconf >/dev/null 2>&1 ||
+            { ! doveconf -n -x >/dev/null 2>&1 && ! Repair_Dovecot_Missing_SNI && ! doveconf -n -x >/dev/null; }; then
           echo 'Upgrade stopped: the running Dovecot configuration cannot be reloaded. Repair the reported configuration error before upgrading; mail has not been restarted.' >&2
           return 1
         fi
       fi
+    elif [[ "$service" = "dovecot" ]] && systemctl is-failed --quiet dovecot &&
+        command -v doveconf >/dev/null 2>&1 && ! doveconf -n -x >/dev/null 2>&1; then
+      # Mail that already failed because of those blocks (older releases
+      # restarted Dovecot right after writing them) starts again at the
+      # upgrade's mail restarts. It does not become an upgrade requirement.
+      Repair_Dovecot_Missing_SNI || true
     fi
   done
   return 0
