@@ -5901,7 +5901,7 @@ StrictHostKeyChecking no
                 shlex.quote(passwordScript),
                 shlex.quote(requestToken),
             )
-            if ProcessUtilities.executioner(command) != 1:
+            if ProcessUtilities.checkedExecutioner(command) != 1:
                 try:
                     consume_system_password_request(requestToken)
                 except Exception:

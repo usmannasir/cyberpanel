@@ -247,9 +247,15 @@ class ProcessUtilities(multi.Thread):
                 time.sleep(2)
 
     @staticmethod
-    def sendCommand(command, user=None, dir=None, retries=3):
+    def sendCommand(command, user=None, dir=None, retries=3, status=False):
         """
         Send command to lscpd with retry mechanism
+
+        With status=True the command runs in a subshell that reports its exit
+        status after the output (plogical/commandStatus.py), and the return
+        value is (exit status or None, output). The helper's own last byte is
+        0 for every command that ends normally, whatever its exit status, so it
+        cannot be used for that.
         
         :param command: Command to execute
         :param user: User to run command as
@@ -281,7 +287,7 @@ class ProcessUtilities(multi.Thread):
                         continue
                     else:
                         logging.writeToFile(f"[sendCommand] All connection attempts failed. Last error: {last_error}")
-                        return f"-1Connection failed after {retries} attempts: {last_error}"
+                        return (None, f"-1Connection failed after {retries} attempts: {last_error}") if status else f"-1Connection failed after {retries} attempts: {last_error}"
                 
                 # If we get here, connection succeeded
                 break
@@ -294,12 +300,12 @@ class ProcessUtilities(multi.Thread):
                     time.sleep(2)
                     continue
                 else:
-                    return f"-1Error after {retries} attempts: {last_error}"
+                    return (None, f"-1Error after {retries} attempts: {last_error}") if status else f"-1Error after {retries} attempts: {last_error}"
         
         try:
             # At this point, we have a successful connection
             if ret is None:
-                return "-1Internal error: connection result is None"
+                return (None, "-1Internal error: connection result is None") if status else "-1Internal error: connection result is None"
             sock = ret[0]
             
             if ProcessUtilities.token == "unset":
@@ -313,38 +319,39 @@ class ProcessUtilities(multi.Thread):
                     sock.close()
                     logging.writeToFile(
                         'Refused a command for another account that would run more than one command. [sendCommand]')
-                    return 'Command refused: it would run more than one command.' + chr(1)
+                    refused = 'Command refused: it would run more than one command.'
+                    return (None, refused) if status else refused + chr(1)
 
                 if command.find('export') > -1:
                     pass
                 elif command.find('sudo') == -1:
                     command = 'sudo %s' % (command)
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    # Log all commands for debugging
-                    logging.writeToFile(command)
-
-                if dir == None:
-                    sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
-                else:
-                    command = '%s-d %s %s' % (ProcessUtilities.token, dir, command)
-                    sock.sendall(command.encode('utf-8'))
+                options = '' if dir == None else '-d %s ' % dir
             else:
                 if command.startswith('sudo'):
                     command = command.replace('sudo', '', 1)  # Replace 'sudo' with an empty string, only once
 
-                if dir == None:
-                    command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
-                else:
-                    command = '%s-u %s -d %s %s' % (ProcessUtilities.token, user, dir, command)
+                options = '-u %s ' % user if dir == None else '-u %s -d %s ' % (user, dir)
 
+            marker = commandStatus.new_marker() if status else None
+            request = None
+            if marker:
+                request = (ProcessUtilities.token + options +
+                           commandStatus.with_status(command, marker)).encode('utf-8')
+                if len(request) > commandStatus.REQUEST_LIMIT:
+                    # Too long for the helper once the status trailer is added:
+                    # send it as before, without a status.
+                    logging.writeToFile('A command is too long to report its exit status; sent without it. [sendCommand]')
+                    marker = request = None
+            if request is None:
+                request = (ProcessUtilities.token + options + command).encode('utf-8')
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                # Log all commands for debugging (without the helper's token)
+                logging.writeToFile(options + command)
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    # Log all commands for debugging
-                    logging.writeToFile(command)
-
-                sock.sendall(command.encode('utf-8'))
+            sock.sendall(request)
 
             # Collect all raw bytes first, then decode as a complete unit
             raw_data = b""
@@ -354,6 +361,20 @@ class ProcessUtilities(multi.Thread):
                 if len(currentData) == 0 or currentData == None:
                     break
                 raw_data += currentData
+
+            exit_status = None
+            if status:
+                found = commandStatus.trailer(marker).search(raw_data) if marker else None
+                if found:
+                    exit_status = int(found.group(1))
+                    raw_data = raw_data[:found.start()]
+                elif marker is None and raw_data:
+                    # Sent without the trailer (too long): only the helper's
+                    # byte is there, read as it always was.
+                    exit_status = raw_data[-1]
+                    raw_data = raw_data[:-1]
+                else:
+                    raw_data = raw_data[:-1]
 
             # Decode all data at once to prevent UTF-8 character boundary issues
             try:
@@ -386,10 +407,14 @@ class ProcessUtilities(multi.Thread):
             
             #logging.writeToFile('Final data: %s.' % (str(data)))
 
+            if status:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f"    └─ [Exit status: {exit_status}]")
+                return exit_status, data
             return data
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [hey:sendCommand]")
-            return "0" + str(msg)
+            return (None, str(msg)) if status else "0" + str(msg)
 
     @staticmethod
     def streamCommand(command, user, sink):
@@ -482,6 +507,27 @@ class ProcessUtilities(multi.Thread):
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + " [executioner]")
+            return 0
+
+    @staticmethod
+    def checkedExecutioner(command, user=None, shell=False):
+        """Return 1 only when the command exited with status 0.
+
+        executioner() answers 1 for nearly every command run through the
+        privileged helper, because the helper's own last byte is 0 for every
+        command that ends normally. This asks the command for its real exit
+        status instead (plogical/commandStatus.py). Use it where the user is
+        told whether something worked."""
+        try:
+            if getpass.getuser() == 'root':
+                return ProcessUtilities.normalExecutioner(command, shell, user)
+            exitCode, _ = ProcessUtilities.sendCommand(command, user, status=True)
+            if exitCode is None:
+                logging.writeToFile("No exit status from lscpd for command: %s [checkedExecutioner]" % command)
+                return 0
+            return 1 if exitCode == 0 else 0
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + " [checkedExecutioner]")
             return 0
 
     @staticmethod

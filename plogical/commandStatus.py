@@ -46,13 +46,18 @@ def request_fits(user, command):
         return False
 
 
+def trailer(marker):
+    """The end of a helper's reply for `marker`: the trailer, then the helper's
+    own last byte, 0 when the shell ended by itself. Group 1 is the status."""
+    return re.compile(b'\n' + marker.encode('ascii') + b' ([0-9]{1,3})\x00\\Z')
+
+
 class StatusReader(object):
     """Pass a helper's reply on to a sink as it arrives and keep the trailer back."""
 
     def __init__(self, marker, sink):
         self.sink = sink
-        # After the trailer comes the helper's own last byte, 0 when the shell ended by itself.
-        self.trailer = re.compile(b'\n' + marker.encode('ascii') + b' ([0-9]{1,3})\x00\\Z')
+        self.trailer = trailer(marker)
         self.longest = len(marker) + 6
         self.held = b''
 
