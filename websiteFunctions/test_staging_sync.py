@@ -1,4 +1,7 @@
+import fcntl
+import os
 import shlex
+import tempfile
 import unittest
 from unittest import mock
 from websiteFunctions.stagingSync import StagingSync
@@ -9,13 +12,20 @@ class SyncTests(unittest.TestCase):
         patcher = mock.patch("websiteFunctions.stagingSync.os.geteuid", return_value=0)
         patcher.start()
         self.addCleanup(patcher.stop)
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        self.locks = holder.name
 
-    def setup_worker(self, fail=None, source_url='http://stage.example'):
+    def setup_worker(self, fail=None, source_url='http://stage.example', status_of=None):
+        """fail(args): the command fails. status_of(args): its exit status, judged
+        against the statuses the worker accepts, as outputExecutioner does."""
         commands, status = [], []
         def runner(command, **kwargs):
             args = shlex.split(command)
             commands.append(args)
             if fail and fail(args):
+                return 0, 'sensitive failure detail'
+            if status_of and status_of(args) not in kwargs.get('okStatuses', (0,)):
                 return 0, 'sensitive failure detail'
             if args[0] == 'readlink':
                 return 1, args[-1]
@@ -24,7 +34,18 @@ class SyncTests(unittest.TestCase):
             if 'option' in args and 'get' in args:
                 return 1, source_url if '--path=/stage' in args else 'https://live.example'
             return 1, 'OK'
-        return StagingSync(runner, status.append, '/private-backup'), commands, status
+        return StagingSync(runner, status.append, '/private-backup', lock_root=self.locks), commands, status
+
+    def lock_is_free(self):
+        for name in os.listdir(self.locks):
+            descriptor = os.open(os.path.join(self.locks, name), os.O_RDWR)
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                return False
+            finally:
+                os.close(descriptor)
+        return True
 
     def test_backup_precedes_import_and_preserves_https(self):
         worker, commands, status = self.setup_worker()
@@ -48,7 +69,7 @@ class SyncTests(unittest.TestCase):
                 worker.run('/stage', '/live', '/php', database=True, copy_all=True)
             self.assertFalse(any('import' in a or a[0] == 'rsync' for a in commands))
             self.assertFalse(any('[200]' in line for line in status))
-            self.assertEqual('rmdir', commands[-1][0])
+            self.assertTrue(self.lock_is_free())
 
     def test_content_only_never_imports_or_rewrites_database(self):
         worker, commands, _ = self.setup_worker()
@@ -88,10 +109,64 @@ class SyncTests(unittest.TestCase):
         self.assertFalse(any('[200]' in line for line in status))
 
     def test_busy_lock_never_mutates_site_or_removes_other_lock(self):
-        worker, commands, _ = self.setup_worker(lambda a: a[0] == 'mkdir' and '/lock-' in a[-1])
+        first, _, _ = self.setup_worker()
+        held = first.lock('/live')
+        self.addCleanup(os.close, held)
+        worker, commands, _ = self.setup_worker()
+        with self.assertRaisesRegex(RuntimeError, 'still running'):
+            worker.run('/stage', '/live', '/php', database=True)
+        self.assertFalse(any(a[0] in ('tar', 'rsync') or 'import' in a for a in commands))
+        self.assertFalse(self.lock_is_free())
+        # Another website is not blocked.
+        self.setup_worker()[0].run('/stage', '/other', '/php', database=True)
+
+    def test_lock_of_a_worker_that_died_does_not_block_the_next_deployment(self):
+        worker, _, _ = self.setup_worker()
+        os.close(worker.lock('/live'))  # the descriptor ends with its process
+        worker, commands, status = self.setup_worker()
+        worker.run('/stage', '/live', '/php', database=True)
+        self.assertTrue(status[-1].endswith('[200]'))
+        self.assertTrue(self.lock_is_free())
+
+    def test_live_site_archive_and_vanished_cache_files_are_normal(self):
+        # tar 1: a file changed while it was read; rsync 24: a source file vanished.
+        normal = lambda a: {'tar': 1 if '-czpf' in a else 0, 'rsync': 24}.get(a[0], 0)
+        worker, commands, status = self.setup_worker(status_of=normal)
+        worker.run('/stage', '/live', '/php', database=True, copy_all=True)
+        self.assertTrue(status[-1].endswith('[200]'))
+        for failing in ({'tar': 2}, {'rsync': 23}, {'rsync': 11}):
+            worker, commands, status = self.setup_worker(
+                status_of=lambda a, codes=failing: codes.get(a[0], 0) if '-tzf' not in a else 0)
+            with self.assertRaises(RuntimeError):
+                worker.run('/stage', '/live', '/php', database=True, copy_all=True)
+            self.assertFalse(any('[200]' in line for line in status))
+        # Every other command still needs exit status 0.
+        worker, commands, _ = self.setup_worker(status_of=lambda a: 1 if 'import' in a else 0)
         with self.assertRaises(RuntimeError):
             worker.run('/stage', '/live', '/php', database=True)
-        self.assertFalse(any(a[0] in ('tar', 'rmdir', 'rsync') for a in commands))
+
+    def test_wp_config_in_the_folder_above_the_wordpress_root_is_accepted(self):
+        above = lambda a: a[:2] == ['test', '-f'] and a[2] in ('/live/wp-config.php', '/stage/wp-config.php')
+        worker, commands, status = self.setup_worker(fail=above)
+        worker.run('/stage', '/live', '/php', database=True)
+        self.assertTrue(status[-1].endswith('[200]'))
+        self.assertIn(['test', '-f', '/wp-config.php'], commands)
+        worker, commands, _ = self.setup_worker(fail=lambda a: a[:2] == ['test', '-f'])
+        with self.assertRaisesRegex(ValueError, 'wp-config.php was not found in /stage'):
+            worker.run('/stage', '/live', '/php', database=True)
+        self.assertFalse(any(a[0] == 'tar' for a in commands))
+
+    def test_missing_wp_content_is_named(self):
+        worker, commands, _ = self.setup_worker(fail=lambda a: a[:2] == ['test', '-d'])
+        with self.assertRaisesRegex(ValueError, 'wp-content was not found in /stage'):
+            worker.run('/stage', '/live', '/php', copy_all=True)
+        self.assertFalse(any(a[0] in ('tar', 'rsync') for a in commands))
+
+    def test_a_failure_names_the_program_not_sudo(self):
+        worker, _, _ = self.setup_worker(fail=lambda a: 'tar' in a)
+        with mock.patch('websiteFunctions.stagingSync.os.geteuid', return_value=1000):
+            with self.assertRaisesRegex(RuntimeError, r'\(tar\)'):
+                worker.command('tar', '-czpf', '/private/a.tar.gz')
 
     def test_nonroot_transport_quotes_arguments_and_keeps_sudo_for_export(self):
         from plogical.processUtilities import ProcessUtilities

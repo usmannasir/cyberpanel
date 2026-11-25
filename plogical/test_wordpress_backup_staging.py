@@ -206,9 +206,11 @@ class BackupJobTests(unittest.TestCase):
             ACLManager=NS(CreateSecureDir=lambda: None), ProcessUtilities=process, logging=log, secrets=secrets,
             shlex=shlex, time=time, json=json, randint=lambda low, high: low, is_job_folder=is_job_folder,
             os=NS(path=os.path, chmod=lambda path, mode: None), open=self.open_description, print=lambda *a: None)
-        create, remove = load_methods('plogical/applicationInstaller.py', 'ApplicationInstaller',
-                                      ['WPCreateBackup', 'removeJobFolder'], self.namespace)
+        create, remove, copy = load_methods('plogical/applicationInstaller.py', 'ApplicationInstaller',
+                                            ['WPCreateBackup', 'removeJobFolder', 'copyWordPressFiles'],
+                                            self.namespace)
         self.Installer = type('Installer', (), {'WPCreateBackup': create, 'removeJobFolder': remove})
+        self.namespace['ApplicationInstaller'] = NS(copyWordPressFiles=copy)
 
     def open_description(self, path, mode='r'):
         # The backup's description is written to the panel's own folder first; here it stays in the test's.
@@ -223,7 +225,7 @@ class BackupJobTests(unittest.TestCase):
         self.commands.append(command)
         return 1
 
-    def output(self, command, user=None, shell=None, dir=None, retRequired=None):
+    def output(self, command, user=None, shell=None, dir=None, retRequired=None, okStatuses=(0,)):
         self.commands.append(command)
         if self.failing is not None and self.failing in command:
             return 0, 'it failed'
@@ -282,7 +284,7 @@ class BackupJobTests(unittest.TestCase):
         self.assertEqual(os.path.basename(folder), description['RandomPath'])
 
     def test_a_backup_that_fails_at_any_step_leaves_no_copy_of_the_site_either(self):
-        for kind, step in (('1', 'cp -R /home/source.example/public_html/*'), ('1', 'db export'), ('1', 'tar -czvf'),
+        for kind, step in (('1', 'rsync -a /home/source.example/public_html/'), ('2', 'rsync -a'), ('1', 'db export'), ('1', 'tar -czvf'),
                            ('2', 'tar -czvf'), ('3', 'db export'), ('3', 'tar -czvf')):
             with self.subTest(kind=kind, step=step):
                 self.failing = step

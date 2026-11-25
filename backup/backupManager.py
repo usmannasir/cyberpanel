@@ -1493,6 +1493,13 @@ class BackupManager:
 
             time.sleep(3)
 
+            # The restore worker writes its log once it has started; until then
+            # the restore is starting, not failed, and the page keeps polling.
+            if ProcessUtilities.checkedExecutioner("test -e " + shlex.quote(backupLogPath)) != 1:
+                return HttpResponse(json.dumps({
+                    'remoteTransferStatus': 1, 'complete': 0, 'error_message': 'None',
+                    'status': 'Starting the restore...'}))
+
             command = "sudo cat " + shlex.quote(backupLogPath)
             result = ProcessUtilities.outputExecutioner(command, retRequired=True)
             if not result or len(result) != 2 or result[0] != 1 or not result[1]:

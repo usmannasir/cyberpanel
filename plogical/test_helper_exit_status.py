@@ -137,5 +137,35 @@ class ExitStatusTests(unittest.TestCase):
         self.assertEqual([], runner.sent)
 
 
+class AcceptedStatusTests(unittest.TestCase):
+    """outputExecutioner(retRequired, okStatuses): the exit statuses that are a
+    command's normal end, for tar 1 and rsync 24."""
+
+    def output_runner(self, user, reply=helper_reply):
+        runner = Runner(reply)
+        namespace = dict(ProcessUtilities=runner.utilities, os=os, subprocess=subprocess, shlex=shlex,
+                         codecs=__import__('codecs'), logging=SimpleNamespace(writeToFile=runner.logged.append),
+                         getpass=SimpleNamespace(getuser=lambda: user))
+        return load_method('plogical/processUtilities.py', 'ProcessUtilities', 'outputExecutioner', namespace), runner
+
+    def test_as_root_listed_statuses_are_success_and_others_are_not(self):
+        run, _ = self.output_runner('root')
+        self.assertEqual((1, 'x'), run("sh -c 'printf x; exit 24'", retRequired=True, okStatuses=(0, 24)))
+        self.assertEqual((1, ''), run('true', retRequired=True, okStatuses=(0, 24)))
+        self.assertEqual(0, run("sh -c 'exit 23'", retRequired=True, okStatuses=(0, 24))[0])
+        # Without okStatuses only 0 is success, as before.
+        self.assertEqual(0, run("sh -c 'exit 24'", retRequired=True)[0])
+        self.assertEqual(1, run('true', retRequired=True)[0])
+
+    def test_through_the_helper_its_last_byte_still_decides(self):
+        # Not an exit status: 0 for every normal end, otherwise a signal or an
+        # error of the helper. okStatuses does not change how it is read.
+        run, runner = self.output_runner('cyberpanel')
+        self.assertEqual(1, run("sh -c 'exit 23'", retRequired=True, okStatuses=(0, 24))[0])
+        run, _ = self.output_runner('cyberpanel', reply=lambda request: b'killed\x18')
+        self.assertEqual((0, 'killed'), run('true', retRequired=True, okStatuses=(0, 24)))
+        self.assertEqual([(TOKEN + "sudo sh -c 'exit 23'").encode()], runner.sent)
+
+
 if __name__ == '__main__':
     unittest.main()

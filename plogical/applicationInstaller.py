@@ -193,6 +193,19 @@ class ApplicationInstaller(multi.Thread):
         return 1
 
     @staticmethod
+    def copyWordPressFiles(user, source, destination):
+        """Copy a WordPress root into a backup folder as the site's own user.
+
+        One copy of the folder's contents, hidden files included: no shell glob,
+        which stayed literal (and failed) on a site without hidden files, and
+        copied the folder itself when its path had no trailing slash. rsync ends
+        with 24 when a file vanished during the copy, a busy site's cache file;
+        that is a normal end. Any other failure, such as a full disk, is not."""
+        command = 'sudo -u %s rsync -a %s %s' % (
+            shlex.quote(user), shlex.quote(source.rstrip('/') + '/'), shlex.quote(destination.rstrip('/') + '/'))
+        return ProcessUtilities.outputExecutioner(command, None, None, None, 1, okStatuses=(0, 24))
+
+    @staticmethod
     def registerWordPressSite(owner, title, path, final_url):
         """Register an installed site in WordPress Manager without duplicates."""
         wordpress_site = WPSites.objects.filter(
@@ -2983,17 +2996,8 @@ class ApplicationInstaller(multi.Thread):
                 logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
 
                 ############## Copy Public_htnl to backup
-                command = "sudo -u %s cp -R %s* %s/public_html" % (VHuser, WPsitepath, self.tempPath)
-                retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if retStatus == 0:
-                    raise BaseException(result)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(result)
-
-                command = "sudo -u %s cp -R %s.[^.]* %s/public_html/" % (VHuser, WPsitepath, self.tempPath)
-                retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                retStatus, result = ApplicationInstaller.copyWordPressFiles(
+                    VHuser, WPsitepath, '%s/public_html' % self.tempPath)
 
                 if retStatus == 0:
                     raise BaseException(result)
@@ -3148,17 +3152,8 @@ class ApplicationInstaller(multi.Thread):
                 logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
 
                 ############## Copy Public_htnl to backup
-                command = "sudo -u %s cp -R %s* %s/public_html" % (VHuser, WPsitepath, self.tempPath)
-                retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                if retStatus == 0:
-                    raise BaseException(result)
-
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(result)
-
-                command = "sudo -u %s cp -R %s.[^.]* %s/public_html/" % (VHuser, WPsitepath, self.tempPath)
-                retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                retStatus, result = ApplicationInstaller.copyWordPressFiles(
+                    VHuser, WPsitepath, '%s/public_html' % self.tempPath)
 
                 if retStatus == 0:
                     raise BaseException(result)

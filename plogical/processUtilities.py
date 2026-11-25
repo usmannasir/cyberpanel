@@ -531,7 +531,12 @@ class ProcessUtilities(multi.Thread):
             return 0
 
     @staticmethod
-    def outputExecutioner(command, user=None, shell = None, dir = None, retRequired = None):
+    def outputExecutioner(command, user=None, shell = None, dir = None, retRequired = None, okStatuses = (0,)):
+        """okStatuses: the exit statuses that count as success with retRequired,
+        for commands whose normal exit is not always 0 (tar 1 when a file
+        changed while it was read, rsync 24 when a file vanished). It applies
+        wherever the real exit status is known, which is as root. Through the
+        privileged helper the answer still comes from the helper's last byte."""
         try:
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
@@ -556,7 +561,7 @@ class ProcessUtilities(multi.Thread):
                     exit_code = p.returncode
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.writeToFile(f"    └─ [Exit Code: {exit_code}]")
-                    if exit_code == 0:
+                    if exit_code in okStatuses:
                         return 1, output
                     else:
                         return 0, output
