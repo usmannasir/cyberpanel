@@ -91,6 +91,13 @@ class TemplateTests(unittest.TestCase):
                 self.assertNotIn('value=', field, name)
         self.assertEqual(0, (TEMPLATES / 'code.html').read_text().count('<form'))
 
+    def test_an_empty_server_list_names_as_many_steps_as_add_a_server_shows(self):
+        source = (TEMPLATES / 'nodes.html').read_text()
+        steps = re.search(r'<ol class="ms-steps">(.*?)</ol>', source, re.S).group(1).count('<li>')
+        words = {2: 'two', 3: 'three', 4: 'four', 5: 'five'}
+        hints = re.findall(r'follow the (\w+) steps', source)
+        self.assertEqual([words[steps]], hints)
+
     def test_where_a_licence_is_missing_or_needed_the_page_links_to_where_it_is_bought(self):
         link = re.compile(r'<a href="{{ buy_url }}" target="_blank" rel="noopener">Get a licence for this '
                           r'(?:server|controller)</a>')
