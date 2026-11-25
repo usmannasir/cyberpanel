@@ -34,6 +34,18 @@ def get_Ubuntu_code_name():
 # Using shared function from install_utils
 FetchCloudLinuxAlmaVersionVersion = install_utils.FetchCloudLinuxAlmaVersionVersion
 
+def quiet_error_log(config):
+    """The server error log of an OpenLiteSpeed configuration at NOTICE, kept
+    14 days. The package's own configuration logs at DEBUG, which fills the
+    disk of a busy server. Other blocks and an explicit keepDays are kept."""
+    def rewrite(block):
+        text = re.sub(r'(?m)^(\s*logLevel\s+)DEBUG\s*$', r'\g<1>NOTICE', block.group(0))
+        if not re.search(r'(?m)^\s*keepDays\s', text):
+            text = text[:text.rindex('}')] + '  keepDays                14\n}'
+        return text
+    return re.sub(r'(?ms)^errorlog\s+\S+\s*\{.*?^\}', rewrite, config, count=1)
+
+
 class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
@@ -853,14 +865,10 @@ module cyberpanel_ols {
 
             data = open(self.server_root_path + "conf/httpd_config.conf", 'r').readlines()
 
+            kept = [items for items in data if not (items.find("map") > -1 and items.find("Example") > -1)]
+
             writeDataToFile = open(self.server_root_path + "conf/httpd_config.conf", 'w')
-
-            for items in data:
-                if items.find("map") > -1 and items.find("Example") > -1:
-                    continue
-                else:
-                    writeDataToFile.writelines(items)
-
+            writeDataToFile.write(quiet_error_log(''.join(kept)))
             writeDataToFile.close()
 
             InstallCyberPanel.stdOut("OpenLiteSpeed Configurations fixed!", 1)
