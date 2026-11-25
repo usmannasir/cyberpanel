@@ -4,6 +4,56 @@ All notable changes to CyberPanel are documented here. The canonical,
 continuously updated changelog also lives at
 https://cyberpanel.net/KnowledgeBase/home/change-logs/
 
+## v3.0.20 (build 20) — 2026-11-25
+
+Upgrades started from the panel (Version Management → Upgrade) finish like a
+command-line upgrade, stop when they hang, and say which steps did not
+complete.
+
+### Upgrade from the panel page
+- A page upgrade now installs the release's Python packages and its panel
+  server (lscpd), as the command-line upgrade does. x86 servers installed before
+  20 Oct 2026 and upgraded only from the page kept lscpd 0.3.1, which ends
+  large phpMyAdmin exports early; they get the current server with this
+  upgrade. Packages are installed only when the panel lacks one, and the
+  server binary is replaced only when it differs; the panel is restarted on
+  the new binary at once, and the previous one is put back if the panel does
+  not answer.
+- phpMyAdmin is no longer removed before its new copy is in place. An upgrade
+  that could not reach GitHub used to leave the panel without phpMyAdmin; it
+  now uses the copy in the release itself and replaces the installed one only
+  with a complete copy.
+- Steps that fail without stopping the upgrade are listed at the end of the
+  upgrade log, on the Version Management page and in the automatic-update
+  report, instead of a plain "upgrade completed".
+- A run that writes nothing for 30 minutes is stopped (4 hours at most), with
+  everything it started, and handled like a failed upgrade: the previous
+  installation is put back if it was already replaced, and the staging
+  directory is removed. After 5 minutes without output the page offers a
+  Stop button.
+- When GitHub cannot be reached, the upgrade asks three times and then says
+  so and that nothing was changed, instead of showing git's error; a download
+  that slows below 1 KB/s for a minute gives up instead of waiting forever.
+- An upgrade no longer refuses with "An unmanaged OLS process is also
+  running" when OpenLiteSpeed is restarted (for example by a panel action)
+  during the two seconds the upgrade's stop of OpenLiteSpeed takes, or when
+  processes of an earlier OpenLiteSpeed generation are still ending. The
+  upgrade stops the restarted instance once more, or waits for and ends the
+  earlier generation, as it already did while that generation's main process
+  was running.
+
+### Multi-Server Manager
+- An empty Managed servers list now says to follow the two steps of Add a
+  server (it still said four after 3.0.19).
+
+### When the changes apply
+- The page runs the upgrade code of the release it installs, so an upgrade to
+  3.0.20 from 3.0.9 or later already gets the packages, the panel server,
+  phpMyAdmin and the OpenLiteSpeed fixes. The time limit, the Stop button,
+  the GitHub message and the list of incomplete steps on the page and in the
+  automatic-update report belong to the installed panel and work from the
+  first upgrade after 3.0.20.
+
 ## v3.0.19 (build 19) — 2026-11-25
 
 Multi-Server Manager: connecting a server takes three steps.
