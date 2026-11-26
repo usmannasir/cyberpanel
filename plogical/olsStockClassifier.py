@@ -215,8 +215,14 @@ _STAMP = re.compile(r'^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d+ (\[[A-Z]+\]) (?:\[\d+
 # file. Such an error was there before the upgrade and cannot be caused by it.
 ABI_DIAGNOSTIC = 'incompatible OpenLiteSpeed core ABI'
 _SITE = re.compile(r'\[config:server:vhosts:vhost:([^\]:\s]+)')
+# Braces that do not pair up by the end of a website's file are reported for
+# the file as a whole, without a line number. The bracket after [PlainConf]
+# names the block that was still open ("[context:/]"), not the kind of file;
+# the kind of file is the rootTag at the end of the line.
 _SITE_FILE = re.compile(r'\[PlainConf\] \[virtualHostConfig:\] .* in (?:file )?(/[^\s:]+):[0-9]+\s*$'
-                        r'|Path for vhost config is invalid: (/\S+)\s*$')
+                        r'|Path for vhost config is invalid: (/\S+)\s*$'
+                        r"|\[PlainConf\] \[.*\] parseFile find '\{' and '\}' do not match "
+                        r'in the end of file (/[^\s,]+), rootTag virtualHostConfig\.?\s*$')
 
 
 def site_scope(line):
@@ -230,7 +236,7 @@ def site_scope(line):
     if not match:
         return None
     # A website's own file names the website, however the core words the error.
-    path = match.group(1) or match.group(2)
+    path = match.group(1) or match.group(2) or match.group(3)
     owner = re.search(r'/conf/vhosts/([^/]+)/[^/]+$', path)
     return 'website ' + owner.group(1) if owner else 'file ' + path
 

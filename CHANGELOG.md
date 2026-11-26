@@ -101,6 +101,21 @@ real exit statuses (scheduled jobs run as root) the fixes apply now.
 - Docker sites: a stopped Docker service is reported as "Docker service is
   not running", not as a failed check.
 
+Upgrade:
+
+- An upgrade no longer stops at the OpenLiteSpeed check because a website's
+  own `vhost.conf` leaves a block open at the end of the file
+  (`[PlainConf] [context:/] parseFile find '{' and '}' do not match in the end
+  of file .../vhosts/<website>/vhost.conf, rootTag virtualHostConfig.`; seen
+  with "Custom OLS configuration failed validation" from the terminal command
+  and "Upgrade exited with code 78 ... OpenLiteSpeed configuration validation
+  failed" from the panel page). OpenLiteSpeed runs with such a file and serves
+  every other website, so the upgrade now lists the files, says how to correct
+  them and continues, as it has done since 3.0.10 for a stray closing brace or
+  a PHP version that is no longer installed. The upgrade does not edit these
+  files. Still refused: the same message for the server's own configuration,
+  and a website that was clean when the upgrade began and has the error later.
+
 ## v3.0.20 (build 20) — 2026-11-25
 
 Upgrades started from the panel (Version Management → Upgrade) finish like a

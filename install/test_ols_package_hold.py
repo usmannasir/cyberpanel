@@ -255,6 +255,44 @@ if [ "$WAF_PACKAGE_STATUS" = "install ok installed" ] && ! grep -Fxq ols-modsecu
         self.assertNotIn('lsphp73', result.stdout)
         self.assert_no_apt()
 
+    # Reported on 26 Nov 2026 (domain changed): braces that do not pair up by the
+    # end of several websites' own files. Status 2, as OpenLiteSpeed 2.5.7 ends.
+    UNPAIRED_BRACES = '\n'.join(
+        "2026-11-26 09:48:53.707205 [ERROR] [312722] [PlainConf] [context:/] parseFile find '{' and '}' do not match "
+        "in the end of file /usr/local/lsws/conf/vhosts/%s/vhost.conf, rootTag virtualHostConfig." % website
+        for website in ('example.invalid', 'shop.example.invalid', 'blog.example.invalid', 'app.example.invalid'))
+    UNPAIRED_GLOBAL = ("2026-11-26 09:48:53.707205 [ERROR] [312722] [PlainConf] [context:/] parseFile find '{' and '}' "
+                       "do not match in the end of file /usr/local/lsws/conf/httpd_config.conf, rootTag httpServerConfig.")
+
+    def test_unpaired_braces_in_website_files_do_not_stop_a_custom_upgrade(self):
+        result = self.run_upgrade(VALIDATION_STATUS='2', VALIDATION_OUTPUT=self.UNPAIRED_BRACES)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn('failed validation', result.stdout)
+        self.assertIn('openlitespeed', self.holds.read_text())
+        self.assertIn('upgrade -y', self.events.read_text())
+
+    def test_unpaired_braces_in_website_files_do_not_stop_a_stock_upgrade(self):
+        self.stock_core()
+        result = self.run_upgrade(VALIDATION_STATUS='2',
+                                  VALIDATION_OUTPUT=self.SITE_ERRORS + '\n' + self.UNPAIRED_BRACES)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('upgrade -y', self.events.read_text())
+        self.assertEqual(self.holds.read_text(), 'other-package\n')
+
+    def test_unpaired_braces_in_the_server_configuration_stop_before_package_changes(self):
+        for stock in (False, True):
+            with self.subTest(stock=stock):
+                if stock:
+                    self.stock_core()
+                result = self.run_upgrade(VALIDATION_STATUS='2',
+                                          VALIDATION_OUTPUT=self.UNPAIRED_BRACES + '\n' + self.UNPAIRED_GLOBAL)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('no package changes attempted', result.stdout)
+                self.assertIn(self.UNPAIRED_GLOBAL, result.stdout)
+                # Only the error that must be corrected first is shown.
+                self.assertNotIn('example.invalid', result.stdout)
+                self.assert_no_apt()
+
     STANZA = '\nmodule cyberpanel_ols {\n  ls_enabled          1\n}\n'
 
     def stale_declaration(self):

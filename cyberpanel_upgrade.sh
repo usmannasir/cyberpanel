@@ -296,10 +296,14 @@ OLS_Blocking_Errors() {
   local site='\[config:server:vhosts:vhost:[^]:[:space:]]+'
   local file='\[PlainConf\] \[virtualHostConfig:\] .* in (file )?/[^[:space:]:]+:[0-9]+[[:space:]]*$'
   local missing='Path for vhost config is invalid: /[^[:space:]]+[[:space:]]*$'
+  # Braces that do not pair up by the end of a website's file: no line number,
+  # and the bracket after [PlainConf] names the block left open, e.g. [context:/].
+  local braces="\[PlainConf\] \[.*\] parseFile find '\{' and '\}' do not match in the end of file /[^[:space:],]+, rootTag virtualHostConfig\.?[[:space:]]*$"
   while IFS= read -r line; do
     if [[ "$line" == *'[FATAL]'* || "$line" == *'incompatible OpenLiteSpeed core ABI'* ]]; then
       printf '%s\n' "$line"
-    elif [[ "$line" == *'[ERROR]'* ]] && ! [[ "$line" =~ $site || "$line" =~ $file || "$line" =~ $missing ]]; then
+    elif [[ "$line" == *'[ERROR]'* ]] &&
+         ! [[ "$line" =~ $site || "$line" =~ $file || "$line" =~ $missing || "$line" =~ $braces ]]; then
       printf '%s\n' "$line"
     fi
   done <<< "$1"
@@ -370,8 +374,8 @@ if hint:
 # The checksum-verified OpenLiteSpeed state classifier
 # (plogical/olsStockClassifier.py), written to the path given.
 OLS_Classifier() {
-  local pin=37dcbc65702e1b3516fc48df05c9b8669d1cf29f93e696e97d5a152ab9681ca2
-  local blob=b1588d98fbda2e2c9f24ba9bc1ae859277d55a7b
+  local pin=ea61449efcba1a63823f7c67bbb2d7e10f9e8d3eaf428f575bd02faa438c30dc
+  local blob=a9fcc3f101792f5ee97e0c162880776e9136a363
   OLS_Pinned_Helper "$1" olsStockClassifier.py "$pin" \
       "https://api.github.com/repos/usmannasir/cyberpanel/git/blobs/$blob" ||
     OLS_Pinned_Helper "$1" olsStockClassifier.py "$pin" \

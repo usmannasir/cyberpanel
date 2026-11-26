@@ -3,6 +3,10 @@
 Reported on 21 Nov 2026: mail websites still pointed at PHP 7.3, which was no
 longer installed, and one website file had a stray closing brace. OpenLiteSpeed
 ran with both; the upgrade to 3.0.10 stopped at its configuration check.
+
+Reported on 26 Nov 2026: several website files left a block open (braces that
+do not pair up by the end of the file). OpenLiteSpeed words that differently
+and the upgrade to 3.0.21 stopped again, from the terminal and from the page.
 """
 import ast
 import os
@@ -24,6 +28,25 @@ REPORTED = [
     STAMP + "[PlainConf] [virtualHostConfig:] parseline found more '}' in "
             "/usr/local/lsws/conf/vhosts/caritasgumaca.com/vhost.conf:110",
 ]
+# Reported on 26 Nov 2026 (Ubuntu 22.04, upgrade to 3.0.21, terminal command and
+# panel page alike): braces that do not pair up by the end of a website's own
+# file. OpenLiteSpeed names the file but no line, and the bracket after
+# [PlainConf] names the block that was still open. The first line is the
+# reported one, with only the domain changed; the server had several such files.
+STAMP26 = '2026-11-26 09:48:53.707205 [ERROR] [312722] '
+UNPAIRED = [
+    STAMP26 + "[PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+              "/usr/local/lsws/conf/vhosts/example.invalid/vhost.conf, rootTag virtualHostConfig.",
+    STAMP26 + "[PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+              "/usr/local/lsws/conf/vhosts/shop.example.invalid/vhost.conf, rootTag virtualHostConfig.",
+    STAMP26 + "[PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+              "/usr/local/lsws/conf/vhosts/blog.example.invalid/vhost.conf, rootTag virtualHostConfig.",
+    STAMP26 + "[PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+              "/usr/local/lsws/conf/vhosts/app.example.invalid/vhost.conf, rootTag virtualHostConfig.",
+]
+# The same message for the server's own configuration is not a website's error.
+UNPAIRED_GLOBAL = (STAMP26 + "[PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+                             "/usr/local/lsws/conf/httpd_config.conf, rootTag httpServerConfig.")
 # (line, the one website it is confined to)
 VECTORS = [
     (REPORTED[0], 'website mail.eaglestccs.com'),
@@ -37,7 +60,31 @@ VECTORS = [
      'website a.com'),
     ("[ERROR] [PlainConf] [virtualHostConfig:] parseline found more '}' in /home/a.com/custom/vhost.conf:3",
      'file /home/a.com/custom/vhost.conf'),
+    (UNPAIRED[0], 'website example.invalid'),
+    (UNPAIRED[1], 'website shop.example.invalid'),
+    (UNPAIRED[2], 'website blog.example.invalid'),
+    (UNPAIRED[3], 'website app.example.invalid'),
+    # The block left open can be the file itself, a block of any name, or a pattern.
+    (STAMP + "[PlainConf] [virtualHostConfig:] parseFile find '{' and '}' do not match in the end of file "
+             "/usr/local/lsws/conf/vhosts/a.com/vhost.conf, rootTag virtualHostConfig.", 'website a.com'),
+    (STAMP + "[PlainConf] [context:exp:^/(a|b)[0-9]$] parseFile find '{' and '}' do not match in the end of file "
+             "/usr/local/lsws/conf/vhosts/a.com/vhost.conf, rootTag virtualHostConfig.", 'website a.com'),
+    ("[ERROR] [PlainConf] [rewrite:] parseFile find '{' and '}' do not match in the end of file "
+     "/home/a.com/custom/vhost.conf, rootTag virtualHostConfig.", 'file /home/a.com/custom/vhost.conf'),
     # Not confined to one website: these still stop an upgrade.
+    (UNPAIRED_GLOBAL, None),
+    (STAMP + "[PlainConf] [httpServerConfig:] parseFile find '{' and '}' do not match in the end of file "
+             "/usr/local/lsws/conf/httpd_config.conf, rootTag httpServerConfig.", None),
+    (STAMP + "[PlainConf] [listener:Default] parseFile find '{' and '}' do not match in the end of file "
+             "/usr/local/lsws/conf/httpd_config.conf, rootTag httpServerConfig.", None),
+    (STAMP + "[PlainConf] [adminConfig:] parseFile find '{' and '}' do not match in the end of file "
+             "/usr/local/lsws/admin/conf/admin_config.conf, rootTag adminConfig.", None),
+    (STAMP + "[PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+             "/usr/local/lsws/conf/templates/ccl.conf, rootTag virtualHostTemplate.", None),
+    ("[ERROR] [PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+     "relative/vhost.conf, rootTag virtualHostConfig.", None),
+    ("[ERROR] [PlainConf] [context:/] parseFile find '{' and '}' do not match in the end of file "
+     "/usr/local/lsws/conf/vhosts/a.com/vhost.conf, rootTag virtualHostConfig. [FATAL] stop", None),
     (STAMP + '[config:server:listener:SSL] failed to load the certificate', None),
     (STAMP + '[PlainConf] [adminConfig:] Not support [throttleenabled 1] in file /usr/local/lsws/admin/conf/admin_config.conf:3', None),
     (STAMP + "[PlainConf] [httpServerConfig:] parseline found more '}' in /usr/local/lsws/conf/httpd_config.conf:40", None),
@@ -83,6 +130,30 @@ class ClassifierTests(unittest.TestCase):
                                          'website mail.eaglestccs.com'])
         self.assertEqual(found['website mail.captainlabaguis.com'], REPORTED[1:3])
 
+    def test_braces_unpaired_at_the_end_of_website_files_stop_nothing(self):
+        output = '\n'.join(HARMLESS + UNPAIRED) + '\n'
+        self.assertEqual(classifier.blocking_errors(output), [])
+        found = classifier.site_errors(output)
+        self.assertEqual(sorted(found), ['website app.example.invalid', 'website blog.example.invalid',
+                                         'website example.invalid', 'website shop.example.invalid'])
+        self.assertEqual(found['website example.invalid'], UNPAIRED[:1])
+        # They account for the status OpenLiteSpeed ends with after any error.
+        self.assertFalse(classifier.status_refused(2, output))
+        # Beside the errors reported on 21 Nov they still stop nothing.
+        self.assertEqual(classifier.blocking_errors('\n'.join(REPORTED + UNPAIRED)), [])
+
+    def test_unpaired_braces_in_the_server_configuration_still_stop(self):
+        output = '\n'.join(HARMLESS + UNPAIRED + [UNPAIRED_GLOBAL]) + '\n'
+        self.assertEqual(classifier.blocking_errors(output), [UNPAIRED_GLOBAL])
+        self.assertNotIn('file /usr/local/lsws/conf/httpd_config.conf', classifier.site_errors(output))
+        self.assertTrue(classifier.status_refused(2, UNPAIRED_GLOBAL))
+
+    def test_a_website_that_was_clean_before_may_not_gain_unpaired_braces(self):
+        known = classifier.site_errors('\n'.join(UNPAIRED[:3]))
+        self.assertEqual(classifier.blocking_errors('\n'.join(UNPAIRED[:3]), known), [])
+        self.assertEqual(classifier.blocking_errors('\n'.join(UNPAIRED), known), UNPAIRED[3:])
+        self.assertEqual(classifier.blocking_errors(UNPAIRED[0], {}), UNPAIRED[:1])
+
     def test_everything_else_still_stops(self):
         output = '\n'.join(line for line, _ in VECTORS) + '\n'
         self.assertEqual(classifier.blocking_errors(output), [line for line, scope in VECTORS if scope is None])
@@ -111,7 +182,9 @@ class ClassifierTests(unittest.TestCase):
         function = source[source.index('OLS_Blocking_Errors() {'):source.index('\nOLS_Custom_Config_Test() (')]
         lines = [line for line, _ in VECTORS] + HARMLESS
         script = function + '\nOLS_Blocking_Errors "$2"\nOLS_Validation_Refused "$1" "$2"'
-        for output in ('\n'.join(lines), '\n'.join(REPORTED), '\n'.join(HARMLESS), '') + tuple(line for line, _ in VECTORS):
+        for output in ('\n'.join(lines), '\n'.join(REPORTED), '\n'.join(UNPAIRED), '\n'.join(UNPAIRED + [UNPAIRED_GLOBAL]),
+                       '\n'.join(HARMLESS), '') + tuple(
+                line for line, _ in VECTORS):
             for status in (0, 1, 2, 3, 78, 124, 139):
                 with self.subTest(status=status, output=output[:60]):
                     result = subprocess.run(['bash', '-c', script, 'bash', str(status), output],
@@ -157,6 +230,45 @@ class UpgraderTests(unittest.TestCase):
         self.assertIn('PHP version chosen for that website is not installed', notice)
         # Later checks of the same run accept the same websites again.
         self.assertIsNone(self.validate(str(self.binary)))
+
+    def test_the_server_reported_on_26_nov_is_upgraded_and_told_which_files_to_correct(self):
+        self.native(HARMLESS + UNPAIRED)  # status 2, as measured on OpenLiteSpeed 2.5.7
+        self.assertIsNone(self.validate(str(self.binary)))
+        notice = self.namespace['ols_site_error_notice']()
+        self.assertIn('4 website(s)', notice)
+        self.assertIn('the upgrade continues', notice)
+        for line in UNPAIRED:
+            self.assertIn(line, notice)
+        self.assertIn('This upgrade does not change that file', notice)
+        self.assertIn('vHost Conf', notice)
+        self.assertNotIn('lsphp', notice)
+        # Later checks of the same run (after the core is replaced, in a rollback) accept the same state.
+        self.assertIsNone(self.validate(str(self.binary)))
+
+    def test_a_missing_php_version_alone_gets_no_advice_about_braces(self):
+        self.native(HARMLESS + REPORTED[:3])
+        self.assertIsNone(self.validate(str(self.binary)))
+        notice = self.namespace['ols_site_error_notice']()
+        self.assertIn('PHP version chosen for that website is not installed', notice)
+        self.assertNotIn('vHost Conf', notice)
+
+    def test_unpaired_braces_that_appear_during_the_upgrade_are_refused(self):
+        self.native(HARMLESS + UNPAIRED[:3])
+        self.validate(str(self.binary))
+        self.native(HARMLESS + UNPAIRED)
+        with self.assertRaises(self.failure) as refusal:
+            self.validate(str(self.binary))
+        self.assertIn('validation failed', str(refusal.exception))
+        self.assertIn('app.example.invalid', str(refusal.exception))
+        self.assertNotIn('shop.example.invalid', str(refusal.exception))
+
+    def test_unpaired_braces_in_the_server_configuration_are_refused(self):
+        self.native(HARMLESS + UNPAIRED + [UNPAIRED_GLOBAL])
+        with self.assertRaises(self.failure) as refusal:
+            self.validate(str(self.binary))
+        self.assertIn('/usr/local/lsws/conf/httpd_config.conf, rootTag httpServerConfig.', str(refusal.exception))
+        self.assertNotIn('example.invalid', str(refusal.exception))
+        self.assertFalse(hasattr(self.validate, 'site_errors'))
 
     def test_a_clean_server_gets_no_notice(self):
         self.native(HARMLESS, 1)
