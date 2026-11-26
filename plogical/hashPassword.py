@@ -38,3 +38,13 @@ def generateToken(username, password):
     # compatibility wrapper for older callers while issuing a random key.
     from plogical.securityUtils import generate_api_token
     return generate_api_token()
+
+
+def needs_password_rehash(stored_hash):
+    """Return True when stored hash should be upgraded to current algorithm."""
+    stored_hash = (stored_hash or '').strip()
+    if not stored_hash:
+        return False
+    if stored_hash.startswith('$2'):
+        return False
+    return True
