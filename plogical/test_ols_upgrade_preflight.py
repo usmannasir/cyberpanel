@@ -236,6 +236,23 @@ class UpgradePreflightTests(unittest.TestCase):
                                          'validate_ols_configuration(OLS_BINARY_PATH, recorded)',
                                          'validate_ols_configuration(OLS_BINARY_PATH, recorded)'])
 
+    def test_rollback_restart_tolerates_only_a_website_that_gained_an_error(self):
+        # After the previous bundle is back, the check before the restart may be
+        # overruled for one reason only (OLSNewWebsiteFault), and the handler changes
+        # nothing: the start that follows is the one every outcome uses.
+        tree = ast.parse(Path(__file__).with_name('upgrade.py').read_text())
+        klass = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Upgrade')
+        method = next(n for n in klass.body if isinstance(n, ast.FunctionDef) and n.name == 'installCustomOLSBinaries')
+        tries = [n for n in ast.walk(method) if isinstance(n, ast.Try) and len(n.body) == 1
+                 and ast.unparse(n.body[0]) == 'validate_ols_configuration(OLS_BINARY_PATH, recorded)']
+        self.assertEqual(len(tries), 1)
+        self.assertEqual([ast.unparse(h.type) for h in tries[0].handlers], ['OLSNewWebsiteFault'])
+        self.assertFalse(tries[0].orelse or tries[0].finalbody)
+        # The handler only keeps the refusal's text for the notice printed after the start.
+        self.assertEqual([ast.unparse(n) for n in tries[0].handlers[0].body], ['website_fault = str(refusal)'])
+        fault = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'OLSNewWebsiteFault')
+        self.assertEqual([ast.unparse(base) for base in fault.bases], ['OLSUpgradeFailure'])  # still a refusal
+
     def test_new_bundle_validation_is_inside_rollback_before_start(self):
         tree=ast.parse(Path(__file__).with_name('upgrade.py').read_text())
         klass=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='Upgrade')

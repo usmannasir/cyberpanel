@@ -51,6 +51,18 @@ class OLSUpgradeFailure(RuntimeError):
     """The current OLS state or bundle failed validation or installation."""
 
 
+class OLSNewWebsiteFault(OLSUpgradeFailure):
+    """The configuration check was refused only for websites that gained an error during this run.
+
+    Every error line is confined to a website and the exit status is the one
+    such errors account for; the websites just had no error when the run
+    began. That stops the upgrade like any other refusal. OpenLiteSpeed
+    itself runs with such errors and serves every other website, which is all
+    the bundle transaction uses this for: it starts the previous bundle again
+    after putting it back, instead of leaving every website down.
+    """
+
+
 @contextmanager
 def ols_upgrade_lock(root='/usr/local/lsws'):
     """Serialize preflight and replacement with the standalone bundle installer."""
@@ -121,12 +133,17 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
         blocking = classifier.blocking_errors(output, known)
         refused = bool(blocking) or classifier.status_refused(result.returncode, output)
         found = classifier.site_errors(output)
+        # Refused only because websites that were clean when the run began have
+        # errors now: nothing else is wrong, in the lines or in the status.
+        websites_only = (known is not None and bool(blocking) and not classifier.blocking_errors(output)
+                         and not classifier.status_refused(result.returncode, output))
     except Exception:
         # Without the classifier every error stops the upgrade.
         blocking = [line for line in output.splitlines() if any(
             level in line for level in ('[ERROR]', '[FATAL]', 'incompatible OpenLiteSpeed core ABI'))]
         refused = bool(blocking) or result.returncode not in (0, 1)
         found = {}
+        websites_only = False
 
     def accepted(value):
         if known is None:
@@ -177,8 +194,9 @@ def validate_ols_configuration(binary='/usr/local/lsws/bin/openlitespeed', split
                         'Then run bash %s %s and retry the upgrade.') % (wrapper, checksum, wrapper, mode)
         except Exception:
             pass  # Diagnostic helpers must never waive the original failure.
-        raise OLSUpgradeFailure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: '
-                                + ('\n'.join(blocking) or output)[-2000:] + hint)
+        failure = OLSNewWebsiteFault if websites_only else OLSUpgradeFailure
+        raise failure('OpenLiteSpeed configuration validation failed; resolve the errors before restarting: '
+                      + ('\n'.join(blocking) or output)[-2000:] + hint)
     return accepted(None)
 
 
@@ -1676,8 +1694,22 @@ class Upgrade:
                         if initial_state and stopped and not service.state():
                             # A restored vendor core is restarted only in the exact
                             # state recorded before the repair began.
-                            validate_ols_configuration(OLS_BINARY_PATH, recorded)
+                            website_fault = None
+                            try:
+                                validate_ols_configuration(OLS_BINARY_PATH, recorded)
+                            except OLSNewWebsiteFault as refusal:
+                                # The bundle on disk is the one that ran before, byte for
+                                # byte (verify_originals), and the only thing wrong is in
+                                # websites whose own configuration gained an error while
+                                # the server was stopped. OpenLiteSpeed runs with that and
+                                # serves every other website; staying down would not.
+                                website_fault = str(refusal)
                             service.change('start', None)
+                            if website_fault:
+                                Upgrade.stdOut('The previous OpenLiteSpeed bundle is back in place, unchanged, and '
+                                               'OpenLiteSpeed runs again. The upgrade stops because the '
+                                               'configuration of a website gained an error while it ran; correct '
+                                               'that website, then run the upgrade again: %s' % website_fault, 0)
                     except Exception as rollback_error:
                         Upgrade.stdOut('ERROR: OLS rollback requires attention: %s; backup: %s' %
                                       (rollback_error, backup_dir), 0)

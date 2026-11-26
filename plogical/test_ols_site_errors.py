@@ -200,14 +200,15 @@ class UpgraderTests(unittest.TestCase):
 
     def setUp(self):
         path = HERE / 'upgrade.py'
-        wanted = {'OLSUpgradeFailure', 'load_ols_diagnostic_helper', 'validate_ols_configuration',
-                  'ols_site_error_notice'}
+        wanted = {'OLSUpgradeFailure', 'OLSNewWebsiteFault', 'load_ols_diagnostic_helper',
+                  'validate_ols_configuration', 'ols_site_error_notice'}
         nodes = [node for node in ast.parse(path.read_text()).body if getattr(node, 'name', '') in wanted]
         self.assertEqual(len(nodes), len(wanted))
         self.namespace = {'__file__': str(path), 'os': os}
         exec(compile(ast.Module(body=nodes, type_ignores=[]), str(path), 'exec'), self.namespace)
         self.validate = self.namespace['validate_ols_configuration']
         self.failure = self.namespace['OLSUpgradeFailure']
+        self.website_fault = self.namespace['OLSNewWebsiteFault']
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.binary = Path(self.temporary.name) / 'bin/openlitespeed'
@@ -310,6 +311,76 @@ class UpgraderTests(unittest.TestCase):
             self.validate(str(self.binary))
         self.assertIn(listener, str(refusal.exception))
         self.assertNotIn('lsphp73', str(refusal.exception))
+
+    # A refusal that is only about websites which gained an error during the run is
+    # told apart from every other refusal: the bundle transaction starts the previous
+    # bundle again after such a refusal instead of leaving every website down. It
+    # remains a refusal of the upgrade.
+    NEW_SITE = '[ERROR] [config:server:vhosts:vhost:shop.example.com] missing docRoot'
+
+    def test_a_website_that_gains_an_error_during_the_run_is_refused_as_a_website_fault(self):
+        for before, later in ((HARMLESS, [UNPAIRED[3]]), (HARMLESS + UNPAIRED[:3], UNPAIRED),
+                              (REPORTED, REPORTED + [self.NEW_SITE]), (REPORTED, [self.NEW_SITE])):
+            with self.subTest(later=later[-1][-60:]):
+                validate = self.fresh_validator()
+                self.native(before, 2 if before is not HARMLESS else 1)
+                validate(str(self.binary))
+                self.native(later)
+                with self.assertRaises(self.website_fault) as refusal:
+                    validate(str(self.binary))
+                self.assertIsInstance(refusal.exception, self.failure)  # still stops the upgrade
+                self.assertIn('validation failed', str(refusal.exception))
+                self.assertIn(later[-1], str(refusal.exception))
+
+    def test_anything_beyond_new_website_errors_is_not_a_website_fault(self):
+        listener = STAMP + '[config:server:listener:SSL] failed to load the certificate'
+        module = STAMP + ('Failed to load module [missing], error: /usr/local/lsws//modules/missing.so: '
+                          'cannot open shared object file: No such file or directory')
+        for later, status in (([listener], 2), ([self.NEW_SITE, listener], 2), ([self.NEW_SITE, module], 2),
+                              ([self.NEW_SITE, UNPAIRED_GLOBAL], 2), ([self.NEW_SITE, '[FATAL] cannot continue'], 2),
+                              ([self.NEW_SITE], 3), ([self.NEW_SITE], 139)):
+            with self.subTest(later=later[-1][-60:], status=status):
+                validate = self.fresh_validator()
+                self.native(REPORTED)
+                validate(str(self.binary))
+                self.native(REPORTED + later, status)
+                with self.assertRaises(self.failure) as refusal:
+                    validate(str(self.binary))
+                self.assertNotIsInstance(refusal.exception, self.website_fault)
+
+    def test_the_first_check_of_a_run_never_reports_a_website_fault(self):
+        # Without a record of the websites that had errors before, nothing is "new".
+        listener = STAMP + '[config:server:listener:SSL] failed to load the certificate'
+        for lines, status in ((REPORTED + [listener], 2), (REPORTED, 3)):
+            with self.subTest(status=status):
+                self.native(lines, status)
+                with self.assertRaises(self.failure) as refusal:
+                    self.fresh_validator()(str(self.binary))
+                self.assertNotIsInstance(refusal.exception, self.website_fault)
+
+    def test_without_the_classifier_no_refusal_is_a_website_fault(self):
+        validate = self.fresh_validator()
+        self.native(HARMLESS, 1)
+        validate(str(self.binary))
+        real = self.namespace['load_ols_diagnostic_helper']
+
+        def broken(name):
+            if name == 'olsStockClassifier.py':
+                raise SyntaxError('broken helper')
+            return real(name)
+        validate.__globals__['load_ols_diagnostic_helper'] = broken
+        self.native([self.NEW_SITE])
+        with self.assertRaises(self.failure) as refusal:
+            validate(str(self.binary))
+        self.assertNotIsInstance(refusal.exception, self.website_fault)
+
+    def fresh_validator(self):
+        """The check as a new run has it: no record yet of which websites had errors."""
+        fresh = dict(self.namespace)
+        exec(compile(ast.Module(body=[node for node in ast.parse((HERE / 'upgrade.py').read_text()).body
+                                      if getattr(node, 'name', '') == 'validate_ols_configuration'],
+                                type_ignores=[]), 'upgrade.py', 'exec'), fresh)
+        return fresh['validate_ols_configuration']
 
     def test_without_the_classifier_every_error_stops_the_upgrade(self):
         real = self.namespace['load_ols_diagnostic_helper']
