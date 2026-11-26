@@ -115,6 +115,15 @@ Upgrade:
   a PHP version that is no longer installed. The upgrade does not edit these
   files. Still refused: the same message for the server's own configuration,
   and a website that was clean when the upgrade began and has the error later.
+- A website whose configuration gains an error in the seconds while the
+  upgrade has OpenLiteSpeed stopped to replace its files no longer leaves
+  every website down. The upgrade is refused as before ("Upgrade exited with
+  code 78") and the previous OpenLiteSpeed files are put back unchanged; they
+  are now started again as well. Before, the check ahead of that start refused
+  the new error too ("OLS rollback requires attention") and OpenLiteSpeed
+  stayed stopped until the watchdog or an administrator started it. Any other
+  new error (the server's own configuration, a failed configuration test)
+  keeps the server stopped as before.
 
 Also fixed:
 

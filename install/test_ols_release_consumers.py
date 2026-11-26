@@ -35,6 +35,15 @@ def load_modsec():
     return namespace['modSec']
 
 
+def load_classifier():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('release_consumers_classifier',
+                                                  str(ROOT / 'plogical' / 'olsStockClassifier.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class ReleaseConsumerTests(unittest.TestCase):
     def test_every_installer_and_modsecurity_action_selects_the_same_artifacts(self):
         install = binary_configs(ROOT / 'install/installCyberPanel.py', 'InstallCyberPanel')
@@ -193,10 +202,29 @@ class BundleFixture:
     ABI = ('[cyberpanel_ols] Module v2.7.7 DISABLED: incompatible OpenLiteSpeed '
            'core ABI (expected CyberPanel OLS 2.5.2)')
 
+    # What the configuration test reports once somebody changed a file while the
+    # web server was stopped for the transaction: (exit status, lines).
+    WEBSITE_FAULT = ("2026-11-26 12:05:48.017291 [ERROR] [280588] [PlainConf] [context:/added-during-upgrade/] "
+                     "parseFile find '{' and '}' do not match in the end of file "
+                     "/usr/local/lsws/conf/vhosts/late.example.invalid/vhost.conf, rootTag virtualHostConfig.")
+    SERVER_FAULT = ('2026-11-26 11:28:49.699206 [ERROR] [152640] Failed to load module [missing], error: '
+                    '/usr/local/lsws//modules/missing.so: cannot open shared object file: No such file or directory')
+    KNOWN_WEBSITE = ('2026-11-26 11:15:30.492192 [ERROR] [104862] [config:server:vhosts:vhost:old.example.invalid'
+                     ':epsr:old1.655340] invalid path - /usr/local/lsws/lsphp73/bin/lsphp, it cannot be started '
+                     'by Web server!')
+    LATE_FAULTS = {
+        'website-fault-while-stopped': (2, [WEBSITE_FAULT]),
+        'server-fault-while-stopped': (2, [SERVER_FAULT]),
+        'website-and-server-fault-while-stopped': (2, [WEBSITE_FAULT, SERVER_FAULT]),
+        'website-fault-and-failed-test-while-stopped': (139, [WEBSITE_FAULT]),
+    }
+
     def __init__(self, directory, source, class_name, failure=None, module=True, waf=True, platform='ubuntu',
-                 split=False):
+                 split=False, known_website=False):
         self.root = Path(directory)
         self.failure = failure
+        # known_website: one website had an error of its own before the upgrade began.
+        self.known_website = known_website
         # split: a package update left a vendor core (old-core) beside our module.
         self.split = split
         self.drift = False
@@ -384,7 +412,10 @@ class BundleFixture:
                          subprocess=SimpleNamespace(run=self.run, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
                          time=SimpleNamespace(sleep=lambda seconds: None), logging=mock.Mock(),
                          OLSUpgradeFailure=RuntimeError,
+                         OLSNewWebsiteFault=type('OLSNewWebsiteFault', (RuntimeError,), {}),
                          load_ols_diagnostic_helper=lambda name: SimpleNamespace(
+                             # The real rules for faults that appear during a transaction.
+                             **(self.classifier_rules() if failure in self.LATE_FAULTS or known_website else {}),
                              validate=lambda binary: self.run([binary, '-t']), OLSService=FixtureService,
                              split_state=split_state, SplitStateRefused=SplitStateRefused,
                              jammy_platform=lambda: platform == 'ubuntu22', RecoveryPolicy=FixturePolicy,
@@ -398,7 +429,9 @@ class BundleFixture:
         exec(compile(ast.fix_missing_locations(ast.Module(body=helpers + [cls], type_ignores=[])),
                      str(source), 'exec'), namespace)
         target_class = namespace[class_name]
-        target_class.stdOut = staticmethod(mock.Mock())
+        self.said = mock.Mock()
+        target_class.stdOut = staticmethod(self.said)
+        self.validate = namespace.get('validate_ols_configuration')
         target = target_class() if class_name == 'InstallCyberPanel' else target_class
         target.detectArchitecture = lambda: True
         target.detectPlatform = lambda: platform
@@ -421,6 +454,11 @@ class BundleFixture:
         target.verifyChecksum = lambda path, published: verify(path, fixture_digests[published])
         self.call = target.installCustomOLSBinaries
         self.rollback = getattr(target, 'rollbackOLSBinary', None)
+
+    @staticmethod
+    def classifier_rules():
+        classifier = load_classifier()
+        return {name: getattr(classifier, name) for name in ('blocking_errors', 'status_refused', 'site_errors')}
 
     def path(self, path):
         path = Path(path)
@@ -479,6 +517,13 @@ class BundleFixture:
             code, stdout = 1, self.ABI
             if self.drift and not self.active:
                 code, stdout = 2, self.ABI + '\n[ERROR] fault that was not there before the repair'
+        elif args[-1] == '-t' and (self.failure in self.LATE_FAULTS or self.known_website):
+            lines = [self.KNOWN_WEBSITE] if self.known_website else []
+            code = 2 if lines else 0
+            if self.failure in self.LATE_FAULTS and not self.active:
+                code = self.LATE_FAULTS[self.failure][0]
+                lines = lines + self.LATE_FAULTS[self.failure][1]
+            stdout = '\n'.join(lines)
         elif args[-1] == '-t':
             code = 2 if self.failure == 'config' and self.path(self.core).read_bytes() == b'new-core' else 0
             stdout = '[ERROR] injected candidate configuration failure' if code else ''
@@ -523,6 +568,65 @@ class BundleTransactionTests(unittest.TestCase):
             self.assertEqual(fixture.bundle(), fixture.old)
             self.assertTrue(fixture.active)
             self.assertEqual(fixture.start_bundles, [fixture.old])
+
+    # 26 Nov 2026: a website's own file gained an unclosed block while the web server was
+    # stopped for the bundle transaction. The upgrade was refused and the previous bundle
+    # put back, as it must be; but the check before the restart refused that same new
+    # error, so OpenLiteSpeed stayed down for every website until a watchdog started it.
+    def test_upgrade_restarts_the_restored_bundle_when_only_a_website_gained_a_fault(self):
+        for known in (False, True):
+            with self.subTest(known_website=known), tempfile.TemporaryDirectory() as directory:
+                fixture = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade',
+                                        failure='website-fault-while-stopped', known_website=known)
+                self.assertFalse(fixture.call())                       # the upgrade is still refused
+                self.assertEqual(fixture.bundle(), fixture.old)        # previous bytes, every file
+                self.assertTrue(fixture.active)                        # and the web server runs again
+                self.assertEqual(fixture.active_bytes, b'old-core')
+                self.assertEqual(fixture.start_bundles, [fixture.old])  # started once, from the old bundle only
+                said = '\n'.join(str(call.args[0]) for call in fixture.said.call_args_list)
+                self.assertIn('restoring the previous OLS bundle', said)
+                self.assertIn('OpenLiteSpeed runs again', said)
+                self.assertIn('late.example.invalid', said)
+                self.assertNotIn('rollback requires attention', said)
+                if known:
+                    self.assertNotIn('old.example.invalid', said.split('OpenLiteSpeed runs again')[1])
+
+    def test_upgrade_keeps_the_restored_bundle_stopped_for_any_other_new_fault(self):
+        for failure in ('server-fault-while-stopped', 'website-and-server-fault-while-stopped',
+                        'website-fault-and-failed-test-while-stopped'):
+            for known in (False, True):
+                with self.subTest(failure=failure, known_website=known), tempfile.TemporaryDirectory() as directory:
+                    fixture = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade',
+                                            failure=failure, known_website=known)
+                    self.assertFalse(fixture.call())
+                    self.assertEqual(fixture.bundle(), fixture.old)
+                    self.assertFalse(fixture.active)
+                    self.assertEqual(fixture.start_bundles, [])
+                    said = '\n'.join(str(call.args[0]) for call in fixture.said.call_args_list)
+                    self.assertIn('rollback requires attention', said)
+                    self.assertNotIn('OpenLiteSpeed runs again', said)
+
+    def test_a_website_fault_before_the_stop_changes_nothing_and_stops_nothing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = BundleFixture(directory, ROOT / 'plogical/upgrade.py', 'Upgrade',
+                                    failure='website-fault-while-stopped')
+            # The same fault, but already there at the check before the stop.
+            real_run = fixture.run
+
+            def run(args, **kwargs):
+                if args[-1] == '-t' and fixture.active and fixture.checks:
+                    return SimpleNamespace(returncode=2, stdout=fixture.WEBSITE_FAULT, stderr='')
+                if args[-1] == '-t':
+                    fixture.checks += 1
+                return real_run(args, **kwargs)
+            fixture.checks = 0
+            fixture.run = run
+            # A first check of the run records that no website had an error.
+            fixture.validate('/usr/local/lsws/bin/openlitespeed')
+            self.assertFalse(fixture.call())
+            self.assertEqual(fixture.bundle(), fixture.old)
+            self.assertTrue(fixture.active)
+            self.assertFalse(any(args[-1] in ('stop', 'start') for args in fixture.commands))
 
     consumers = [('install/installCyberPanel.py', 'InstallCyberPanel'),
                  ('plogical/upgrade.py', 'Upgrade')]
