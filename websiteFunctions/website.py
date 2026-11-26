@@ -47,7 +47,8 @@ from plogical.systemPassword import (
 )
 from plogical.securityUtils import generate_api_token
 from managePHP.phpManager import PHPManager
-from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name, normalized_php_selection, php_selection_digits
+from managePHP.phpConfig import existing_fpm_pool_name, fpm_pool_name, normalized_php_selection, php_selection_digits, \
+    require_installed_php
 from ApachController.ApacheVhosts import ApacheVhost
 from ApachController.ApacheController import ApacheController
 from plogical.vhostConfs import vhostConfs
@@ -2349,7 +2350,7 @@ Require valid-user
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def submitWebsiteCreation(self, userID=None, data=None, conversionPreflight=None):
+    def submitWebsiteCreation(self, userID=None, data=None, conversionPreflight=None, installedPHPOnly=False):
         try:
             entitlement_error = apache_backend_entitlement_error(data)
             if entitlement_error is not None:
@@ -2367,6 +2368,9 @@ Require valid-user
             # Exactly 'PHP x.y': the selection is stored with the website and
             # becomes part of its configuration, paths and command lines.
             php_selection_digits(phpSelection)
+            if installedPHPOnly and not normalize_apache_backend(data.get('apacheBackend', 0)):
+                # A page request: only a version the page offers.
+                require_installed_php(phpSelection)
             packageName = data['package']
             websiteOwner = data['websiteOwner'].lower()
 
@@ -2500,7 +2504,7 @@ Require valid-user
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def submitDomainCreation(self, userID=None, data=None):
+    def submitDomainCreation(self, userID=None, data=None, installedPHPOnly=False):
         try:
             entitlement_error = apache_backend_entitlement_error(data)
             if entitlement_error is not None:
@@ -2548,6 +2552,10 @@ Require valid-user
                     return first_setup_error
 
             php_selection_digits(phpSelection)
+            if installedPHPOnly and alias == 0 and not normalize_apache_backend(data.get('apacheBackend', 0)):
+                # A page request: only a version the page offers. An alias
+                # keeps its master's version.
+                require_installed_php(phpSelection)
 
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 

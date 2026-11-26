@@ -26,7 +26,7 @@ from plogical.ftpUtilities import FTPUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.backupSchedule import backupSchedule
-from managePHP.phpConfig import normalized_php_selection
+from managePHP.phpConfig import normalized_php_selection, require_installed_php
 from plogical.dnsRecordContent import record_priority, srv_record_content, mx_record_content
 
 # All that we see or seem is but a dream within a dream.
@@ -53,6 +53,7 @@ class cyberPanel:
             from random import randint
             externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:5].lower() + str(randint(1000, 9999))
             phpSelection = normalized_php_selection(php)
+            require_installed_php(phpSelection)
 
             try:
                 counter = 0
@@ -82,6 +83,7 @@ class cyberPanel:
 
             complete_path = '/home/' + masterDomain + '/' + path
             phpSelection = normalized_php_selection(php)
+            require_installed_php(phpSelection)
 
             result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, complete_path, ssl, dkim, openBasedir, owner, 0)
 

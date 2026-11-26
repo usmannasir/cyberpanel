@@ -1,8 +1,11 @@
 """The one check of a PHP selection, and the names that are built from its digits."""
+import os
+from pathlib import Path
+import tempfile
 import unittest
 
 from managePHP.phpConfig import (fpm_service_for_selection, normalized_php_selection, php_selection_digits,
-                                  stored_php_selection)
+                                  require_installed_php, stored_php_selection)
 
 # Every version a page or an installer of the panel offers, and a two-digit
 # minor number as findPHPVersions would report it for /usr/local/lsws/lsphp810.
@@ -101,6 +104,79 @@ class StoredSelectionTests(unittest.TestCase):
         # The worker refuses it for that one website; the caller's loop goes on.
         for value in ('PHP seven', '', None, 'PHP 8.3; x'):
             self.assertIs(value, stored_php_selection(value))
+
+
+def lsphp_root(testcase, installed=(), extensions_only=()):
+    """A LiteSpeed root in a temporary folder: complete versions and versions with only extension packages.
+
+    A version with only extension packages is what the installer left on
+    AlmaLinux 10 for PHP 8.6: lsphp86 with php-config and the extension
+    folders, without lsphp and php.
+    """
+    folder = tempfile.TemporaryDirectory()
+    testcase.addCleanup(folder.cleanup)
+    root = Path(folder.name)
+    for digits in installed:
+        for name in ('lsphp', 'php', 'php-config'):
+            program = root / ('lsphp' + digits) / 'bin' / name
+            program.parent.mkdir(parents=True, exist_ok=True)
+            program.write_text('#!/bin/sh\n')
+            program.chmod(0o755)
+    for digits in extensions_only:
+        (root / ('lsphp' + digits) / 'etc' / 'php.d').mkdir(parents=True)
+        program = root / ('lsphp' + digits) / 'bin' / 'php-config'
+        program.parent.mkdir(parents=True, exist_ok=True)
+        program.write_text('#!/bin/sh\n')
+        program.chmod(0o755)
+    return str(root)
+
+
+class InstalledPHPTests(unittest.TestCase):
+    def test_an_installed_version_passes(self):
+        root = lsphp_root(self, installed=('83', '85', '810'))
+        for selection in ('PHP 8.3', 'PHP 8.5', 'PHP 8.10'):
+            with self.subTest(selection=selection):
+                self.assertIsNone(require_installed_php(selection, server_root=root))
+
+    def test_a_version_with_only_extension_packages_is_refused(self):
+        root = lsphp_root(self, installed=('85',), extensions_only=('86',))
+        with self.assertRaisesRegex(ValueError, r'^PHP 8\.6 is not installed on this server\.$'):
+            require_installed_php('PHP 8.6', server_root=root)
+
+    def test_a_version_without_its_folder_is_refused(self):
+        root = lsphp_root(self, installed=('85',))
+        for selection in ('PHP 7.4', 'PHP 8.4', 'PHP 8.1'):
+            with self.subTest(selection=selection):
+                with self.assertRaisesRegex(ValueError, 'is not installed on this server'):
+                    require_installed_php(selection, server_root=root)
+
+    def test_php_without_lsphp_is_not_enough(self):
+        # The web server starts lsphp; a command-line php alone runs no website.
+        root = lsphp_root(self, installed=('84',))
+        os.remove(os.path.join(root, 'lsphp84', 'bin', 'lsphp'))
+        with self.assertRaisesRegex(ValueError, 'PHP 8.4 is not installed'):
+            require_installed_php('PHP 8.4', server_root=root)
+
+    def test_an_lsphp_that_cannot_run_is_refused(self):
+        root = lsphp_root(self, installed=('84', '83'))
+        os.chmod(os.path.join(root, 'lsphp84', 'bin', 'lsphp'), 0o644)
+        program = os.path.join(root, 'lsphp83', 'bin', 'lsphp')
+        os.remove(program)
+        os.mkdir(program)
+        for selection in ('PHP 8.4', 'PHP 8.3'):
+            with self.subTest(selection=selection):
+                with self.assertRaisesRegex(ValueError, 'is not installed on this server'):
+                    require_installed_php(selection, server_root=root)
+
+    def test_text_that_is_no_selection_is_refused_as_before(self):
+        root = lsphp_root(self, installed=('83',))
+        for value in NOT_A_SELECTION:
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, 'Invalid PHP version'):
+                    require_installed_php(value, server_root=root)
+
+    def test_the_default_root_is_the_web_servers(self):
+        self.assertEqual('/usr/local/lsws', require_installed_php.__defaults__[0])
 
 
 if __name__ == '__main__':
