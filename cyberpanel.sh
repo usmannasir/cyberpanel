@@ -461,6 +461,18 @@ install_dev_tools() {
     esac
 }
 
+# The LiteSpeed PHP versions that are installed: an lsphpNN folder with its
+# php program, printed as NN. A folder alone is not a version: extension
+# packages make one without PHP itself.
+installed_lsphp_versions() {
+    local lsws_root="${LSWS_ROOT:-/usr/local/lsws}"
+    local php_dir
+    for php_dir in "$lsws_root"/lsphp[0-9][0-9] ; do
+        [[ -x "$php_dir/bin/php" ]] && printf '%s\n' "${php_dir##*/lsphp}"
+    done
+    return 0
+}
+
 # Helper Function for PHP Package Installation
 install_php_packages() {
     local php_extension="$1"
@@ -2673,7 +2685,13 @@ cd timezonedb-*  || exit
 if [[ "$Server_OS" = "Ubuntu" ]] ; then
   install_package "libmagickwand-dev pkg-config build-essential lsphp*-dev"
 else
-  install_package "lsphp??-mysqlnd lsphp??-devel make gcc glibc-devel libmemcached-devel zlib-devel"
+  install_package "make gcc glibc-devel libmemcached-devel zlib-devel"
+  # Only for the PHP versions installed above. A wildcard such as
+  # lsphp??-devel names every version in the repository: on AlmaLinux 10 it
+  # brought lsphp86-devel and lsphp86-mysqlnd without PHP 8.6 itself.
+  for PHP_Version in $(installed_lsphp_versions) ; do
+    install_package "lsphp${PHP_Version}-mysqlnd lsphp${PHP_Version}-devel"
+  done
   yum remove -y lsphp??-mysql
 fi
 

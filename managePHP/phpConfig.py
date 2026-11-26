@@ -1,4 +1,5 @@
 import hashlib
+import os
 import re
 
 
@@ -59,6 +60,22 @@ def stored_php_selection(value):
         return normalized_php_selection(value)
     except ValueError:
         return value
+
+
+def require_installed_php(selection, server_root='/usr/local/lsws'):
+    """Refuse, with ValueError, a selection whose LiteSpeed PHP is not installed.
+
+    For a version a person chose for a new website or child domain on a page
+    of the panel or on the command line; the pages offer only these versions
+    (PHPManager.findPHPVersions). A version is installed when the program the
+    web server starts for the website is there: lsphp83/bin/lsphp for
+    'PHP 8.3'. The directory alone says nothing: on AlmaLinux 10 the
+    installer's extension packages made lsphp86 without PHP 8.6 itself.
+    """
+    major, minor = php_selection_digits(selection)
+    program = os.path.join(server_root, 'lsphp%s%s' % (major, minor), 'bin', 'lsphp')
+    if not (os.path.isfile(program) and os.access(program, os.X_OK)):
+        raise ValueError('%s is not installed on this server.' % selection)
 
 
 def fpm_service_for_selection(selection, rpm_family):

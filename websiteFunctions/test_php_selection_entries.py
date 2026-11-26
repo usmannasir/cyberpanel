@@ -1,5 +1,8 @@
 """Every request that names a PHP version is refused unless it is exactly one of the panel's selections."""
+import ast
 import json
+from pathlib import Path
+import posixpath
 import shlex
 import sys
 from types import SimpleNamespace
@@ -9,6 +12,8 @@ from unittest import mock
 from managePHP.test_php_selection import NOT_A_SELECTION, OFFERED, OLDER_SPELLINGS
 from websiteFunctions.test_apache_entitlements import child_data, website_data
 from websiteFunctions.test_wordpress_entitlements import Response, load_wordpress_manager
+
+ROOT = Path(__file__).resolve().parents[1]
 
 # What a request body can carry; bytes cannot arrive in JSON.
 REFUSED = tuple(value for value in NOT_A_SELECTION if not isinstance(value, bytes))
@@ -222,6 +227,80 @@ class PHPSelectionEntryTests(unittest.TestCase):
         self.assertEqual(0, payload['createWebSiteStatus'])
         self.assertIn('Invalid PHP version selected.', payload['error_message'])
         self.assertEqual([], self.worker_commands())
+
+    def installed_versions(self, *digits):
+        """Make the mocked file system hold LiteSpeed PHP for these versions only."""
+        programs = {'/usr/local/lsws/lsphp%s/bin/lsphp' % version for version in digits}
+        self.services['os'].path.join.side_effect = posixpath.join
+        self.services['os'].path.isfile.side_effect = lambda path: path in programs
+        self.services['os'].access.return_value = True
+
+    def page_requests(self):
+        manager = self.manager
+        return (
+            ('submitWebsiteCreation', lambda php, **extra: manager().submitWebsiteCreation(
+                7, dict(website_data(), phpSelection=php, **extra), installedPHPOnly=True)),
+            ('submitDomainCreation', lambda php, **extra: manager().submitDomainCreation(
+                7, dict(child_data(), phpSelection=php, **extra), installedPHPOnly=True)),
+        )
+
+    def test_a_page_request_for_a_version_that_is_not_installed_is_refused(self):
+        # PHP 8.6 as AlmaLinux 10 had it: extension packages, no lsphp.
+        self.installed_versions('83', '85')
+        for name, call in self.page_requests():
+            for selection in ('PHP 8.6', 'PHP 7.4'):
+                with self.subTest(entry=name, selection=selection):
+                    self.process.reset_mock()
+                    payload = json.loads(call(selection).content)
+                    self.assertEqual(0, payload['status'], payload)
+                    self.assertEqual(0, payload['createWebSiteStatus'], payload)
+                    self.assertEqual('%s is not installed on this server.' % selection, payload['error_message'])
+                    self.assertEqual([], self.worker_commands())
+                    self.services['os'].path.isfile.assert_any_call(
+                        '/usr/local/lsws/lsphp%s/bin/lsphp' % selection[4:].replace('.', ''))
+
+    def test_a_page_request_for_an_installed_version_reaches_the_worker(self):
+        self.installed_versions('83', '85')
+        for name, call in self.page_requests():
+            for selection in ('PHP 8.3', 'PHP 8.5'):
+                with self.subTest(entry=name, selection=selection):
+                    self.process.reset_mock()
+                    payload = json.loads(call(selection).content)
+                    self.assertEqual(1, payload['status'], payload)
+                    self.assertEqual(selection, self.php_word())
+
+    def test_other_callers_keep_their_version_as_before(self):
+        # The panel's own flows (hostname SSL with PHP 8.0, Docker sites with
+        # PHP 8.1), restores and the cloud API name versions themselves; they
+        # are not checked here.
+        self.installed_versions('83')
+        for call in (lambda: self.manager().submitWebsiteCreation(7, dict(website_data(), phpSelection='PHP 8.0')),
+                     lambda: self.manager().submitDomainCreation(7, dict(child_data(), phpSelection='PHP 8.0'))):
+            self.process.reset_mock()
+            payload = json.loads(call().content)
+            self.assertEqual(1, payload['status'], payload)
+            self.assertEqual('PHP 8.0', self.php_word())
+
+    def test_an_alias_from_a_page_keeps_its_masters_version(self):
+        self.installed_versions('83')
+        self.existing_site()
+        self.site.phpSelection = 'PHP 7.4'
+        payload = json.loads(self.manager().submitDomainCreation(
+            7, dict(child_data(), domainName='alias.example', alias=1), installedPHPOnly=True).content)
+        self.assertEqual(1, payload['status'], payload)
+        self.assertEqual('PHP 7.4', self.php_word())
+
+    def test_the_pages_of_the_panel_ask_for_the_check(self):
+        tree = ast.parse((ROOT / 'websiteFunctions/views.py').read_text())
+        for view, method in (('submitWebsiteCreation', 'submitWebsiteCreation'),
+                             ('submitDomainCreation', 'submitDomainCreation')):
+            with self.subTest(view=view):
+                function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == view)
+                calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)
+                         and isinstance(node.func, ast.Attribute) and node.func.attr == method]
+                self.assertEqual(1, len(calls))
+                flags = {keyword.arg: getattr(keyword.value, 'value', None) for keyword in calls[0].keywords}
+                self.assertIs(True, flags.get('installedPHPOnly'))
 
     def test_refusal_follows_the_permission_checks_of_an_existing_website(self):
         # Someone who may not touch the website learns nothing about the value.

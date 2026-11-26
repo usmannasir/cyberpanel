@@ -889,7 +889,7 @@ def submitWebsiteCreation(request):
             return result
 
         wm = WebsiteManager()
-        coreResult = wm.submitWebsiteCreation(userID, json.loads(request.body))
+        coreResult = wm.submitWebsiteCreation(userID, json.loads(request.body), installedPHPOnly=True)
 
         result = pluginManager.postWebsiteCreation(request, coreResult)
         if result != 200:
@@ -910,7 +910,7 @@ def submitDomainCreation(request):
             return result
 
         wm = WebsiteManager()
-        coreResult = wm.submitDomainCreation(userID, json.loads(request.body))
+        coreResult = wm.submitDomainCreation(userID, json.loads(request.body), installedPHPOnly=True)
 
         result = pluginManager.postDomainCreation(request, coreResult)
         if result != 200:

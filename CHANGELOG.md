@@ -116,6 +116,19 @@ Upgrade:
   files. Still refused: the same message for the server's own configuration,
   and a website that was clean when the upgrade began and has the error later.
 
+Also fixed:
+
+- AlmaLinux 8, 9 and 10: a fresh install left `/usr/local/lsws/lsphp86` with
+  PHP 8.6's development and MySQL packages but without PHP 8.6 itself, since
+  LiteSpeed's repositories carry PHP 8.6. The timezone step's
+  `lsphp??-devel lsphp??-mysqlnd` named every version in the repository; it
+  now installs those packages for the installed versions only. On a server
+  installed before, `dnf install -y lsphp86` completes PHP 8.6.
+- Creating a website or a child domain on the command line
+  (`cyberpanel createWebsite`/`createChild --php`) or from the panel's pages
+  refuses a PHP version that is not installed ("PHP 8.6 is not installed on
+  this server."). Before, such a website was created without a working PHP.
+
 ## v3.0.20 (build 20) — 2026-11-25
 
 Upgrades started from the panel (Version Management → Upgrade) finish like a

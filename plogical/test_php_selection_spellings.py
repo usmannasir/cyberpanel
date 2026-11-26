@@ -6,8 +6,11 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest import mock
 
-from managePHP.phpConfig import normalized_php_selection, php_selection_digits, stored_php_selection
-from managePHP.test_php_selection import OLDER_SPELLINGS
+from functools import partial
+
+from managePHP.phpConfig import normalized_php_selection, php_selection_digits, require_installed_php, \
+    stored_php_selection
+from managePHP.test_php_selection import OLDER_SPELLINGS, lsphp_root
 from plogical.test_php_restart_marker import load_methods
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,9 +33,12 @@ class CommandLineTests(unittest.TestCase):
         self.vhost.changePHP.return_value = (1, 'None')
         websites = mock.Mock()
         websites.objects.get.side_effect = LookupError('no such user')
+        # 8.6 as AlmaLinux 10 had it: extension packages without PHP 8.6.
+        root = lsphp_root(self, installed=('74', '81', '83'), extensions_only=('86',))
         namespace = dict(virtualHostUtilities=self.worker, vhost=self.vhost, Websites=websites, logger=mock.Mock(),
                          stack=lambda: [[None, None, None, 'test']], time=mock.Mock(), re=__import__('re'),
-                         normalized_php_selection=normalized_php_selection, stored_php_selection=stored_php_selection)
+                         normalized_php_selection=normalized_php_selection, stored_php_selection=stored_php_selection,
+                         require_installed_php=partial(require_installed_php, server_root=root))
         self.create_site, self.create_child, self.change = load_methods(
             'cli/cyberPanel.py', 'cyberPanel', ['createWebsite', 'createDomain', 'changePHP'], namespace)
         self.cli = mock.Mock()
@@ -63,6 +69,18 @@ class CommandLineTests(unittest.TestCase):
                 self.cli.printStatus.assert_called_once_with(0, 'Invalid PHP version selected.')
         self.assertEqual([], self.worker.mock_calls)
         self.assertEqual([], self.vhost.mock_calls)
+
+    def test_a_version_that_is_not_installed_is_reported_and_starts_nothing(self):
+        for option, selection in (('8.6', 'PHP 8.6'), ('86', 'PHP 8.6'), ('PHP 8.6', 'PHP 8.6'),
+                                  ('8.5', 'PHP 8.5'), ('7.0', 'PHP 7.0')):
+            with self.subTest(option=option):
+                self.cli.reset_mock()
+                self.create_site(self.cli, 'Default', 'admin', 'example.test', 'owner@example.test', option, 0, 0, 0)
+                self.cli.printStatus.assert_called_once_with(0, '%s is not installed on this server.' % selection)
+                self.cli.reset_mock()
+                self.create_child(self.cli, 'example.test', 'shop.example.test', 'admin', option, 0, 0, 0, 'shop')
+                self.cli.printStatus.assert_called_once_with(0, '%s is not installed on this server.' % selection)
+        self.assertEqual([], self.worker.mock_calls)
 
 
 class BackupRestoreTests(unittest.TestCase):
