@@ -279,6 +279,11 @@ def ols_site_error_notice():
     if any('invalid path' in line and '/bin/lsphp' in line for line in lines):
         text.append('An invalid lsphp path means the PHP version chosen for that website is not installed. '
                     'Choose an installed version for it under Websites > List Websites > Manage.')
+    if any("'{' and '}' do not match" in line or "parseline found" in line for line in lines):
+        text.append("Braces that do not match mean that the named vhost.conf opens a block with '{' and never closes "
+                    "it with '}', or closes one once too often. This upgrade does not change that file. Correct it "
+                    'under Websites > List Websites > Manage > vHost Conf; /usr/local/lsws/bin/openlitespeed -t '
+                    'no longer lists the file once it is right.')
     text.append('Correct these when convenient.')
     return '\n'.join(text)
 
