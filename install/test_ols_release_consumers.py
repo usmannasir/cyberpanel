@@ -583,7 +583,7 @@ class BundleTransactionTests(unittest.TestCase):
                 self.assertTrue(fixture.active)                        # and the web server runs again
                 self.assertEqual(fixture.active_bytes, b'old-core')
                 self.assertEqual(fixture.start_bundles, [fixture.old])  # started once, from the old bundle only
-                said = '\n'.join(str(call.args[0]) for call in fixture.said.call_args_list)
+                said = '\n'.join(str(call[0][0]) for call in fixture.said.call_args_list)
                 self.assertIn('restoring the previous OLS bundle', said)
                 self.assertIn('OpenLiteSpeed runs again', said)
                 self.assertIn('late.example.invalid', said)
@@ -602,7 +602,7 @@ class BundleTransactionTests(unittest.TestCase):
                     self.assertEqual(fixture.bundle(), fixture.old)
                     self.assertFalse(fixture.active)
                     self.assertEqual(fixture.start_bundles, [])
-                    said = '\n'.join(str(call.args[0]) for call in fixture.said.call_args_list)
+                    said = '\n'.join(str(call[0][0]) for call in fixture.said.call_args_list)
                     self.assertIn('rollback requires attention', said)
                     self.assertNotIn('OpenLiteSpeed runs again', said)
 
