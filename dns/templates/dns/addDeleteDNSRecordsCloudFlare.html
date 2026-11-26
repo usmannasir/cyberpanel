@@ -487,7 +487,14 @@
                                     <div class="col-md-8">
                                         <div class="form-group">
                                             <label class="form-label">{% trans "CloudFlare Email" %}</label>
-                                            <input name="cfEmail" type="email" class="form-control" ng-model="cfEmail" 
+                                            <div class="form-group">
+                                            <label>Authentication type</label>
+                                            <select name="cfAuthType" class="form-control" ng-model="cfAuthType">
+                                                <option value="global_key">Global API Key (email + key)</option>
+                                                <option value="api_token">API Token (token only)</option>
+                                            </select>
+                                        </div>
+                                        <input name="cfEmail" type="email" class="form-control" ng-model="cfEmail" 
                                                    placeholder="your@email.com" required>
                                         </div>
                                         
@@ -875,7 +882,7 @@
                                         <div class="col-md-8">
                                             <div class="form-group">
                                                 <label class="form-label">{% trans "CloudFlare Email" %}</label>
-                                                <input ng-init="cfEmail='{{ cfEmail }}'" name="cfEmail" type="email" 
+                                                <input ng-init="cfAuthType='{{ cfAuthType|default:'global_key' }}';cfEmail='{{ cfEmail }}'" name="cfEmail" type="email" 
                                                        class="form-control" ng-model="cfEmail" 
                                                        placeholder="your@email.com" required>
                                             </div>

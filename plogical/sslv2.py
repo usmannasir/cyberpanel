@@ -348,7 +348,7 @@ class sslUtilities:
                 import CloudFlare
 
                 params = {'name': topLevelDomain, 'per_page': 50}
-                cf = CloudFlare.CloudFlare(email=SAVED_CF_Email, token=SAVED_CF_Key)
+                cf = DNS.createCloudFlareClient(SAVED_CF_Email, SAVED_CF_Key)
 
                 try:
                     zones = cf.zones.get(params=params)
