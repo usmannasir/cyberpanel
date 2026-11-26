@@ -30,6 +30,7 @@ urlpatterns = [
     re_path(r'^deleteBackup$', views.deleteBackup, name='deleteBackup'),
 
     re_path(r'^restoreStatus$', views.restoreStatus, name='restoreStatus'),
+    re_path(r'^getBackupFileInfo$', views.getBackupFileInfo, name='getBackupFileInfo'),
 
     re_path(r'^submitRestore$', views.submitRestore, name='submitRestore'),
 
