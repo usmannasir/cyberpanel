@@ -113,6 +113,22 @@ class SplitStateTests(unittest.TestCase):
         with self.assertRaises(classifier.SplitStateRefused):
             self.state(3, self.default_output() + site + '\n')
 
+    def test_a_website_file_that_leaves_a_block_open_does_not_refuse_the_repair(self):
+        # Reported on 26 Nov 2026: no line number, and the bracket names the block left open.
+        unpaired = ("2026-11-26 09:48:53.707205 [ERROR] [312722] [PlainConf] [context:/] parseFile find '{' and '}' "
+                    "do not match in the end of file /usr/local/lsws/conf/vhosts/example.invalid/vhost.conf, "
+                    "rootTag virtualHostConfig.")
+        baseline = self.state(2, self.default_output() + unpaired + '\n')
+        self.assertEqual(len(baseline['errors']), 2)
+        self.assertEqual(baseline, self.state(2, self.default_output('2026-11-26 10:00:00.000001 ') + unpaired + '\n'))
+        # The same message for the server's own configuration is not a website's error.
+        server = unpaired.replace('/conf/vhosts/example.invalid/vhost.conf, rootTag virtualHostConfig.',
+                                  '/conf/httpd_config.conf, rootTag httpServerConfig.')
+        with self.assertRaises(classifier.SplitStateRefused) as refusal:
+            self.state(2, self.default_output() + unpaired + '\n' + server + '\n')
+        self.assertIn('httpd_config.conf', str(refusal.exception))
+        self.assertNotIn('example.invalid', str(refusal.exception))
+
     def test_unsupported_line_must_match_the_cited_configuration_line(self):
         for line in (self.unsupported('ERROR', 'throttleenabled 1', self.admin, 1),      # another directive there
                      self.unsupported('ERROR', 'throttleenabled 1', self.admin, 400),    # beyond the file
