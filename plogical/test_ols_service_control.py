@@ -1003,7 +1003,7 @@ class StopBesideEarlierGenerationTests(unittest.TestCase):
         def controller():
             if marker:
                 marker.pop()
-                raise control.OLSRestarting('An OLS restart marker, trial hook or watchdog is active')
+                raise control.OLSRestarting(control.RESTARTING % '/usr/local/lsws/admin/tmp/.restart')
         self.service.controller.side_effect = controller
         result, stops, said = self.restart_during_stop(1)
         self.assertIsNone(result)
@@ -1015,7 +1015,7 @@ class StopBesideEarlierGenerationTests(unittest.TestCase):
         def controller():
             calls.append(1)
             if len(calls) == 1:
-                raise control.OLSRestarting('An OLS restart marker, trial hook or watchdog is active')
+                raise control.OLSRestarting(control.RESTARTING % '/usr/local/lsws/admin/tmp/.restart')
         self.service.controller.side_effect = controller
         with self.assertRaisesRegex(RuntimeError, 'restart marker'):
             self.service.state()
@@ -1082,6 +1082,9 @@ class StartCommandSideEffectTests(unittest.TestCase):
         self.assertIn('(unset WSWATCH)', str(error))
         self.assertNotIn('trial', str(error))
         self.assertNotIn('restart marker', str(error))
+        # Any value refuses, as before; the sentence says which value the vendor command acts on.
+        os.environ['WSWATCH'] = '0'
+        self.assertIn('with WSWATCH=1 the start command', str(self.refusal()))
 
     def test_the_restart_marker_is_a_restart_in_progress_and_is_named(self):
         marker = self.root / 'admin/tmp/.restart'
@@ -1089,6 +1092,7 @@ class StartCommandSideEffectTests(unittest.TestCase):
         error = self.refusal()
         self.assertIsInstance(error, control.OLSRestarting)
         self.assertIn('restart marker %s exists' % marker, str(error))
+        self.assertIn('Run the upgrade again in a minute', str(error))  # a single look names the next step too
         self.assertNotIn('trial', str(error))
         self.assertNotIn('watchdog', str(error))
         marker.unlink()
@@ -1155,10 +1159,32 @@ class RestartInProgressTests(unittest.TestCase):
         self.assertEqual(81, len(seen))
         message = str(caught.exception)
         self.assertIn('did not finish within 20 seconds', message)
-        self.assertIn(self.MARKER, message)
+        self.assertIn(control.RESTARTING % self.service.restart_marker(), message)
+        self.assertNotIn('in a minute', message)
         self.assertIn('systemctl restart lsws', message)
         self.assertIn('run the upgrade again', message)
         self.assertEqual([], self.killed)
+
+    def test_a_restart_first_seen_after_the_wait_for_an_earlier_generation_gets_its_own_wait(self):
+        # The 20 seconds count from the moment the marker is first seen. Counted from the first
+        # look, a restart met after the minute an earlier generation is given would be refused at
+        # once, with "did not finish within 20 seconds" for a restart that had just begun.
+        now = self.clock()
+        seen = []
+
+        def controller():
+            if self.killed:  # the earlier generation has just been ended
+                seen.append(now[0])
+                if len(seen) <= 3:
+                    raise control.OLSRestarting(self.MARKER)
+        self.service.controller.side_effect = controller
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(control.watchdog, 'prepare_watchdog'), \
+                patch.object(self.service, 'verify_mapped_bundle'), patch('builtins.print'):
+            self.assertEqual(200, self.service.prepare_state()[0])
+        self.assertEqual([100, 101], sorted(self.killed))
+        self.assertGreaterEqual(seen[0], 1000.0 + control.OLSService.PREVIOUS_GENERATION_WAIT)
+        self.assertEqual(.75, seen[3] - seen[0])  # three pauses of a quarter second, then it went on
 
     def test_settling_gives_the_same_reason_after_its_wait(self):
         self.clock()
@@ -1324,7 +1350,110 @@ class SupervisedOutsideUnitTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'disagree'):
             self.service._native_state()
 
+    def test_a_unit_that_is_still_starting_reloading_or_failed_is_refused(self):
+        for state in ('activating', 'reloading', 'deactivating', 'failed'):
+            self.units['lshttpd.service'] = (state, '123')
+            with self.assertRaisesRegex(RuntimeError, 'manager or PID'):
+                self.service._native_state()
+        self.assertIsNone(self.service.unit)
+
+    def test_an_earlier_generation_beside_it_is_still_an_unmanaged_process(self):
+        # Outside the unit's control group nothing ties an old main to this service: never waited for, never ended.
+        self.process(110, 1, '5')
+        self.process(111, 110, '6')
+        with self.assertRaisesRegex(RuntimeError, 'An unmanaged OLS process is also running'):
+            self.service._native_state()
+
+    def drained(self, master_group, worker_group):
+        """Stop a master whose control group is master_group; its known worker is then found in worker_group."""
+        for pid in (123, 124):
+            (self.proc / str(pid) / 'cgroup').write_text(master_group)
+        original = self.service._native_state()
+
+        def stop(command, **kwargs):
+            self.units['lshttpd.service'] = ('inactive', '0')
+            self.remove(123)
+            self.status = 'litespeed is not running.'
+            (self.proc / '124/cgroup').write_text(worker_group)
+            return SimpleNamespace(returncode=0)
+
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(self.service, 'verify_mapped_bundle'), \
+                patch.object(control.subprocess, 'run', side_effect=stop), \
+                patch.object(control.time, 'sleep'):
+            return self.service.change('stop', original)
+
+    def test_a_known_worker_must_stay_where_the_master_was_when_it_was_stopped(self):
+        # Supervised from outside: its worker turning up inside the unit is not the process observed.
+        with self.assertRaisesRegex(RuntimeError, 'An unverified OLS process appeared during shutdown'):
+            self.drained(self.SESSION, self.SERVICE)
+
+    def test_a_worker_of_a_master_inside_the_unit_may_not_turn_up_outside_it(self):
+        with self.assertRaisesRegex(RuntimeError, 'An unverified OLS process appeared during shutdown'):
+            self.drained(self.SERVICE, self.SESSION)
+
+    def reloaded(self):
+        """reload() of the current master; returns the service commands it ran."""
+        original = self.service._native_state()
+        commands = []
+
+        def act(command, **kwargs):
+            commands.append(command)
+            if command[1] == 'stop':
+                self.units['lshttpd.service'] = ('inactive', '0')
+                self.remove(123)
+                self.remove(124)
+                self.status = 'litespeed is not running.'
+            elif command[1] == 'start':
+                self.process(130, 1, '33', cgroup=self.SERVICE)
+                self.status = 'litespeed is running with PID 130.'
+                self.units['lshttpd.service'] = ('active', '130')
+            return SimpleNamespace(returncode=0)
+
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(self.service, 'verify_mapped_bundle'), \
+                patch.object(control.subprocess, 'run', side_effect=act), \
+                patch.object(control.time, 'sleep'):
+            self.service.reload(original)
+        return original, commands
+
+    def test_its_configuration_is_reloaded_by_a_stop_and_a_start_through_the_unit(self):
+        # A reload would fork the new main in the same session and leave the old generation beside it.
+        original, commands = self.reloaded()
+        self.assertEqual(commands, [['systemctl', 'stop', 'lshttpd.service'], ['systemctl', 'start', 'lshttpd.service']])
+        current = self.service._native_state()
+        self.assertEqual(current, (130, '33', 'lshttpd.service'))
+        self.assertFalse(self.service.outside_its_unit(current))
+
+    def test_a_master_inside_its_unit_is_reloaded_as_before(self):
+        for pid in (123, 124):
+            (self.proc / str(pid) / 'cgroup').write_text(self.SERVICE)
+        original, commands = self.reloaded()
+        self.assertFalse(self.service.outside_its_unit(original))
+        self.assertEqual(commands, [['systemctl', 'reload', 'lshttpd.service']])
+
+    def test_a_manual_instance_is_not_one_supervised_from_outside(self):
+        self.units['lshttpd.service'] = ('inactive', '0')
+        manual = self.service._native_state()
+        self.assertEqual(manual, (123, '11', None))
+        self.assertFalse(self.service.outside_its_unit(manual))
+        self.assertFalse(self.service.outside_its_unit(None))
+
+    def test_while_the_stopped_generation_is_still_there_a_restart_during_the_stop_refuses(self):
+        # The new main is forked by the one being stopped; until that one and its workers have
+        # gone it is a main with an unmanaged process beside it. Nothing has been replaced.
+        original = self.service._native_state()
+        self.service.draining = original
+        self.service._draining_processes = {123: '11', 124: '22'}
+        self.service._draining_cgroup = self.SESSION
+        self.process(140, 123, '44')
+        self.status = 'litespeed is running with PID 140.'
+        self.units['lshttpd.service'] = ('active', '140')
+        with self.assertRaisesRegex(RuntimeError, 'An unmanaged OLS process is also running'):
+            self.service._native_state()
+
     def test_a_master_started_again_in_that_session_during_the_stop_is_recognised(self):
+        # Once the generation that was stopped has gone (see the test above for the moment before).
         original = self.service._native_state()
         self.service.draining = original
         self.service._draining_processes = {123: '11', 124: '22'}

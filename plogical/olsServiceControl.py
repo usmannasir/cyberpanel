@@ -273,11 +273,14 @@ class OLSRestarting(RuntimeError):
     """
 
 
-def restart_unfinished(restarting, seconds):
+RESTARTING = 'OpenLiteSpeed is restarting: its restart marker %s exists'
+
+
+def restart_unfinished(marker, seconds):
     """What to say once the restart marker has outlasted the wait: the reason and the next step."""
     return OLSRestarting('A restart of OpenLiteSpeed did not finish within %d seconds (%s). Restart OpenLiteSpeed '
                          '(systemctl restart lsws), check that the websites load, and run the upgrade again'
-                         % (seconds, restarting))
+                         % (seconds, RESTARTING % marker))
 
 
 class OLSStartedDuringStop(RuntimeError):
@@ -319,7 +322,7 @@ class OLSService:
 
     # How long every process of an earlier generation must have been seen draining before the upgrade ends it.
     PREVIOUS_GENERATION_WAIT = 60
-    # How long a graceful restart that is in progress is waited for before a state inspection gives up.
+    # How long a graceful restart that is in progress is waited for, from the moment its marker is first seen.
     RESTART_WAIT = 20
 
     def _previous_generation(self, master, processes, strays):
@@ -578,11 +581,33 @@ class OLSService:
                 'is there. Move it away (mv %s /root/) and run the upgrade again' % (hook, hook))
         if os.getenv('WSWATCH'):
             raise RuntimeError(
-                'The environment variable WSWATCH is set, which makes the start command of OpenLiteSpeed start '
-                "LiteSpeed's own watchdog script. Run the upgrade again from a shell without it (unset WSWATCH)")
-        marker = self.root / 'admin/tmp/.restart'
+                'The environment variable WSWATCH is set in this shell; with WSWATCH=1 the start command of '
+                "OpenLiteSpeed also starts LiteSpeed's own watchdog script. Run the upgrade again from a shell "
+                'without it (unset WSWATCH)')
+        marker = self.restart_marker()
         if os.path.lexists(str(marker)):
-            raise OLSRestarting('OpenLiteSpeed is restarting: its restart marker %s exists' % marker)
+            # Waited for where the upgrade first looks at the service and where it settles
+            # (see _restart_waited); a single look reports it with the next step.
+            raise OLSRestarting((RESTARTING + '. Run the upgrade again in a minute') % marker)
+
+    def restart_marker(self):
+        return self.root / 'admin/tmp/.restart'
+
+    def _restart_waited(self, check):
+        """Return check(). A restart of OpenLiteSpeed that is in progress is waited for: RESTART_WAIT
+        seconds from the moment its marker is first seen, whatever was waited for before that. A
+        marker that outlasts the wait is a restart that did not finish (see restart_unfinished)."""
+        deadline = None
+        while True:
+            try:
+                return check()
+            except OLSRestarting as restarting:
+                now = time.monotonic()
+                if deadline is None:
+                    deadline = now + self.RESTART_WAIT
+                elif now >= deadline:
+                    raise restart_unfinished(self.restart_marker(), self.RESTART_WAIT) from restarting
+                time.sleep(0.25)
 
     def verify_unit_claims(self, pid, owner):
         if not Path('/run/systemd/system').is_dir():
@@ -677,15 +702,7 @@ class OLSService:
         # job does after an .htaccess change, and so does a panel action). That is
         # over in a moment and is waited for, as settled_state() does; only a marker
         # that stays refuses.
-        deadline = time.monotonic() + self.RESTART_WAIT
-        while True:
-            try:
-                initial = self.settle_previous_generation(self.inspect_state)
-                break
-            except OLSRestarting as restarting:
-                if time.monotonic() >= deadline:
-                    raise restart_unfinished(restarting, self.RESTART_WAIT) from restarting
-                time.sleep(0.25)
+        initial = self.settle_previous_generation(lambda: self._restart_waited(self.inspect_state))
         self.verify_mapped_bundle(initial)
         if watchdog.inspect_watchdog(self.root, self.proc, allow_legacy=True):
             self.watch_lock = watchdog.lock_identity(self.root, require_exclusive=True)
@@ -876,14 +893,14 @@ class OLSService:
 
     def settled_state(self, retire_previous=True):
         """retire_previous=False only reports: an earlier generation then raises OLSPreviousGeneration."""
-        deadline = time.monotonic() + self.RESTART_WAIT
+        def check():
+            return self._restart_waited(self.state)
+        deadline = time.monotonic() + 20
         while True:
             try:
-                return self.settle_previous_generation(self.state) if retire_previous else self.state()
-            except (OLSWorkersRemain, OLSRestarting) as pending:
+                return self.settle_previous_generation(check) if retire_previous else check()
+            except OLSWorkersRemain:
                 if time.monotonic() >= deadline:
-                    if isinstance(pending, OLSRestarting):
-                        raise restart_unfinished(pending, self.RESTART_WAIT) from pending
                     raise
                 time.sleep(0.25)
 
@@ -1009,10 +1026,27 @@ class OLSService:
                 raise RuntimeError('The OpenLiteSpeed unit is still %s after %d seconds' % (state, timeout))
             time.sleep(0.5)
 
+    def outside_its_unit(self, state):
+        """Whether this running master is one its unit supervises from outside the unit's control
+        group (see supervising_unit)."""
+        try:
+            return (bool(state) and state[2] is not None
+                    and process_owner((self.proc / str(state[0]) / 'cgroup').read_text()) is None)
+        except (FileNotFoundError, ProcessLookupError):
+            return False
+
     def reload(self, expected):
         if expected is None or self.state() != expected:
             raise RuntimeError('OLS changed state before configuration reload')
         self.verify_mapped_bundle(expected)
+        if self.outside_its_unit(expected):
+            # A reload forks the new main from the old one: it would stay outside the unit's
+            # control group, where what the old generation leaves behind cannot be told from
+            # an unmanaged process. A stop and a start through the unit load the same
+            # configuration and put OpenLiteSpeed back into the unit's own control group.
+            self.change('stop', expected)
+            self.change('start', None)
+            return
         command = ['systemctl', 'reload', self.unit] if self.unit else [str(self.control), 'reload']
         result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         if result.returncode:

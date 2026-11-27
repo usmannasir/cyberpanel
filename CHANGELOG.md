@@ -124,24 +124,6 @@ Upgrade:
   stayed stopped until the watchdog or an administrator started it. Any other
   new error (the server's own configuration, a failed configuration test)
   keeps the server stopped as before.
-- An upgrade refused with "An OLS restart marker, trial hook or watchdog is
-  active" (code 78) now says which of the three it found and what to do: the
-  file `/usr/local/lsws/bin/get_trial_key.sh` (move it away), the environment
-  variable `WSWATCH` (unset it), or a restart of OpenLiteSpeed that did not
-  finish (`systemctl restart lsws`, check the websites). A restart that is
-  simply in progress when the upgrade first looks at OpenLiteSpeed is waited
-  for, 20 seconds at most, instead of stopping the upgrade. What is refused
-  has not changed.
-- The upgrade command no longer stops with "OLS systemd unit and process
-  control group disagree" (code 78, at every attempt) on a server where
-  OpenLiteSpeed was last started with `lswsctrl` outside its service: after
-  the Upgrade button of the Version Management page of a release before 3.0.9
-  (seen on AlmaLinux 8 going from 3.0.1), or after `lswsctrl stop` and
-  `lswsctrl start` in a terminal. When the OpenLiteSpeed service is active and
-  names that process as its own, the upgrade now stops and starts it through
-  the service, which puts it back where the service expects it. On the
-  release before this one: `systemctl stop lsws; sleep 10; systemctl start
-  lsws`, then run the upgrade again.
 
 Also fixed:
 
@@ -155,6 +137,27 @@ Also fixed:
   (`cyberpanel createWebsite`/`createChild --php`) or from the panel's pages
   refuses a PHP version that is not installed ("PHP 8.6 is not installed on
   this server."). Before, such a website was created without a working PHP.
+
+### Fixed later in build 21 (2026-11-27)
+Two refusals of the upgrade at its OpenLiteSpeed check (code 78).
+
+- "An OLS restart marker, trial hook or watchdog is active" now says which of
+  the three it found and what to do: the file
+  `/usr/local/lsws/bin/get_trial_key.sh` (move it away), the environment
+  variable `WSWATCH` (unset it), or a restart of OpenLiteSpeed that did not
+  finish (`systemctl restart lsws`, check the websites, run the upgrade
+  again). A restart that is simply in progress when the upgrade first looks at
+  OpenLiteSpeed is waited for, 20 seconds at most, instead of stopping the
+  upgrade. What is refused has not changed.
+- The upgrade command no longer stops with "OLS systemd unit and process
+  control group disagree" at every attempt on a server where OpenLiteSpeed was
+  last started with `lswsctrl` outside its service: after the Upgrade button
+  of the Version Management page of a release before 3.0.9 (seen on
+  AlmaLinux 8 going from 3.0.1), or after `lswsctrl stop` and `lswsctrl start`
+  in a terminal. When the OpenLiteSpeed service is active and names that
+  process as its own, the upgrade now stops and starts it through the service,
+  which puts it back where the service expects it. Anything else the service
+  and the process disagree about is refused as before.
 
 ## v3.0.20 (build 20) — 2026-11-25
 
