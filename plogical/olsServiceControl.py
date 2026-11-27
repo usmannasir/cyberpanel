@@ -265,7 +265,19 @@ class OLSPreviousGeneration(RuntimeError):
 
 
 class OLSRestarting(RuntimeError):
-    """OpenLiteSpeed's restart marker exists: a graceful restart is in progress (about 0.1 s)."""
+    """OpenLiteSpeed's restart marker exists: a graceful restart is in progress (about 0.1 s).
+
+    The main process creates admin/tmp/.restart when it is told to restart and
+    the new main removes it once it is ready to serve. A marker that stays
+    means that the restart never finished (see restart_unfinished).
+    """
+
+
+def restart_unfinished(restarting, seconds):
+    """What to say once the restart marker has outlasted the wait: the reason and the next step."""
+    return OLSRestarting('A restart of OpenLiteSpeed did not finish within %d seconds (%s). Restart OpenLiteSpeed '
+                         '(systemctl restart lsws), check that the websites load, and run the upgrade again'
+                         % (seconds, restarting))
 
 
 class OLSStartedDuringStop(RuntimeError):
@@ -307,6 +319,8 @@ class OLSService:
 
     # How long every process of an earlier generation must have been seen draining before the upgrade ends it.
     PREVIOUS_GENERATION_WAIT = 60
+    # How long a graceful restart that is in progress is waited for before a state inspection gives up.
+    RESTART_WAIT = 20
 
     def _previous_generation(self, master, processes, strays):
         """{pid: start ticks} when every stray belongs to an earlier generation of this service, else None.
@@ -552,10 +566,23 @@ class OLSService:
                  else digest(self.control) not in CONTROLLER_HASHES) or env.is_symlink() or
                 not env.is_file() or digest(env) != ENV_HASH):
             raise RuntimeError('The OLS controller or its PID configuration cannot be verified')
-        if os.path.lexists(str(directory / 'get_trial_key.sh')) or os.getenv('WSWATCH'):
-            raise RuntimeError('An OLS restart marker, trial hook or watchdog is active')
-        if os.path.lexists(str(self.root / 'admin/tmp/.restart')):
-            raise OLSRestarting('An OLS restart marker, trial hook or watchdog is active')
+        # The vendor start command runs bin/get_trial_key.sh when that file exists and
+        # starts wswatch.sh when WSWATCH is 1. Neither is part of OpenLiteSpeed or of
+        # CyberPanel, so a start made here would run something nobody has verified.
+        # Each refusal names what was found and what removes it.
+        hook = directory / 'get_trial_key.sh'
+        if os.path.lexists(str(hook)):
+            raise RuntimeError(
+                '%s exists. The start command of OpenLiteSpeed runs that file on every start; it is the trial key '
+                'hook of LiteSpeed Enterprise and no part of OpenLiteSpeed or of CyberPanel. Move it away '
+                '(mv %s /root/) and run the upgrade again' % (hook, hook))
+        if os.getenv('WSWATCH'):
+            raise RuntimeError(
+                'The environment variable WSWATCH is set, which makes the start command of OpenLiteSpeed start '
+                "LiteSpeed's own watchdog script. Run the upgrade again from a shell without it (unset WSWATCH)")
+        marker = self.root / 'admin/tmp/.restart'
+        if os.path.lexists(str(marker)):
+            raise OLSRestarting('OpenLiteSpeed is restarting: its restart marker %s exists' % marker)
 
     def verify_unit_claims(self, pid, owner):
         if not Path('/run/systemd/system').is_dir():
@@ -797,12 +824,14 @@ class OLSService:
 
     def settled_state(self, retire_previous=True):
         """retire_previous=False only reports: an earlier generation then raises OLSPreviousGeneration."""
-        deadline = time.monotonic() + 20
+        deadline = time.monotonic() + self.RESTART_WAIT
         while True:
             try:
                 return self.settle_previous_generation(self.state) if retire_previous else self.state()
-            except (OLSWorkersRemain, OLSRestarting):
+            except (OLSWorkersRemain, OLSRestarting) as pending:
                 if time.monotonic() >= deadline:
+                    if isinstance(pending, OLSRestarting):
+                        raise restart_unfinished(pending, self.RESTART_WAIT) from pending
                     raise
                 time.sleep(0.25)
 
