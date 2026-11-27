@@ -1187,3 +1187,152 @@ class RestartInProgressTests(unittest.TestCase):
         with patch.object(self.service, 'state', side_effect=control.OLSWorkersRemain('OLS status missed a running process')):
             with self.assertRaisesRegex(control.OLSWorkersRemain, '^OLS status missed a running process$'):
                 self.service.settled_state()
+
+
+class SupervisedOutsideUnitTests(unittest.TestCase):
+    """A master in the panel's old sudo session that the vendor unit names as its MainPID.
+
+    Releases before 3.0.9 restarted OpenLiteSpeed with lswsctrl from the Version
+    Management page; the unit (Restart=on-failure) then signalled that master and
+    systemd read it from the PID file. Control groups as recorded on AlmaLinux 8.10
+    (systemd 239, 27 Nov 2026) after that page was used on CyberPanel 3.0.1.
+    """
+    SESSION = ('12:freezer:/\n11:hugetlb:/\n10:memory:/user.slice/user-0.slice/session-c4.scope\n'
+               '9:net_cls,net_prio:/\n8:blkio:/user.slice\n7:rdma:/\n6:perf_event:/\n5:cpuset:/\n'
+               '4:pids:/user.slice/user-0.slice/session-c4.scope\n3:cpu,cpuacct:/\n2:devices:/user.slice\n'
+               '1:name=systemd:/user.slice/user-0.slice/session-c4.scope\n')
+    SERVICE = SESSION.replace('/user.slice/user-0.slice/session-c4.scope', '/system.slice/lshttpd.service')
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.binary = self.root / 'bin/openlitespeed'
+        self.binary.parent.mkdir()
+        self.binary.write_bytes(b'installed core fixture')
+        self.proc = self.root / 'proc'
+        self.proc.mkdir()
+        self.process(123, 1, '11')
+        self.process(124, 123, '22')
+        self.service = control.OLSService(self.root, self.proc)
+        # What systemd reports for the unit, under each of its names.
+        self.units = {'lshttpd.service': ('active', '123')}
+        self.status = 'litespeed is running with PID 123.'
+        for target in ('controller', 'systemd'):
+            patcher = patch.object(self.service, target, return_value=None)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        for patcher in (patch.object(control, 'run', side_effect=self.answer),
+                        patch.object(Path, 'is_dir', return_value=True)):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def process(self, pid, parent, ticks, cgroup=None):
+        entry = self.proc / str(pid)
+        entry.mkdir()
+        (entry / 'comm').write_text('litespeed\n')
+        (entry / 'exe').symlink_to(self.binary)
+        fields = ['S', str(parent)] + ['0'] * 17 + [ticks]
+        (entry / 'stat').write_text('%s (litespeed) %s\n' % (pid, ' '.join(fields)))
+        (entry / 'cgroup').write_text(self.SESSION if cgroup is None else cgroup)
+        (entry / 'cmdline').write_bytes(b'openlitespeed (lshttpd - main)\x00')
+
+    def remove(self, pid):
+        for path in (self.proc / str(pid)).iterdir():
+            path.unlink()
+        (self.proc / str(pid)).rmdir()
+
+    def answer(self, command, timeout=30):
+        if command[:2] == ['systemctl', 'show']:
+            # lsws.service and openlitespeed.service are other names of lshttpd.service.
+            name = command[2] if command[2] in self.units else 'lshttpd.service'
+            state, main = self.units[name]
+            return SimpleNamespace(returncode=0, stdout='Id=%s\nLoadState=loaded\nActiveState=%s\nMainPID=%s\n'
+                                   % (name, state, main))
+        self.assertEqual(command, [str(self.service.control), 'status'])
+        return SimpleNamespace(returncode=0, stdout=self.status)
+
+    def test_the_unit_that_names_the_master_manages_it(self):
+        self.assertEqual(self.service._native_state(), (123, '11', 'lshttpd.service'))
+        self.assertEqual(self.service.unit, 'lshttpd.service')
+        self.service.systemd.assert_called_once_with(123)
+
+    def test_it_is_stopped_through_that_unit_and_waited_for_like_any_other(self):
+        original = self.service._native_state()
+        polls = []
+
+        def stop(command, **kwargs):
+            self.assertEqual(command, ['systemctl', 'stop', 'lshttpd.service'])
+            # KillMode=none: systemd reports the unit stopped at once and forgets the main,
+            # while OpenLiteSpeed is still counting down.
+            self.units['lshttpd.service'] = ('inactive', '0')
+            return SimpleNamespace(returncode=0)
+
+        def drain(delay):
+            polls.append(delay)
+            if len(polls) == 1:      # the master ends first; its worker is left under init
+                self.remove(123)
+                self.status = 'litespeed is not running.'
+                stat_file = self.proc / '124/stat'
+                stat_file.write_text(stat_file.read_text().replace(') S 123 ', ') S 1 '))
+            elif len(polls) == 2:
+                self.remove(124)
+
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(self.service, 'verify_mapped_bundle'), \
+                patch.object(control.subprocess, 'run', side_effect=stop), \
+                patch.object(control.time, 'sleep', side_effect=drain):
+            self.assertIsNone(self.service.change('stop', original))
+        self.assertEqual(polls, [.25, .25])
+        self.service.systemd.assert_called_with(None)
+        # The unit's own start then puts the new master into the unit's control group.
+        self.process(130, 1, '33', cgroup=self.SERVICE)
+        self.status = 'litespeed is running with PID 130.'
+        self.units['lshttpd.service'] = ('active', '130')
+        self.assertEqual(self.service._native_state(), (130, '33', 'lshttpd.service'))
+
+    def test_a_worker_of_another_service_still_refuses_the_stop(self):
+        original = self.service._native_state()
+
+        def stop(command, **kwargs):
+            self.units['lshttpd.service'] = ('inactive', '0')
+            self.remove(123)
+            self.status = 'litespeed is not running.'
+            (self.proc / '124/cgroup').write_text(self.SESSION.replace(
+                '/user.slice/user-0.slice/session-c4.scope', '/system.slice/other.service'))
+            return SimpleNamespace(returncode=0)
+
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(self.service, 'verify_mapped_bundle'), \
+                patch.object(control.subprocess, 'run', side_effect=stop), \
+                patch.object(control.time, 'sleep'), \
+                self.assertRaisesRegex(RuntimeError, 'other.service'):
+            self.service.change('stop', original)
+
+    def test_a_master_no_unit_names_stays_a_manual_instance(self):
+        self.units['lshttpd.service'] = ('inactive', '0')
+        self.assertEqual(self.service._native_state(), (123, '11', None))
+        self.assertIsNone(self.service.unit)
+
+    def test_a_unit_that_names_another_process_is_still_refused(self):
+        self.units['lshttpd.service'] = ('active', '999')
+        with self.assertRaisesRegex(RuntimeError, 'manager or PID'):
+            self.service._native_state()
+
+    def test_two_units_naming_the_master_are_still_refused(self):
+        self.units['lsws.service'] = ('active', '123')
+        with self.assertRaisesRegex(RuntimeError, 'disagree'):
+            self.service._native_state()
+
+    def test_a_master_started_again_in_that_session_during_the_stop_is_recognised(self):
+        original = self.service._native_state()
+        self.service.draining = original
+        self.service._draining_processes = {123: '11', 124: '22'}
+        self.service._draining_cgroup = self.SESSION
+        self.remove(123)
+        self.remove(124)
+        self.process(140, 1, '44')
+        self.status = 'litespeed is running with PID 140.'
+        self.units['lshttpd.service'] = ('active', '140')
+        with self.assertRaises(control.OLSStartedDuringStop):
+            self.service._native_state()
