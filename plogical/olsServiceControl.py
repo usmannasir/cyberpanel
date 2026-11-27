@@ -604,6 +604,39 @@ class OLSService:
         if claims != ({owner} if owner else set()):
             raise RuntimeError('OLS systemd unit and process control group disagree')
 
+    def supervising_unit(self, master):
+        """The one vendor unit that is active with exactly this master as its MainPID, else None.
+
+        Asked only for a master whose control group belongs to no service. Before
+        3.0.9 an upgrade started on the Version Management page ran `lswsctrl stop`
+        and `lswsctrl start` itself, inside the panel's sudo session. The vendor
+        unit (Restart=on-failure) then ran `lswsctrl start`, which only signals a
+        master that is already running, and systemd took that master from the PID
+        file: the unit is active and names it as MainPID, while the process stays
+        in the session's control group. The unit's actions address the PID file
+        (KillMode=none), so it controls this master like one it started. The
+        upgrade therefore stops and starts it through that unit, and the start
+        puts OpenLiteSpeed back into the unit's own control group.
+        """
+        if not Path('/run/systemd/system').is_dir():
+            return None
+        units = set()
+        for unit in sorted(VENDOR_UNITS):
+            result = run(['systemctl', 'show', unit, '--property=Id,LoadState,ActiveState,MainPID'])
+            values = dict(line.split('=', 1) for line in result.stdout.splitlines() if '=' in line)
+            if (not result.returncode and values.get('LoadState') == 'loaded'
+                    and values.get('ActiveState') == 'active' and values.get('MainPID') == str(master)
+                    and values.get('Id') in VENDOR_UNITS):
+                units.add(values['Id'])
+        return units.pop() if len(units) == 1 else None
+
+    def _draining_group(self):
+        """The service whose control group held the master being stopped: the unit that manages
+        it, or None for a master that unit supervises from outside (see supervising_unit)."""
+        if not self._draining_cgroup:
+            return self.draining[2]
+        return process_owner(self._draining_cgroup)
+
     def systemd(self, pid):
         if self.unit is None:
             return
@@ -682,7 +715,7 @@ class OLSService:
             try:
                 cgroup = (self.proc / str(pid) / 'cgroup').read_text()
                 if known:
-                    if process_owner(cgroup) != self.draining[2]:
+                    if process_owner(cgroup) != self._draining_group():
                         return None
                     continue
                 if not self._earlier_than_draining(pid, processes, cgroup):
@@ -812,6 +845,13 @@ class OLSService:
                 # stop loop must obtain a fresh empty snapshot with unit proof.
                 raise OLSWorkersRemain('Original OLS master exited during ownership inspection')
             raise
+        if owner is None:
+            if self.draining is not None and (master, processes[master][1]) == self.draining[:2]:
+                # systemd no longer names the main of a unit it has stopped: the master
+                # being stopped keeps the manager established before the stop action.
+                owner = self.draining[2]
+            else:
+                owner = self.supervising_unit(master)
         if self.draining is not None:
             if (master, processes[master][1], owner) == self.draining:
                 if previous is not None:
