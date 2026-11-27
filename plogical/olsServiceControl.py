@@ -640,7 +640,19 @@ class OLSService:
         return state
 
     def prepare_state(self, script=None):
-        initial = self.settle_previous_generation(self.inspect_state)
+        # Something else may be restarting OpenLiteSpeed right now (the panel's cron
+        # job does after an .htaccess change, and so does a panel action). That is
+        # over in a moment and is waited for, as settled_state() does; only a marker
+        # that stays refuses.
+        deadline = time.monotonic() + self.RESTART_WAIT
+        while True:
+            try:
+                initial = self.settle_previous_generation(self.inspect_state)
+                break
+            except OLSRestarting as restarting:
+                if time.monotonic() >= deadline:
+                    raise restart_unfinished(restarting, self.RESTART_WAIT) from restarting
+                time.sleep(0.25)
         self.verify_mapped_bundle(initial)
         if watchdog.inspect_watchdog(self.root, self.proc, allow_legacy=True):
             self.watch_lock = watchdog.lock_identity(self.root, require_exclusive=True)
