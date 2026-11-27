@@ -13,15 +13,21 @@ def load():
     tree = ast.parse(Path(__file__).with_name('upgrade.py').read_text())
     helper = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'validate_ols_configuration')
     notice = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'ols_site_error_notice')
+    # The wording of the error upgrade() ends with when the bundle step gives up
+    # (tested in test_upgrade_failure_reason.py).
+    wording = ('OLS_BUNDLE_FAILED', 'OLS_BUNDLE_FAILURE_LIMIT', 'shortened', 'ols_bundle_failure')
+    failure = [n for n in tree.body
+               if (isinstance(n, ast.FunctionDef) and n.name in wording)
+               or (isinstance(n, ast.Assign) and getattr(n.targets[0], 'id', '') in wording)]
     klass = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Upgrade')
     method = next(n for n in klass.body if isinstance(n, ast.FunctionDef) and n.name == 'upgrade')
     method.decorator_list = []
-    upgrade = Mock(CentOSPath='/not-centos', openEulerPath='/not-euler', SoftUpgrade=0)
+    upgrade = Mock(CentOSPath='/not-centos', openEulerPath='/not-euler', SoftUpgrade=0, Said=None)
     ns = {'os':os, 'subprocess':subprocess, 'shlex':shlex, 'Upgrade':upgrade, 'ols_upgrade_lock':nullcontext, 'OLSUpgradeFailure':RuntimeError, 'requireCSFMigration':Mock()}
     ns['load_ols_diagnostic_helper'] = lambda name: SimpleNamespace(
         validate=lambda binary: subprocess.run([binary, '-t']), recovery_hint=lambda *args: '',
         stock_recovery_hint=lambda *args: '', OLSService=Mock())
-    exec(compile(ast.fix_missing_locations(ast.Module(body=[helper,notice,method],type_ignores=[])), 'upgrade.py','exec'),ns)
+    exec(compile(ast.fix_missing_locations(ast.Module(body=[helper,notice]+failure+[method],type_ignores=[])), 'upgrade.py','exec'),ns)
     return ns
 
 
