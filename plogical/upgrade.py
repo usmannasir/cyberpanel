@@ -4982,10 +4982,10 @@ milter_default_action = accept
             source_find = "find /usr/local/CyberCP"
             if preserving_csf():
                 source_find += " -path /usr/local/CyberCP/configservercsf -prune -o"
-            command = source_find + " -type d -exec chmod 0755 {} \;"
+            command = source_find + " -type d -exec chmod 0755 {} \\;"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = source_find + " -type f -exec chmod 0644 {} \;"
+            command = source_find + " -type f -exec chmod 0644 {} \\;"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod -R 755 /usr/local/CyberCP/bin"
@@ -5005,10 +5005,10 @@ milter_default_action = accept
 
             ########### Fix LSCPD
 
-            command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
+            command = "find /usr/local/lscp -type d -exec chmod 0755 {} \\;"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
+            command = "find /usr/local/lscp -type f -exec chmod 0644 {} \\;"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod -R 755 /usr/local/lscp/bin"
@@ -5520,7 +5520,7 @@ vmail
             Upgrade.executioner(command, command, 0, True)
 
         # Fix all existing vhost confs to use new Logformat standard for better stats and accesslogs
-        command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \;"""
+        command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \\;"""
         Upgrade.executioner(command, command, 0, True)
 
         # Install any Cyberpanel missing crons to root crontab so its visible to users via crontab -l as root user

@@ -83,5 +83,32 @@ class UpgraderLogHandlingTests(unittest.TestCase):
         self.assertIn('os._exit(1)', fatal)
 
 
+class UpgraderErrorOutputTests(unittest.TestCase):
+    """The upgrade page's error box and an automatic update's summary are made from the end of
+    what the upgrader wrote to stderr. Anything else written there stands before the error the
+    upgrade ended with and, the text being cut to a fixed length, can push it out."""
+
+    def test_the_upgrader_compiles_without_a_warning(self):
+        # Python 3.12 reports every invalid escape sequence of the script it runs with two lines
+        # on stderr; five of them took the first 500 characters of the box.
+        import warnings
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            compile(SOURCE, 'upgrade.py', 'exec')
+        self.assertEqual([], ['line %s: %s' % (warning.lineno, warning.message) for warning in caught])
+
+    def test_find_commands_still_end_their_exec_with_an_escaped_semicolon(self):
+        def text(node):
+            if isinstance(node, ast.Constant):
+                return node.value
+            return node.s if type(node).__name__ == 'Str' else None  # Python 3.6 and 3.7
+        commands = [text(node) for node in ast.walk(ast.parse(SOURCE))]
+        commands = [value for value in commands
+                    if isinstance(value, str) and ' -exec ' in value and value.rstrip().endswith(';')]
+        self.assertEqual(len(commands), 5)
+        for command in commands:
+            self.assertTrue(command.endswith(' {} \\;'), command)
+
+
 if __name__ == '__main__':
     unittest.main()
