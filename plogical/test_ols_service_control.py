@@ -1026,3 +1026,122 @@ class StopBesideEarlierGenerationTests(unittest.TestCase):
                 patch.object(control.watchdog, 'inspect_watchdog', return_value=[]):
             self.assertEqual(200, self.service.settled_state()[0])
         self.assertEqual(2, len(calls))
+
+
+class StartCommandSideEffectTests(unittest.TestCase):
+    """What the vendor start command would run beside OpenLiteSpeed is refused by name.
+
+    Until 27 Nov 2026 one sentence, "An OLS restart marker, trial hook or watchdog
+    is active", stood for three different findings, and an administrator who met
+    it (Facebook group, 27 Nov 2026) could not tell which one, or what to do.
+    """
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+        (self.root / 'bin').mkdir()
+        (self.root / 'admin/tmp').mkdir(parents=True)
+        (self.root / 'bin/openlitespeed').write_bytes(b'core')
+        (self.root / 'bin/lswsctrl').write_bytes(b'vendor-controller')
+        (self.root / 'bin/lsws_env').write_bytes(b'environment')
+        hashes = {b'vendor-controller': next(iter(control.CONTROLLER_HASHES)), b'environment': control.ENV_HASH}
+        for patcher in (patch.object(control, 'digest', lambda path: hashes.get(Path(path).read_bytes(), 'unknown')),
+                        patch.dict(os.environ)):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        os.environ.pop('WSWATCH', None)
+        self.service = control.OLSService(self.root)
+
+    def refusal(self):
+        with self.assertRaises(RuntimeError) as caught:
+            self.service.controller()
+        return caught.exception
+
+    def test_the_vendor_controller_alone_is_accepted(self):
+        self.assertIsNone(self.service.controller())
+
+    def test_a_trial_key_hook_is_refused_with_its_path_and_the_command_that_removes_it(self):
+        hook = self.root / 'bin/get_trial_key.sh'
+        for create in (lambda: hook.write_bytes(b''), lambda: hook.symlink_to('missing')):
+            create()
+            error = self.refusal()
+            self.assertNotIsInstance(error, control.OLSRestarting)  # never waited for
+            self.assertIn('%s exists' % hook, str(error))
+            self.assertIn('(mv %s /root/)' % hook, str(error))
+            self.assertIn('run the upgrade again', str(error))
+            self.assertNotIn('restart marker', str(error))
+            self.assertNotIn('watchdog', str(error))
+            hook.unlink()
+        self.assertIsNone(self.service.controller())
+
+    def test_the_watchdog_variable_is_refused_by_name(self):
+        os.environ['WSWATCH'] = '1'
+        error = self.refusal()
+        self.assertNotIsInstance(error, control.OLSRestarting)
+        self.assertIn('WSWATCH', str(error))
+        self.assertIn('(unset WSWATCH)', str(error))
+        self.assertNotIn('trial', str(error))
+        self.assertNotIn('restart marker', str(error))
+
+    def test_the_restart_marker_is_a_restart_in_progress_and_is_named(self):
+        marker = self.root / 'admin/tmp/.restart'
+        marker.write_bytes(b'')
+        error = self.refusal()
+        self.assertIsInstance(error, control.OLSRestarting)
+        self.assertIn('restart marker %s exists' % marker, str(error))
+        self.assertNotIn('trial', str(error))
+        self.assertNotIn('watchdog', str(error))
+        marker.unlink()
+        self.assertIsNone(self.service.controller())
+
+    def test_the_hook_is_reported_before_a_restart_marker(self):
+        # The marker goes away by itself; the hook never does.
+        (self.root / 'admin/tmp/.restart').write_bytes(b'')
+        (self.root / 'bin/get_trial_key.sh').write_bytes(b'')
+        self.assertNotIsInstance(self.refusal(), control.OLSRestarting)
+
+    def test_an_unknown_controller_is_still_refused_first(self):
+        (self.root / 'bin/lswsctrl').write_bytes(b'another controller')
+        (self.root / 'bin/get_trial_key.sh').write_bytes(b'')
+        self.assertIn('cannot be verified', str(self.refusal()))
+
+
+class RestartInProgressTests(unittest.TestCase):
+    """A restart marker that outlasts the wait is reported with its reason and the next step."""
+    setUp = PreviousGenerationTests.setUp
+    process = PreviousGenerationTests.process
+    remove = PreviousGenerationTests.remove
+    kill = PreviousGenerationTests.kill
+    clock = PreviousGenerationTests.clock
+    MARKER = 'OpenLiteSpeed is restarting: its restart marker /usr/local/lsws/admin/tmp/.restart exists'
+
+    def restarting(self, checks):
+        """The marker is there for the first `checks` inspections (None: it never goes)."""
+        seen = []
+
+        def controller():
+            seen.append(1)
+            if checks is None or len(seen) <= checks:
+                raise control.OLSRestarting(self.MARKER)
+        self.service.controller.side_effect = controller
+        return seen
+
+    def test_settling_gives_the_same_reason_after_its_wait(self):
+        self.clock()
+        self.restarting(None)
+        for pid in (100, 101):
+            self.remove(pid)
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]):
+            with self.assertRaisesRegex(control.OLSRestarting, 'did not finish within 20 seconds .*systemctl restart lsws'):
+                self.service.settled_state()
+            # A single look still reports the marker as it is, at once.
+            with self.assertRaisesRegex(control.OLSRestarting, '^OpenLiteSpeed is restarting'):
+                self.service.state()
+
+    def test_workers_that_remain_are_still_reported_as_before(self):
+        self.clock()
+        for pid in (100, 101):
+            self.remove(pid)
+        with patch.object(self.service, 'state', side_effect=control.OLSWorkersRemain('OLS status missed a running process')):
+            with self.assertRaisesRegex(control.OLSWorkersRemain, '^OLS status missed a running process$'):
+                self.service.settled_state()
