@@ -1107,13 +1107,26 @@ class StartCommandSideEffectTests(unittest.TestCase):
 
 
 class RestartInProgressTests(unittest.TestCase):
-    """A restart marker that outlasts the wait is reported with its reason and the next step."""
+    """A graceful restart by something else is waited for wherever the upgrade first looks at the service.
+
+    prepare_state() is the first inspection of the bundle transaction and of every
+    configuration migration. It refused the whole upgrade (status 78) when the
+    restart marker happened to exist at that instant, while settled_state() waited.
+    """
     setUp = PreviousGenerationTests.setUp
     process = PreviousGenerationTests.process
     remove = PreviousGenerationTests.remove
     kill = PreviousGenerationTests.kill
     clock = PreviousGenerationTests.clock
     MARKER = 'OpenLiteSpeed is restarting: its restart marker /usr/local/lsws/admin/tmp/.restart exists'
+
+    def prepare(self):
+        for pid in (100, 101):
+            self.remove(pid)
+        with patch.object(control.watchdog, 'inspect_watchdog', return_value=[]), \
+                patch.object(control.watchdog, 'prepare_watchdog'), \
+                patch.object(self.service, 'verify_mapped_bundle'), patch('builtins.print'):
+            return self.service.prepare_state()
 
     def restarting(self, checks):
         """The marker is there for the first `checks` inspections (None: it never goes)."""
@@ -1126,6 +1139,27 @@ class RestartInProgressTests(unittest.TestCase):
         self.service.controller.side_effect = controller
         return seen
 
+    def test_prepare_state_waits_for_a_restart_in_progress(self):
+        now = self.clock()
+        self.restarting(3)
+        self.assertEqual(200, self.prepare()[0])
+        self.assertEqual(1000.75, now[0])  # three pauses of a quarter second
+        self.assertEqual([], self.killed)
+
+    def test_a_marker_that_stays_refuses_after_the_wait_and_names_the_next_step(self):
+        now = self.clock()
+        seen = self.restarting(None)
+        with self.assertRaises(control.OLSRestarting) as caught:
+            self.prepare()
+        self.assertEqual(1000.0 + control.OLSService.RESTART_WAIT, now[0])
+        self.assertEqual(81, len(seen))
+        message = str(caught.exception)
+        self.assertIn('did not finish within 20 seconds', message)
+        self.assertIn(self.MARKER, message)
+        self.assertIn('systemctl restart lsws', message)
+        self.assertIn('run the upgrade again', message)
+        self.assertEqual([], self.killed)
+
     def test_settling_gives_the_same_reason_after_its_wait(self):
         self.clock()
         self.restarting(None)
@@ -1137,6 +1171,14 @@ class RestartInProgressTests(unittest.TestCase):
             # A single look still reports the marker as it is, at once.
             with self.assertRaisesRegex(control.OLSRestarting, '^OpenLiteSpeed is restarting'):
                 self.service.state()
+
+    def test_anything_else_is_never_waited_for(self):
+        now = self.clock()
+        self.service.controller.side_effect = RuntimeError('/usr/local/lsws/bin/get_trial_key.sh exists.')
+        with self.assertRaisesRegex(RuntimeError, 'get_trial_key.sh exists') as caught:
+            self.prepare()
+        self.assertNotIsInstance(caught.exception, control.OLSRestarting)
+        self.assertEqual(1000.0, now[0])
 
     def test_workers_that_remain_are_still_reported_as_before(self):
         self.clock()
