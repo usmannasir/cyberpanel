@@ -16,7 +16,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-SOURCE = Path(__file__).with_name('upgrade.py').read_text()
+# Read as UTF-8 whatever the locale is: Python 3.6 does not do that by itself under C or POSIX.
+SOURCE = Path(__file__).with_name('upgrade.py').read_text(encoding='utf-8')
 WORDING = ('OLS_BUNDLE_FAILED', 'OLS_BUNDLE_FAILURE_LIMIT', 'shortened', 'ols_bundle_failure')
 
 
@@ -52,7 +53,7 @@ def load():
 
 def page_job_wording():
     """What the page job of an installed panel makes of the upgrader's last words (softUpgrade.py)."""
-    tree = ast.parse(Path(__file__).with_name('softUpgrade.py').read_text())
+    tree = ast.parse(Path(__file__).with_name('softUpgrade.py').read_text(encoding='utf-8'))
     function = next(node for node in tree.body
                     if isinstance(node, ast.FunctionDef) and node.name == 'readable_failure')
     namespace = {}
@@ -65,9 +66,11 @@ HOOK = ('Custom OLS overlay aborted: /usr/local/lsws/bin/get_trial_key.sh exists
         'OpenLiteSpeed runs that file on every start, and neither OpenLiteSpeed nor CyberPanel installs it, so '
         'this upgrade does not start OpenLiteSpeed while it is there. Move it away '
         '(mv /usr/local/lsws/bin/get_trial_key.sh /root/) and run the upgrade again')
-# The line OpenLiteSpeed reported on 26 Nov 2026 for a website whose braces do not pair up.
+# The line OpenLiteSpeed reported on 26 Nov 2026 for a website whose braces do not pair up, and the
+# sentence the upgrader's check puts before such lines when it refuses them.
 FAULT = ("2026-11-26 09:48:53.707205 [ERROR] [312722] [PlainConf] [context:/] parseFile find '{' and '}' do not "
          "match in the end of file /usr/local/lsws/conf/vhosts/%s/vhost.conf, rootTag virtualHostConfig.")
+REFUSED = 'OpenLiteSpeed configuration validation failed; resolve the errors before restarting: '
 BACK = ('The previous OpenLiteSpeed bundle is back in place, unchanged, and OpenLiteSpeed runs again. The upgrade '
         'stops because the configuration of a website gained an error while it ran; correct that website, then '
         'run the upgrade again: ')
@@ -162,15 +165,33 @@ class PageBoxTests(unittest.TestCase):
     def test_the_refusals_of_27_november_fit_unshortened(self):
         self.assertEqual(self.shown(['ERROR: ' + HOOK]), FAILED + ' ' + HOOK)
 
-    def test_a_rollback_for_a_website_keeps_the_reason_and_the_instruction(self):
+    def test_a_rollback_for_a_website_keeps_the_outcome_and_the_instruction(self):
         for websites in (1, 2, 5, 40):
             with self.subTest(websites=websites):
-                fault = '\n'.join(FAULT % ('site%d.example' % number) for number in range(websites))
+                fault = REFUSED + '\n'.join(FAULT % ('site%d.example' % number) for number in range(websites))
                 text = self.shown(['Downloading binary...', 'ERROR: %s; restoring the previous OLS bundle' % fault,
                                    BACK + fault])
+                self.assertIn(' ' + REFUSED, text)
+                # What became of the server and what to do are whole, whatever the number of websites.
                 self.assertIn('; restoring the previous OLS bundle. ' + BACK, text)
-                self.assertIn('/usr/local/lsws/conf/vhosts/site0.example/vhost.conf', text)
-                self.assertTrue(text.endswith('vhost.conf, rootTag virtualHostConfig.'))
+                # The last website is named in full, in the reason and again after the instruction;
+                # with several, the ones before it are in the log.
+                last = '/usr/local/lsws/conf/vhosts/site%d.example/vhost.conf, rootTag virtualHostConfig.' % (websites - 1)
+                self.assertEqual(text.count(last), 2)
+                self.assertTrue(text.endswith(last))
+                self.assertIn(' ... ', text)  # The rest of the lines is in the log.
+
+    def test_the_instruction_of_a_rollback_fits_the_room_of_two_messages(self):
+        # With two messages each has 385 characters and keeps its first 254. The sentence that says
+        # what became of the server and what to do must end before that, or the page shows it cut.
+        def text(node):
+            if isinstance(node, ast.Constant):
+                return node.value
+            return node.s if type(node).__name__ == 'Str' else None  # Python 3.6 and 3.7
+        said = [value for value in map(text, ast.walk(ast.parse(SOURCE)))
+                if isinstance(value, str) and value.startswith('The previous OpenLiteSpeed bundle is back in place')]
+        self.assertEqual(said, [BACK + '%s'])
+        self.assertLessEqual(len(BACK), 254)
 
     def test_a_long_reason_keeps_its_beginning_and_its_end(self):
         listing = ''.join('\tlib%03d.so => /lib64/lib%03d.so (0x00007f0000000000)\n' % (n, n) for n in range(40))
@@ -178,7 +199,7 @@ class PageBoxTests(unittest.TestCase):
                            'ERROR: Required binary failed download, checksum or ABI verification; keeping the '
                            'existing OLS bundle'])
         self.assertIn(' OLS runtime libraries did not validate: lib000.so => ', text)
-        self.assertIn(' ... ', text)
+        self.assertIn(' ... ', text)  # The middle of the listing is in the log only.
         self.assertTrue(text.endswith('libudns.so.0 => not found. Required binary failed download, checksum or ABI '
                                       'verification; keeping the existing OLS bundle'))
 
