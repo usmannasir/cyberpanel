@@ -573,9 +573,9 @@ class OLSService:
         hook = directory / 'get_trial_key.sh'
         if os.path.lexists(str(hook)):
             raise RuntimeError(
-                '%s exists. The start command of OpenLiteSpeed runs that file on every start; it is the trial key '
-                'hook of LiteSpeed Enterprise and no part of OpenLiteSpeed or of CyberPanel. Move it away '
-                '(mv %s /root/) and run the upgrade again' % (hook, hook))
+                '%s exists. The start command of OpenLiteSpeed runs that file on every start, and neither '
+                'OpenLiteSpeed nor CyberPanel installs it, so this upgrade does not start OpenLiteSpeed while it '
+                'is there. Move it away (mv %s /root/) and run the upgrade again' % (hook, hook))
         if os.getenv('WSWATCH'):
             raise RuntimeError(
                 'The environment variable WSWATCH is set, which makes the start command of OpenLiteSpeed start '
