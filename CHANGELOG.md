@@ -159,6 +159,29 @@ Two refusals of the upgrade at its OpenLiteSpeed check (code 78).
   which puts it back where the service expects it. Anything else the service
   and the process disagree about is refused as before.
 
+A second update the same day: the Version Management page now says why an
+upgrade stopped at its OpenLiteSpeed step.
+
+- The error such an upgrade ends with repeats the reason and what the step
+  did about it: for example which file to move away, or that the previous
+  OpenLiteSpeed files are back in place and OpenLiteSpeed runs again. The
+  page shows that error in its error box, where it used to end with only
+  "Custom OLS bundle installation failed; upgrade stopped before further
+  service changes. Check the upgrade log and any rollback diagnostics."; the
+  summary of an automatic update and the last lines in a terminal show it
+  too. The page keeps 900 characters of the error, so a long reason loses its
+  middle and the rest is shown whole; the complete text is in the progress
+  log as before. What is refused has not changed.
+- Where the panel runs on Python 3.12 (seen on Ubuntu 24.04 and
+  AlmaLinux 10), the same error box was filled with warnings about the
+  upgrade script itself ("SyntaxWarning: invalid escape sequence"), ahead of
+  that sentence. The script no longer causes them; they are gone from the
+  terminal as well.
+- A configuration change that OpenLiteSpeed could not take up now lets a
+  start or stop of the service finish before the previous configuration is
+  put back into use. Before, a restart at that moment could stop the upgrade
+  with the previous configuration on disk but not yet in use.
+
 ## v3.0.20 (build 20) — 2026-11-25
 
 Upgrades started from the panel (Version Management → Upgrade) finish like a
