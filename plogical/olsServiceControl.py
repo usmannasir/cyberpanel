@@ -1120,6 +1120,9 @@ def apply_config_changes(changes, validate, service):
             raise RuntimeError('OLS configuration restoration incomplete: ' + ', '.join(failures)) from original_error
         if originals:
             validate()
+            # A start or stop job of the unit may still run (a failed start, or a restart that
+            # raced the stop and start of reload); its claims are verifiable once it has finished.
+            service.wait_for_unit()
             state = service.settled_state()
             if activation_attempted and not state:
                 service.change('start', None)

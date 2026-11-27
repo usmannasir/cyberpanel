@@ -479,6 +479,42 @@ class ServiceControlTests(unittest.TestCase):
             self.assertEqual(conf.read_text(), 'before')
             self.assertEqual(svc.reload.call_count, 2)
 
+    def failed_reload(self, svc):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            conf = root / 'conf/httpd_config.conf'
+            conf.parent.mkdir()
+            conf.write_text('before')
+            svc.root = root
+            svc.state.return_value = svc.prepare_state.return_value = (123, '4', 'lshttpd.service')
+            svc.reload.side_effect = [RuntimeError('failed reload'), None]
+            try:
+                control.apply_config_changes({str(conf): ('before', 'after')}, Mock(), svc)
+            finally:
+                self.assertEqual(conf.read_text(), 'before')
+
+    def test_a_failed_reload_lets_the_units_job_finish_before_it_looks_at_the_service(self):
+        # A failed start, or a restart that raced the stop and start of reload, leaves the unit
+        # activating for seconds. Looked at then, its claims on the main PID cannot be verified
+        # and the restored configuration would not be activated.
+        svc, order = Mock(), []
+        svc.wait_for_unit.side_effect = lambda: order.append('wait')
+        svc.settled_state.side_effect = lambda: order.append('look') or (456, '9', 'lshttpd.service')
+        with self.assertRaisesRegex(RuntimeError, 'failed reload'):
+            self.failed_reload(svc)
+        self.assertEqual(order, ['wait', 'look'])
+        svc.reload.assert_called_with((456, '9', 'lshttpd.service'))
+        svc.change.assert_not_called()
+
+    def test_a_unit_job_that_does_not_end_stops_with_the_configuration_restored(self):
+        svc = Mock()
+        svc.wait_for_unit.side_effect = RuntimeError('The OpenLiteSpeed unit is still activating after 60 seconds')
+        with self.assertRaisesRegex(RuntimeError, 'still activating'):
+            self.failed_reload(svc)
+        svc.settled_state.assert_not_called()
+        self.assertEqual(svc.reload.call_count, 1)
+        svc.change.assert_not_called()
+
     def test_concurrent_config_edit_is_preserved(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
