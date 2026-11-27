@@ -306,6 +306,48 @@ def ols_site_error_notice():
     return '\n'.join(text)
 
 
+OLS_BUNDLE_FAILED = 'Custom OLS bundle installation failed; upgrade stopped before further service changes.'
+# The upgrade page of an installed panel keeps 900 characters of the error an
+# upgrade ends with and cuts the middle out of a longer one. That page belongs
+# to the release being replaced, so the error itself stays below its limit.
+OLS_BUNDLE_FAILURE_LIMIT = 860
+
+
+def shortened(text, limit):
+    """`text` in at most `limit` characters: its beginning and its end, ' ... ' between them."""
+    if len(text) <= limit:
+        return text
+    kept = max(limit - 5, 3)
+    return text[:kept - kept // 3] + ' ... ' + text[len(text) - kept // 3:]
+
+
+def ols_bundle_failure(said):
+    """The error an upgrade ends with after the OpenLiteSpeed bundle step gave up.
+
+    `said` is what that step wrote to the log. The error box of the upgrade
+    page, the summary of an automatic update and the last lines in a terminal
+    show this error and not the log, so it repeats the step's own words from
+    its first error on: the reason, and what the step did about it (previous
+    bundle restored, a rollback that needs attention). Each message gets the
+    same share of the room; a longer one loses its middle, which is in the log.
+    """
+    said = [str(message) for message in said]
+    first = next((index for index, message in enumerate(said) if message.startswith('ERROR: ')), None)
+    parts = [] if first is None else [
+        ' '.join((message[len('ERROR: '):] if message.startswith('ERROR: ') else message).split())
+        for message in said[first:]]
+    parts = [part for part in parts if part]
+    if not parts:
+        return OLS_BUNDLE_FAILED + ' Check the upgrade log and any rollback diagnostics.'
+    if len(parts) > 6:
+        parts = parts[:3] + ['...'] + parts[-2:]
+    share = (OLS_BUNDLE_FAILURE_LIMIT - len(OLS_BUNDLE_FAILED)) // len(parts) - 2
+    text = OLS_BUNDLE_FAILED
+    for part in parts:
+        text += (' ' if text.endswith(('.', ':', ';', '?', '!')) else '. ') + shortened(part, share)
+    return text
+
+
 def apply_ols_config_changes(changes):
     if not changes:
         return
@@ -948,6 +990,10 @@ class Upgrade:
     SoftUpgrade = 0
     # Steps of this run that did not complete although the upgrade went on.
     Incomplete = []
+    # What the OpenLiteSpeed bundle step writes while it runs, for the error the upgrade
+    # ends with when that step gives up (see ols_bundle_failure). None at any other time:
+    # messages of other steps are not kept.
+    Said = None
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -1044,6 +1090,8 @@ class Upgrade:
 
     @staticmethod
     def stdOut(message, do_exit=0):
+        if Upgrade.Said is not None:
+            Upgrade.Said.append(message)
         print("\n\n")
         print(("[" + time.strftime(
             "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
@@ -6041,9 +6089,13 @@ pm.max_spare_servers = 3
                     Upgrade.stdOut(notice)
                 # The transaction owns validation, rollback and service state.
                 # Preserve administrator-selected module and AutoSSL settings.
-                installed = Upgrade.installCustomOLSBinaries(split, accepted=stale)
+                Upgrade.Said = []
+                try:
+                    installed = Upgrade.installCustomOLSBinaries(split, accepted=stale)
+                finally:
+                    said, Upgrade.Said = Upgrade.Said, None
                 if installed is False:
-                    raise OLSUpgradeFailure("Custom OLS bundle installation failed; upgrade stopped before further service changes. Check the upgrade log and any rollback diagnostics.")
+                    raise OLSUpgradeFailure(ols_bundle_failure(said))
                 if split is not None and installed is None:
                     raise OLSUpgradeFailure("A vendor OpenLiteSpeed core is installed beside a disabled CyberPanel module and no CyberPanel OpenLiteSpeed bundle is available for this platform; nothing was changed.")
                 if stale is not None and installed is None:
