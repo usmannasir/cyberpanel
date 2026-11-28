@@ -7,7 +7,16 @@ from django.test import Client, RequestFactory, SimpleTestCase, tag
 from django.test import override_settings
 
 from CyberCP.secMiddleware import secMiddleware
+from webmail import mailbox_secret
 from webmail.webmailManager import WebmailManager
+
+
+def sign_in(request, password='secret'):
+    """Give request the standalone session a successful login creates."""
+    request.session['webmail_standalone'] = True
+    request.session['webmail_email'] = 'user@example.com'
+    mailbox_secret.store(request, HttpResponse(), password)
+    return request
 
 
 class StandaloneWebmailMiddlewareTests(SimpleTestCase):
@@ -55,6 +64,43 @@ class StandaloneWebmailMiddlewareTests(SimpleTestCase):
         )
 
     def test_valid_standalone_session_can_access_mailbox_api(self):
+        request = sign_in(self.request('/webmail/api/listFolders', body={'folder': 'INBOX'}))
+
+        response = self.middleware(request)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(b'allowed', response.content)
+
+    def test_session_without_the_browser_key_is_rejected(self):
+        request = sign_in(self.request('/webmail/api/listFolders', body={'folder': 'INBOX'}))
+        del request.COOKIES[mailbox_secret.COOKIE_NAME]
+
+        response = self.middleware(request)
+
+        self.assertEqual('This request need session.',
+                         json.loads(response.content)['error_message'])
+
+    def test_session_whose_secret_cannot_be_opened_is_rejected(self):
+        request = sign_in(self.request('/webmail/api/listFolders', body={'folder': 'INBOX'}))
+        from cryptography.fernet import Fernet
+        request.COOKIES[mailbox_secret.COOKIE_NAME] = Fernet.generate_key().decode('ascii')
+
+        response = self.middleware(request)
+
+        self.assertEqual('This request need session.',
+                         json.loads(response.content)['error_message'])
+
+    def test_ended_mailbox_session_is_sent_to_the_webmail_login(self):
+        session = SessionStore()
+        session.update({'webmail_standalone': True, 'webmail_email': 'user@example.com',
+                        'webmail_password': 'secret'})
+
+        response = self.middleware(self.request('/webmail/', session=session))
+
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('/webmail/login', response['Location'])
+
+    def test_plain_password_session_of_older_releases_is_rejected(self):
         session = SessionStore()
         session.update({
             'webmail_standalone': True,
@@ -63,13 +109,10 @@ class StandaloneWebmailMiddlewareTests(SimpleTestCase):
         })
 
         response = self.middleware(self.request(
-            '/webmail/api/listFolders',
-            session=session,
-            body={'folder': 'INBOX'},
-        ))
+            '/webmail/api/listFolders', session=session, body={'folder': 'INBOX'}))
 
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(b'allowed', response.content)
+        self.assertEqual('This request need session.',
+                         json.loads(response.content)['error_message'])
 
     def test_incomplete_standalone_session_is_rejected(self):
         session = SessionStore()
@@ -162,7 +205,7 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
     def test_successful_login_creates_standalone_session(self, imap_client):
         session = SessionStore()
         request = self.request(
-            body={'email': ' user@example.com ', 'password': 'secret'},
+            body={'email': ' user@example.com ', 'password': 'mailbox-pw-7781'},
             session=session,
         )
 
@@ -170,9 +213,17 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
 
         self.assertEqual(1, json.loads(response.content)['status'])
         self.assertEqual('user@example.com', session['webmail_email'])
-        self.assertEqual('secret', session['webmail_password'])
+        self.assertNotIn('webmail_password', session)
+        self.assertNotIn('mailbox-pw-7781', json.dumps(dict(session.items())))
         self.assertTrue(session['webmail_standalone'])
-        imap_client.assert_called_once_with('user@example.com', 'secret')
+        cookie = response.cookies[mailbox_secret.COOKIE_NAME]
+        self.assertTrue(cookie['httponly'])
+        self.assertTrue(cookie['secure'])
+        self.assertEqual('/webmail', cookie['path'])
+        later = self.request(session=session)
+        later.COOKIES[mailbox_secret.COOKIE_NAME] = cookie.value
+        self.assertEqual('mailbox-pw-7781', mailbox_secret.password(later))
+        imap_client.assert_called_once_with('user@example.com', 'mailbox-pw-7781')
         imap_client.return_value.close.assert_called_once_with()
 
     @mock.patch('webmail.webmailManager.WebmailManager._get_master_config',
@@ -200,11 +251,7 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
                 return_value=('cyberpanel_master', 'stale-master-password'))
     @mock.patch('webmail.webmailManager.SieveClient')
     def test_standalone_sieve_uses_authenticated_mailbox_credentials(self, sieve_client, master_config):
-        request = self.request(session={
-            'webmail_standalone': True,
-            'webmail_email': 'user@example.com',
-            'webmail_password': 'secret',
-        })
+        request = sign_in(self.request())
 
         WebmailManager(request)._get_sieve()
 
@@ -260,14 +307,7 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
         )
 
     def test_standalone_sso_returns_the_authenticated_mailbox(self):
-        session = SessionStore()
-        session.update({
-            'webmail_standalone': True,
-            'webmail_email': 'user@example.com',
-            'webmail_password': 'secret',
-        })
-
-        response = WebmailManager(self.request(session=session)).apiSSO()
+        response = WebmailManager(sign_in(self.request())).apiSSO()
 
         payload = json.loads(response.content)
         self.assertEqual(1, payload['status'])
@@ -275,19 +315,16 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
         self.assertEqual(['user@example.com'], payload['accounts'])
 
     def test_logout_clears_standalone_mailbox_session(self):
-        session = SessionStore()
-        session.update({
-            'webmail_standalone': True,
-            'webmail_email': 'user@example.com',
-            'webmail_password': 'secret',
-        })
+        request = sign_in(self.request())
+        session = request.session
 
-        response = WebmailManager(self.request(session=session)).apiLogout()
+        response = WebmailManager(request).apiLogout()
 
         self.assertEqual(1, json.loads(response.content)['status'])
         self.assertNotIn('webmail_standalone', session)
         self.assertNotIn('webmail_email', session)
-        self.assertNotIn('webmail_password', session)
+        self.assertNotIn(mailbox_secret.SESSION_KEY, session)
+        self.assertEqual(0, int(response.cookies[mailbox_secret.COOKIE_NAME]['max-age']))
 
     @mock.patch('webmail.webmailManager.IMAPClient', side_effect=Exception('denied'))
     @mock.patch('webmail.webmailManager.logging.CyberCPLogFileWriter.writeToFile')
@@ -309,21 +346,92 @@ class StandaloneWebmailManagerTests(SimpleTestCase):
     def test_standalone_mailbox_page_renders_without_panel_user(self, render_view):
         request = self.factory.get('/webmail/')
         request.session = SessionStore()
-        request.session.update({
-            'webmail_standalone': True,
-            'webmail_email': 'user@example.com',
-            'webmail_password': 'secret',
-        })
+        sign_in(request)
 
         response = WebmailManager(request).loadWebmail()
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual('webmail/index.html', render_view.call_args.args[1])
+        # call_args[0] rather than .args: Python 3.6 (AlmaLinux 8) has no .args.
+        self.assertEqual('webmail/index.html', render_view.call_args[0][1])
         self.assertEqual(
             'webmail/base.html',
-            render_view.call_args.args[2]['webmail_base_template'],
+            render_view.call_args[0][2]['webmail_base_template'],
         )
         self.assertEqual(
             'user@example.com',
-            render_view.call_args.args[2]['email'],
+            render_view.call_args[0][2]['email'],
         )
+
+
+class StoredPasswordScrubTests(SimpleTestCase):
+    """Sessions written by older releases held the mailbox password itself."""
+
+    def fake_session_model(self, rows):
+        class Manager:
+            def only(self, *fields):
+                return self
+
+            def iterator(self):
+                from types import SimpleNamespace
+                return [SimpleNamespace(session_key=key, session_data=value)
+                        for key, value in list(rows.items())]
+
+            def filter(self, session_key):
+                class Update:
+                    def update(self, session_data):
+                        rows[session_key] = session_data
+                return Update()
+
+        class Model:
+            objects = Manager()
+
+        return Model
+
+    def test_plain_passwords_are_removed_and_other_sessions_left_alone(self):
+        from django.contrib.sessions.backends.db import SessionStore as DatabaseStore
+        codec = DatabaseStore()
+        rows = {
+            'standalone': codec.encode({'webmail_standalone': True,
+                                        'webmail_email': 'user@example.com',
+                                        'webmail_password': 'secret'}),
+            'panel': codec.encode({'userID': 1}),
+            'unreadable': 'not a session',
+        }
+        untouched = dict(rows)
+
+        # The real store: Django salts session signatures with its class name.
+        with mock.patch.object(DatabaseStore, 'clear_expired') as clear_expired:
+            changed = mailbox_secret.scrub_stored_passwords(
+                self.fake_session_model(rows), DatabaseStore)
+
+        clear_expired.assert_called_once_with()
+
+        self.assertEqual(1, changed)
+        scrubbed = codec.decode(rows['standalone'])
+        self.assertNotIn('webmail_password', scrubbed)
+        self.assertEqual('user@example.com', scrubbed['webmail_email'])
+        self.assertEqual(untouched['panel'], rows['panel'])
+        self.assertEqual(untouched['unreadable'], rows['unreadable'])
+
+    def test_scrub_never_raises(self):
+        class Broken:
+            class objects:
+                @staticmethod
+                def only(*fields):
+                    raise RuntimeError('database unavailable')
+
+        with mock.patch('plogical.CyberCPLogFileWriter.CyberCPLogFileWriter.writeToFile'):
+            self.assertEqual(0, mailbox_secret.scrub_stored_passwords(Broken, SessionStore))
+
+    def test_scrub_runs_after_every_migrate(self):
+        from django.apps import apps
+        from django.db.models.signals import post_migrate
+        config = apps.get_app_config('webmail')
+        with mock.patch('webmail.mailbox_secret.scrub_stored_passwords') as scrub:
+            receivers = post_migrate._live_receivers(config)
+            if isinstance(receivers, tuple):  # Django 5 splits sync and async
+                receivers = list(receivers[0]) + list(receivers[1])
+            for receiver in receivers:
+                if getattr(receiver, '__module__', '') == 'webmail.apps':
+                    receiver(sender=config)
+        scrub.assert_called_once_with()

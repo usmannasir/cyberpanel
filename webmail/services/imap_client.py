@@ -70,18 +70,31 @@ class IMAPClient:
     def _decode_header_value(self, value):
         return decode_mime_header(value)
 
+    # LIST answer: (flags) "delimiter" name, where the name is a quoted string
+    # (with \\ and \" escapes) or an atom.
+    LIST_LINE = re.compile(
+        r'\(([^)]*)\)\s+(?:"((?:[^"\\]|\\.)*)"|NIL)\s+(?:"((?:[^"\\]|\\.)*)"|(\S.*?))\s*$')
+
     def _parse_folder_list(self, line):
+        if isinstance(line, tuple) and len(line) == 2:
+            # A name sent as a literal: "(flags) "." {n}" followed by the name.
+            head, literal = (part.decode('utf-8', errors='replace') if isinstance(part, bytes) else part
+                             for part in line)
+            head = re.sub(r'\{\d+\}$', '', head.rstrip())
+            line = '%s "%s"' % (head, literal.replace('\\', '\\\\').replace('"', '\\"'))
         if isinstance(line, bytes):
             line = line.decode('utf-8', errors='replace')
-        match = re.match(r'\(([^)]*)\)\s+"([^"]+)"\s+"?([^"]+)"?', line)
+        if not isinstance(line, str):
+            return None
+        match = self.LIST_LINE.match(line)
         if not match:
-            match = re.match(r'\(([^)]*)\)\s+"([^"]+)"\s+(.+)', line)
-        if match:
-            flags = match.group(1)
-            delimiter = match.group(2)
-            name = match.group(3).strip('"')
-            return {'name': name, 'delimiter': delimiter, 'flags': flags}
-        return None
+            return None
+        flags, delimiter, quoted, atom = match.groups()
+        if quoted is not None:
+            name = re.sub(r'\\(.)', r'\1', quoted)
+        else:
+            name = atom
+        return {'name': name, 'delimiter': delimiter or '', 'flags': flags}
 
     def _display_name(self, folder_name):
         """Return a readable label while keeping the wire mailbox unchanged."""
@@ -140,8 +153,7 @@ class IMAPClient:
             unread = 0
             total = 0
             try:
-                # Quote folder names with spaces for STATUS command
-                quoted = '"%s"' % folder_name
+                quoted = self._quote_mailbox(folder_name)
                 st, counts = self.conn.status(quoted, '(MESSAGES UNSEEN)')
                 if st == 'OK' and counts[0]:
                     count_str = counts[0].decode('utf-8', errors='replace') if isinstance(counts[0], bytes) else counts[0]
@@ -165,8 +177,8 @@ class IMAPClient:
         return folders
 
     def _select(self, folder):
-        """Select a folder, quoting names with spaces."""
-        return self.conn.select('"%s"' % folder)
+        """Select a folder by its quoted name."""
+        return self.conn.select(self._quote_mailbox(folder))
 
     def list_messages(self, folder='INBOX', page=1, per_page=25, sort='date_desc'):
         self._select(folder)
@@ -257,6 +269,8 @@ class IMAPClient:
     def search_messages(self, folder='INBOX', query='', criteria='ALL'):
         self._select(folder)
         if query:
+            if any(ord(char) < 32 or ord(char) == 127 for char in query):
+                raise ValueError('Search text cannot contain control characters.')
             # Escape quotes to prevent IMAP search injection
             safe_query = query.replace('\\', '\\\\').replace('"', '\\"')
             search_criteria = '(OR OR (FROM "%s") (TO "%s") (SUBJECT "%s"))' % (safe_query, safe_query, safe_query)
@@ -268,8 +282,9 @@ class IMAPClient:
         return data[0].split() if data[0] else []
 
     def get_message(self, folder, uid):
+        uid = self._uid_set([uid])
         self._select(folder)
-        status, data = self.conn.uid('fetch', str(uid).encode(), '(RFC822 FLAGS)')
+        status, data = self.conn.uid('fetch', uid, '(RFC822 FLAGS)')
         if status != 'OK' or not data or not data[0]:
             return None
 
@@ -296,8 +311,9 @@ class IMAPClient:
         return parsed
 
     def get_attachment(self, folder, uid, part_id):
+        uid = self._uid_set([uid])
         self._select(folder)
-        status, data = self.conn.uid('fetch', str(uid).encode(), '(RFC822)')
+        status, data = self.conn.uid('fetch', uid, '(RFC822)')
         if status != 'OK' or not data or not data[0]:
             return None
 
@@ -330,9 +346,9 @@ class IMAPClient:
         return None
 
     def move_messages(self, folder, uids, target_folder):
-        uid_str = self._delete_uid_set(uids)
-        quoted_folder = self._delete_mailbox(folder)
-        quoted_target = self._delete_mailbox(target_folder)
+        uid_str = self._uid_set(uids)
+        quoted_folder = self._quote_mailbox(folder)
+        quoted_target = self._quote_mailbox(target_folder)
         if folder == target_folder:
             raise IMAPOperationError('Select a different destination folder before moving messages.')
         uncertain = ('The mail server did not confirm the message move. '
@@ -349,7 +365,7 @@ class IMAPClient:
             raise IMAPOperationError(uncertain) from error
 
     @staticmethod
-    def _delete_uid_set(uids):
+    def _uid_set(uids):
         if not isinstance(uids, list) or not uids:
             raise ValueError('Select explicit message UIDs before changing messages.')
         selected = []
@@ -364,7 +380,8 @@ class IMAPClient:
         return ','.join(selected)
 
     @staticmethod
-    def _delete_mailbox(folder):
+    def _quote_mailbox(folder):
+        """A folder name as an IMAP quoted string (every command uses this)."""
         if (not isinstance(folder, str) or not folder
                 or any(ord(char) < 32 or ord(char) == 127 for char in folder)):
             raise ValueError('Select a valid folder before changing messages.')
@@ -415,8 +432,8 @@ class IMAPClient:
             self._delete_require_ok(self.conn.uid('expunge', uid_str), uncertain)
 
     def delete_messages(self, folder, uids):
-        uid_str = self._delete_uid_set(uids)
-        quoted_folder = self._delete_mailbox(folder)
+        uid_str = self._uid_set(uids)
+        quoted_folder = self._quote_mailbox(folder)
         uncertain = ('The mail server did not confirm message deletion. '
                      'Refresh the source folder and Trash before retrying.')
         try:
@@ -434,7 +451,7 @@ class IMAPClient:
                 raise IMAPOperationError('The mail server does not support moving only the selected messages to Trash.')
             target = None
             for trash in trash_folders:
-                quoted_trash = self._delete_mailbox(trash)
+                quoted_trash = self._quote_mailbox(trash)
                 status, _ = self.conn.status(quoted_trash, '(UIDVALIDITY)')
                 if status == 'OK':
                     target = quoted_trash
@@ -442,7 +459,7 @@ class IMAPClient:
                 if status != 'NO':
                     raise IMAPOperationError('Unable to verify the Trash folder.')
             if target is None:
-                target = self._delete_mailbox(trash_folders[0])
+                target = self._quote_mailbox(trash_folders[0])
                 self._delete_require_ok(self.conn.create(target),
                                         'Unable to create the Trash folder. No messages were deleted.')
                 self._delete_require_ok(self.conn.status(target, '(UIDVALIDITY)'),
@@ -456,8 +473,10 @@ class IMAPClient:
             raise IMAPOperationError(uncertain) from error
 
     def set_flags(self, folder, uids, flags, action='add'):
+        if not uids:
+            return True
+        uid_str = self._uid_set(list(uids))
         self._select(folder)
-        uid_str = ','.join(str(u) for u in uids)
         flag_str = '(%s)' % ' '.join(flags)
         if action == 'add':
             self.conn.uid('store', uid_str, '+FLAGS', flag_str)
@@ -475,20 +494,20 @@ class IMAPClient:
         return self.set_flags(folder, uids, ['\\Flagged'], 'add')
 
     def create_folder(self, name):
-        status, _ = self.conn.create(name)
+        status, _ = self.conn.create(self._quote_mailbox(name))
         return status == 'OK'
 
     def rename_folder(self, old_name, new_name):
-        status, _ = self.conn.rename(old_name, new_name)
+        status, _ = self.conn.rename(self._quote_mailbox(old_name), self._quote_mailbox(new_name))
         return status == 'OK'
 
     def delete_folder(self, name):
-        status, _ = self.conn.delete(name)
+        status, _ = self.conn.delete(self._quote_mailbox(name))
         return status == 'OK'
 
     def append_message(self, folder, raw_message, flags=''):
         if isinstance(raw_message, str):
             raw_message = raw_message.encode('utf-8')
         flag_str = '(%s)' % flags if flags else None
-        status, _ = self.conn.append('"%s"' % folder, flag_str, None, raw_message)
+        status, _ = self.conn.append(self._quote_mailbox(folder), flag_str, None, raw_message)
         return status == 'OK'

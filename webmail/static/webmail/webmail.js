@@ -1001,7 +1001,21 @@ app.controller('webmailCtrl', ['$scope', '$http', '$sce', '$timeout', '$interval
             if (data.status === 1) {
                 $scope.editingRule = null;
                 $scope.loadRules();
-                notify('Rule saved.');
+                if (data.otherActiveScript) {
+                    // Only one filter script can be active per mailbox.
+                    if (confirm('Rule saved. The filter script "' + data.otherActiveScript +
+                                '" set up in another mail client is active on this mailbox, so ' +
+                                'these rules are not applied. Replace it with the rules from this page?')) {
+                        apiCall('/webmail/api/activateRules', {}, function(result) {
+                            notify(result.status === 1 ? 'Rules activated.' : result.error_message,
+                                   result.status === 1 ? undefined : 'error');
+                        });
+                    } else {
+                        notify('Rule saved. The other filter script stays active.');
+                    }
+                } else {
+                    notify('Rule saved.');
+                }
             } else {
                 notify(data.error_message, 'error');
             }
