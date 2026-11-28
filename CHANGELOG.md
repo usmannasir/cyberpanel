@@ -182,6 +182,50 @@ upgrade stopped at its OpenLiteSpeed step.
   put back into use. Before, a restart at that moment could stop the upgrade
   with the previous configuration on disk but not yet in use.
 
+### Fixed later in build 21 (2026-11-28)
+Security update for the built-in webmail (reported privately). Upgrading is
+recommended for every server whose webmail is used.
+
+- The image proxy of the webmail (`/webmail/api/proxyImage`), which shows the
+  remote pictures of a message through the panel, now hands back only PNG,
+  JPEG, GIF, WebP, AVIF, BMP and ICO images, recognised from the image itself
+  and sent with that type, under a policy that lets nothing in them run. SVG
+  and anything else are refused. Before, an SVG picture could run script in
+  the panel with the rights of whoever was signed in. Pictures are fetched
+  only from public addresses on the standard web ports: every address a name
+  resolves to (IPv4 and IPv6) must be public, the connection goes to the
+  address that was checked, and each redirect is checked again (three at
+  most). One picture may take 30 seconds and 5 MB at most.
+- Links in a message no longer lead into the panel: a relative link, or a web
+  link without a host name, is removed. Attachments are downloaded under the
+  same policy as pictures.
+- A webmail sign-in with a mailbox address and password (`/webmail/login`) no
+  longer keeps the mailbox password in the panel database. The session keeps
+  it encrypted, and the key exists only in a cookie of the signed-in browser.
+  The upgrade removes the passwords that earlier releases left in stored
+  sessions and deletes sessions that had expired; mailboxes signed in that
+  way sign in again. Copies of the panel database made before the upgrade can
+  still contain such passwords.
+- Filter rules accept only what the Filters page offers (From, To, Subject or
+  Size; contains, is, matches, or greater than with a size such as 100K or
+  5M; move to a folder, forward to one address, discard or flag), and every
+  value is written into the filter script as text. Rules saved earlier with a
+  field or size the page does not offer are left out of the script. When a
+  filter script made in another mail client is active on the mailbox, saving
+  a rule no longer switches it off: the page asks before replacing it.
+- Folder names are sent to the mail server quoted in every command, so
+  folders whose names contain spaces, quotes or a backslash are created,
+  renamed, deleted and listed as typed (a name with a space used to be
+  created cut off at the space). Message numbers and search text are checked
+  first.
+- Bcc recipients receive the message. The webmail never handed them to the
+  mail server, so they received nothing. The other recipients still do not
+  see them; the sender's Sent copy shows them.
+
+When the changes apply: from the upgrade to this update on, by any path (the
+guide's command, the Version Management page or automatic updates). The
+webmail page loads its new script by itself.
+
 ## v3.0.20 (build 20) — 2026-11-25
 
 Upgrades started from the panel (Version Management → Upgrade) finish like a
