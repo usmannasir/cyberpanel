@@ -38,10 +38,11 @@ class secMiddleware:
 
     @staticmethod
     def _has_standalone_webmail_session(request):
+        from webmail import mailbox_secret
         return bool(
             request.session.get('webmail_standalone')
             and request.session.get('webmail_email')
-            and request.session.get('webmail_password')
+            and mailbox_secret.present(request)
         )
 
     get_client_ip = staticmethod(get_client_ip)
@@ -111,6 +112,10 @@ class secMiddleware:
                     return HttpResponse(final_json)
                 else:
                     from django.shortcuts import redirect
+                    if pathActual.startswith('/webmail/') and request.session.get('webmail_standalone'):
+                        # A mailbox sign-in that ended (or one from before the
+                        # password was kept encrypted) signs in to webmail again.
+                        return redirect('/webmail/login')
                     from loginSystem.views import loadLoginPage
                     return redirect(loadLoginPage)
 

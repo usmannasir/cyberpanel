@@ -12,6 +12,8 @@ from .services.smtp_client import SMTPClient
 from .services.email_composer import EmailComposer
 from .services.email_parser import EmailParser
 from .services.sieve_client import SieveClient
+from .services import image_proxy
+from . import mailbox_secret
 from plogical.securityUtils import record_rate_limit_failure
 
 import plogical.CyberCPLogFileWriter as logging
@@ -95,7 +97,7 @@ class WebmailManager:
             return IMAPClient(addr, '', master_user=master_user, master_password=master_pass)
 
         # Fallback: standalone login with stored password
-        password = self.request.session.get('webmail_password', '')
+        password = mailbox_secret.password(self.request)
         return IMAPClient(addr, password)
 
     def _get_smtp(self):
@@ -112,7 +114,7 @@ class WebmailManager:
         if master_user and master_pass and not is_standalone:
             return SMTPClient(addr, '', use_local_relay=True)
 
-        password = self.request.session.get('webmail_password', '')
+        password = mailbox_secret.password(self.request)
         return SMTPClient(addr, password)
 
     def _get_sieve(self, email_addr=None):
@@ -124,7 +126,7 @@ class WebmailManager:
         if master_user and master_pass and not self.request.session.get('webmail_standalone'):
             return SieveClient(addr, '', master_user=master_user, master_password=master_pass)
 
-        password = self.request.session.get('webmail_password', '')
+        password = mailbox_secret.password(self.request)
         return SieveClient(addr, password)
 
     def _get_managed_accounts(self):
@@ -160,7 +162,7 @@ class WebmailManager:
         accounts = self._get_managed_accounts()
 
         if self.request.session.get('webmail_standalone'):
-            if not email or not self.request.session.get('webmail_password'):
+            if not email or not mailbox_secret.password(self.request):
                 return redirect('/webmail/login')
             return render(self.request, 'webmail/index.html', {
                 'email': email,
@@ -225,24 +227,25 @@ class WebmailManager:
         cache.delete(failureCacheKey)
         self.request.session.cycle_key()
         self.request.session['webmail_email'] = email_addr
-        self.request.session['webmail_password'] = password
         self.request.session['webmail_standalone'] = True
-        self.request.session.set_expiry(43200)
+        response = mailbox_secret.store(self.request, self._success(), password)
+        self.request.session.set_expiry(mailbox_secret.LIFETIME)
         self.request.session.save()
-        return self._success()
+        return response
 
     def apiLogout(self):
-        for key in ['webmail_email', 'webmail_password', 'webmail_standalone']:
+        for key in ['webmail_email', 'webmail_standalone']:
             self.request.session.pop(key, None)
+        response = mailbox_secret.forget(self.request, self._success())
         self.request.session.cycle_key()
         self.request.session.save()
-        return self._success()
+        return response
 
     def apiSSO(self):
         """Auto-login for CyberPanel users."""
         if self.request.session.get('webmail_standalone'):
             current = self._get_email()
-            if not current or not self.request.session.get('webmail_password'):
+            if not current or not mailbox_secret.password(self.request):
                 return self._error('Mailbox session expired.')
             return self._success({'email': current, 'accounts': [current]})
 
@@ -388,6 +391,9 @@ class WebmailManager:
             if not safe_filename:
                 safe_filename = 'attachment'
             response['Content-Disposition'] = 'attachment; filename="%s"' % safe_filename
+            # The bytes come from the sender and are served from the panel's
+            # address: never let a browser run them as a page.
+            response['Content-Security-Policy'] = image_proxy.RESPONSE_POLICY
             return response
         except Exception as e:
             return self._error(str(e))
@@ -710,23 +716,36 @@ class WebmailManager:
         except Exception as e:
             return self._error(str(e))
 
+    RULE_TEXT_FIELDS = ('name', 'condition_field', 'condition_type',
+                        'condition_value', 'action_type', 'action_value')
+
+    def _rule_saved(self, notice, extra=None):
+        data = dict(extra or {})
+        if notice:
+            data['otherActiveScript'] = notice
+        return self._success(data)
+
     def apiCreateRule(self):
         email = self._get_email()
         data = self._get_post_data()
         try:
+            values = {
+                'name': data.get('name', 'New Rule'),
+                'condition_field': data.get('conditionField', 'from'),
+                'condition_type': data.get('conditionType', 'contains'),
+                'condition_value': data.get('conditionValue', ''),
+                'action_type': data.get('actionType', 'move'),
+                'action_value': data.get('actionValue', ''),
+            }
+            SieveClient.validate_rule(values)
             rule = SieveRule.objects.create(
                 email_account=email,
-                name=data.get('name', 'New Rule'),
-                priority=data.get('priority', 0),
-                is_active=data.get('isActive', True),
-                condition_field=data.get('conditionField', 'from'),
-                condition_type=data.get('conditionType', 'contains'),
-                condition_value=data.get('conditionValue', ''),
-                action_type=data.get('actionType', 'move'),
-                action_value=data.get('actionValue', ''),
+                priority=int(data.get('priority', 0) or 0),
+                is_active=bool(data.get('isActive', True)),
+                **values
             )
-            self._sync_sieve_rules(email)
-            return self._success({'id': rule.id})
+            notice = self._sync_sieve_rules(email)
+            return self._rule_saved(notice, {'id': rule.id})
         except Exception as e:
             return self._error(str(e))
 
@@ -747,9 +766,10 @@ class WebmailManager:
                     elif field == 'priority':
                         val = int(val)
                     setattr(rule, field, val)
+            SieveClient.validate_rule({field: getattr(rule, field) for field in self.RULE_TEXT_FIELDS})
             rule.save()
-            self._sync_sieve_rules(email)
-            return self._success()
+            notice = self._sync_sieve_rules(email)
+            return self._rule_saved(notice)
         except SieveRule.DoesNotExist:
             return self._error('Rule not found.')
         except Exception as e:
@@ -769,17 +789,22 @@ class WebmailManager:
     def apiActivateRules(self):
         email = self._get_email()
         try:
-            self._sync_sieve_rules(email)
+            # The user asked for these rules to replace any other active script.
+            self._sync_sieve_rules(email, replace_active=True)
             return self._success()
         except Exception as e:
             return self._error(str(e))
 
-    def _sync_sieve_rules(self, email):
+    def _sync_sieve_rules(self, email, replace_active=False):
         """Generate sieve script from DB rules and upload to Dovecot.
 
         ManageSieve may not be available if dovecot-sieve/pigeonhole is not
         installed or if the ManageSieve service isn't running on port 4190.
         Rules are always saved to the database; Sieve sync is best-effort.
+
+        Only one script can be active.  A script the user made with another
+        filter client stays active unless replace_active is set; its name is
+        returned so the page can ask.
         """
         rules = SieveRule.objects.filter(email_account=email, is_active=True).order_by('priority')
         rule_dicts = []
@@ -798,6 +823,10 @@ class WebmailManager:
         try:
             with self._get_sieve(email) as sieve:
                 sieve.put_script('cyberpanel', script)
+                others = [name for name, active in sieve.list_scripts()
+                          if active and name != 'cyberpanel']
+                if others and not replace_active:
+                    return others[0]
                 sieve.activate_script('cyberpanel')
         except ConnectionRefusedError:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -805,6 +834,7 @@ class WebmailManager:
                 'Install dovecot-sieve and enable ManageSieve.' % email)
         except Exception as e:
             logging.CyberCPLogFileWriter.writeToFile('Sieve sync failed for %s: %s' % (email, str(e)))
+        return None
 
     # ── Settings APIs ─────────────────────────────────────────
 
@@ -862,32 +892,18 @@ class WebmailManager:
         except Exception:
             return self._error('Invalid URL.')
 
-        if not url.startswith(('http://', 'https://')):
-            return self._error('Invalid URL scheme.')
-
-        # Block internal/private IPs to prevent SSRF
-        import urllib.parse
-        import socket
-        import ipaddress
-        hostname = urllib.parse.urlparse(url).hostname or ''
+        # The image is served from the panel's own address: only raster
+        # images, only from public addresses (see image_proxy).
         try:
-            resolved_ip = socket.gethostbyname(hostname)
-            ip_obj = ipaddress.ip_address(resolved_ip)
-            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_multicast or ip_obj.is_reserved:
-                return self._error('Invalid URL.')
-        except (socket.gaierror, ValueError):
-            return self._error('Invalid URL.')
-
-        try:
-            import urllib.request
-            req = urllib.request.Request(url, headers={
-                'User-Agent': 'CyberPanel-Webmail-Proxy/1.0',
-            })
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                content_type = resp.headers.get('Content-Type', 'image/png')
-                if not content_type.startswith('image/'):
-                    return self._error('Not an image.')
-                data = resp.read(5 * 1024 * 1024)  # 5MB max
-            return HttpResponse(data, content_type=content_type)
-        except Exception:
+            data, content_type = image_proxy.fetch_image(url)
+        except image_proxy.ImageProxyError:
             return self._error('Failed to fetch image.')
+        except Exception as error:
+            logging.CyberCPLogFileWriter.writeToFile(
+                'Webmail image proxy failed: %s' % type(error).__name__)
+            return self._error('Failed to fetch image.')
+        response = HttpResponse(data, content_type=content_type)
+        response['Content-Security-Policy'] = image_proxy.RESPONSE_POLICY
+        response['Content-Disposition'] = 'inline; filename="image"'
+        response['Cache-Control'] = 'private, max-age=3600'
+        return response

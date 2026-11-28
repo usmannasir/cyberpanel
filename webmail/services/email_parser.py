@@ -29,7 +29,7 @@ class EmailParser:
         'dir', 'lang', 'start', 'type', 'target', 'rel',
     }
 
-    SAFE_HREF_SCHEMES = {'', 'http', 'https', 'mailto'}
+    SAFE_HREF_SCHEMES = {'http', 'https', 'mailto'}
     SAFE_SRC_SCHEMES = {'cid'}
 
     @staticmethod
@@ -155,7 +155,7 @@ class EmailParser:
                     value = str(raw_value)
 
                 if attribute == 'href':
-                    value = cls._sanitize_url(value, cls.SAFE_HREF_SCHEMES)
+                    value = cls._sanitize_link(value)
                 elif attribute == 'src':
                     value = cls._sanitize_image_source(value)
                 elif attribute == 'target':
@@ -176,6 +176,30 @@ class EmailParser:
         except ValueError:
             return ''
         return value if scheme in allowed_schemes else ''
+
+    @classmethod
+    def _sanitize_link(cls, value):
+        # A relative link in a message would point into the panel itself
+        # (the page showing it); only in-message anchors stay relative.
+        # Browsers also read "https:/path" and "https:path" on an https page
+        # as relative, so a web link must name its host after "//".
+        value = ''.join(character for character in value.strip() if ord(character) >= 0x20)
+        if value.startswith('#'):
+            return value
+        if '\\' in value:
+            return ''
+        if value.startswith('//'):
+            value = 'https:' + value
+        value = cls._sanitize_url(value, cls.SAFE_HREF_SCHEMES)
+        scheme, separator, rest = value.partition(':')
+        if scheme.lower() in ('http', 'https'):
+            try:
+                host = urlsplit(value).hostname
+            except ValueError:
+                return ''
+            if not rest.startswith('//') or not host:
+                return ''
+        return value
 
     @classmethod
     def _sanitize_image_source(cls, value):

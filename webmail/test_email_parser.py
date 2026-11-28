@@ -89,6 +89,27 @@ class HtmlSanitizationTests(unittest.TestCase):
         self.assertNotIn('src="//images.example.net', sanitized)
         self.assertNotIn('src="/websites/', sanitized)
 
+    def test_relative_links_cannot_point_into_the_panel(self):
+        sanitized = EmailParser.sanitize_html(
+            '<a href="/webmail/api/proxyImage?url=aHR0cHM6Ly9ldmlsLmV4YW1wbGUveC5zdmc=">a</a>'
+            '<a href="../base/">b</a><a href="/\\evil.example/">c</a>'
+            '<a href="#section">d</a><a href="//news.example/item">e</a>'
+            '<a href="mailto:help@example.net">f</a>'
+            '<a href="https:/webmail/api/logout">g</a><a href="https:base/">h</a>'
+            '<a href="https:\\\\panel.example/">i</a><a href="https:///x">j</a>'
+        )
+
+        self.assertNotIn('proxyImage', sanitized)
+        self.assertNotIn('../base', sanitized)
+        self.assertNotIn('evil.example', sanitized)
+        self.assertNotIn('logout', sanitized)
+        self.assertNotIn('https:base', sanitized)
+        self.assertNotIn('panel.example', sanitized)
+        self.assertNotIn('https:///x', sanitized)
+        self.assertIn('href="#section"', sanitized)
+        self.assertIn('href="https://news.example/item"', sanitized)
+        self.assertIn('href="mailto:help@example.net"', sanitized)
+
     def test_links_opened_in_new_tab_are_isolated(self):
         sanitized = EmailParser.sanitize_html(
             '<a href="https://example.net" target="_blank">Open</a>'

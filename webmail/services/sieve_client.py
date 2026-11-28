@@ -4,6 +4,10 @@ import re
 import base64
 
 
+class SieveRuleError(ValueError):
+    """A filter rule holds a value the filter page does not offer."""
+
+
 class SieveClient:
     """ManageSieve protocol client (RFC 5804) for managing mail filter rules."""
 
@@ -167,64 +171,114 @@ class SieveClient:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+    # The only values a rule may hold; anything else never reaches a script.
+    FIELD_HEADERS = {'from': 'From', 'to': 'To', 'subject': 'Subject'}
+    HEADER_TESTS = {'contains': ':contains', 'is': ':is', 'matches': ':matches'}
+    ACTIONS = ('move', 'forward', 'discard', 'flag')
+    SIZE_VALUE = re.compile(r'[0-9]{1,12}[KMG]?\Z')
+    FORWARD_ADDRESS = re.compile(r'[^@\s"\\,;<>()\[\]]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+\Z')
+
     @staticmethod
-    def rules_to_sieve(rules):
+    def _has_control(value):
+        return any(ord(character) < 32 or ord(character) == 127 for character in value)
+
+    @classmethod
+    def _quote(cls, value):
+        """A Sieve quoted string holding value as literal text."""
+        value = ''.join(character for character in str(value)
+                        if not cls._has_control(character))
+        return '"%s"' % value.replace('\\', '\\\\').replace('"', '\\"')
+
+    @classmethod
+    def validate_rule(cls, rule):
+        """Refuse a rule the filter page cannot express (SieveRuleError)."""
+        field = rule.get('condition_field')
+        cond_type = rule.get('condition_type')
+        cond_value = rule.get('condition_value')
+        action_type = rule.get('action_type')
+        action_value = rule.get('action_value')
+        name = rule.get('name')
+        for value in (field, cond_type, cond_value, action_type, action_value, name):
+            if not isinstance(value, str):
+                raise SieveRuleError('Every rule field must be text.')
+            if cls._has_control(value):
+                raise SieveRuleError('Rule fields cannot contain line breaks or control characters.')
+        if field == 'size':
+            if cond_type != 'greater_than':
+                raise SieveRuleError('Size rules use the "greater than" condition.')
+            if not cls.SIZE_VALUE.match(cond_value.strip().upper()):
+                raise SieveRuleError('Enter the size as a number, optionally followed by K, M or G.')
+        elif field in cls.FIELD_HEADERS:
+            if cond_type not in cls.HEADER_TESTS:
+                raise SieveRuleError('Choose contains, is or matches for this field.')
+        else:
+            raise SieveRuleError('Choose From, To, Subject or Size.')
+        if action_type not in cls.ACTIONS:
+            raise SieveRuleError('Choose a supported action.')
+        if action_type == 'move' and not action_value.strip():
+            raise SieveRuleError('Choose the folder to move messages to.')
+        if action_type == 'forward' and not cls.FORWARD_ADDRESS.match(action_value.strip()):
+            raise SieveRuleError('Enter one e-mail address to forward to.')
+        return True
+
+    @classmethod
+    def _rule_block(cls, rule, requires):
+        field = str(rule.get('condition_field', 'from'))
+        cond_type = str(rule.get('condition_type', 'contains'))
+        cond_value = str(rule.get('condition_value', ''))
+        action_type = str(rule.get('action_type', 'move'))
+        action_value = str(rule.get('action_value', ''))
+
+        if field == 'size':
+            size = cond_value.strip().upper()
+            if not cls.SIZE_VALUE.match(size):
+                return None
+            test = 'size :over %s' % size
+        elif field in cls.FIELD_HEADERS:
+            # Rules saved before validation existed fall back to "contains".
+            match = cls.HEADER_TESTS.get(cond_type, ':contains')
+            test = 'header %s %s %s' % (match, cls._quote(cls.FIELD_HEADERS[field]),
+                                         cls._quote(cond_value))
+        else:
+            return None
+
+        if action_type == 'move':
+            requires.add('fileinto')
+            # Ensure folder uses INBOX. namespace prefix for dovecot
+            folder = action_value
+            if folder and not folder.startswith('INBOX.'):
+                folder = 'INBOX.%s' % folder
+            action = 'fileinto %s;' % cls._quote(folder)
+        elif action_type == 'forward':
+            action = 'redirect %s;' % cls._quote(action_value.strip())
+        elif action_type == 'discard':
+            action = 'discard;'
+        elif action_type == 'flag':
+            requires.add('imap4flags')
+            action = 'addflag "\\\\Flagged";'
+        else:
+            action = 'keep;'
+
+        # A comment ends at the line break: the name never holds one.
+        name = ''.join(' ' if cls._has_control(character) else character
+                       for character in str(rule.get('name', 'Rule')))
+        return '# %s\nif %s {\n    %s\n}' % (name, test, action)
+
+    @classmethod
+    def rules_to_sieve(cls, rules):
         """Convert a list of rule dicts to a Sieve script.
 
         Each rule: {condition_field, condition_type, condition_value, action_type, action_value, name}
+        Values are only ever emitted as quoted strings; a rule whose field or
+        size cannot be expressed is left out.
         """
         requires = set()
         rule_blocks = []
 
         for rule in rules:
-            field = rule.get('condition_field', 'from')
-            cond_type = rule.get('condition_type', 'contains')
-            cond_value = rule.get('condition_value', '').replace('\\', '\\\\').replace('"', '\\"')
-            action_type = rule.get('action_type', 'move')
-            action_value = rule.get('action_value', '').replace('\\', '\\\\').replace('"', '\\"')
-
-            # Map field to Sieve header
-            if field == 'from':
-                header = 'From'
-            elif field == 'to':
-                header = 'To'
-            elif field == 'subject':
-                header = 'Subject'
-            else:
-                header = field
-
-            # Map condition type to Sieve test
-            if cond_type == 'contains':
-                test = 'header :contains "%s" "%s"' % (header, cond_value)
-            elif cond_type == 'is':
-                test = 'header :is "%s" "%s"' % (header, cond_value)
-            elif cond_type == 'matches':
-                test = 'header :matches "%s" "%s"' % (header, cond_value)
-            elif cond_type == 'greater_than' and field == 'size':
-                test = 'size :over %s' % cond_value
-            else:
-                test = 'header :contains "%s" "%s"' % (header, cond_value)
-
-            # Map action
-            if action_type == 'move':
-                requires.add('fileinto')
-                # Ensure folder uses INBOX. namespace prefix for dovecot
-                folder = action_value
-                if folder and not folder.startswith('INBOX.'):
-                    folder = 'INBOX.%s' % folder
-                action = 'fileinto "%s";' % folder
-            elif action_type == 'forward':
-                action = 'redirect "%s";' % action_value
-            elif action_type == 'discard':
-                action = 'discard;'
-            elif action_type == 'flag':
-                requires.add('imap4flags')
-                action = 'addflag "\\\\Flagged";'
-            else:
-                action = 'keep;'
-
-            name = rule.get('name', 'Rule')
-            rule_blocks.append('# %s\nif %s {\n    %s\n}' % (name, test, action))
+            block = cls._rule_block(rule, requires)
+            if block is not None:
+                rule_blocks.append(block)
 
         # Build full script
         parts = []
