@@ -66,10 +66,18 @@ class EmailComposer:
         # Keep the mailbox separate for Message-ID generation and quote names safely.
         if any(char in display_name for char in ('\r', '\n')):
             raise ValueError('Display name must not contain line breaks.')
+        if any(char in (value or '') for value in (to_addrs, cc_addrs, bcc_addrs)
+               for char in ('\r', '\n')):
+            raise ValueError('Recipient lists must not contain line breaks.')
         msg['From'] = formataddr((display_name, from_addr)) if display_name else from_addr
         msg['To'] = to_addrs
         if cc_addrs:
             msg['Cc'] = cc_addrs
+        if bcc_addrs:
+            # smtplib's send_message() adds these to the envelope and removes
+            # the header from the copy it transmits; the sender's Sent copy
+            # keeps it, as mail clients do.
+            msg['Bcc'] = bcc_addrs
         msg['Subject'] = subject
         msg['Date'] = formatdate(localtime=True)
         msg['Message-ID'] = make_msgid(domain=from_addr.split('@')[-1] if '@' in from_addr else 'localhost')
